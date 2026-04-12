@@ -12,6 +12,12 @@ the full story.
 | --- | --- |
 | [compression](compression/) | Token-saving compression for `.md` files — three tiers (Lite, Full, Ultra) for different audiences |
 
+## Quick Start
+
+Unzip or clone as `electrified-cortex` in your agent's skills folder. Each
+skill is self-contained — point your agent at the `SKILL.md` for the tier you
+need and it works immediately.
+
 ## Philosophy
 
 Each skill is self-contained, platform-agnostic, and follows the
