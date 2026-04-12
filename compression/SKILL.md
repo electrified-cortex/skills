@@ -19,7 +19,7 @@ Surface map:
 
 Usage: `lite/SKILL.md`, `full/SKILL.md`, `ultra/SKILL.md`.
 
-Rules: lossless only. Reduce tokens, never meaning. Never compress specs, code,
+Rules: meaning-preserving intent — reduce tokens, not meaning. Never compress specs, code,
 audio. Security warnings: full clarity. Full/Ultra strip non-structural markdown.
 Lite keeps meaningful markdown.
 
