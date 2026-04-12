@@ -1,0 +1,24 @@
+---
+name: lite
+description: light compression
+---
+
+Remove: filler (just/really/basically/actually/simply), hedging
+(might be worth/could consider), pleasantries (sure/certainly/happy to),
+qualifiers (I think/I believe), verbose phrasing ("in order to" → "to").
+
+Keep: articles (a/an/the), full sentences, professional tone, connectives,
+meaningful markdown.
+
+Format: vertical structure. Bullets, headings, line breaks. Lead with task title.
+Readability over density.
+
+Preserve: code blocks, inline code, URLs, paths, commands, terms, proper nouns,
+dates, versions, security warnings, irreversible confirmations. Logic words
+(not/never/only/unless/must/may). Actors + permissions. Ordered steps, counts,
+thresholds. Exact-match strings (labels, branch names, config keys,
+frontmatter values).
+
+Ambiguity stop: if compression adds ambiguity, keep original.
+
+Pass order: preserve scan, remove, transform, ambiguity check.

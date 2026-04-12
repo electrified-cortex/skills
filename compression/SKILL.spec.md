@@ -1,0 +1,183 @@
+---
+name: compression
+description: >-
+  Spec for the compression skill — design rationale, tier philosophy,
+  credits, gate justifications, and displaced commentary.
+---
+
+# Compression — Spec
+
+Design rationale and reference for the compression skill. This file is the
+spec companion — it contains everything that was stripped from the lean
+`SKILL.md` and everything that explains *why* the skill works the way it does.
+
+## Credit
+
+Inspired by [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) (MIT).
+The caveman approach showed that LLMs can read and produce telegraphic text
+with no loss of comprehension. We adopted this insight and extended it with
+safety gates, tier differentiation, and integration into an audit pipeline.
+
+## Purpose
+
+Every file loaded into an AI agent's context window costs tokens. Some files
+are loaded on every session start (agent definitions, instructions). Others are
+loaded on every skill invocation. The cost compounds: a 10KB agent file loaded
+200 times costs 2MB of context window across sessions. Reducing that file to
+6KB saves 800KB — real capacity that could hold actual work products instead.
+
+Compression isn't about readability for humans. It's about density for machines.
+LLMs parse compressed text with no loss of understanding. The spec (this file)
+preserves the human-readable version.
+
+## Why Markdown Only
+
+The skill targets `.md` files that are loaded into agent context: agent files,
+skills, instructions. These are the highest-volume, highest-frequency files in
+the workspace. Code files have their own density — they're already compressed
+by necessity. General text files (READMEs, docs) are human-facing and use Lite
+compression by convention, not this skill.
+
+## Skill vs Agent Separation
+
+The skill is pure technique — what to remove, transform, and preserve. It has
+no opinions about *when* or *whether* compression should happen.
+
+Process gates live in the **compression agent** — see
+`subagents/compression.agent.spec.md` for full gate design and rationale.
+
+This separation means: if someone invokes the skill directly, they get raw
+compression with no safety net. That's by design — the skill is a tool, not
+a workflow.
+
+## Tier Philosophy
+
+The workspace uses four compression tiers:
+
+| Tier | Description | Applied by |
+| --- | --- | --- |
+| **None** | Full natural language, no compression | Audio, specs, code |
+| **Lite** | Drop filler/hedging, keep articles and grammar | Human-facing text, operator messages |
+| **Full** | Drop articles, fragments OK, short synonyms | General documentation |
+| **Ultra** | Abbreviate, telegraphic, arrows for causality | Agent-to-agent, agent files, skills |
+
+The compression skill implements all three tiers as self-contained sub-skills:
+
+- `lite/SKILL.md` — Lite rules, human-facing content
+- `full/SKILL.md` — Full rules, general documentation
+- `ultra/SKILL.md` — Ultra rules, agent-facing files
+
+Each tier is standalone — loading `ultra/SKILL.md` gives an agent everything
+needed to apply Ultra compression without reading the parent or other tiers.
+The top-level `SKILL.md` serves as a concept overview and tier index.
+
+The key insight: Ultra is for machines reading instructions. Lite is for humans
+reading updates. They serve different audiences and should never be mixed.
+A message to a human should be Lite. A direct message to an agent should be Ultra.
+The transport (Telegram, Signal, Teams, whatever) doesn't matter — the audience does.
+
+**Gold standard:** `ultra/SKILL.md` is the benchmark for how agent-facing files
+should be structured — minimal frontmatter, label: format, zero fluff, self-referential
+stamp. All agent-facing files should aspire to this density.
+
+## Why Specs Are Never Compressed
+
+Specs exist for human readability. They contain the *why* behind decisions,
+incident history, design rationale, gotchas, and credits. Compressing a spec
+defeats its purpose — it's the one place where verbose explanation is not only
+acceptable but required.
+
+Specs are also comparatively low-frequency reads. An agent file might be loaded
+200 times; its spec might be read 5 times. The token savings from compressing
+specs are negligible compared to the information loss.
+
+## The Preserve List — Why Each Item
+
+- **Code blocks** — Semantic meaning depends on exact syntax. Even whitespace matters.
+- **Inline code** — Same as code blocks but inline. Identifiers, commands, paths.
+- **URLs/links/file paths** — Changing a single character breaks them.
+- **Technical terms** — "AppArmor" ≠ "app armor". "SSRF" ≠ "server-side request forgery" (in compressed context).
+- **Proper nouns** — Names of people, projects, companies. Identity matters.
+- **Dates/versions/numbers** — Factual data that cannot be approximated.
+- **Environment variables** — Exact case and spelling required.
+- **Headings** — Structural anchors. Compressing heading text breaks navigation and cross-references.
+- **Bullet/list structure** — Hierarchy carries meaning. Flattening loses relationships.
+- **Tables** — Cell text can be compressed but structure (columns, rows) must stay.
+- **Frontmatter** — Machine-parsed metadata. Exact keys and values required.
+
+### Semantic Preserve Additions (GPT 5.4 Review, 2026-04-12)
+
+External review identified silent failure modes where compression can destroy
+meaning without obvious breakage:
+
+- **Logic/modality words** (not, never, only, unless, must, may) — Removing "not" or
+  "only" inverts meaning. "Must" vs "may" is the difference between a requirement and
+  a suggestion. These are load-bearing words that compression must never touch.
+- **Actors + permissions** (who does what) — "Curator commits" ≠ "Workers commit."
+  Stripping the actor makes the sentence ambiguous about who has permission.
+- **Ordered steps, counts, thresholds** — "Run A then B" ≠ "Run A and B." Sequence
+  matters. "Max 3 retries" cannot be approximated.
+- **Exact-match strings** (labels, branch names, config keys, frontmatter values) —
+  These are machine-parsed identifiers. Synonyms break them.
+
+These rules apply at all tiers — even Lite must preserve logic words and actors.
+
+### Process Additions
+
+- **Ambiguity stop** — If compression produces a sentence that could be read two ways,
+  keep the original. This is the final safety net. Better to waste tokens than create
+  a misunderstanding that causes wrong behavior.
+- **Pass order** (preserve scan → remove → transform → ambiguity check) — Scanning for
+  preserved content first prevents accidental removal. The ambiguity check at the end
+  catches any meaning drift introduced by transforms.
+- **Abbreviation discipline** (one per concept per file, standard or introduced once in
+  full) — Prevents abbreviation collisions and ensures a reader encountering an
+  abbreviation can find its expansion nearby.
+
+## Integration Points
+
+The compression skill is invoked by:
+
+1. **Compression agent** (`subagents/compression.agent.md`) — the primary consumer.
+   Enforces both gates, applies the skill, reports results.
+2. **Agent Refinement Auditor** (`subagents/agent-refinement-auditor.agent.md`) —
+   Phase 2 of the audit→compress→re-audit cycle references this skill.
+3. **File audit skill** (`skills/file-audit/SKILL.md`) — Step 3 dispatches
+   compression via this skill.
+4. **Copilot caveman-compress** (`cortex.lan/.github/skills/caveman-compress/`) —
+   Copilot-specific wrapper that references this as the canonical source.
+
+## Example — Before and After
+
+Before compression (original prose):
+> You should always make sure to run the test suite before pushing any changes
+> to the main branch. This is important because it helps catch bugs early and
+> prevents broken builds from being deployed to production.
+
+After Ultra compression:
+> Run tests before push to main. Catches bugs early, prevents broken prod deploys.
+
+Removed: "You should always make sure to" (imperative softener), "This is
+important because" (connective fluff), "any changes to the" (articles + padding),
+"from being deployed to" (wordier than needed).
+
+Preserved: "test suite" → "tests" (acceptable synonym), "main branch" → "main"
+(context makes "branch" implicit), all technical meaning intact.
+
+## One Example Per Pattern
+
+The skill limits Transform to "one example per pattern." Multiple examples
+consume tokens without adding instruction value — an LLM grasps the pattern
+from a single instance. Additional examples belong in the spec (like the one
+above), not in the lean skill file.
+
+## Future Considerations
+
+- Help topics in TMCP: `compression` (overview), `compression/lite`,
+  `compression/full`, `compression/ultra` — derived from this skill and the
+  tier system. Part of the guide spec implementation.
+- Publishing to electrified cortex as a reusable community skill.
+- Automated compression pipeline: commit hook that flags files over a size
+  threshold and suggests compression.
+
+Credit: Inspired by [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) (MIT).

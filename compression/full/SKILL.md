@@ -1,0 +1,22 @@
+---
+name: full
+description: classic compression
+---
+
+Remove: articles (a/an/the), filler (just/really/basically), hedging, pleasantries,
+verbose phrasing (replace "in order to" with "to"), connective fluff,
+non-structural markdown (bold/italics/emphasis blockquotes).
+
+Transform: short synonyms, merge redundant bullets, fragments only when unambiguous.
+
+Keep: full punctuation where it aids clarity. Structural markdown: headings, lists,
+tables, code fences, frontmatter.
+
+Preserve: code blocks, inline code, URLs, paths, commands, terms, proper nouns,
+dates, versions, env vars. Logic words (not/never/only/unless/must/may). Actors +
+permissions. Ordered steps, counts, thresholds. Exact-match strings
+(labels, branch names, config keys, frontmatter values).
+
+Ambiguity stop: if compression adds ambiguity, keep original.
+
+Pass order: preserve scan, remove, transform, ambiguity check.
