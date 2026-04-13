@@ -21,4 +21,6 @@ Pass: preserve scan → remove → transform → ambiguity check.
 
 Abbreviations: one per concept per file. Standard or introduced once.
 
+Contractions: multi-word negations → contractions (do not → don't, must not → mustn't, will not → won't). Cannot > can't — 1 token, stronger.
+
 This file exemplifies ultra compression.

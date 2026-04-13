@@ -7,7 +7,7 @@ Write agent files as executable control surfaces. Companion spec = source langua
 
 Purpose: produce runtime agent files (`.agent.md`, `AGENT.md`, `CLAUDE.md`) containing only instructions needed to operate correctly.
 
-Scope: use when writing or rewriting an agent file from a companion spec.
+Scope: use when writing or rewriting agent file from companion spec.
 
 Definitions:
 Agent spec: verbose companion defining full agent contract.
@@ -44,11 +44,13 @@ Preserve exact technical strings: tool names, commands, flags, file paths, confi
 Preserve logic/modality words: not, never, only, unless, must, may, required, optional.
 Preserve ordered procedures, retry limits, escalation conditions, shutdown sequences.
 Preserve authority boundaries unchanged.
+Model references: use runtime alias (`Sonnet`, `Opus`) in agent file frontmatter — not pinned version strings (`claude-sonnet-4-6`). Aliases are agnostic across VS Code Copilot and Claude Code. In companion specs, use class-level refs (`Sonnet-class or later equivalent`).
 
 Constraints:
 No long-form rationale.
 No audit logs, bug reports, historical incident narrative.
 No speculative design notes.
+No tutorials, postmortems, design debates, historical archives, or human-first explanation documents.
 No duplicated reminders adding no operational control.
 No prose existing only to persuade human reader.
 Never hide authority boundaries in descriptive text.
@@ -89,7 +91,3 @@ Runtime agent files read frequently; token efficiency matters strongly.
 Companion specs read less frequently, may contain large reasoning.
 Runtime agent files are operational control surfaces, not explanatory references.
 Human reviewers, auditors, repair agents may consult companion spec when runtime file needs correction.
-
-Non-goals: runtime agent file is not a tutorial, postmortem, audit report, design debate, historical archive, or human-first explanation document.
-Does not require preserving every explanation from companion spec.
-Does require preserving every control instruction that matters at runtime.

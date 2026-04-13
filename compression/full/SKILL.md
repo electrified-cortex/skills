@@ -4,7 +4,7 @@ description: classic compression
 ---
 
 Remove: articles (a/an/the), filler (just/really/basically), hedging, pleasantries,
-verbose phrasing (replace "in order to" with "to"), connective fluff,
+verbose phrasing ("in order to" → "to"), connective fluff,
 non-structural markdown (bold/italics/emphasis blockquotes).
 
 Transform: short synonyms, merge redundant bullets, fragments only when unambiguous.
@@ -17,6 +17,8 @@ dates, versions, env vars. Logic words (not/never/only/unless/must/may). Actors 
 permissions. Ordered steps, counts, thresholds. Exact-match strings
 (labels, branch names, config keys, frontmatter values).
 
-Ambiguity stop: if compression adds ambiguity, keep original.
+Ambiguity stop: compression adds ambiguity → keep original.
 
 Pass order: preserve scan, remove, transform, ambiguity check.
+
+Contractions: multi-word negations → contractions (do not → don't, must not → mustn't, will not → won't). Prefer "cannot" over "can't" — stronger imperative, guaranteed single token.

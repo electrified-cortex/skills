@@ -27,7 +27,7 @@ Requirements, constraints.
 Procedures, ordered steps, thresholds.
 Defaults, error handling, stop conditions.
 Precedence rules, conflict resolution.
-Explicit exclusions (non-goals).
+Explicit exclusions (do-not constraints).
 
 Companion spec only (non-program content):
 Design rationale.
@@ -37,7 +37,7 @@ Edge-case walkthroughs.
 Compression guidance, protocol notes.
 Change history, credits, publication notes.
 
-Additions permitted in companion spec only when they help produce more accurate or efficient target skill file.
+Additions permitted in companion spec only when producing more accurate or efficient target skill file.
 
 Defaults:
 Target skill file assumed read by agent, not human auditor.
@@ -47,7 +47,7 @@ Companion spec available for review, audit, repair, evolution.
 
 Requirements:
 When authoring companion spec: conform to parent spec; define target as runtime artifact; clearly separate program and non-program content.
-Self-contained. Skill file must not require companion spec at runtime.
+Self-contained. Skill file mustn't require companion spec at runtime.
 Concise. Every line must earn its place.
 Accurate. Preserve all load-bearing meaning from spec.
 Semantically complete. Every runtime-relevant instruction must be present.
@@ -59,8 +59,10 @@ Include minimal frontmatter required by target runtime or standard.
 
 Constraints:
 No design rationale.
-No audit logs or bug histories.
+No audit logs, audit reports, or bug histories.
 No publication notes, change history, credits.
+No tutorials, design essays, changelogs, or bug trackers.
+No publication artifacts intended for human-first consumption.
 No long-form examples unless removing them makes rule ambiguous.
 No broad conceptual explanation not affecting execution.
 No multiple explanations of same rule.
@@ -68,7 +70,7 @@ No filler, marketing prose, narrative framing.
 No dependency on reader also loading spec during ordinary execution.
 Never trade correctness for brevity.
 Never remove detail necessary for unambiguous execution.
-Never use byte-code principle to justify omitting runtime-critical instructions.
+Don't use byte-code principle to justify omitting runtime-critical instructions.
 
 Behavior — compiling spec → skill file:
 1. Extract all program content from spec.
@@ -97,7 +99,3 @@ Self-containment wins over aggressive compression.
 Exact technical meaning wins over stylistic density.
 Runtime instructions win over explanation.
 Companion spec holds rationale; skill file holds executable program.
-
-Non-goals: target skill file is not a tutorial, design essay, changelog, audit report, bug tracker, or publication artifact for humans first.
-Does not require preserving all human-readable context from companion spec.
-Does require preserving all runtime-relevant behavior.

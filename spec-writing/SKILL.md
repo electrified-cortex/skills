@@ -5,16 +5,16 @@ description: Write precise, testable, auditable specification documents with exp
 
 Write specs: clear, complete, enforceable, internally consistent, externally auditable.
 
-Purpose: define intent. A spec is a normative document defining rules, requirements, constraints, and expected behavior — precise, testable, auditable.
+Purpose: define intent. Spec is normative document defining rules, requirements, constraints, expected behavior — precise, testable, auditable.
 
-Scope: use when writing a spec or derived target document governed by a source spec. All scope must be explicitly declared.
+Scope: use when writing spec or derived target document governed by source spec. All scope must be explicitly declared.
 
 Definitions:
 Spec: normative document defining rules, requirements, constraints, expected behavior.
-Atomic: requirement expressing exactly one testable condition; cannot decompose further.
+Atomic: requirement expressing exactly one testable condition; can't decompose further.
 Testable: satisfaction verifiable from document text alone without external judgment.
 Normative: defines requirements/constraints/behavior; strictly enforceable.
-Descriptive: explains context/intent; must not contradict normative content.
+Descriptive: explains context/intent; mustn't contradict normative content.
 Exploratory: captures ideas, tradeoffs, open questions; may contain ambiguity.
 Informational: notes, examples, references.
 Mandatory language: must, shall, required.
@@ -78,12 +78,10 @@ Requirement not atomic, testable, or enforceable → rewrite before treating spe
 Precedence:
 Correctness and enforceability over readability.
 Normative content governs behavior.
-Non-normative content must not introduce hidden requirements.
+Non-normative content mustn't introduce hidden requirements.
 For derived targets, source spec authoritative, target subordinate.
 Normative statement with multiple reasonable interpretations → invalid, must rewrite.
 
-## Non-Goals
-
-- Do not use descriptive, exploratory, or informational content as a substitute for normative requirements.
-- Do not use this skill to justify silent scope expansion.
-- Do not use this skill to hide requirements in examples, notes, or descriptive prose.
+Don't use descriptive, exploratory, or informational content as substitute for normative requirements.
+Don't use this skill to justify silent scope expansion.
+Don't use this skill to hide requirements in examples, notes, or descriptive prose.

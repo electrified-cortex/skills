@@ -135,6 +135,21 @@ These rules apply at all tiers — even Lite must preserve logic words and actor
 - **Abbreviation discipline** (one per concept per file, standard or introduced once in
   full) — Prevents abbreviation collisions and ensures a reader encountering an
   abbreviation can find its expansion nearby.
+- **Contractions at all tiers** (don't, mustn't, won't over expanded multi-word forms) —
+  "Don't" is 1 BPE token vs "Do not" at 2 tokens. Contractions carry identical meaning
+  with lower cost. Applies to Lite, Full, and Ultra. "Cannot" is preferred over "can't"
+  for two reasons: (1) it's a single word guaranteed to be 1 token — the apostrophe in
+  "can't" might split on some tokenizers, and (2) "cannot" carries stronger imperative
+  weight in English — "you cannot do this" is a prohibition/command, while "can't" reads
+  as a softer capability statement. In normative contexts (constraints, rules, skill
+  directives), "cannot" is semantically more precise.
+  
+  **Normative strength hierarchy:** "must not" / "mustn't" is the strongest prohibition —
+  spec-like, expressing a hard requirement ("this must not break"). "Cannot" is a strong
+  imperative command. "Can't" / "shouldn't" are softer, conveying capability or suggestion.
+  Unlike cannot→can't, the contraction "mustn't" preserves the full normative weight of
+  "must not" — both are equally spec-like. Prefer "mustn't" freely; prefer "cannot" over
+  "can't" in normative contexts.
 
 ## Integration Points
 
