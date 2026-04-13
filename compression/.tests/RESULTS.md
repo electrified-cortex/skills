@@ -56,11 +56,12 @@ below are representative deductions that lower scores, but the final percentage 
 assigned holistically based on severity and total rule adherence.
 
 Common deductions considered during scoring:
+
 - Remaining articles in Full/Ultra (target: 0)
 - Removed articles in Lite (articles should be preserved)
 - Uncontracted multi-word negations (`do not` instead of `don't`)
 - Wrong heading format in Ultra (`##` instead of `Label:`)
-- Remaining bullet markers in Ultra (`- `)
+- Remaining bullet markers in Ultra (`-`)
 - Residual filler words
 - Undercompression / excess connective tissue beyond tier spec
 
@@ -185,7 +186,7 @@ Opus resolves this trade-off partially — higher compression than Sonnet (42.3%
 contamination, Opus is competitive with Sonnet but not clearly superior.
 
 The old Sonnet Ultra (now replaced) was 519 words / 55.7% reduction but violated
-structural rules (`##` headings, `- ` bullets). After re-running with current rules,
+structural rules (`##` headings, `-` bullets). After re-running with current rules,
 Sonnet dropped to 690 words / 41.1% — a 17pp reduction in compression ratio just
 from following the structural rules correctly.
 
