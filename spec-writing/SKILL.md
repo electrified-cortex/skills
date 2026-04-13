@@ -20,6 +20,8 @@ All scope must be explicitly declared.
 ## Definitions
 
 - Spec: a normative document that defines rules, requirements, constraints, and expected behavior.
+- Atomic: a requirement that expresses exactly one testable condition; cannot be decomposed further.
+- Testable: a requirement whose satisfaction can be verified from the document text alone without external judgment.
 - Normative: defines requirements, constraints, or behavior; strictly enforceable.
 - Descriptive: explains context or intent; must not contradict normative content.
 - Exploratory: captures ideas, tradeoffs, or open questions; may contain ambiguity.
@@ -34,6 +36,7 @@ All scope must be explicitly declared.
 - Define behavior or constraints.
 - Use enforceable language.
 - Be internally consistent.
+- Be structurally coherent.
 - Be externally auditable.
 - Avoid reliance on implied intent.
 - State all required behavior explicitly.
@@ -79,8 +82,12 @@ All scope must be explicitly declared.
   - no duplicates
   - no contradictions
   - no implicit assumptions
-  - all requirements testable
-  - no unauthorized scope expansion
+- Accept only if:
+  - all requirements are testable
+  - no critical ambiguity exists
+  - terminology is stable
+  - no contradictions exist
+  - no unauthorized scope expansion exists
 
 ## Defaults and Assumptions
 

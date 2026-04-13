@@ -187,8 +187,8 @@ Explicit exclusions.
 
 Each requirement must:
 
-- be atomic
-- be testable
+- be atomic (expresses exactly one testable condition; cannot be decomposed further)
+- be testable (satisfaction can be verified from document text alone without external judgment)
 - use normative language
 - avoid ambiguity
 
