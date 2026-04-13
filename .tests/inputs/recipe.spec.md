@@ -1,10 +1,8 @@
 ---
-title: Elaborate Soufflé Recipe
+title: Test Input Spec - Elaborate Soufflé Recipe
 type: test-input-spec
 purpose: Compression benchmark — generate a maximally verbose recipe for compression testing
 ---
-
-# Test Input Spec — Elaborate Soufflé Recipe
 
 ## What This Is
 
