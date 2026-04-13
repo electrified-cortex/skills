@@ -42,14 +42,22 @@ Haiku = `claude-haiku-4-5-20251001`, GPT = `GPT 5.4` (Copilot model identifier).
 
 ## Conformance Methodology
 
-Each output scored against its tier's SKILL.md rules. Deductions for:
-- Remaining articles in Full/Ultra (should be 0): -3% each
-- Removed articles in Lite (should keep): -2% each
-- Uncontracted multi-word negations ("do not" instead of "don't"): -5% each
-- Wrong heading format in Ultra (`##` instead of `Label:`): -20%
-- Remaining bullet markers in Ultra (`- `): -15%
-- Residual filler words: -5% each
-- Undercompression (retaining connective tissue beyond tier spec): -5% to -15%
+Each output was scored against its tier's `SKILL.md` rules using a rubric-based
+overall conformance assessment rather than a strict additive formula. The issues
+below are representative deductions that lower scores, but the final percentage is
+assigned holistically based on severity and total rule adherence.
+
+Common deductions considered during scoring:
+- Remaining articles in Full/Ultra (target: 0)
+- Removed articles in Lite (articles should be preserved)
+- Uncontracted multi-word negations (`do not` instead of `don't`)
+- Wrong heading format in Ultra (`##` instead of `Label:`)
+- Remaining bullet markers in Ultra (`- `)
+- Residual filler words
+- Undercompression / excess connective tissue beyond tier spec
+
+Notes in the audit tables are highlights of the most visible deviations, not
+a complete penalty ledger.
 
 Baseline filler scan: original recipe has 2 filler words ("simply" x2). All models
 removed both at every tier.

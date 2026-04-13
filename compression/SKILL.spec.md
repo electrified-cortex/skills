@@ -138,7 +138,7 @@ These rules apply at all tiers — even Lite must preserve logic words and actor
 - **Contractions at all tiers** (don't, mustn't, won't over expanded multi-word forms) —
   "Don't" is 1 BPE token vs "Do not" at 2 tokens. Contractions carry identical meaning
   with lower cost. Applies to Lite, Full, and Ultra. "Cannot" is preferred over "can't"
-  for two reasons: (1) it's a single word guaranteed to be 1 token — the apostrophe in
+  for two reasons: (1) it's a single word typically 1 token in common BPE tokenizers — the apostrophe in
   "can't" might split on some tokenizers, and (2) "cannot" carries stronger imperative
   weight in English — "you cannot do this" is a prohibition/command, while "can't" reads
   as a softer capability statement. In normative contexts (constraints, rules, skill

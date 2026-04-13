@@ -40,7 +40,7 @@ extended with three compression tiers, safety gates, companion specs, and a
 rigorous audit pipeline. Dozens of iterations, external review, and operator
 sign-off brought it to publication quality.
 
-Each tier ships a `.tests/` folder with a shared test plan, tier-specific
+The compression skill ships a `.tests/` folder with a shared test plan, tier-specific
 agent outputs, and input fixtures — every compression is dogfooded against
 real skill files before release.
 

@@ -1,6 +1,6 @@
 # Agent Writing — SKILL.md Spec
 
-> Child spec derived from `../spec-writing/SKILL.spec.md`.
+> Child spec derived from `../SKILL.spec.md`.
 > This file defines how to produce a skill-writing `SKILL.md` whose target domain is agent files such as `.agent.md`, `AGENT.md`, and `CLAUDE.md`.
 
 ## Purpose
@@ -20,7 +20,7 @@ This spec governs a derived target `SKILL.md` whose job is to tell an authoring 
 
 The target domain includes agent-facing instruction files such as `.agent.md`, `AGENT.md`, `CLAUDE.md`, and similar runtime-loaded control documents.
 
-This spec inherits the parent requirements from `../spec-writing/SKILL.spec.md` and adds agent-specific constraints about what belongs in the runtime agent file versus the companion spec.
+This spec inherits the parent requirements from `../SKILL.spec.md` and adds agent-specific constraints about what belongs in the runtime agent file versus the companion spec.
 
 ## Definitions
 
