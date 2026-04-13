@@ -21,4 +21,4 @@ Ambiguity stop: compression adds ambiguity → keep original.
 
 Pass order: preserve scan, remove, transform, ambiguity check.
 
-Contractions: multi-word negations → contractions (do not → don't, must not → mustn't, will not → won't). Prefer "cannot" over "can't" — stronger imperative, guaranteed single token.
+Contractions: multi-word negations → contractions (do not → don't, must not → mustn't, will not → won't). Prefer "cannot" over "can't" — stronger imperative, typically single token in common BPE tokenizers.

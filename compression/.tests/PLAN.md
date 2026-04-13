@@ -15,8 +15,8 @@ sensitivity, and inform default model recommendations.
 │   ├── sonnet.md
 │   ├── haiku.md
 │   ├── gpt54.md
-│   ├── qwen-14b.md
-│   └── qwen-1.7b.md
+│   ├── qwen-14b.md           ← planned (not yet tested)
+│   └── qwen-1.7b.md          ← planned (not yet tested)
 ├── full/
 │   └── (same model files)
 ├── ultra/
@@ -30,7 +30,7 @@ sensitivity, and inform default model recommendations.
 ### Phase 1 — Input Generation
 
 1. Generate `recipe.md` from `recipe.spec.md` using a frontier model (Sonnet or
-   GPT 5.4). The generated recipe is the uncompressed baseline.
+   GPT). The generated recipe is the uncompressed baseline.
 2. Run the Spec Auditor on `recipe.md` against `recipe.spec.md` to verify the
    input meets all spec requirements before proceeding.
 
@@ -46,9 +46,9 @@ For each model in the matrix, compress `recipe.md` at each tier:
 | 2d | `recipe.md` | Lite | Haiku | `lite/haiku.md` |
 | 2e | `recipe.md` | Full | Haiku | `full/haiku.md` |
 | 2f | `recipe.md` | Ultra | Haiku | `ultra/haiku.md` |
-| 2g | `recipe.md` | Lite | GPT 5.4 | `lite/gpt54.md` |
-| 2h | `recipe.md` | Full | GPT 5.4 | `full/gpt54.md` |
-| 2i | `recipe.md` | Ultra | GPT 5.4 | `ultra/gpt54.md` |
+| 2g | `recipe.md` | Lite | GPT | `lite/gpt54.md` |
+| 2h | `recipe.md` | Full | GPT | `full/gpt54.md` |
+| 2i | `recipe.md` | Ultra | GPT | `ultra/gpt54.md` |
 | 2j | `recipe.md` | Lite | Qwen 14B | `lite/qwen-14b.md` |
 | 2k | `recipe.md` | Full | Qwen 14B | `full/qwen-14b.md` |
 | 2l | `recipe.md` | Ultra | Qwen 14B | `ultra/qwen-14b.md` |
@@ -90,15 +90,15 @@ Populate `RESULTS.md` with:
 | Model | Type | Access | Priority |
 | --- | --- | --- | --- |
 | Claude Sonnet 4 | Frontier | API | P1 — baseline |
-| Claude Haiku 4 | Frontier (small) | API | P1 — cost comparison |
-| GPT 5.4 | Frontier (external) | API | P2 — cross-vendor |
+| Claude Haiku 4.5 | Frontier (small) | API | P1 — cost comparison |
+| GPT | Frontier (external) | API | P2 — cross-vendor |
 | Qwen 2.5 14B Instruct | Local | Ollama (local) | P3 — local validation |
 | Qwen 3 1.7B | Local | Ollama (local) | P4 — small model floor |
 
 ## Success Criteria
 
 - [ ] Sonnet + Haiku complete at all 3 tiers (6 outputs minimum)
-- [ ] GPT 5.4 at all 3 tiers if accessible (3 more)
+- [ ] GPT at all 3 tiers if accessible (3 more)
 - [ ] At least one local model attempt (Qwen 14B)
 - [ ] All outputs pass Spec Auditor preserve rule check
 - [ ] RESULTS.md populated with full comparison matrix

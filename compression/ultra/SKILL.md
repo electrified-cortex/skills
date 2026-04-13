@@ -13,7 +13,7 @@ Preserve: code blocks, inline code, URLs, paths, commands, technical terms, prop
 
 Structural primitives: periods end statements, newlines separate concepts, commas inline items, `Label:` for major sections.
 Transforms: `## Heading` → `Heading:`. `- item` → newline-separated or semicolon-joined. `#` title only for identity, flatten all others to `Label:`. Tables keep when structure aids parsing.
-Strip: #/##/###, `- `, **/__/>, ---. Numbered lists OK (ordering). Tables OK (grid aids parsing).
+Strip markdown syntax markers (preserve text content): heading markers (#, ##, ###), list markers (- ), blockquote markers (>), emphasis markers (**, __), body horizontal rules (---). Do not strip YAML frontmatter delimiters. Numbered lists OK (ordering). Tables OK (grid aids parsing).
 
 Ambiguity: compression loses meaning → keep original.
 
@@ -21,6 +21,6 @@ Pass: preserve scan → remove → transform → ambiguity check.
 
 Abbreviations: one per concept per file. Standard or introduced once.
 
-Contractions: multi-word negations → contractions (do not → don't, must not → mustn't, will not → won't). Cannot > can't — 1 token, stronger.
+Contractions: multi-word negations → contractions (do not → don't, must not → mustn't, will not → won't). Cannot > can't — typically single token in common BPE tokenizers, stronger imperative.
 
 This file exemplifies ultra compression.
