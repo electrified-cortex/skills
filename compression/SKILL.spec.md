@@ -15,8 +15,9 @@ spec companion — it contains everything that was stripped from the lean
 
 Inspired by [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) (MIT).
 The caveman approach showed that LLMs can read and produce telegraphic text
-with no loss of comprehension. We adopted this insight and extended it with
-safety gates, tier differentiation, and integration into an audit pipeline.
+with negligible loss of comprehension in practice. We adopted this insight
+and extended it with safety gates, tier differentiation, and integration
+into an audit pipeline.
 
 ## Purpose
 
@@ -27,8 +28,9 @@ loaded on every skill invocation. The cost compounds: a 10KB agent file loaded
 6KB saves 800KB — real capacity that could hold actual work products instead.
 
 Compression isn't about readability for humans. It's about density for machines.
-LLMs parse compressed text with no loss of understanding. The spec (this file)
-preserves the human-readable version.
+In practice, LLMs parse compressed text with negligible loss of understanding —
+though results vary by model, task, and compression tier. Verify via audit.
+The spec (this file) preserves the human-readable version.
 
 ## Why Markdown Only
 

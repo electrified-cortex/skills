@@ -9,10 +9,11 @@ and instructions are loaded on every session start — the cost compounds across
 hundreds of sessions. Reducing a 10KB agent file to 6KB saves real capacity that
 could hold actual work products instead.
 
-LLMs parse compressed text with no loss of understanding. The technique was
-pioneered by [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman)
-(MIT) and extended here with safety gates, tiered compression, and a rigorous
-audit pipeline.
+In practice, LLMs typically parse compressed text with negligible loss of
+understanding. The technique was pioneered by
+[JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) (MIT) and
+extended here with safety gates, tiered compression, and a rigorous audit
+pipeline.
 
 ## Human-Curated
 
@@ -41,9 +42,9 @@ Load only the tier you need. No cross-tier dependencies.
 
 ## Design Principles
 
-**Lossless only.** Compression reduces tokens, never meaning. Every fact,
-constraint, and technical detail survives compression. If compression adds
-ambiguity, keep the original.
+**Meaning-preserving intent.** Compression is designed to reduce tokens, not
+meaning. Every fact, constraint, and technical detail should survive
+compression. If compression adds ambiguity, keep the original.
 
 **Preserve what matters.** Code, URLs, paths, technical terms, logic words
 (not/never/only/must), actors, permissions, ordered steps, and exact-match
