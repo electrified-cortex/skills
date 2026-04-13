@@ -22,3 +22,5 @@ frontmatter values).
 Ambiguity stop: if compression adds ambiguity, keep original.
 
 Pass order: preserve scan, remove, transform, ambiguity check.
+
+Contractions: convert multi-word negations to contractions (do not → don't, must not → mustn't, will not → won't). Prefer "cannot" over "can't" — it is a stronger imperative and typically a single token in common BPE tokenizers.

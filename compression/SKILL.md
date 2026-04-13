@@ -34,3 +34,7 @@ Ambiguity stop: if compression adds ambiguity, keep original.
 Pass order: preserve scan, remove, transform, ambiguity check.
 
 Abbreviations: one per concept per file. Standard or introduced once in full.
+
+Contractions: all tiers. Multi-word negations → contractions (do not → don't,
+must not → mustn't, will not → won't). Prefer "cannot" over "can't" —
+stronger imperative weight, typically single token in common BPE tokenizers.

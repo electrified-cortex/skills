@@ -11,6 +11,7 @@ the full story.
 | Skill | Description |
 | --- | --- |
 | [compression](compression/) | Token-saving compression for `.md` files — three tiers (Lite, Full, Ultra) for different audiences |
+| [spec-writing](spec-writing/) | Write behavioral specs (`.spec.md` files) for any file, feature, or system — plus specialized sub-skills for compiling specs into agent and skill files |
 
 ## Quick Start
 
@@ -39,7 +40,22 @@ extended with three compression tiers, safety gates, companion specs, and a
 rigorous audit pipeline. Dozens of iterations, external review, and operator
 sign-off brought it to publication quality.
 
+The compression skill ships a `.tests/` folder with a shared test plan, tier-specific
+agent outputs, and input fixtures — every compression is dogfooded against
+real skill files before release.
+
 [Read more →](compression/README.md)
+
+### Spec Writing
+
+Our second skill. Spec writing applies to anything — any file, feature,
+or system can have a behavioral spec. The parent skill defines spec
+structure, governance, and the authorship workflow. Specialized sub-skills
+for agents and skills encode the byte-code principle: specs are source
+code, runtime files are the compiled program. These sub-skills handle
+the compilation step from verbose spec to lean operational file.
+
+[Read more →](spec-writing/)
 
 ## License
 
