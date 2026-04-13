@@ -5,22 +5,30 @@ Baseline: `inputs/recipe.md` — 1172 words, 131 lines, 129 articles, 2 filler w
 **Model versions tested:** Sonnet = `claude-sonnet-4-20250514`, Opus = `claude-opus-4-20250514`,
 Haiku = `claude-haiku-4-5-20251001`, GPT = `GPT 5.4` (Copilot model identifier).
 
+> **Status: Preliminary.** Conformance scores are manual rubric assessments.
+> Formal Spec Auditor pass/fail on all outputs is still pending (see Remaining Work).
+> Audit verdicts below are derived from the manual conformance checks.
+
 ## Dual-Metric Matrix
 
-| Tier | Model | Words | Reduction | Conformance | Notes |
-| --- | --- | ---: | ---: | ---: | --- |
-| Lite | Sonnet | 1090 | 7.0% | 90% | 1 uncontracted "do not"; 4 articles removed (should keep) |
-| Lite | Haiku | 1141 | 2.6% | 95% | Correct but conservative; minimal filler removal |
-| Lite | GPT | 1139 | 2.8% | 95% | Same as Haiku — rules followed, low aggression |
-| Lite | **Opus** | 1061 | **9.5%** | 91% | 9 articles removed (should keep); 0 filler, 0 uncontracted |
-| Full | Sonnet | 734 | 37.4% | 95% | 3 articles survive; structural markdown correct |
-| Full | Haiku | 916 | 21.8% | 85% | 0 articles ✓ but undercompresses; retains connective tissue |
-| Full | GPT | 932 | 20.5% | 85% | 1 article; undercompresses like Haiku |
-| Full | **Opus** | 841 | **28.2%** | 93% | 2 articles survive; structural markdown ✓, good synonym use |
-| Ultra | Sonnet | 690 | 41.1% | 98% | Label: format ✓, 0 articles, 0 bullets, contractions ✓ |
-| Ultra | Haiku | 666 | 43.2% | 92% | Label: format ✓, 1 article survives |
-| Ultra | GPT | 654 | 44.2% | 90% | Label: format ✓, 2 articles survive |
-| Ultra | **Opus** | 676 | **42.3%** | 93% | Label: ✓, 2 articles survive, 32 abbreviations |
+| Tier | Model | Words | Reduction | Conformance | Verdict | Notes |
+| --- | --- | ---: | ---: | ---: | --- | --- |
+| Lite | Sonnet | 1090 | 7.0% | 90% | Fail | 1 uncontracted "do not"; 4 articles removed (should keep) |
+| Lite | Haiku | 1141 | 2.6% | 95% | Pass | Correct but conservative; minimal filler removal |
+| Lite | GPT | 1139 | 2.8% | 95% | Pass | Same as Haiku — rules followed, low aggression |
+| Lite | **Opus** | 1061 | **9.5%** | 91% | Fail | 9 articles removed (should keep); 0 filler, 0 uncontracted |
+| Full | Sonnet | 734 | 37.4% | 95% | Fail | 3 articles survive; structural markdown correct |
+| Full | Haiku | 916 | 21.8% | 85% | Fail | 0 articles ✓ but undercompresses; retains connective tissue |
+| Full | GPT | 932 | 20.5% | 85% | Fail | 1 article; undercompresses like Haiku |
+| Full | **Opus** | 841 | **28.2%** | 93% | Fail | 2 articles survive; structural markdown ✓, good synonym use |
+| Ultra | Sonnet | 690 | 41.1% | 98% | Pass | Label: format ✓, 0 articles, 0 bullets, contractions ✓ |
+| Ultra | Haiku | 666 | 43.2% | 92% | Fail | Label: format ✓, 1 article survives |
+| Ultra | GPT | 654 | 44.2% | 90% | Fail | Label: format ✓, 2 articles survive |
+| Ultra | **Opus** | 676 | **42.3%** | 93% | Fail | Label: ✓, 2 articles survive, 32 abbreviations |
+
+`Verdict` = manual pass/fail based on preserve-rule compliance. Formal Spec Auditor
+runs pending. Pass requires zero critical rule violations (article handling, structural
+format, contraction rules) for the tier.
 
 ## Compression Ratio by Tier
 
