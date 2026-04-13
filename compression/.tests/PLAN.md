@@ -29,32 +29,32 @@ sensitivity, and inform default model recommendations.
 
 ### Phase 1 — Input Generation
 
-1. Generate `recipe.md` from `recipe.spec.md` using a frontier model (Sonnet or
+1. Generate `inputs/recipe.md` from `inputs/recipe.spec.md` using a frontier model (Sonnet or
    GPT). The generated recipe is the uncompressed baseline.
-2. Run the Spec Auditor on `recipe.md` against `recipe.spec.md` to verify the
+2. Run the Spec Auditor on `inputs/recipe.md` against `inputs/recipe.spec.md` to verify the
    input meets all spec requirements before proceeding.
 
 ### Phase 2 — Compression Runs
 
-For each model in the matrix, compress `recipe.md` at each tier:
+For each model in the matrix, compress `inputs/recipe.md` at each tier:
 
 | Step | Input | Tier | Model | Output |
 | --- | --- | --- | --- | --- |
-| 2a | `recipe.md` | Lite | Sonnet | `lite/sonnet.md` |
-| 2b | `recipe.md` | Full | Sonnet | `full/sonnet.md` |
-| 2c | `recipe.md` | Ultra | Sonnet | `ultra/sonnet.md` |
-| 2d | `recipe.md` | Lite | Haiku | `lite/haiku.md` |
-| 2e | `recipe.md` | Full | Haiku | `full/haiku.md` |
-| 2f | `recipe.md` | Ultra | Haiku | `ultra/haiku.md` |
-| 2g | `recipe.md` | Lite | GPT | `lite/gpt54.md` |
-| 2h | `recipe.md` | Full | GPT | `full/gpt54.md` |
-| 2i | `recipe.md` | Ultra | GPT | `ultra/gpt54.md` |
-| 2j | `recipe.md` | Lite | Qwen 14B | `lite/qwen-14b.md` |
-| 2k | `recipe.md` | Full | Qwen 14B | `full/qwen-14b.md` |
-| 2l | `recipe.md` | Ultra | Qwen 14B | `ultra/qwen-14b.md` |
-| 2m | `recipe.md` | Lite | Qwen 1.7B | `lite/qwen-1.7b.md` |
-| 2n | `recipe.md` | Full | Qwen 1.7B | `full/qwen-1.7b.md` |
-| 2o | `recipe.md` | Ultra | Qwen 1.7B | `ultra/qwen-1.7b.md` |
+| 2a | `inputs/recipe.md` | Lite | Sonnet | `lite/sonnet.md` |
+| 2b | `inputs/recipe.md` | Full | Sonnet | `full/sonnet.md` |
+| 2c | `inputs/recipe.md` | Ultra | Sonnet | `ultra/sonnet.md` |
+| 2d | `inputs/recipe.md` | Lite | Haiku | `lite/haiku.md` |
+| 2e | `inputs/recipe.md` | Full | Haiku | `full/haiku.md` |
+| 2f | `inputs/recipe.md` | Ultra | Haiku | `ultra/haiku.md` |
+| 2g | `inputs/recipe.md` | Lite | GPT | `lite/gpt54.md` |
+| 2h | `inputs/recipe.md` | Full | GPT | `full/gpt54.md` |
+| 2i | `inputs/recipe.md` | Ultra | GPT | `ultra/gpt54.md` |
+| 2j | `inputs/recipe.md` | Lite | Qwen 14B | `lite/qwen-14b.md` |
+| 2k | `inputs/recipe.md` | Full | Qwen 14B | `full/qwen-14b.md` |
+| 2l | `inputs/recipe.md` | Ultra | Qwen 14B | `ultra/qwen-14b.md` |
+| 2m | `inputs/recipe.md` | Lite | Qwen 1.7B | `lite/qwen-1.7b.md` |
+| 2n | `inputs/recipe.md` | Full | Qwen 1.7B | `full/qwen-1.7b.md` |
+| 2o | `inputs/recipe.md` | Ultra | Qwen 1.7B | `ultra/qwen-1.7b.md` |
 
 Each compression run uses the skill's standard prompt with the appropriate tier
 instructions. No manual intervention — the model receives the skill prompt and
