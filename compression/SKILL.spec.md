@@ -28,7 +28,8 @@ loaded on every skill invocation. The cost compounds: a 10KB agent file loaded
 6KB saves 800KB — real capacity that could hold actual work products instead.
 
 Compression isn't about readability for humans. It's about density for machines.
-LLMs parse compressed text with negligible loss of understanding in practice.
+In practice, LLMs parse compressed text with negligible loss of understanding —
+though results vary by model, task, and compression tier. Verify via audit.
 The spec (this file) preserves the human-readable version.
 
 ## Why Markdown Only
