@@ -4,8 +4,6 @@ type: test-plan-spec
 purpose: Requirements for the benchmark test procedure — what the plan must cover
 ---
 
-# Benchmark Test Plan Spec
-
 This spec defines the requirements for `.tests/PLAN.md`. The plan is the
 procedure document that governs how the compression benchmark suite is executed.
 
