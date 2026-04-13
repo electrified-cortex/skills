@@ -92,8 +92,8 @@ Populate `RESULTS.md` with:
 | Claude Sonnet 4 | Frontier | API | P1 — baseline |
 | Claude Haiku 4 | Frontier (small) | API | P1 — cost comparison |
 | GPT 5.4 | Frontier (external) | API | P2 — cross-vendor |
-| Qwen 2.5 14B Instruct | Local | Ollama (LXC 200) | P3 — local validation |
-| Qwen 3 1.7B | Local | Ollama (LXC 200) | P4 — small model floor |
+| Qwen 2.5 14B Instruct | Local | Ollama (local) | P3 — local validation |
+| Qwen 3 1.7B | Local | Ollama (local) | P4 — small model floor |
 
 ## Success Criteria
 
