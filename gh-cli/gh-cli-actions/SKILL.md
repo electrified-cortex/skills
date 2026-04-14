@@ -1,10 +1,10 @@
 ---
 name: gh-cli-actions
-description: Trigger, monitor, and manage GitHub Actions workflows, runs, secrets, and variables via the CLI.
+description: Trigger, monitor, manage GitHub Actions workflows, runs, secrets, variables via CLI.
 ---
 
 List workflows: `gh workflow list`
-Enable / disable: `gh workflow enable ci.yml` / `gh workflow disable ci.yml`
+Enable/disable: `gh workflow enable ci.yml` / `gh workflow disable ci.yml`
 
 Trigger + capture run ID:
 ```
@@ -24,7 +24,7 @@ gh run view "$RUN_ID" --log-failed
 gh run view "$RUN_ID" --job 987654321 --log
 ```
 
-Rerun / cancel:
+Rerun/cancel:
 ```
 gh run rerun "$RUN_ID" --failed    # rerun only failed jobs
 gh run cancel "$RUN_ID"
@@ -36,7 +36,7 @@ gh run download "$RUN_ID" --dir ./artifacts
 gh run download "$RUN_ID" --name build
 ```
 
-Secrets — never pass value as argument; pipe or use env:
+Secrets (never pass as arg; pipe or use env):
 ```
 echo "$SECRET_VALUE" | gh secret set MY_SECRET
 gh secret set MY_SECRET --env production

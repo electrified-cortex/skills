@@ -1,9 +1,9 @@
 ---
 name: gh-cli-prs-create
-description: Open a pull request via the GitHub CLI.
+description: Open pull request via GitHub CLI.
 ---
 
-Before creating — confirm no open PR for this branch:
+Before creating — confirm no open PR for branch:
 ```
 gh pr list --head $(git branch --show-current)
 ```
@@ -22,7 +22,7 @@ Draft → ready when review-ready:
 gh pr ready 123
 ```
 
-Edit metadata after creation:
+Edit metadata post-creation:
 ```
 gh pr edit 123 --add-reviewer user3 --add-label bug --remove-label wip
 ```

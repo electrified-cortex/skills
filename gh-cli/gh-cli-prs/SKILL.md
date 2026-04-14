@@ -1,16 +1,15 @@
 ---
 name: gh-cli-prs
-description: Pull request lifecycle via the GitHub CLI. Start here, follow sub-skills.
+description: Pull request lifecycle via GitHub CLI. Start here, follow sub-skills.
 ---
 
-Sub-skills — read the one you need:
+Sub-skills:
+- Open PR → `gh-cli-prs/gh-cli-prs-create/SKILL.md`
+- Review PR → `gh-cli-prs/gh-cli-prs-review/SKILL.md`
+- Comment on PR → `gh-cli-prs/gh-cli-prs-comments/SKILL.md`
+- Merge/update/revert PR → `gh-cli-prs/gh-cli-prs-merge/SKILL.md`
 
-- **Open a PR** → `gh-cli-prs/gh-cli-prs-create/SKILL.md`
-- **Review a PR** → `gh-cli-prs/gh-cli-prs-review/SKILL.md`
-- **Comment on a PR** → `gh-cli-prs/gh-cli-prs-comments/SKILL.md`
-- **Merge / update / revert a PR** → `gh-cli-prs/gh-cli-prs-merge/SKILL.md`
-
-Common inspection commands (all stages):
+Common inspection (all stages):
 ```
 gh pr list --state open --author @me --json number,title,headRefName
 gh pr view 123 --comments

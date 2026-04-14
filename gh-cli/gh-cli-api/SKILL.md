@@ -3,7 +3,7 @@ name: gh-cli-api
 description: Make authenticated REST and GraphQL calls to the GitHub API via the CLI. Use when no dedicated gh subcommand covers the operation.
 ---
 
-Use `gh api` only when a domain skill can't do the job. Check domain skills first.
+Use `gh api` only when domain skills unavailable.
 
 REST — GET:
 ```
@@ -20,7 +20,7 @@ gh api --method PATCH /repos/owner/repo/issues/123 \
   --field state="closed"
 ```
 
-Pagination (multiple requests, can be slow on large datasets):
+Pagination (multiple requests; slow on large datasets):
 ```
 gh api /user/repos --paginate --jq '.[].name'
 ```
@@ -41,7 +41,7 @@ gh api graphql -f query='
   { viewer { login repositories(first: 5) { nodes { name } } } }'
 ```
 
-GraphQL — mutation (e.g. resolve review thread):
+GraphQL — mutation (resolve review thread):
 ```
 gh api graphql -f query='
   mutation { resolveReviewThread(input: {threadId: "THREAD_ID"}) { thread { isResolved } } }'

@@ -1,6 +1,6 @@
 ---
 name: gh-cli-prs-comments
-description: Add, edit, and delete pull request comments via the GitHub CLI.
+description: Add, edit, delete pull request comments via GitHub CLI.
 ---
 
 Add:
@@ -18,7 +18,7 @@ Delete:
 gh pr comment 123 --delete 456789
 ```
 
-View existing comments: `gh pr view 123 --comments`
+View comments: `gh pr view 123 --comments`
 
 Resolving review threads: no `gh pr` command exists. Use `resolveReviewThread` GraphQL mutation → `gh-cli-api/SKILL.md`.
 

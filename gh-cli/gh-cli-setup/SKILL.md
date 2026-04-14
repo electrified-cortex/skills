@@ -1,6 +1,6 @@
 ---
 name: gh-cli-setup
-description: Install, authenticate, and configure the GitHub CLI.
+description: Install, authenticate, configure GitHub CLI.
 ---
 
 Check installed: `gh --version`. If missing, install:
@@ -36,9 +36,9 @@ gh config set git_protocol ssh
 gh config set prompt disabled
 ```
 
-Set default repo (suppress `--repo` on every command):
+Set default repo (suppress `--repo` per command):
 ```
 gh repo set-default owner/repo
 ```
 
-GitHub Enterprise — add `--hostname enterprise.internal` to any `gh auth login` or `gh api` call.
+GitHub Enterprise: add `--hostname enterprise.internal` to any `gh auth login` or `gh api` call.

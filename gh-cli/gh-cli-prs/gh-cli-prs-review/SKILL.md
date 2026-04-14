@@ -1,6 +1,6 @@
 ---
 name: gh-cli-prs-review
-description: Approve, request changes on, or dismiss a pull request review via the GitHub CLI.
+description: Approve, request changes on, dismiss pull request review via GitHub CLI.
 ---
 
 Approve:
@@ -18,7 +18,7 @@ Comment-only review (no verdict):
 gh pr review 123 --comment --body "Thoughts inline"
 ```
 
-Dismiss a review:
+Dismiss:
 ```
 gh pr review 123 --dismiss
 ```

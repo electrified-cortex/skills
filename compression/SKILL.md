@@ -1,27 +1,18 @@
 ---
 name: compression
-description: Compress .md files. Dispatch AGENT.md — don't compress inline.
+description: Compress .md files via subagent dispatch.
 ---
 
 # Compression
 
-Dispatch `./AGENT.md` (background preferred) with the target file and optional `--tier <lite|full|ultra>`.
-Default tier: ultra. The agent handles gates, tier selection, and post-flight verification.
+Dispatch `./AGENT.md` as a subagent with:
+`<file-path> [--tier <lite|full|ultra>]` (default: ultra)
 
-**Do NOT attempt compression inline.** The agent runs in isolated context and produces
-consistent, verified results. Reading tier skills directly leads to content loss.
+The agent handles safety gates (clean baseline, spec companion), tier resolution,
+and post-flight verification.
 
-## Surface → Tier Map
-
-- Agent files, skills, agent DMs, reminders → Ultra
-- Operator text, tasks, READMEs → Lite
-- General docs → Full
-- Spec files, audio, code → None (never compress)
-
-## Tier Skills (reference only)
+## Tiers
 
 - `ultra/SKILL.md` — telegraphic, abbreviations, arrows
 - `full/SKILL.md` — drop articles, fragments OK
 - `lite/SKILL.md` — drop filler, keep grammar
-
-Rationale: `spec.md`

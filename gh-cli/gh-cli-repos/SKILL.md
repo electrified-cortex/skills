@@ -1,6 +1,6 @@
 ---
 name: gh-cli-repos
-description: Create, clone, fork, sync, edit, and delete GitHub repositories via the CLI.
+description: Create, clone, fork, sync, edit, delete GitHub repositories via CLI.
 ---
 
 Create:
@@ -12,7 +12,7 @@ Always specify `--public` or `--private` — no default assumed.
 
 Clone: `gh repo clone owner/repo [dir]`
 
-Fork + configure upstream remote:
+Fork + configure upstream:
 ```
 gh repo fork owner/repo --clone --remote-name upstream
 ```
@@ -35,5 +35,5 @@ List:
 gh repo list [owner] --limit 50 --json name,visibility,owner --jq '.[].name'
 ```
 
-Set default repo for current directory: `gh repo set-default owner/repo`
+Set default repo (current dir): `gh repo set-default owner/repo`
 Unset: `gh repo set-default --unset`

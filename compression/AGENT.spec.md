@@ -14,7 +14,7 @@ last-updated: 2026-04-13
 | **Content loss** | Any fact, rule, constraint, or technical detail present in the baseline but absent after compression. |
 | **Post-flight** | Verification step comparing compressed output against the baseline. |
 | **Tier** | Compression intensity level: lite, full, or ultra. See the Compression skill. |
-| **Spec companion** | A `.spec.md` file co-located with the target, holding design rationale stripped during compression. |
+
 
 ## Relationship to the Skill
 
@@ -49,7 +49,7 @@ Two modes:
 - **File mode:** file path + optional `--tier <lite|full|ultra>`
 - **Blurb mode:** raw text (snippet, task description, chat input) + optional tier
 
-Blurb mode skips all gates — there's no file to check and no spec to require.
+Blurb mode skips the gate — there's no file to check.
 
 ## Flow
 
@@ -58,23 +58,21 @@ file that will be rejected.
 
 1. **Parse input** — extract file path or text, and tier if provided.
 2. **If blurb** → skip to step 5.
-3. **Gate 1: Clean baseline** — `git status --porcelain <file>`. The file
+3. **Gate: Clean baseline** — `git status --porcelain <file>`. The file
    must have a recoverable git baseline. Reject if no baseline exists.
-4. **Gate 2: Spec companion** — `<basename>.spec.md` must exist in the same
-   directory. Reject if missing.
-5. **Resolve tier** — use `--tier` value if provided, otherwise **ultra**.
-6. **Read and execute tier skill** — load only the relevant tier file
+4. **Resolve tier** — use `--tier` value if provided, otherwise **ultra**.
+5. **Read and execute tier skill** — load only the relevant tier file
    (e.g. `ultra/SKILL.md`) from the Compression skill directory. Do not read
    the root `SKILL.md` or other tiers. The skill lives in the skills repo
    at `<tier>/SKILL.md` (co-located in this skill folder).
-7. **Post-flight verification** (file mode only) — compare compressed output
+6. **Post-flight verification** (file mode only) — compare compressed output
    against the git baseline. Every fact, rule, and constraint must survive.
    If content was lost, restore the file and reject.
-8. **Write and report.**
+7. **Write and report.**
 
 ## Gate Design
 
-### Gate 1: Clean Baseline
+### Clean Baseline
 
 The file must have no unstaged working-tree changes. It can be committed or
 staged — either way, a recoverable baseline exists for post-flight comparison.
@@ -93,21 +91,6 @@ Acceptable: ` ` (committed), `M` (staged, clean tree), `A` (new, staged).
 verification has nothing to compare against, and there's no recovery path if
 compression destroys content. Historical incident: an agent compressed a file
 while the operator was editing it, destroying in-progress work.
-
-### Gate 2: Spec Companion
-
-A `.spec.md` companion must exist for the target file. Naming:
-`foo.md` → `foo.spec.md`, `SKILL.md` → `SKILL.spec.md`,
-`bar.agent.md` → `bar.agent.spec.md`.
-
-**Why:** Compression strips explanatory text — rationale, context, examples.
-The spec is where that content lives after compression. Without a spec,
-stripped content is permanently lost. The spec + file pair is the complete unit:
-the file tells machines what to do, the spec tells humans why.
-
-This gate also forces authors to think about design before compressing. If a
-file can't have a spec written for it, it's probably not structured well enough
-to compress safely.
 
 ## Tier Selection
 
@@ -146,9 +129,6 @@ In both cases, suggest what should change to prevent future loss:
 
 - What about the **source file** made it fragile to compression (e.g. a rule
   buried in prose, an implicit constraint that reads like filler)
-- What about the **spec** could be improved to make the requirement more
-  visible and compression-resistant (e.g. elevate an implicit requirement to
-  an explicit one)
 
 The suggestion is guidance, not a command. The caller decides what to fix.
 
@@ -172,7 +152,7 @@ REJECTED: <reason>
 ```
 
 One line. If content was lost, include a brief suggestion about what the file
-or spec may need.
+may need.
 
 **Success with fixes:**
 
@@ -188,8 +168,7 @@ Suggest: source file buries condition in prose — elevate to explicit rule
 
 ```txt
 REJECTED: no git baseline
-REJECTED: missing spec companion (expected SKILL.spec.md)
-REJECTED: content loss — gate ordering rationale not recoverable; spec could make ordering requirement explicit
+REJECTED: content loss — gate ordering rationale not recoverable
 1618→1180 bytes | 27% reduction | ultra
 2400→1488 bytes | 38% reduction | full
 3200→1568 bytes | 51% reduction | ultra
@@ -197,14 +176,11 @@ REJECTED: content loss — gate ordering rationale not recoverable; spec could m
 
 ## Constraints
 
-- **Never compress `.spec.md` files.** They exist for human readability.
-  Compressing a spec defeats its purpose and undermines Gate 2.
 - **One file per invocation.** One baseline, one post-flight check, one verdict.
   Callers chain invocations for batch work.
 - **Never read more than one tier.** Load only the requested tier's skill file.
   Reading multiple tiers wastes context.
-- **Blurb mode has no gates.** No file = no baseline = no spec check. Just
-  compress and return.
+- **Blurb mode has no gate.** No file = no baseline. Just compress and return.
 
 ## Error Handling
 
@@ -230,7 +206,6 @@ The output format is the compressed text followed by the reduction line:
 ## Non-Goals
 
 - **Batch compression.** One file per invocation. Callers chain invocations.
-- **Spec generation.** The agent does not create missing spec companions.
 - **Content restructuring.** Compression preserves structure; it does not
   reorganize, rewrite, or improve the target beyond token reduction.
 - **Interactive mode.** No back-and-forth with the caller during compression.
@@ -245,4 +220,4 @@ The companion `AGENT.md` must include:
 | `name` | yes | `Compression` |
 | `description` | yes | Brief single-line purpose statement |
 | `model` | yes | Sonnet-class (e.g. `claude-sonnet-4-6`) |
-| `tools` | yes | Minimum: `read`, `edit`, `execute` |
+| `tools` | yes | Minimum: `read`, `edit` |

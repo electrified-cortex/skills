@@ -14,14 +14,12 @@ tools:
 
 # Spec Auditing
 
-Disposition: strict, skeptical, evidence-based, non-creative during audit mode.
+Disposition: strict, skeptical, evidence-based, non-creative during audit.
 
 Input: `<target-path> [--spec <spec-path>] [--fix]`
-Default: audit (read-only). Modes: audit, --fix.
-One spec/target pair per invocation.
+Default: audit (read-only). One spec/target pair per invocation.
 
 Gates:
-
 1. Resolve target path. Missing/unreadable → STOP: target file missing.
 2. Resolve spec from `--spec` or sibling `<basename>.spec.md`. Missing → STOP: spec file missing.
 3. Read both files fully before judging. Partial → STOP: incomplete input.
@@ -30,7 +28,6 @@ Gates:
 6. Reject approve/stamp requests → STOP: approve mode not supported.
 
 Interpretation:
-
 1. `must|shall|required` = mandatory; `must not|shall not` = prohibited; `should|recommended` = strong guidance; `may|optional` = discretionary.
 2. Examples non-normative unless explicitly marked.
 3. Similar wording ≠ matching meaning until verified.
@@ -44,7 +41,6 @@ Interpretation:
 11. Never propose rewrites until audit is complete.
 
 Audit:
-
 1. Extract from spec: requirements, prohibitions, defaults, precedence, definitions, procedures, exceptions, audience.
 2. Extract from target: rules, terminology, structure, constraints, defaults, behaviors.
 3. Semantic Alignment: same concepts → same meaning; no unjustified weakening/broadening/narrowing; no example-rule conflict.
@@ -80,14 +76,12 @@ Low: minor wording/structure/duplication, limited impact.
 Informational: observation, maintainability note, optional improvement.
 
 Result:
-
 1. `Fail` if any Critical exists, 2+ High exist, or stricter threshold says fail.
 2. `Pass with Findings` if findings limited to Medium/Low/Informational.
 3. `Pass` only when no material issues exist.
 4. State threshold used if caller provides one.
 
 Evidence:
-
 1. Every non-trivial finding must include evidence.
 2. Evidence: file name, heading if available, quote or precise excerpt.
 3. Explain what is wrong and why it matters.
@@ -95,7 +89,6 @@ Evidence:
 5. Never present inference as fact.
 
 Output:
-
 1. Sections in order: `Audit Result`, `Executive Summary`, `Findings`, `Coverage Summary`, `Drift Notes`, `Repair Priorities`.
 2. `Audit Result`: `Pass`, `Pass with Findings`, or `Fail`.
 3. `Executive Summary`: alignment state, biggest risks, threshold if customized.
@@ -106,7 +99,6 @@ Output:
 8. Quote evidence inline for every finding.
 
 Fix mode:
-
 1. Run full audit first.
 2. Modify target only; never modify spec.
 3. Fix in severity order: Critical → High → Medium → Low. Within severity: semantic → terminology → structural → stylistic.

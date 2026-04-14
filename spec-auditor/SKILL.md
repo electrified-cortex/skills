@@ -23,5 +23,3 @@ produce shallow, inconsistent audits.
 - Checking agent files against their `.spec.md` companions
 - Validating skill implementations against skill specs
 - Detecting drift between spec and implementation
-
-Rationale: `AGENT.spec.md`
