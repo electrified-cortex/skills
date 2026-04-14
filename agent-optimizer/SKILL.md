@@ -328,6 +328,31 @@ within a layer) are distinct. The recommended workflow:
 
 This skill recommends placement. The compression skill handles token reduction.
 
+## Advanced: Hook-Based Context Injection
+
+Platforms with lifecycle hooks can automate context loading entirely, making
+the agent file even smaller.
+
+**SessionStart hooks** can read manifest files and inject them as
+`additionalContext` — the agent arrives with full operating context already
+loaded, zero file reads needed. The same hook with a `compact` matcher
+re-injects context after compaction automatically.
+
+**Reminders** can inject periodic context (fleet status, pending tasks,
+blocked items) on schedule rather than baking it into always-on cost.
+
+**Subagent folders** give specialized work its own context window, keeping
+the main agent's context clean.
+
+When hook-based injection is available, the agent file shrinks further:
+- No "read manifest on startup" instruction needed — hooks handle it
+- No "re-read after compaction" instruction needed — hooks handle it
+- The agent file becomes pure kernel: identity, invariants, routing index
+- Target: ~200-300 tokens
+
+This is the most aggressive optimization tier. Mention it as a bonus
+recommendation when the platform supports hooks.
+
 ## Precedence
 
 Safety placement (Layer 1) > token savings.

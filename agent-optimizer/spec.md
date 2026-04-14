@@ -262,7 +262,8 @@ Requirements:
 ### Descriptive
 
 - **Claude Code**: CLAUDE.md as user message, re-injected after compaction.
-  File reading via Read tool. Skills in `.claude/skills/`.
+  File reading via Read tool. Skills in `.claude/skills/`. Hooks: SessionStart
+  (startup/compact matchers), PreCompact, Stop, PreToolUse, PostToolUse.
 - **VS Code Copilot**: `.agent.md` as system prompt, constant per-turn cost.
   File reading via `read_file`. Skills discovered via frontmatter.
   Path-specific `.instructions.md` with `applyTo`.
@@ -271,6 +272,36 @@ Requirements:
 
 Recommendations are platform-agnostic. Platform-specific mechanics are
 implementation details.
+
+## Hook-Based Context Injection
+
+### Descriptive
+
+Platforms with lifecycle hooks enable a more aggressive optimization tier
+where the infrastructure handles context loading instead of the agent file.
+
+**SessionStart hooks** can read manifest files and inject them as
+`additionalContext` — the agent arrives with full operating context already
+loaded without any file read instruction in the agent file. The same hook
+with a `compact` matcher re-injects context after compaction automatically.
+
+**Reminders** (where available) inject periodic context — fleet status,
+pending tasks, blocked items — on schedule rather than baking it into
+always-on cost.
+
+**Subagent dispatching** gives specialized work its own context window,
+keeping the main agent's context clean.
+
+When hook-based injection is available:
+- No "read manifest on startup" instruction needed in Layer 1
+- No "re-read after compaction" instruction needed in Layer 1
+- Layer 1 target drops to ~200-300 tokens
+- The agent file becomes pure kernel: identity, invariants, routing index
+
+This is the most aggressive optimization available. The skill should mention
+it as a bonus recommendation when the platform supports hooks. The
+post-compaction recovery constraint (Layer 1 must contain reload instruction)
+is relaxed when hooks guarantee injection.
 
 ## Anti-Patterns
 
