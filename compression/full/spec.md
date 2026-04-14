@@ -1,6 +1,6 @@
-# Full Compression — SKILL.md Spec
+# Full Compression — rules.txt Spec
 
-> Companion spec for `full/SKILL.md` in `skills/electrified-cortex/compression/`.
+> Companion spec for `full/rules.txt` in `skills/electrified-cortex/compression/`.
 > Agents read the main file only. Reviewers and auditors read both.
 
 ## Purpose
@@ -40,7 +40,7 @@ Under 40 lines of content (excluding frontmatter). Full has moderate rule set.
 ## Compression
 
 This file (the spec) is NEVER compressed.
-The SKILL.md itself should be Full-compressed (dog-food the rules it describes).
+The rules.txt itself should be Full-compressed (dog-food the rules it describes).
 
 ## Audit Checklist
 
@@ -55,6 +55,6 @@ The SKILL.md itself should be Full-compressed (dog-food the rules it describes).
 - [ ] No arrow notation (Ultra only)
 - [ ] No overlap with Lite or Ultra tier content
 - [ ] Size under 40 lines of content
-- [ ] SKILL.md is itself Full-compressed (dog-fooding)
+- [ ] rules.txt is itself Full-compressed (dog-fooding)
 
 Created: 2026-04-12

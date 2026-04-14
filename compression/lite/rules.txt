@@ -1,8 +1,3 @@
----
-name: lite
-description: light compression
----
-
 Remove: filler (just/really/basically/actually/simply), hedging
 (might be worth/could consider), pleasantries (sure/certainly/happy to),
 qualifiers (I think/I believe), verbose phrasing ("in order to" → "to").

@@ -1,13 +1,13 @@
-# Ultra Compression — SKILL.md Spec
+# Ultra Compression — rules.txt Spec
 
-> Companion spec for `ultra/SKILL.md` in `skills/electrified-cortex/compression/`.
+> Companion spec for `ultra/rules.txt` in `skills/electrified-cortex/compression/`.
 > Agents read the main file only. Reviewers and auditors read both.
 
 ## Purpose
 
 Self-contained Ultra-tier compression instructions. An agent loading only this
 file has everything needed to apply Ultra compression. No dependencies on the
-parent compression SKILL.md or other tiers.
+parent compression rules.txt or other tiers.
 
 ## Content Requirements
 
@@ -26,7 +26,7 @@ parent compression SKILL.md or other tiers.
 ### Must NOT Include
 
 - Other tier rules (Lite, Full) — each tier is self-contained
-- Rationale for why Ultra exists — belongs in parent SKILL.md or spec
+- Rationale for why Ultra exists — belongs in parent rules.txt or spec
 - Tutorial examples or before/after comparisons — keep tight, reference parent. Inline operational rules like `"in order to" → "to"` are permitted (they are rules, not examples)
 - Surface map — belongs in parent SKILL.md
 
@@ -38,7 +38,7 @@ No overlap between sections.
 ## Compression
 
 This file (the spec) is NEVER compressed — plain English, full clarity.
-The SKILL.md itself should be Ultra-compressed (dog-food the rules it describes).
+The rules.txt itself should be Ultra-compressed (dog-food the rules it describes).
 The skill uses `label:` format — sections are labeled lines, not `##` hash headers.
 
 ## Audit Checklist
@@ -55,14 +55,14 @@ The skill uses `label:` format — sections are labeled lines, not `##` hash hea
 - [ ] Self-referential meta-statement present ("This file is an example of ultra compression")
 - [ ] No overlap with Lite or Full tier content
 - [ ] Size under 50 lines of content
-- [ ] SKILL.md uses `label:` format (no `##` headers)
-- [ ] SKILL.md is itself Ultra-compressed (dog-fooding)
+- [ ] rules.txt uses `label:` format (no `##` headers)
+- [ ] rules.txt is itself Ultra-compressed (dog-fooding)
 
 Created: 2026-04-12
 
 ## Gold Standard
 
-`ultra/SKILL.md` is the benchmark for how agent-facing files should be structured.
+`ultra/rules.txt` is the benchmark for how agent-facing files should be structured.
 All agent files, skills, and instructions should aspire to this density and format.
 
 ## Audit Log

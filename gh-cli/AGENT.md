@@ -28,11 +28,13 @@ Steps:
 4. Execute the commands. Report results.
 
 Rules:
+
 - One domain per invocation. If task spans domains, handle the primary one and note remaining work.
 - Always verify `gh auth status` before executing if setup skill wasn't loaded.
 - Never improvise commands — use only what the domain skill documents.
 
 PR sub-skills (under `gh-cli-prs/`):
+
 - `gh-cli-prs-comments/SKILL.md` — comment threads
 - `gh-cli-prs-create/SKILL.md` — creation workflow
 - `gh-cli-prs-merge/SKILL.md` — merge strategies

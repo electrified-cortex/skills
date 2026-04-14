@@ -34,11 +34,11 @@ reasoning behind each decision. The audit trail is in the git history.
 
 Each tier is self-contained in its own folder:
 
-- [`lite/SKILL.md`](lite/SKILL.md) — Professional prose, minimal waste
-- [`full/SKILL.md`](full/SKILL.md) — Dense but readable
-- [`ultra/SKILL.md`](ultra/SKILL.md) — Maximum density for machine readers
+- [`lite/rules.txt`](lite/rules.txt) — Professional prose, minimal waste
+- [`full/rules.txt`](full/rules.txt) — Dense but readable
+- [`ultra/rules.txt`](ultra/rules.txt) — Maximum density for machine readers
 
-Load only the tier you need. No cross-tier dependencies.
+The agent loads only the tier you specify. No cross-tier dependencies.
 
 ## Design Principles
 
@@ -54,16 +54,25 @@ strings are never touched.
 preserves rationale, design history, and credits in full natural language.
 The spec is the safety net — everything stripped from the skill lives there.
 
-**Dog-fooding.** Each tier's SKILL.md is compressed at its own level. Ultra's
-skill file is itself ultra-compressed. It's both the instructions and a working
+**Dog-fooding.** Each tier's `rules.txt` is compressed at its own level. Ultra's
+`rules.txt` is itself ultra-compressed. It's both the instructions and a working
 example.
+
+## Skill-Agent Pair
+
+This skill is structured as a pair:
+
+- [`SKILL.md`](SKILL.md) — describes what compression is and how to dispatch it
+- [`AGENT.md`](AGENT.md) — defines how compression runs (git gate, tier resolution, post-flight verification)
+
+Agents must always route through `AGENT.md`. Never load `rules.txt` and apply manually — the agent enforces safety gates and post-flight checks that protect content integrity.
 
 ## Quick Start
 
-1. Identify the target audience (human, general, or agent)
-2. Load the corresponding tier's `SKILL.md`
-3. Apply the rules to your `.md` file
-4. Run a spec audit to verify alignment
+1. Identify the target audience (human, general, or agent) and pick a tier
+2. Spawn `AGENT.md` as a background subagent with `<file-path> [--tier <lite|full|ultra>]`
+3. The agent handles the git gate, applies the tier's `rules.txt`, and runs post-flight verification
+4. Review the reported byte reduction and any fix or rejection notices
 
 ## Standards
 

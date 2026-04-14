@@ -1,8 +1,3 @@
----
-name: full
-description: classic compression
----
-
 Remove: articles (a/an/the), filler (just/really/basically), hedging, pleasantries,
 verbose phrasing ("in order to" → "to"), connective fluff,
 non-structural markdown (bold/italics/emphasis blockquotes).

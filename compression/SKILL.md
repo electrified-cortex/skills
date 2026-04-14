@@ -13,6 +13,6 @@ and post-flight verification.
 
 ## Tiers
 
-- `ultra/SKILL.md` — telegraphic, abbreviations, arrows
-- `full/SKILL.md` — drop articles, fragments OK
-- `lite/SKILL.md` — drop filler, keep grammar
+- `ultra/rules.txt` — telegraphic, abbreviations, arrows
+- `full/rules.txt` — drop articles, fragments OK
+- `lite/rules.txt` — drop filler, keep grammar

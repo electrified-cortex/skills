@@ -15,7 +15,6 @@ last-updated: 2026-04-13
 | **Post-flight** | Verification step comparing compressed output against the baseline. |
 | **Tier** | Compression intensity level: lite, full, or ultra. See the Compression skill. |
 
-
 ## Relationship to the Skill
 
 | Concern | Owner |
@@ -62,9 +61,9 @@ file that will be rejected.
    must have a recoverable git baseline. Reject if no baseline exists.
 4. **Resolve tier** — use `--tier` value if provided, otherwise **ultra**.
 5. **Read and execute tier skill** — load only the relevant tier file
-   (e.g. `ultra/SKILL.md`) from the Compression skill directory. Do not read
+   (e.g. `ultra/rules.txt`) from the Compression skill directory. Do not read
    the root `SKILL.md` or other tiers. The skill lives in the skills repo
-   at `<tier>/SKILL.md` (co-located in this skill folder).
+   at `<tier>/rules.txt` (co-located in this skill folder).
 6. **Post-flight verification** (file mode only) — compare compressed output
    against the git baseline. Every fact, rule, and constraint must survive.
    If content was lost, restore the file and reject.
@@ -184,7 +183,7 @@ REJECTED: content loss — gate ordering rationale not recoverable
 
 ## Error Handling
 
-- **Tier skill not found:** If the requested tier's SKILL.md does not exist
+- **Tier skill not found:** If the requested tier's rules.txt does not exist
   or is unreadable, reject: `REJECTED: tier skill not found (<tier>)`. Do not
   fall back to a different tier or improvise compression rules.
 - **Git not available:** If `git` commands fail (not a repo, git not installed),

@@ -50,7 +50,7 @@ format, contraction rules) for the tier.
 
 ## Conformance Methodology
 
-Each output was scored against its tier's `SKILL.md` rules using a rubric-based
+Each output was scored against its tier's `rules.txt` rules using a rubric-based
 overall conformance assessment rather than a strict additive formula. The issues
 below are representative deductions that lower scores, but the final percentage is
 assigned holistically based on severity and total rule adherence.

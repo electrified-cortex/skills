@@ -65,11 +65,11 @@ The workspace uses four compression tiers:
 
 The compression skill implements all three tiers as self-contained sub-skills:
 
-- `lite/SKILL.md` — Lite rules, human-facing content
-- `full/SKILL.md` — Full rules, general documentation
-- `ultra/SKILL.md` — Ultra rules, agent-facing files
+- `lite/rules.txt` — Lite rules, human-facing content
+- `full/rules.txt` — Full rules, general documentation
+- `ultra/rules.txt` — Ultra rules, agent-facing files
 
-Each tier is standalone — loading `ultra/SKILL.md` gives an agent everything
+Each tier is standalone — loading `ultra/rules.txt` gives an agent everything
 needed to apply Ultra compression without reading the parent or other tiers.
 The top-level `SKILL.md` serves as a concept overview and tier index.
 
@@ -78,7 +78,7 @@ reading updates. They serve different audiences and should never be mixed.
 A message to a human should be Lite. A direct message to an agent should be Ultra.
 The transport (Telegram, Signal, Teams, whatever) doesn't matter — the audience does.
 
-**Gold standard:** `ultra/SKILL.md` is the benchmark for how agent-facing files
+**Gold standard:** `ultra/rules.txt` is the benchmark for how agent-facing files
 should be structured — minimal frontmatter, label: format, zero fluff, self-referential
 stamp. All agent-facing files should aspire to this density.
 
