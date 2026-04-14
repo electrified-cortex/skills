@@ -5,9 +5,6 @@ model: sonnet-class
 last-updated: 2026-04-13
 ---
 
-Canonical requirements for `subagents/electrified-cortex/compression/AGENT.md`.
-This spec governs; the agent file conforms.
-
 ## Definitions
 
 | Term | Meaning |

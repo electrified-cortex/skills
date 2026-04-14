@@ -35,4 +35,4 @@ One tier only — no fallback if skill not found; reject, never improvise
 Never compress `.spec.md`
 Post-flight internal
 Reject untracked/dirty/no-spec files
-Rationale: `AGENT.spec.md`
+Rationale: `AGENT.spec.md` | Skill rationale: `spec.md`

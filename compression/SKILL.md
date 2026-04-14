@@ -5,7 +5,7 @@ description: Compress .md files. Dispatch AGENT.md — don't compress inline.
 
 # Compression
 
-Dispatch `./AGENT.md` with the target file and optional `--tier <lite|full|ultra>`.
+Dispatch `./AGENT.md` (background preferred) with the target file and optional `--tier <lite|full|ultra>`.
 Default tier: ultra. The agent handles gates, tier selection, and post-flight verification.
 
 **Do NOT attempt compression inline.** The agent runs in isolated context and produces
@@ -24,4 +24,4 @@ consistent, verified results. Reading tier skills directly leads to content loss
 - `full/SKILL.md` — drop articles, fragments OK
 - `lite/SKILL.md` — drop filler, keep grammar
 
-Rationale: `SKILL.spec.md`
+Rationale: `spec.md`
