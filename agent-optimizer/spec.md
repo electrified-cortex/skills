@@ -1,283 +1,335 @@
 ---
 name: agent-optimizer
 description: >-
-  Spec for the agent-optimizer skill — design rationale, tier philosophy,
-  token cost model, and optimization principles.
+  Spec for the agent-optimizer skill — design rationale, layered architecture,
+  pruning philosophy, empirical findings, and platform references.
 ---
 
 # Agent Optimizer — Spec
 
 Design rationale and reference for the agent-optimizer skill. This file is the
-spec companion — it contains the *why* behind the optimization strategy and the
-full reasoning that agents must not carry per-turn.
+spec companion — it contains the *why* behind the optimization strategy, the
+empirical evidence, and the full reasoning that agents must not carry per-turn.
+
+## Credit
+
+Architecture informed by:
+- Vercel's agent eval findings showing compressed indexes outperform both
+  baseline and skill-only setups
+  ([source](https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals))
+- Anthropic's Claude Code documentation on persistent vs on-demand context
+  ([source](https://docs.anthropic.com/en/docs/claude-code/skills))
+- GitHub's documentation on repo-wide vs path-specific instruction mechanisms
+  ([source](https://docs.github.com/copilot/customizing-copilot/adding-custom-instructions-for-github-copilot))
 
 ## Purpose
 
-Agent files (CLAUDE.md, .agent.md) are loaded into the system prompt and sent
-on every API call. Every token in an agent file is a per-turn cost — paid on
-every single interaction, not just at session start. This makes agent files the
-most expensive real estate in the entire agent context window.
+Agent files (`CLAUDE.md`, `.agent.md`, `AGENTS.md`) are loaded into the system
+prompt and sent on every API call. Every token in an agent file is a per-turn
+cost — paid on every single interaction, not just at session start. This makes
+agent files the most expensive real estate in the entire agent context window.
 
-The agent-optimizer skill exists to analyze agent files and produce actionable
-recommendations for reducing per-turn token cost while preserving behavioral
-fidelity.
+The common failure mode is treating the agent file as a manual or biography
+instead of a kernel. Vercel's evals exposed this directly: a compact 8KB docs
+index in `AGENTS.md` outperformed both baseline and skill-based setups because
+it removed decision ambiguity and told the agent where to retrieve the right
+material.
+
+The agent-optimizer skill exists to audit agent files and produce actionable
+recommendations for reducing per-turn cost while preserving or improving
+behavioral quality.
 
 ## Scope
 
 This spec governs the agent-optimizer skill. The skill operates on agent
 definition files across any platform (VS Code Copilot, Claude Code, custom
 orchestrators). It does NOT modify files directly — it produces analysis and
-recommendations. Implementation is a separate step.
+recommendations.
 
 ### In Scope
 
-- Analysis of agent file token cost
-- Classification of content by loading frequency
-- Recommendations for content placement across tiers
+- Audit of agent file content, structure, and token cost
+- Classification of content by loading frequency and purpose
+- Recommendations for content placement across layers
 - Compression-aware optimization (interoperates with compression skill)
 - Post-compaction recovery pattern design
-- Manifest and skill extraction strategies
+- Anti-pattern detection and reporting
 
 ### Out of Scope
 
 - Direct file modification (the skill recommends; humans or other skills apply)
+- Writing new agent files from scratch
 - Runtime agent behavior testing
 - Platform-specific system prompt internals
-- Token counting precision (estimates using chars/4 heuristic)
+- Precise tokenizer-level counting
 
 ## Definitions
 
 - **Agent file**: The file loaded into the system prompt on every API call.
-  CLAUDE.md for Claude Code. .agent.md for VS Code Copilot. The per-turn file.
-- **Per-turn cost**: Tokens sent to the model on every interaction. Agent file
-  content pays this cost. Measured in tokens (estimated as characters / 4).
-- **Session cost**: Tokens loaded once at the start of a session or after
-  compaction. Manifest content pays this cost.
-- **On-demand cost**: Tokens loaded only when a specific topic arises. Skill
-  content pays this cost. May never be loaded in a session.
-- **Tier**: A classification of content by its loading frequency and cost
-  profile. Three tiers defined below.
-- **Manifest**: A Tier 2 document containing full operating context, read once
-  at session start and re-read after compaction.
-- **Compaction**: Context window reset performed by the platform. The agent file
-  survives compaction; conversation context does not.
+  `CLAUDE.md` for Claude Code. `.agent.md` for VS Code Copilot. The always-on
+  file.
+- **Always-on context**: Content that persists across nearly every turn. The
+  agent file is the primary source. Anthropic: "CLAUDE.md content is
+  persistent." GitHub: repo-wide instructions "apply to all requests made in
+  the context of a repository."
+- **Per-turn cost**: Tokens sent on every interaction. Agent file content pays
+  this cost. Estimated as characters / 4.
+- **Kernel**: The mental model for what an agent file should be. A kernel
+  enforces invariants, schedules retrieval, and dispatches specialized work.
+  Everything else is userland.
+- **Compaction**: Context window reset by the platform. The agent file survives;
+  conversation context does not.
 - **Behavioral fidelity**: The degree to which optimized agent behavior matches
-  the original unoptimized behavior. Optimization must not degrade this.
+  the original. Optimization must not degrade this.
 
-## The Three-Tier Model
+## The Core Design Principle
 
 ### Normative
 
-The skill classifies agent file content into exactly three tiers based on
-loading frequency.
+The agent file is not a general handbook.
 
-#### Tier 1 — Agent File (per-turn)
+It should contain only:
+1. **Identity and stance** — what the agent is for, in one tight paragraph
+2. **Global invariants** — rules that are almost never wrong
+3. **Routing rules** — when to delegate, load a skill, or read another doc
+4. **Compact knowledge index** — pointers to where deeper knowledge lives
 
-Content that MUST be in the agent file because it influences behavior on
-almost every request.
+Anything procedural, situational, lengthy, or domain-specific must move out.
 
-Requirements for Tier 1 content:
-- Identity (who the agent is, 1-2 sentences)
-- Prime directive (the single most important behavioral rule)
-- Safety guards (loop prevention, permission boundaries, forbidden actions)
-- Manifest reload instruction ("read X on session start and after compaction")
-- Quick reference (compressed essentials for high-frequency decisions)
+### The Pruning Test
 
-Tier 1 target size: 200-500 tokens.
+A line belongs in the always-on file only if at least one is true:
+- It prevents expensive recurring mistakes
+- It is relevant to a large share of requests
+- It routes the agent toward the right next context
+- Its absence would regularly cause bad decisions before retrieval happens
 
-Tier 1 content MUST satisfy ALL of these criteria:
-1. Relevant to nearly every interaction
-2. Required to survive compaction without re-reading another file
-3. Cannot be deferred to a later read without behavioral degradation
+Everything else should move out. Treat each added line in the root file as
+rent paid forever.
 
-#### Tier 2 — Startup Manifest (session cost)
+## The Four-Layer Architecture
 
-Content loaded once at session start via file read. Stays in conversation
-context but NOT in the system prompt. The Tier 1 agent file contains the
-instruction to read this file.
+### Normative
 
-Appropriate for Tier 2:
-- Full personality and disposition
-- Ownership and domain tables
-- Delegation model and rules
-- Scoring rubric
-- Operating principles and guidelines
-- Communication rules
-- Autonomous action decision tables
-- Skill index and cross-references
+The skill classifies agent file content into four layers based on loading
+frequency and scope.
 
-Tier 2 target size: 1,000-2,000 tokens.
+#### Layer 1 — Always-On Core (per-turn)
 
-Tier 2 content MUST satisfy ALL of these criteria:
-1. Important for correct behavior but not needed on every single turn
-2. Can be loaded once and retained in conversation context
-3. The agent file contains a reload instruction for post-compaction recovery
+The agent file itself. Sent every API call. Must be small enough that paying
+for it every turn is justified.
 
-#### Tier 3 — Skills (on-demand cost)
+Contains:
+- Identity and role boundaries that must persist
+- Global invariants that are almost always correct
+- Routing rules that determine when to load other materials
+- A compact index of where deeper instructions live
 
-Content loaded only when the relevant topic arises. Zero cost until needed.
-May never be loaded in a given session.
+Target size: the smallest set of instructions that should persist across
+nearly every turn. Benchmark: under 500 tokens.
 
-Appropriate for Tier 3:
-- Detailed procedures (startup, shutdown, recovery)
-- Compression guidelines and tier details
-- Git workflow procedures
-- Task pipeline mechanics
-- Platform-specific instructions
-- Specialized domain knowledge
+#### Layer 2 — Conditional Procedural Modules (skills)
 
-Tier 3 has no target size — skills are self-contained and vary.
+Loaded only when a specific type of work is being performed. Zero cost until
+invoked.
 
-Tier 3 content MUST satisfy ALL of these criteria:
-1. Procedural, situational, or domain-specific
-2. Not needed unless a specific topic or task arises
-3. Self-contained enough to be useful without Tier 1 or Tier 2 context
+Anything that smells like "steps," "workflow," "audit," "generate," "review,"
+"publish," "migrate," or "debug" belongs here.
 
-### Classification Rules
+Each skill should answer:
+- When to use it
+- Inputs expected
+- Decision criteria
+- Steps to follow
+- Required outputs
+- What to flag as uncertainty
 
-- Content that affects behavior on almost every request → Tier 1
-- Content that shapes overall session behavior but not per-turn → Tier 2
-- Content that is procedural, situational, or large → Tier 3
-- When in doubt between Tier 1 and Tier 2, prefer Tier 2 (cheaper)
-- When in doubt between Tier 2 and Tier 3, prefer Tier 3 (cheapest)
-- Safety-critical content always stays in Tier 1 regardless of frequency
+The agent file only says *when* to invoke them — not their content.
+
+#### Layer 3 — Retrieval Targets (docs, indexes, references)
+
+The part most people miss. Content removed from the agent file still needs a
+fast path to the agent. Vercel's finding: a compressed index inside the
+always-on file outperformed relying on the model to realize it should invoke
+a skill.
+
+The agent file should not hold the full architecture guide. It should hold a
+minimal retrieval map pointing to where deeper knowledge lives:
+- Architecture docs
+- Convention docs
+- Build/test commands
+- Subsystem indexes
+- Skill paths
+
+This gives persistent awareness without persistent cost.
+
+#### Layer 4 — Scoped Overrides (platform-dependent)
+
+Narrower files for narrower contexts. Where supported:
+- Root `AGENTS.md` = universal behavior + global routing
+- Subdirectory `AGENTS.md` = local conventions
+- `.instructions.md` with `applyTo` = path-specific guidance
+- Skill files = optional procedural payload
+
+This keeps the root file skeletal and moves local conventions to the relevant
+subtree.
+
+## Empirical Evidence
+
+### Informational
+
+**Vercel agent evals:** A compressed 8KB docs index in `AGENTS.md` beat both
+baseline and skill-based setups. The index didn't contain the full docs — it
+contained a compact map that pointed to them. Skills only helped when the agent
+decided to use them; the persistent index removed that decision ambiguity.
+
+**Anthropic docs:** Explicit distinction between persistent (`CLAUDE.md`) and
+on-demand (skill bodies that "load only when used"). This is the foundational
+split the optimization exploits.
+
+**GitHub docs:** Repo-wide instructions apply broadly; path-specific
+instructions narrow context to matching files. Custom agents use subagents
+with their own context windows so specialized work doesn't clutter the main
+context.
+
+## What Does Not Belong In The Always-On File
+
+### Normative
+
+Unless they are tiny, these must move out:
+- Long philosophy/personality prose
+- Detailed workflow steps
+- Examples beyond one or two miniature examples
+- Exhaustive coding standards
+- Subsystem documentation
+- Long command references
+- Migration guides
+- Troubleshooting trees
+
+These are all classic skill or doc content.
 
 ## Token Cost Model
 
 ### Normative
 
-The skill estimates token cost using the heuristic: tokens ≈ characters / 4.
+Tokens ≈ characters / 4 (approximation — never claim exact counts).
 
 Cost formulas:
-- Per-turn cost = Tier 1 size × number of turns
-- Session cost = Tier 2 size × number of (re)loads (typically 1-3)
-- On-demand cost = Tier 3 size × number of invocations (0-N)
-- Total session cost = per-turn + session + on-demand
+- Per-turn cost = Layer 1 size × number of turns
+- Skill cost = Layer 2 size × number of invocations (0-N)
+- Retrieval cost = Layer 3 size × number of reads
+- Total session cost = per-turn + skill + retrieval
 
-Example calculation for a 100-turn session:
-- Current: 1,800 tokens × 100 turns = 180,000 tokens
-- Optimized: 400 tokens × 100 turns + 1,500 × 2 reloads = 43,000 tokens
+Example (100-turn session):
+- Current: 1,800 tokens × 100 = 180,000 tokens
+- Optimized: 400 × 100 + 1,500 × 2 reloads = 43,000 tokens
 - Savings: ~137,000 tokens (76% reduction)
 
-### Constraints
-
-- Token estimates are approximations. Actual tokenization varies by model.
-- The skill must never claim exact token counts — always "approximately" or "~".
-- Savings projections must state assumptions (turns, reloads).
-
-## Optimization Process
-
-### Normative
-
-The skill follows this sequence when analyzing an agent file:
-
-1. **Measure** — Calculate current agent file size in characters and estimated
-   tokens.
-2. **Classify** — For each section/paragraph, determine which tier it belongs
-   to using the classification rules above.
-3. **Recommend** — Produce a tier assignment table showing what moves where.
-4. **Estimate** — Calculate projected savings with stated assumptions.
-5. **Flag risks** — Identify any content where tier assignment is ambiguous or
-   where moving it could degrade behavioral fidelity.
-
-### Output Format
-
-The skill produces a structured recommendation with these sections:
-
-1. **Current State** — file path, size, estimated tokens
-2. **Tier Assignment Table** — each content block with current location,
-   recommended tier, and rationale
-3. **Projected Savings** — per-turn reduction, session cost, total over N turns
-4. **Risks and Caveats** — behavioral fidelity concerns, ambiguous assignments
-5. **Proposed Tier 1** — draft of the minimal agent file
-6. **Proposed Tier 2** — draft of the manifest (or delta from existing)
+Projections must state assumptions.
 
 ## Compression Interoperation
 
 ### Normative
 
-The agent-optimizer skill interoperates with the compression skill but they
-are distinct concerns:
+Optimization (moving content between layers) and compression (reducing tokens
+within a layer) are distinct concerns.
 
-- **Optimization** = moving content to cheaper tiers (structural change)
-- **Compression** = reducing token count within a tier (textual change)
+Workflow: optimize first → compress each layer independently.
+- Layer 1 = Ultra compression (highest density, per-turn)
+- Layer 2 manifests = Full compression
+- Layer 3 skills = per skill convention
 
-The recommended workflow:
-1. Optimize first (move content to correct tiers)
-2. Compress each tier independently using the compression skill
-3. Tier 1 should use Ultra compression (highest density, per-turn)
-4. Tier 2 should use Full compression (good density, loaded occasionally)
-5. Tier 3 follows its own compression conventions
-
-The agent-optimizer skill must never apply compression itself. It recommends
-tier placement. The compression skill handles token reduction within tiers.
+The agent-optimizer recommends placement. The compression skill handles
+token reduction within layers. The optimizer must never apply compression
+itself.
 
 ## Post-Compaction Recovery
 
 ### Normative
 
-The optimization strategy MUST preserve post-compaction recovery. This is a
-hard constraint — an optimized agent that cannot recover after compaction is
-a failed optimization.
+Optimization MUST preserve post-compaction recovery. An optimized agent that
+cannot recover after compaction is a failed optimization.
 
 Requirements:
-- Tier 1 MUST contain explicit instruction to re-read the manifest after
+- Layer 1 MUST contain explicit instruction to re-read the manifest after
   compaction
-- The reload instruction MUST reference the manifest by file path
-- The manifest path MUST be relative to the agent file location
-- The manifest MUST be self-contained enough to restore full operating context
-  without requiring additional reads (though it may reference skills)
+- The reload instruction MUST reference the manifest by file path (relative
+  to agent file location)
+- The manifest MUST be self-contained enough to restore operating context
 
 ## Platform Considerations
 
 ### Descriptive
 
-Different platforms handle agent files differently:
+- **Claude Code**: CLAUDE.md as user message, re-injected after compaction.
+  File reading via Read tool. Skills in `.claude/skills/`.
+- **VS Code Copilot**: `.agent.md` as system prompt, constant per-turn cost.
+  File reading via `read_file`. Skills discovered via frontmatter.
+  Path-specific `.instructions.md` with `applyTo`.
+- **Custom orchestrators**: Behavior varies. The four-layer model is
+  platform-agnostic but reload mechanics differ.
 
-- **Claude Code**: CLAUDE.md loaded as user message, re-injected after
-  compaction. Supports file reading via Read tool.
-- **VS Code Copilot**: .agent.md loaded as system prompt, constant per-turn
-  cost. Supports file reading via read_file tool. Skills discovered via
-  frontmatter.
-- **Custom orchestrators**: Behavior varies. The three-tier model is
-  platform-agnostic but reload mechanics may differ.
+Recommendations are platform-agnostic. Platform-specific mechanics are
+implementation details.
 
-The skill's recommendations are platform-agnostic. Platform-specific reload
-mechanics are implementation details handled during application.
+## Anti-Patterns
+
+### Normative
+
+The skill must flag these explicitly when found:
+- Biography-style agent files
+- Manifesto-style principle dumps
+- Procedural checklists embedded in root
+- Giant coding standards in root
+- Duplicated rules in multiple sections
+- Weak "be helpful / be thoughtful / be careful" filler
+- Skill content embedded directly in agent file
+- Doc content embedded directly in agent file
+- Unclear delegation or retrieval triggers
+- No compact index to deeper material
+
+## The Core Tension
+
+### Descriptive
+
+There is a real tradeoff:
+- Too much moved out → agent fails to retrieve what it needs
+- Too much kept in → bloated persistent context
+
+Vercel's finding suggests the compromise: not "tiny file with no map" but
+**small persistent map + deferred retrieval**. That is the current best
+pattern.
 
 ## Constraints
 
-- The skill must not modify files directly
-- The skill must not claim exact token counts
-- The skill must not recommend removing safety-critical content from Tier 1
-- The skill must not recommend optimization that breaks post-compaction recovery
-- The skill must state all assumptions in savings projections
-- The skill must flag ambiguous tier assignments rather than guessing
-- Behavioral fidelity is a hard constraint — optimization must not change
-  what the agent does, only where the instructions live
+- Must not modify files directly
+- Must not claim exact token counts
+- Must not recommend removing safety-critical content from Layer 1
+- Must not recommend optimization that breaks post-compaction recovery
+- Must state all assumptions in savings projections
+- Must flag ambiguous classifications rather than guessing
+- Behavioral fidelity is a hard constraint
 
 ## Defaults and Assumptions
 
-- Default token estimation: characters / 4
-- Default session length for projections: 100 turns
-- Default number of compaction events: 1-2 per session
-- Default Tier 1 target: 200-500 tokens
-- Default Tier 2 target: 1,000-2,000 tokens
-- If no compression tier specified for output, recommend Ultra for Tier 1,
-  Full for Tier 2
+- Token estimation: characters / 4
+- Default session length: 100 turns
+- Default compaction events: 1-2 per session
+- Default Layer 1 target: under 500 tokens
+- If no compression tier specified, recommend Ultra for Layer 1, Full for
+  manifests
 
 ## Error Handling
 
-- Agent file cannot be read → report error, do not guess content
-- Agent file has no clear identity section → flag as critical finding
-- Agent file has no safety guards → flag as critical finding
-- Content classification is ambiguous → include in Risks section with both
-  possible tiers and rationale for each
-- Manifest already exists → analyze both files, recommend merge strategy
+- Agent file cannot be read → report error, do not guess
+- Agent file has no clear identity → flag as critical
+- Agent file has no routing/index → flag as structural gap
+- Classification is ambiguous → include both options in Risks
+- Manifest already exists → analyze both, recommend merge strategy
 
 ## Precedence
 
-- Safety-critical content placement (Tier 1) overrides token savings
+- Safety-critical placement (Layer 1) overrides token savings
 - Post-compaction recovery overrides structural elegance
 - Behavioral fidelity overrides compression targets
 - This spec governs the SKILL.md — any conflict, spec wins
@@ -285,7 +337,7 @@ mechanics are implementation details handled during application.
 ## Non-Goals
 
 - Automated file modification (recommend only)
+- Writing new agent files from scratch
 - Runtime behavioral testing
 - Precise tokenizer-level counting
 - Platform-specific system prompt engineering
-- Agent file creation from scratch (optimization of existing files only)
