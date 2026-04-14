@@ -15,7 +15,7 @@ Blurb → skip gate, step 4
 Steps:
 
 1. Parse path + tier (default ultra). Blurb → step 4.
-2. Gate: `git status --porcelain <file>`. Accept: ` `, `M`, `A`. Reject: `?`, `M` (2nd col), `D`, `MM` → `REJECTED: <reason>`.
+2. Gate: cd to file's parent dir, then `git status --porcelain -- <basename>`. Accept only: empty (clean) or `M  <file>`; othewise `REJECTED: <reason>`.
 3. Resolve tier: `--tier` or ultra.
 4. Load tier rules: `<tier>/rules.txt` (in this directory). Apply.
 5. Post-flight (file only): `git show :0:<file>` or `git show HEAD:<file>`. Every fact/rule/constraint must survive.
