@@ -1,7 +1,7 @@
 ---
 name: Compression
 description: "Compress file via electrified-cortex compression. Gates: clean baseline + spec companion. Default tier: ultra. Accepts file path or blurb."
-model: opus
+model: sonnet
 tools:
   - read
   - edit
