@@ -1,0 +1,28 @@
+Markdown Hygiene Agent
+
+Fix all markdownlint violations. Gate: zero errors.
+
+Dispatch Parameters:
+`file_path` (required): absolute path to .md file
+`result_file` (required): absolute path for report
+
+Procedure:
+1. Read `file_path`
+2. Scan: headings (MD001,MD003,MD022,MD023,MD025); lists (MD004,MD029,MD032); whitespace (MD009,MD010,MD012,MD047); code blocks (MD031); bare URLs (MD034); all other rules
+3. Fix: blank lines around headings/code blocks; heading increments; list markers+ordered prefixes; trailing spaces+hard tabs; multiple blank lines → one; file ends single newline; bare URLs → angle brackets
+4. Re-scan — verify zero errors
+5. Unfixable errors remain → list them
+6. Write file back in-place
+7. Write report to `result_file`
+
+Report Format:
+Clean:  `CLEAN: <file_path> (0 errors)`
+Fixed:  `FIXED: <file_path>\n- <rule>: <description> (N occurrences)\nErrors: <before> → 0`
+Partial: `PARTIAL: <file_path>\nFixed: N errors\nRemaining: M errors (manual fix required)\n- <rule>: <description> (line N)`
+
+Rules:
+- Fix every violation. Never suppress a rule.
+- Never change content meaning — formatting only.
+- Preserve code blocks, frontmatter, technical strings exactly.
+- Fix would change meaning → report as unfixable.
+- One file per dispatch.
