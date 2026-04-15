@@ -1,6 +1,6 @@
 # Skill Writing — SKILL.md Spec
 
-> Child spec derived from `../SKILL.spec.md`.
+> Child spec derived from `../spec.md`.
 > This file defines how to produce a skill-writing `SKILL.md` whose target is the concise, executable form of the broader skill-design contract.
 
 ## Purpose
@@ -22,11 +22,11 @@ This spec governs a derived target file named `SKILL.md` for skill authoring and
 
 This spec applies when the target file is intended to be loaded directly into agent context as an operational skill.
 
-This spec inherits the parent requirements from `../SKILL.spec.md` and adds skill-specific constraints on what belongs in the target skill file versus the companion spec.
+This spec inherits the parent requirements from `../spec.md` and adds skill-specific constraints on what belongs in the target skill file versus the companion spec.
 
 ## Definitions
 
-- **Parent spec**: `../SKILL.spec.md`, the general contract for writing specifications.
+- **Parent spec**: `../spec.md`, the general contract for writing specifications.
 - **Skill spec**: the verbose companion document that defines the skill in full, including rationale and displaced detail.
 - **Target skill file**: the derived `SKILL.md` loaded by an agent at runtime.
 - **Program content**: instructions that directly change how the agent should execute the skill.

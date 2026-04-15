@@ -5,7 +5,7 @@ description: Write precise, testable, auditable specification documents with exp
 
 Write specs: clear, complete, enforceable, internally consistent, externally auditable.
 
-Purpose: define intent. Spec is normative doc defining rules, requirements, constraints, expected behavior — precise, testable, auditable.
+Purpose: define intent precisely, testably, auditably.
 
 Scope: use when writing spec or derived target doc governed by source spec. All scope must be explicitly declared.
 
@@ -49,3 +49,5 @@ Precedence:
 Correctness and enforceability over readability. Normative content governs behavior. Non-normative content mustn't introduce hidden requirements. For derived targets, source spec authoritative, target subordinate. Normative statement with multiple reasonable interpretations → invalid, must rewrite.
 
 Don't use descriptive, exploratory, or informational content as substitute for normative requirements. Don't use this skill to justify silent scope expansion. Don't use this skill to hide requirements in examples, notes, or descriptive prose.
+
+Related: `spec-auditor` (verify spec quality), `skill-writing` (write skills from specs), `skill-auditing` (verify skill quality)

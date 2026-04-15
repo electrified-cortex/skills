@@ -5,8 +5,8 @@ description: Audit spec/companion pairs. Dispatch AGENT.md — don't audit inlin
 
 # Spec Auditing
 
-Dispatch `./AGENT.md` with `<target-path> [--spec <spec-path>] [--fix]`.
-The agent handles resolution, gating, and multi-pass fix cycles.
+Dispatch an isolated agent (Dispatch agent, zero context): "Read and follow
+`instructions.txt` (in this directory). Input: `<target-path> [--spec <spec-path>] [--fix]`"
 
 **Do NOT attempt spec auditing inline.** The agent runs in isolated context with
 strict disposition (skeptical, evidence-based, non-creative). Inline attempts
@@ -23,3 +23,8 @@ produce shallow, inconsistent audits.
 - Checking agent files against their `.spec.md` companions
 - Validating skill implementations against skill specs
 - Detecting drift between spec and implementation
+
+Multi-pass audit: Haiku iterations until clean, Sonnet final.
+
+Related: `spec-writing` (governs specs), `skill-auditing` (audits skills),
+`compression` (exemplar dispatch pattern)

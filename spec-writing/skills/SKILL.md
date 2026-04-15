@@ -17,7 +17,7 @@ Non-program content: rationale, history, audit notes, bug reports, long examples
 Executable compression: transforming skill spec into smaller operational file without changing meaning.
 Byte-code principle: target skill file is compiled operational form of companion spec — only instructions agent needs at execution time.
 Self-contained: target skill file contains all instructions to apply skill without requiring companion spec during normal runtime.
-Parent spec: ../SKILL.spec.md — general contract for writing specifications.
+Parent spec: ../spec.md — general contract for writing specifications.
 
 What goes where:
 
