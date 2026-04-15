@@ -201,6 +201,34 @@ A skill passes audit if:
 7. **Tested** (dispatch only) — agent can be dispatched and returns
    expected output format
 
+## Compiling Spec to SKILL.md
+
+The SKILL.md is a compiled form of the spec — executable byte-code for
+agents. The spec is the source language; the SKILL.md is the compiled
+program. Use the `spec-writing` skill to write the spec, then compile.
+
+### What goes in SKILL.md (program content)
+
+Purpose, scope, definitions, requirements, constraints, procedures,
+ordered steps, thresholds, defaults, error handling, stop conditions,
+precedence rules, conflict resolution, explicit exclusions.
+
+### What stays in spec.md (non-program content)
+
+Design rationale, audit reports, bug histories, extended examples,
+anti-pattern catalogs, edge-case walkthroughs, compression guidance,
+change history, credits, publication notes.
+
+### Compilation rules
+
+1. Extract program content from spec
+2. Strip non-program content
+3. Flatten explanation into direct operational rules
+4. Compress using `compression` skill (source→target mode)
+5. Keep examples only when removing them makes a rule ambiguous
+6. Self-containment wins over aggressive compression
+7. Correctness wins over brevity
+
 ## Constraints
 
 - Don't create dispatch skills for tasks that need caller context
