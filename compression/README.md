@@ -38,7 +38,7 @@ Each tier is self-contained in its own folder:
 - [`full/rules.txt`](full/rules.txt) — Dense but readable
 - [`ultra/rules.txt`](ultra/rules.txt) — Maximum density for machine readers
 
-The agent loads only the tier you specify. No cross-tier dependencies.
+The process loads only the tier you specify. No cross-tier dependencies.
 
 ## Design Principles
 
@@ -58,21 +58,26 @@ The spec is the safety net — everything stripped from the skill lives there.
 `rules.txt` is itself ultra-compressed. It's both the instructions and a working
 example.
 
-## Skill-Agent Pair
-
-This skill is structured as a pair:
+## Structure
 
 - [`SKILL.md`](SKILL.md) — describes what compression is and how to dispatch it
-- [`AGENT.md`](AGENT.md) — defines how compression runs (git gate, tier resolution, post-flight verification)
+- [`compress.md`](compress.md) — defines how compression runs (git gate, tier resolution, post-flight verification)
 
-Agents must always route through `AGENT.md`. Never load `rules.txt` and apply manually — the agent enforces safety gates and post-flight checks that protect content integrity.
+Always route through `compress.md`. Never load `rules.txt` and apply manually — the process enforces safety gates and post-flight checks that protect content integrity.
 
 ## Quick Start
 
 1. Identify the target audience (human, general, or agent) and pick a tier
-2. Spawn `AGENT.md` as a background subagent with `<file-path> [--tier <lite|full|ultra>]`
-3. The agent handles the git gate, applies the tier's `rules.txt`, and runs post-flight verification
-4. Review the reported byte reduction and any fix or rejection notices
+2. Dispatch a background subagent (Sonnet): tell it to read and follow `compress.md` with `<file-path> [--tier <lite|full|ultra>]`
+3. The subagent reads the compress.md itself — don't read it first and repeat it in the prompt
+4. The process handles the git gate, applies the tier's `rules.txt`, and runs post-flight verification
+5. Review the reported byte reduction and any fix or rejection notices
+
+## Optimizing Dispatch
+
+`compress.md` only needs Read and Edit. Prefer an isolated subagent (Sonnet-class
+or lower) that doesn't inherit your full context. Dispatch in background, in
+parallel when batching multiple files.
 
 ## Standards
 

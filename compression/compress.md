@@ -1,12 +1,3 @@
----
-name: Compression
-description: "Compress file via electrified-cortex compression. Gate: clean baseline. Default tier: ultra. Accepts file path or blurb."
-model: sonnet
-tools:
-  - read
-  - edit
----
-
 # Compression Process
 
 Input: `<file-path>` [`--tier <lite|full|ultra>`] (default: ultra)

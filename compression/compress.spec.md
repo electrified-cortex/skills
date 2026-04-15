@@ -1,8 +1,7 @@
 ---
-title: Compression Agent Spec
-companion: AGENT.md
-model: sonnet-class
-last-updated: 2026-04-13
+title: Compression Process Spec
+companion: compress.md
+last-updated: 2026-04-14
 ---
 
 ## Definitions
@@ -20,21 +19,18 @@ last-updated: 2026-04-13
 | Concern | Owner |
 | --- | --- |
 | What to compress (rules, preserve lists, transforms) | Skill (per tier) |
-| When to compress (gates, eligibility) | Agent |
-| How to verify (post-flight baseline comparison) | Agent |
-| Tier selection and defaults | Agent |
+| When to compress (gates, eligibility) | Process |
+| How to verify (post-flight baseline comparison) | Process |
+| Tier selection and defaults | Process |
 
-The skill is pure technique. The agent is the process wrapper that decides
+The skill is pure technique. `compress.md` is the process wrapper that decides
 whether compression should happen, which tier to use, and whether the result
 is acceptable.
 
-Any agent can invoke the skill directly for raw compression with no safety
-checks. The compression agent adds the safety layer.
+## Why the Process Exists
 
-## Why the Agent Exists
-
-Without a dedicated agent, gate logic and verification get duplicated across
-every consumer. The agent centralizes:
+Without a dedicated process, gate logic and verification get duplicated across
+every consumer. The process centralizes:
 
 1. **Gate enforcement** — consistent safety checks regardless of caller
 2. **Tier resolution** — default to ultra, accept overrides
@@ -107,7 +103,7 @@ maximum token reduction matters. Callers override with `--tier full` or
 
 ## Post-Flight Verification
 
-Internal to the agent — the caller never sees the diff (they can run
+Internal to the process — the caller never sees the diff (they can run
 `git diff` themselves).
 
 Compare the compressed output against `git show HEAD:<file>` or
@@ -210,13 +206,6 @@ The output format is the compressed text followed by the reduction line:
 - **Interactive mode.** No back-and-forth with the caller during compression.
   One input, one output.
 
-## Agent Frontmatter Requirements
+## Runtime Requirements
 
-The companion `AGENT.md` must include:
-
-| Field | Required | Value |
-| --- | --- | --- |
-| `name` | yes | `Compression` |
-| `description` | yes | Brief single-line purpose statement |
-| `model` | yes | Sonnet-class (e.g. `claude-sonnet-4-6`) |
-| `tools` | yes | Minimum: `read`, `edit` |
+The compression process (`compress.md`) requires only Read and Edit capabilities. Dispatch at Sonnet-class or lower — higher models add cost without benefit for this task.
