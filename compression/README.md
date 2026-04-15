@@ -79,6 +79,24 @@ Always route through `compress.md`. Never load `rules.txt` and apply manually �
 or lower) that doesn't inherit your full context. Dispatch in background, in
 parallel when batching multiple files.
 
+## Design Decisions
+
+**Why a separate agent file?** Loading `compress.md` into a subagent
+keeps the compression process isolated from the caller's context. Custom subagents
+in Claude Code (and VS Code Copilot) get their own fresh context window —
+they don't inherit the parent's conversation history, accumulated reasoning,
+or tool results. This means the compression process runs clean every time.
+
+**Why not inline the process in the skill?** If the SKILL.md contained the
+full compression protocol, it would be loaded into the caller's context —
+adding permanent token cost for instructions that only matter during the
+brief compression run. Delegating to a subagent keeps the caller's context
+lean.
+
+**Why Sonnet-class?** Compression is mechanical: read rules, apply transforms,
+verify output. It doesn't require advanced reasoning. Using Sonnet (or lower)
+instead of Opus cuts cost without affecting quality.
+
 ## Standards
 
 This skill follows the [Agent Skills](https://agentskills.io) open standard.
