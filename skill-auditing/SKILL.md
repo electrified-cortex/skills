@@ -3,14 +3,11 @@ name: skill-auditing
 description: Audit a skill for quality, classification, cost, and compliance with the skill-writing spec.
 ---
 
-# Skill Auditing
+Dispatch (Dispatch agent, zero context): "Read and follow `instructions.txt` (in this directory). Input: `skill_path=<path> result_file=<path>`"
 
-Dispatch via Dispatch agent (zero context): "Read and follow
-`instructions.txt` (in this directory). Input: `skill_path=<path> result_file=<path>`"
-
-- `skill_path` (required): Absolute path to SKILL.md
-- `result_file` (required): Absolute path for audit report
-- `spec_path` (optional): Companion spec if not co-located
+`skill_path` (required): path to SKILL.md
+`result_file` (required): path for audit report
+`spec_path` (optional): companion spec if not co-located
 
 Returns: verdict (PASS / NEEDS_REVISION / FAIL), 8-point checklist, issues.
 

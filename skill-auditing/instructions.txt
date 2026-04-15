@@ -1,84 +1,40 @@
 # Skill Auditor
 
-Read the target skill, evaluate against the 8-point checklist, write verdict.
+Read target skill, evaluate against 8-point checklist, write verdict.
 
-## Dispatch Parameters
+Params: `skill_path` (required) · `result_file` (required) · `spec_path` (optional, if not beside SKILL.md)
 
-- `skill_path` (required): Absolute path to SKILL.md to audit
-- `result_file` (required): Absolute path to write the audit report
-- `spec_path` (optional): Path to companion spec if not beside SKILL.md
+Procedure:
+1. Read skill at `skill_path`; determine type: inline or dispatch
+2. If `spec.md` co-located or `spec_path` given, read it
+3. Run 8-point checklist → assign verdict → write report to `result_file`
 
-## Procedure
+8-Point Checklist:
 
-1. Read the skill at `skill_path`
-2. Determine type: inline or dispatch
-3. If companion spec exists (co-located `spec.md` or at `spec_path`), read it
-4. Run the 8-point checklist (see below)
-5. Assign verdict
-6. Write report to `result_file`
+1. Classification — "Could someone with no context do this from just the inputs?" Yes → dispatch, No → inline. Flag misclassification.
 
-## 8-Point Checklist
+2. Structure
+Inline: frontmatter (`name`, `description`), direct instructions, self-contained.
+Dispatch: SKILL.md ≤15 lines. Instruction file exists. Params typed with required/optional/defaults. Output format specified. Uses Dispatch agent (isolated), not background agent with host context.
 
-### 1. Classification
+3. Companion Spec — Required for dispatch and complex inline (>30 lines); absent OK for simple inline. Mustn't contradict SKILL.md. Named `spec.md` (no SKILL prefix).
 
-Apply: "Could someone with no context do this from just the inputs?"
-- Yes → should be dispatch. No → should be inline.
-- Flag misclassification.
+4. Conciseness — Every line affects runtime behavior; no rationale (belongs in spec); no redundant explanations; agent-facing density.
 
-### 2. Structure
+5. Completeness — All runtime instructions present; no implicit assumptions; edge cases addressed or excluded; defaults stated.
 
-**Inline:** frontmatter (`name`, `description`), direct instructions, self-contained.
-**Dispatch:** SKILL.md ≤15 lines routing content. Instruction file exists. Params
-typed with required/optional/defaults. Output format specified. Uses Dispatch agent
-(isolated), not background agent with host context.
+6. Breadcrumbs — Ends with related skills/topics; references valid (targets exist); no stale references.
 
-### 3. Companion Spec
+7. Cost Analysis (dispatch only) — Dispatch agent (zero-context isolation); instruction file <500 lines; sub-skills by pointer not inlined; single dispatch turn when possible.
 
-- Required for dispatch and complex inline skills (>30 lines)
-- May be absent for simple inline skills
-- Must not contradict SKILL.md
-- Named `spec.md` (no SKILL prefix)
+8. No Duplication — Not duplicating existing capability; if similar exists, recommend merge or distinguish.
 
-### 4. Conciseness
+Verdict Rules:
+- PASS: All 8 checks pass
+- NEEDS_REVISION: 1-2 non-critical issues. List fixes.
+- FAIL: Classification error, missing instruction file, structural breakdown
 
-- Every line affects runtime behavior
-- No rationale in SKILL.md (belongs in spec)
-- No redundant explanations
-- Agent-facing density
-
-### 5. Completeness
-
-- All runtime instructions present
-- No implicit assumptions
-- Edge cases addressed or excluded
-- Defaults stated
-
-### 6. Breadcrumbs
-
-- Ends with related skills/topics
-- References are valid (targets exist)
-- No stale references
-
-### 7. Cost Analysis (dispatch only)
-
-- Uses Dispatch agent (zero-context isolation)
-- Instruction file right-sized (<500 lines)
-- Sub-skills referenced by pointer, not inlined
-- Single dispatch turn when possible
-
-### 8. No Duplication
-
-- Not duplicating existing capability
-- If similar exists, recommend merge or distinguish
-
-## Verdict Rules
-
-- **PASS**: All 8 checks pass
-- **NEEDS_REVISION**: 1-2 non-critical issues. List fixes.
-- **FAIL**: Classification error, missing instruction file, structural breakdown
-
-## Report Format
-
+Report Format:
 ```markdown
 ## Skill Audit: <skill-name>
 
@@ -106,9 +62,4 @@ typed with required/optional/defaults. Output format specified. Uses Dispatch ag
 <one line>
 ```
 
-## Rules
-
-- Read-only. Never modify the skill.
-- One skill per dispatch.
-- Evidence-based verdicts.
-- When in doubt, NEEDS_REVISION over PASS.
+Rules: Read-only. Never modify skill. One skill per dispatch. Evidence-based verdicts. When in doubt, NEEDS_REVISION over PASS.
