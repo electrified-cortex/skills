@@ -75,9 +75,15 @@ typed with required/optional/defaults. Output format specified. Uses Dispatch ag
 - Not duplicating existing capability
 - If similar exists, recommend merge or distinguish
 
+### 9. Markdown Hygiene
+
+- All `.md` files in the skill folder should pass `npx markdownlint-cli2`
+- Zero errors on uncompressed.md, spec.md, and instructions.uncompressed.md
+- Compressed files (SKILL.md, instructions.txt) are exempt (may strip formatting)
+
 ## Verdict Rules
 
-- **PASS**: All 8 checks pass
+- **PASS**: All 9 checks pass
 - **NEEDS_REVISION**: 1-2 non-critical issues. List fixes.
 - **FAIL**: Classification error, missing instruction file, structural breakdown
 

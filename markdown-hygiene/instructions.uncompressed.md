@@ -9,8 +9,9 @@ Fix all markdownlint violations in a markdown file. Zero errors is the gate.
 
 ## Procedure
 
-1. Read the file at `file_path`
-2. Scan for all markdownlint violations:
+1. Run `npx markdownlint-cli2 "<file_path>"` to get current violations
+2. Read the file at `file_path`
+3. Fix all reported violations:
    - Heading levels (MD001, MD003, MD022, MD023, MD025)
    - List formatting (MD004, MD029, MD032)
    - Whitespace (MD009, MD010, MD012, MD047)
@@ -25,7 +26,7 @@ Fix all markdownlint violations in a markdown file. Zero errors is the gate.
    - Collapse multiple blank lines to one
    - Ensure file ends with single newline
    - Wrap bare URLs in angle brackets
-4. Re-scan to verify zero errors remain
+5. Re-run `npx markdownlint-cli2 "<file_path>"` to verify zero errors
 5. If errors remain that can't be auto-fixed, list them
 6. Write the file back (in-place edit)
 7. Write report to `result_file`

@@ -50,6 +50,7 @@ Parameters: types, required/optional, defaults. Output format specified.
 - Breadcrumbs: end with related skills (verified, not stale)
 - No secrets
 
+After writing any .md file, run `markdown-hygiene` (dispatch) before compressing or stamping.
 Verify completed skills with `skill-auditing`.
 
 ## Related
