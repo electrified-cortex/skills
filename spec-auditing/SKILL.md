@@ -1,6 +1,6 @@
 ---
-name: spec-auditor
-description: Audit spec/companion pairs. Dispatch AGENT.md — don't audit inline.
+name: spec-auditing
+description: Audit spec/companion pairs. Dispatch instructions.txt — don't audit inline.
 ---
 
 # Spec Auditing

@@ -50,4 +50,4 @@ Correctness and enforceability over readability. Normative content governs behav
 
 Don't use descriptive, exploratory, or informational content as substitute for normative requirements. Don't use this skill to justify silent scope expansion. Don't use this skill to hide requirements in examples, notes, or descriptive prose.
 
-Related: `spec-auditor` (verify spec quality), `skill-writing` (write skills from specs), `skill-auditing` (verify skill quality)
+Related: `spec-auditing` (verify spec quality), `skill-writing` (write skills from specs), `skill-auditing` (verify skill quality)

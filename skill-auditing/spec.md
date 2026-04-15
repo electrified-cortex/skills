@@ -160,7 +160,7 @@ itself. If the auditor fails its own audit, fix it before auditing others.
 ## Relationship to Other Skills
 
 - **skill-writing** — the spec this auditor enforces
-- **spec-auditor** — audits companion specs (complementary, not overlapping)
+- **spec-auditing** — audits companion specs (complementary, not overlapping)
 - **compression** — exemplar dispatch pattern to compare against
 - **task-verification** — exemplar audit dispatch pattern
 

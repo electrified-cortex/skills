@@ -212,7 +212,7 @@ A skill passes audit if:
 ## Relationship to Other Skills
 
 - **spec-writing**: Governs how to write the companion spec
-- **spec-auditor**: Verifies companion specs meet quality bar
+- **spec-auditing**: Verifies companion specs meet quality bar
 - **compression**: Exemplar for the dispatch pattern
 - **task-verification**: Exemplar for the audit/verify dispatch pattern
 

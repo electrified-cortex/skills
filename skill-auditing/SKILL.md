@@ -21,5 +21,5 @@ Multi-pass audit (cost-optimized):
 2. Sonnet final — one thorough sign-off after Haiku is clean
 Never iterate on Sonnet. Haiku catches structural issues cheaply.
 
-Related: `skill-writing` (rules enforced), `spec-auditor` (spec quality),
+Related: `skill-writing` (rules enforced), `spec-auditing` (spec quality),
 `compression` (exemplar dispatch pattern)
