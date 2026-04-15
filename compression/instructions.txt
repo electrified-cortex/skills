@@ -1,5 +1,3 @@
-# Compression Process
-
 Input: `<file-path>` [`--tier <lite|full|ultra>`] [`--source <src> --target <dst>`] (default tier: ultra)
 Blurb → skip gate, step 4
 

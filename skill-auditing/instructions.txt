@@ -1,5 +1,3 @@
-# Skill Auditor
-
 Read target skill, evaluate against 8-point checklist, write verdict.
 
 Params: `skill_path` (required); `result_file` (required); `spec_path` (optional, if not beside SKILL.md)
