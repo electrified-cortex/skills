@@ -3,11 +3,11 @@
 Input: `<file-path>` [`--tier <lite|full|ultra>`] [`--source <src> --target <dst>`] (default tier: ultra)
 Blurb → skip gate, step 4
 
-Modes:
+## Modes
 
-Source→Target: `--source X --target Y` → read X, compress, write Y. No git check. X untouched.
-In-place (default): compress file directly. Git check required.
-Fallback: if file is untracked/dirty and no `--target`, create `<file>.compressed` alongside.
+**Source→Target:** `--source X --target Y` → read X, compress, write Y. No git check. X untouched.
+**In-place (default):** compress file directly. Git check required.
+**Fallback:** if file is untracked/dirty and no `--target`, create `<file>.compressed` alongside.
 
 Steps:
 
@@ -19,7 +19,7 @@ Steps:
    - `REJECTED` only on conflict/deleted states.
 3. Resolve tier: `--tier` or ultra.
 4. Load tier rules: `<tier>/rules.txt` (in this directory). Apply.
-5. Verify (file mode only, not blurb): compare compressed result against original. Every fact, rule, and constraint must survive.
+5. Verify (file mode only, not blurb): compare compressed result against original content. Every fact, rule, and constraint must survive.
    - Recoverable (single dropped item or collapsed qualifier) → fix in-place, report fix + suggest prevention.
    - Not recoverable (multi-element loss, structural damage, meaning reversal) → restore original, `REJECTED: content lost — <details>`.
 6. Write result to target (in-place, `.compressed`, or `--target` path).

@@ -25,7 +25,7 @@ Dispatch: SKILL.md ≤15 lines. Instruction file exists. Params typed with requi
 
 6. Breadcrumbs — Ends with related skills/topics; references valid (targets exist); no stale references.
 
-7. Cost Analysis (dispatch only) — Dispatch agent (zero-context isolation); instruction file <500 lines; sub-skills by pointer not inlined; single dispatch turn when possible.
+7. Cost Analysis (dispatch only) — Dispatch agent (zero-context isolation); instruction file <500 lines; sub-skills by pointer, not inlined; single dispatch turn when possible.
 
 8. No Duplication — Not duplicating existing capability; if similar exists, recommend merge or distinguish.
 
