@@ -8,14 +8,16 @@ description: How to write skills — decision tree for inline vs dispatch, struc
 Create skills agents can discover, invoke, rely on.
 Never reference `spec.md` at runtime. Minimize tokens.
 
-Decision: Inline or Dispatch?
-"Could someone with no context do this from just the inputs?"
-Yes → dispatch. No → inline.
+## Decision: Inline or Dispatch?
 
-Inline: needs caller's context, judgment, creative intent.
-Dispatch: mechanical processing against rules. Use Dispatch agent (zero context).
+> "Could someone with no context do this from just the inputs?"
+> **Yes** → dispatch. **No** → inline.
 
-Skill Folder Convention:
+**Inline** = needs caller's context, judgment, creative intent.
+**Dispatch** = mechanical processing against rules. Use Dispatch agent (zero context).
+
+## Skill Folder Convention
+
 ```
 skill-name/
 ├── SKILL.md            ← compressed runtime (what agents load)
@@ -23,16 +25,24 @@ skill-name/
 ├── uncompressed.md     ← human-readable baseline
 └── spec.md             ← normative spec (never at runtime)
 ```
+
 `instructions.txt` present = dispatch skill. Absent = inline.
 Never use "SKILL" in any filename except `SKILL.md`.
 
-Inline Skill: SKILL.md IS full instruction set. Agent reads and applies directly.
+## Inline Skill
 
-Dispatch Skill (Routing Card): SKILL.md = ~10-15 line routing card. `instructions.txt` holds procedure.
+SKILL.md IS the full instruction set. Agent reads and applies directly.
+
+## Dispatch Skill (Routing Card)
+
+SKILL.md = ~10-15 line routing card. `instructions.txt` holds procedure.
+
 Dispatch via Dispatch agent: "Read and follow `instructions.txt`. Input: `<params>`"
+
 Parameters: types, required/optional, defaults. Output format specified.
 
-Requirements:
+## Requirements
+
 - Frontmatter: `name` + `description`
 - Self-contained: no spec dependency at runtime
 - Concise: agent-facing, every line earns its place
@@ -42,7 +52,8 @@ Requirements:
 
 Verify completed skills with `skill-auditing`.
 
-Related:
+## Related
+
 - `skill-auditing` — verifies skill quality (dispatch, dogfoods itself)
 - `compression` — exemplar dispatch pattern
-- `spec-writing` — how to write companion spec
+- `spec-writing` — how to write the companion spec
