@@ -12,7 +12,11 @@ Read the target skill, evaluate against the 8-point checklist, write verdict.
 
 1. Read the skill at `skill_path`
 2. Determine type: inline or dispatch
-3. If companion spec exists (co-located `spec.md` or at `spec_path`), read it
+3. Check for companion spec — ALWAYS check these paths in order:
+   a. `spec_path` if provided
+   b. `spec.md` in the same directory as `skill_path`
+   c. `<skill-name>.spec.md` in the same directory
+   If found, read it. If not found, note as N/A for simple inline skills (<30 lines) or FAIL for dispatch/complex inline.
 4. Run the 8-point checklist (see below)
 5. Assign verdict
 6. Write report to `result_file`

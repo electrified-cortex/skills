@@ -2,11 +2,11 @@
 
 Read target skill, evaluate against 8-point checklist, write verdict.
 
-Params: `skill_path` (required) · `result_file` (required) · `spec_path` (optional, if not beside SKILL.md)
+Params: `skill_path` (required); `result_file` (required); `spec_path` (optional, if not beside SKILL.md)
 
 Procedure:
 1. Read skill at `skill_path`; determine type: inline or dispatch
-2. If `spec.md` co-located or `spec_path` given, read it
+2. Check companion spec in order: `spec_path` if provided → `spec.md` in same dir → `<skill-name>.spec.md` in same dir. If found, read it. If not found: N/A for simple inline (<30 lines), FAIL for dispatch/complex inline.
 3. Run 8-point checklist → assign verdict → write report to `result_file`
 
 8-Point Checklist:

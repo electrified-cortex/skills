@@ -188,6 +188,43 @@ consume tokens without adding instruction value — an LLM grasps the pattern
 from a single instance. Additional examples belong in the spec (like the one
 above), not in the lean skill file.
 
+## Operating Modes
+
+The compression skill supports three operating modes based on the caller's
+intent and the file's git tracking state.
+
+### Mode 1: Source→Target (`--source X --target Y`)
+
+Read the source file, compress it, write to the target path. The source file
+is never modified. No git status check is required — the caller explicitly
+controls input and output. This is the primary workflow for skill development:
+
+- `uncompressed.md` → `SKILL.md`
+- `instructions.uncompressed.md` → `instructions.txt`
+
+**Rationale:** Separating source and target eliminates friction from git guards.
+The uncompressed file is the authoritative source; the compressed file is a
+derived artifact that can always be regenerated.
+
+### Mode 2: In-place (default, tracked+clean)
+
+Compress the file directly. Requires the file to be tracked by git with no
+uncommitted changes (`git status --porcelain` returns empty or `M  <file>`).
+This is the original behavior and remains the default when no `--source` or
+`--target` flags are provided.
+
+### Mode 3: Fallback (untracked/dirty)
+
+When no `--source`/`--target` is provided and the file is untracked or has
+uncommitted changes, create a `<filename>.compressed` version alongside it.
+The original file is never modified. This prevents accidental overwrites of
+work-in-progress files.
+
+**Decision tree:**
+1. `--source` + `--target` provided → Mode 1 (no git check)
+2. No flags, file tracked+clean → Mode 2 (in-place)
+3. No flags, file untracked/dirty → Mode 3 (alongside)
+
 ## Future Considerations
 
 - Help topics in TMCP: `compression` (overview), `compression/lite`,
