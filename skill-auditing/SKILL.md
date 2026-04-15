@@ -16,10 +16,5 @@ Parameters:
 Returns: Audit report with verdict (PASS / NEEDS_REVISION / FAIL), 8-point
 checklist, issues, and recommendation.
 
-Multi-pass audit (cost-optimized):
-1. Haiku passes — iterate: audit → fix → re-audit until PASS
-2. Sonnet final — one thorough sign-off after Haiku is clean
-Never iterate on Sonnet. Haiku catches structural issues cheaply.
-
 Related: `skill-writing` (rules enforced), `spec-auditing` (spec quality),
 `compression` (exemplar dispatch pattern)

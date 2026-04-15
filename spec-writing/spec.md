@@ -1,4 +1,4 @@
-# SKILL.spec.md
+# Spec-Writing Specification
 
 This file defines the authoritative behavior for producing high-quality specification documents.
 
