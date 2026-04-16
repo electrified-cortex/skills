@@ -80,7 +80,7 @@ Reject if not a space:
 - `D` — deleted
 - `MM` — staged with additional unstaged changes
 
-Acceptable: ` ` (committed), `M` (staged, clean tree), `A` (new, staged).
+Acceptable: `  ` (committed, clean working tree), `M ` (staged, clean working tree), `A ` (staged new file, clean working tree).
 
 **Why:** Compression modifies in-place. Without a baseline, post-flight
 verification has nothing to compare against, and there's no recovery path if
