@@ -36,86 +36,91 @@ and should run in an isolated agent via the Dispatch agent pattern.
 - **Routing depth**: How many sub-skills a skill references. Deeper =
   more modular but harder to trace.
 
-## Audit Checklist
+## Audit Phases
 
-### 1. Classification (inline vs dispatch)
+The audit executes three phases in order. Failure at any phase stops
+the audit — subsequent phases do not execute.
 
-Apply the decision tree from the skill-writing spec:
+### Phase 1 — Spec Gate
 
-> "Could someone with no context do this from just the inputs?"
-> Yes → should be dispatch. No → should be inline.
+Verify the companion spec exists and is structurally sound. This phase
+must pass before any skill-level checks.
 
-- If classified as inline but task is mechanical → flag as NEEDS_REVISION
-- If classified as dispatch but task needs caller context → flag
+1. **Spec exists** — `spec.md` must exist in the skill folder (or at
+   `spec_path` if provided). Exception: simple inline skills under ~30
+   lines with no design decisions may omit the spec — in that case,
+   skip to Phase 2.
+2. **Required sections** — the spec must contain these sections:
+   Purpose, Scope, Definitions, Requirements, Constraints. Missing
+   sections → FAIL.
+3. **Normative language** — requirements must use enforceable language
+   (must, shall, required). Vague terms in normative sections → FAIL.
+4. **Internal consistency** — no contradictions between sections. No
+   duplicate rules. No normative content in descriptive sections.
+5. **Completeness** — all terms used are defined. All behavior is
+   explicitly stated, not implied.
 
-### 2. Structure
+If the spec fails any of these checks, the verdict is FAIL with
+detail identifying which spec check failed. Do not proceed to Phase 2.
 
-**For inline skills:**
+### Phase 2 — Skill Smoke Check
 
-- Has frontmatter with `name` and `description`
-- Instructions are direct and actionable
-- Self-contained (no dependency on companion spec at runtime)
+Quick structural verification of the SKILL.md.
 
-**For dispatch skills (routing cards):**
+1. **Classification** — apply the decision tree from the skill-writing
+   spec: "Could someone with no context do this from just the inputs?"
+   Yes → should be dispatch. No → should be inline. Flag misclassification.
+2. **Structure** — for inline: has frontmatter (`name`, `description`),
+   direct instructions, self-contained. For dispatch: SKILL.md ≤15 lines
+   of routing content, instruction file exists and is reachable,
+   parameters typed with required/optional/defaults, output format
+   specified, uses Dispatch agent (isolated).
+3. **Frontmatter** — `name` and `description` present and accurate.
+4. **No duplication** — skill does not duplicate an existing capability.
+   If similar skill exists, recommend merge or distinguish clearly.
 
-- SKILL.md is ≤15 lines of routing content
-- Dispatch instruction file exists and is reachable
-- Parameters documented with types, required/optional, and defaults
-- Output format specified
-- Uses Dispatch agent (isolated) — not background agent with host context
+If any smoke check fails, the verdict is FAIL. Do not proceed to
+Phase 3.
 
-### 3. Companion Spec
+### Phase 3 — Spec Compliance Audit
 
-- Required for dispatch skills and complex inline skills
-- May be absent only for simple inline skills (under ~30 lines, no
-  design decisions worth recording)
-- If present, must not contradict the SKILL.md
-- Must be clearly separated: spec holds rationale, SKILL.md holds runtime
-  instructions
+Deep verification that the SKILL.md faithfully represents the spec.
+This is the final quality gate.
 
-### 4. Conciseness
-
-- Every line must affect runtime behavior
-- No design rationale in SKILL.md (belongs in spec)
-- No redundant explanations of the same rule
-- No prose that could be fragments
-- Agent-facing density, not human-facing readability
-
-### 5. Completeness
-
-- All runtime-relevant instructions present
-- No implicit assumptions — state everything explicitly
-- Edge cases addressed or explicitly excluded
-- Defaults stated, not assumed
-
-### 6. Breadcrumbs
-
-- Ends with related skills or help topics
-- References are valid (pointed-to resources exist)
-- No stale references to renamed/moved resources
-
-### 7. Cost Analysis (dispatch skills only)
-
-- Uses Dispatch agent (zero-context isolation) — not background agent
-  with host context
-- Instruction file is right-sized — not loading unnecessary content
-- References sub-skills by pointer, not by inlining their content
-- Single dispatch turn when possible (agent reads file once, processes,
-  returns)
-- Flag skills where instruction file is >500 lines — may need splitting
-
-### 8. No Duplication
-
-- Skill does not duplicate an existing capability
-- If similar skill exists, recommend merge or distinguish clearly
+1. **Coverage** — every normative requirement in the spec must be
+   represented in the SKILL.md. Missing requirements → FAIL.
+2. **No contradictions** — SKILL.md must not contradict the spec.
+   Spec is authoritative; SKILL.md is subordinate.
+3. **No unauthorized additions** — SKILL.md must not introduce
+   normative requirements not present in the spec.
+4. **Conciseness** — every line in SKILL.md must affect runtime
+   behavior. No design rationale (belongs in spec). No redundant
+   explanations. Agent-facing density, not human-facing readability.
+5. **Completeness** — all runtime instructions present. No implicit
+   assumptions. Edge cases addressed or explicitly excluded. Defaults
+   stated, not assumed.
+6. **Breadcrumbs** — ends with related skills or help topics.
+   References are valid (pointed-to resources exist). No stale
+   references.
+7. **Cost analysis** (dispatch skills only) — uses Dispatch agent
+   (zero-context isolation). Instruction file is right-sized (<500
+   lines). Sub-skills referenced by pointer, not inlined. Single
+   dispatch turn when possible.
+8. **Markdown hygiene** — all `.md` files in skill folder pass
+   markdownlint. Compressed files (SKILL.md, instructions.txt) exempt.
+9. **No dispatch refs in instructions** — `instructions.txt` must not
+   tell the agent to dispatch other skills. Subagents cannot dispatch;
+   only the host agent can. "Related" context references are OK;
+   "run this skill" or "dispatch this" → FAIL.
 
 ## Verdict Rules
 
-- **PASS**: All 8 checks pass. Skill is production-ready.
-- **NEEDS_REVISION**: 1-2 non-critical issues. Skill works but has quality
-  gaps. List specific fixes.
-- **FAIL**: Classification error, missing instruction file, or structural
-  breakdown. Skill cannot be used reliably until fixed.
+- **PASS**: All three phases pass. Skill is production-ready.
+- **NEEDS_REVISION**: Phase 1 and 2 pass, Phase 3 has 1-2 non-critical
+  issues. Skill works but has quality gaps. List specific fixes.
+- **FAIL**: Any phase fails, or Phase 3 has critical issues
+  (classification error, missing instruction file, spec contradiction,
+  or structural breakdown). Skill cannot be used reliably until fixed.
 
 ## Audit Report Format
 
@@ -125,19 +130,40 @@ Apply the decision tree from the skill-writing spec:
 **Verdict:** PASS | NEEDS_REVISION | FAIL
 **Type:** inline | dispatch
 **Path:** <path-to-skill>
+**Failed phase:** <1 | 2 | 3 | none>
 
-### Checklist
+### Phase 1 — Spec Gate
 
 | Check | Result | Notes |
 | --- | --- | --- |
-| Classification | PASS/FAIL | <notes> |
-| Structure | PASS/FAIL | <notes> |
-| Companion spec | PASS/FAIL/N/A | <notes> |
-| Conciseness | PASS/FAIL | <notes> |
-| Completeness | PASS/FAIL | <notes> |
-| Breadcrumbs | PASS/FAIL | <notes> |
-| Cost analysis | PASS/FAIL/N/A | <notes> |
-| No duplication | PASS/FAIL | <notes> |
+| Spec exists | PASS/FAIL/SKIP | |
+| Required sections | PASS/FAIL | |
+| Normative language | PASS/FAIL | |
+| Internal consistency | PASS/FAIL | |
+| Completeness | PASS/FAIL | |
+
+### Phase 2 — Skill Smoke Check
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Classification | PASS/FAIL | |
+| Structure | PASS/FAIL | |
+| Frontmatter | PASS/FAIL | |
+| No duplication | PASS/FAIL | |
+
+### Phase 3 — Spec Compliance
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Coverage | PASS/FAIL | |
+| No contradictions | PASS/FAIL | |
+| No unauthorized additions | PASS/FAIL | |
+| Conciseness | PASS/FAIL | |
+| Completeness | PASS/FAIL | |
+| Breadcrumbs | PASS/FAIL | |
+| Cost analysis | PASS/FAIL/N/A | |
+| Markdown hygiene | PASS/FAIL | |
+| No dispatch refs | PASS/FAIL/N/A | |
 
 ### Issues
 - <specific issue and fix>
@@ -164,7 +190,6 @@ itself. If the auditor fails its own audit, fix it before auditing others.
 - **skill-writing** — the spec this auditor enforces
 - **spec-auditing** — audits companion specs (complementary, not overlapping)
 - **compression** — exemplar dispatch pattern to compare against
-- **task-verification** — exemplar audit dispatch pattern
 
 ## Constraints
 

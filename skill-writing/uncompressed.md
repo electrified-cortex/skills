@@ -1,6 +1,8 @@
 ---
 name: skill-writing
-description: How to write skills — decision tree for inline vs dispatch, structure, quality criteria.
+description: >-
+  How to write skills — decision tree for inline vs dispatch, structure,
+  quality criteria.
 ---
 
 # Skill Writing
@@ -8,13 +10,37 @@ description: How to write skills — decision tree for inline vs dispatch, struc
 Create skills agents can discover, invoke, rely on.
 Never reference `spec.md` at runtime. Minimize tokens.
 
+## Workflow
+
+When creating a new skill, follow this order. Never skip steps.
+
+1. **Spec first** — write `spec.md` using the `spec-writing` skill. The
+   spec defines what the skill does, its requirements, constraints, and
+   acceptance criteria.
+2. **Write uncompressed** — write `uncompressed.md` derived from the
+   spec. This is the human-readable baseline.
+3. **Compress** — use the `compression` skill (source→target mode:
+   `--source uncompressed.md --target SKILL.md`). The SKILL.md is the
+   compressed runtime agents load.
+4. **Audit** — use `skill-auditing` skill. Haiku-class for iteration
+   rounds, Sonnet-class for final sign-off.
+5. **Fix and re-audit** — address findings, re-audit until PASS.
+
+For dispatch skills, also write the companion agent file (see Dispatch
+Skill section).
+
+When revising an existing skill: update spec first → update
+uncompressed.md → recompress → re-audit. Never modify SKILL.md directly
+— it is a compiled artifact.
+
 ## Decision: Inline or Dispatch?
 
 > "Could someone with no context do this from just the inputs?"
 > **Yes** → dispatch. **No** → inline.
 
 **Inline** = needs caller's context, judgment, creative intent.
-**Dispatch** = mechanical processing against rules. Use Dispatch agent (zero context).
+**Dispatch** = mechanical processing against rules. Use Dispatch agent
+(zero context).
 
 ## Skill Folder Convention
 
@@ -37,7 +63,8 @@ SKILL.md IS the full instruction set. Agent reads and applies directly.
 
 SKILL.md = ~10-15 line routing card. `instructions.txt` holds procedure.
 
-Dispatch via Dispatch agent: "Read and follow `instructions.txt`. Input: `<params>`"
+Dispatch via Dispatch agent: "Read and follow `instructions.txt`.
+Input: `<params>`"
 
 Parameters: types, required/optional, defaults. Output format specified.
 
@@ -50,11 +77,12 @@ Parameters: types, required/optional, defaults. Output format specified.
 - Breadcrumbs: end with related skills (verified, not stale)
 - No secrets
 
-After writing any .md file, run `markdown-hygiene` (dispatch) before compressing or stamping.
+After writing any .md file, run `markdown-hygiene` (dispatch) before
+compressing or stamping.
 Verify completed skills with `skill-auditing`.
 
 ## Related
 
-- `skill-auditing` — verifies skill quality (dispatch, dogfoods itself)
-- `compression` — exemplar dispatch pattern
-- `spec-writing` — how to write the companion spec
+- `spec-writing` — write the spec first (step 1 of workflow)
+- `compression` — compress uncompressed.md to SKILL.md (step 3)
+- `skill-auditing` — verify skill quality (step 4, dispatch, dogfoods itself)

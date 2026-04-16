@@ -1,40 +1,44 @@
-Read target skill, evaluate against 10-point checklist, write verdict.
+Skill Auditor: read target skill, evaluate in 3 phases, write verdict. Failure at any phase stops audit.
 
-Params: `skill_path` (required); `result_file` (required); `spec_path` (optional, if not beside SKILL.md)
+Params: `skill_path` (required); `result_file` (required); `spec_path` (optional)
 
 Procedure:
 1. Read skill at `skill_path`; determine type: inline or dispatch
-2. Check companion spec in order: `spec_path` if provided → `spec.md` in same dir → `<skill-name>.spec.md` in same dir. If found, read it. If not found: N/A for simple inline (<30 lines), FAIL for dispatch/complex inline.
-3. Run 10-point checklist → assign verdict → write report to `result_file`
+2. Locate companion spec — check: `spec_path` if provided → `spec.md` in same dir as `skill_path`. Not found: simple inline (<30 lines) may skip Phase 1; dispatch/complex inline → FAIL immediately.
+3. Run Phase 1 → Phase 2 → Phase 3 (stop on first failure) → assign verdict → write report to `result_file`
 
-10-Point Checklist:
+Phase 1 — Spec Gate: verify companion spec structurally sound before any skill-level checks.
+1. Spec exists — `spec.md` must exist (or `spec_path` resolves). Exception: simple inline (<30 lines) → skip phase entirely.
+2. Required sections — spec must contain: Purpose, Scope, Definitions, Requirements, Constraints. Missing → FAIL.
+3. Normative language — requirements must use enforceable language (must/shall/required). Vague terms in normative sections → FAIL.
+4. Internal consistency — no contradictions between sections; no duplicate rules; no normative content in descriptive sections.
+5. Completeness — all terms defined; all behavior explicitly stated, not implied.
+Phase 1 fail → verdict FAIL, report which check failed, don't proceed to Phase 2.
 
-1. Classification — "Could someone with no context do this from just the inputs?" Yes → dispatch, No → inline. Flag misclassification.
-
+Phase 2 — Skill Smoke Check: quick structural verification.
+1. Classification — "Could someone with no context do this from just the inputs?" Yes → should be dispatch; No → should be inline. Flag misclassification.
 2. Structure
-Inline: frontmatter (`name`, `description`), direct instructions, self-contained.
-Dispatch: SKILL.md ≤15 lines. Instruction file exists. Params typed with required/optional/defaults. Output format specified. Uses Dispatch agent (isolated), not background agent with host context.
+   Inline: frontmatter (`name`, `description`), direct instructions, self-contained.
+   Dispatch: SKILL.md ≤15 lines routing content; instruction file exists and reachable; params typed with required/optional/defaults; output format specified; uses Dispatch agent (isolated), not background agent with host context.
+3. Frontmatter — `name` and `description` present and accurate.
+4. No duplication — not duplicating existing capability; if similar exists, recommend merge or distinguish.
+Phase 2 fail → verdict FAIL, don't proceed to Phase 3.
 
-3. Companion Spec — Required for dispatch and complex inline (>30 lines); absent OK for simple inline. Mustn't contradict SKILL.md. Named `spec.md` (no SKILL prefix).
-
-4. Conciseness — Every line affects runtime behavior; no rationale (belongs in spec); no redundant explanations; agent-facing density.
-
-5. Completeness — All runtime instructions present; no implicit assumptions; edge cases addressed or excluded; defaults stated.
-
-6. Breadcrumbs — Ends with related skills/topics; references valid (targets exist); no stale references.
-
-7. Cost Analysis (dispatch only) — Dispatch agent (zero-context isolation); instruction file <500 lines; sub-skills by pointer, not inlined; single dispatch turn when possible.
-
-8. No Duplication — Not duplicating existing capability; if similar exists, recommend merge or distinguish.
-
-9. Markdown Hygiene — All `.md` files in skill folder pass `npx markdownlint-cli2`; zero errors on uncompressed.md, spec.md, instructions.uncompressed.md; compressed files (SKILL.md, instructions.txt) exempt.
-
-10. No Dispatch References in Instructions — `instructions.txt` mustn't tell agent to dispatch other skills; subagents can't dispatch, only host agent can; "Related" context refs OK; "run this skill"/"dispatch this" → FAIL; remediation: move dispatch steps to SKILL.md.
+Phase 3 — Spec Compliance Audit: deep verification SKILL.md faithfully represents spec.
+1. Coverage — every normative requirement in spec represented in SKILL.md. Missing → FAIL.
+2. No contradictions — SKILL.md mustn't contradict spec. Spec authoritative; SKILL.md subordinate.
+3. No unauthorized additions — SKILL.md mustn't introduce normative requirements not in spec.
+4. Conciseness — every line affects runtime behavior; no rationale (belongs in spec); no redundant explanations; agent-facing density.
+5. Completeness — all runtime instructions present; no implicit assumptions; edge cases addressed or excluded; defaults stated.
+6. Breadcrumbs — ends with related skills/topics; references valid (targets exist); no stale references.
+7. Cost analysis (dispatch only) — uses Dispatch agent (zero-context isolation); instruction file <500 lines; sub-skills by pointer, not inlined; single dispatch turn when possible.
+8. Markdown hygiene — all `.md` files in skill folder pass `npx markdownlint-cli2`; zero errors on uncompressed.md, spec.md, instructions.uncompressed.md; compressed files (SKILL.md, instructions.txt) exempt.
+9. No dispatch refs in instructions — `instructions.txt` mustn't tell agent to dispatch other skills; subagents can't dispatch, only host agent can; "Related" context refs OK; "run this skill"/"dispatch this" → FAIL; remediation: move dispatch steps to SKILL.md.
 
 Verdict Rules:
-- PASS: All 10 checks pass
-- NEEDS_REVISION: 1-2 non-critical issues. List fixes.
-- FAIL: Classification error, missing instruction file, structural breakdown
+PASS: all 3 phases pass.
+NEEDS_REVISION: Phase 1 and 2 pass; Phase 3 has 1-2 non-critical issues. List fixes.
+FAIL: any phase fails, or Phase 3 has critical issues.
 
 Report Format:
 ```markdown
@@ -43,19 +47,40 @@ Report Format:
 **Verdict:** PASS | NEEDS_REVISION | FAIL
 **Type:** inline | dispatch
 **Path:** <path>
+**Failed phase:** <1 | 2 | 3 | none>
 
-### Checklist
+### Phase 1 — Spec Gate
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Spec exists | PASS/FAIL/SKIP | |
+| Required sections | PASS/FAIL | |
+| Normative language | PASS/FAIL | |
+| Internal consistency | PASS/FAIL | |
+| Completeness | PASS/FAIL | |
+
+### Phase 2 — Skill Smoke Check
 
 | Check | Result | Notes |
 | --- | --- | --- |
 | Classification | PASS/FAIL | |
 | Structure | PASS/FAIL | |
-| Companion spec | PASS/FAIL/N/A | |
+| Frontmatter | PASS/FAIL | |
+| No duplication | PASS/FAIL | |
+
+### Phase 3 — Spec Compliance
+
+| Check | Result | Notes |
+| --- | --- | --- |
+| Coverage | PASS/FAIL | |
+| No contradictions | PASS/FAIL | |
+| No unauthorized additions | PASS/FAIL | |
 | Conciseness | PASS/FAIL | |
 | Completeness | PASS/FAIL | |
 | Breadcrumbs | PASS/FAIL | |
 | Cost analysis | PASS/FAIL/N/A | |
-| No duplication | PASS/FAIL | |
+| Markdown hygiene | PASS/FAIL | |
+| No dispatch refs | PASS/FAIL/N/A | |
 
 ### Issues
 - <issue and fix>
@@ -64,4 +89,4 @@ Report Format:
 <one line>
 ```
 
-Rules: Read-only. Never modify skill. One skill per dispatch. Evidence-based verdicts. When in doubt, NEEDS_REVISION over PASS.
+Rules: read-only; never modify skill; one skill per dispatch; evidence-based verdicts; when in doubt, NEEDS_REVISION over PASS.

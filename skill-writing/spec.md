@@ -21,6 +21,44 @@ Applies when creating a new skill or revising an existing one. Covers
 structure, classification, quality criteria, and the relationship between
 skills and their companion agents.
 
+## Skill Creation Workflow
+
+When creating a new skill, these steps must be followed in this exact
+order. No step may be skipped.
+
+1. **Write spec** — use the `spec-writing` skill to write `spec.md` in
+   the skill's folder. The spec defines purpose, scope, requirements,
+   constraints, and acceptance criteria. The spec is the source of truth
+   for everything that follows.
+2. **Write uncompressed skill** — derive `uncompressed.md` from the spec.
+   This is the human-readable baseline that contains all runtime
+   instructions. Every normative requirement in the spec must be
+   represented. No new requirements may be introduced that are not in
+   the spec.
+3. **Compress** — use the `compression` skill in source→target mode
+   (`--source uncompressed.md --target SKILL.md`) to produce the
+   compressed runtime file. SKILL.md is what agents load at runtime.
+4. **Audit** — use the `skill-auditing` skill to verify the SKILL.md
+   against the spec. Use a Haiku-class model for iteration rounds (cheaper, faster).
+   Use a Sonnet-class model for the final sign-off audit.
+5. **Fix and re-audit** — address audit findings in the uncompressed.md,
+   recompress, re-audit. Repeat until the audit returns PASS.
+
+For dispatch skills, the companion agent file must also be written
+(step 2) and verified as reachable (step 4).
+
+### Revision workflow
+
+When modifying an existing skill:
+
+1. Update the spec first if the change affects requirements or constraints
+2. Update uncompressed.md to reflect the spec change
+3. Recompress to SKILL.md
+4. Re-audit
+
+Never modify SKILL.md directly — it is a compiled artifact. Changes
+flow: spec → uncompressed → compressed.
+
 ## Definitions
 
 - **Skill**: A `SKILL.md` file containing instructions an agent follows to
@@ -52,7 +90,7 @@ skills and their companion agents.
 
 The fundamental question: **does the task require the caller's context?**
 
-### Use inline skill when:
+### Use inline skill when
 
 - The task requires understanding *why* — creative intent, design context,
   judgment about the current situation
@@ -63,7 +101,7 @@ The fundamental question: **does the task require the caller's context?**
 **Examples:** spec-writing, skill-writing, agent-writing, communication
 guidelines, git discipline, friction protocol.
 
-### Use dispatch skill (skill+agent pair) when:
+### Use dispatch skill (skill+agent pair) when
 
 - The task is *mechanical processing* against rules
 - The input is self-contained (file path, parameters)
@@ -163,9 +201,13 @@ generic agent reads it and follows it. The Dispatch agent
 
 - Skill directory name = kebab-case, descriptive
 - `SKILL.md` = the runtime file (always this exact name)
-- `spec.md` = companion spec (required for dispatch and complex
-  inline skills; may omit for simple inline skills under ~30 lines)
-- Dispatch instruction files: `<name>.md` in the same directory
+- `spec.md` = companion spec (always this exact name — no prefix, no
+  "SKILL" in the filename). Required for dispatch and complex inline
+  skills; may omit for simple inline skills under ~30 lines
+- `uncompressed.md` = human-readable baseline (always this exact name)
+- Dispatch instruction files: `instructions.txt` or `<name>.md` in
+  the same directory
+- Never use "SKILL" in any filename except `SKILL.md`
 
 ### Content
 
@@ -242,7 +284,6 @@ change history, credits, publication notes.
 - **spec-writing**: Governs how to write the companion spec
 - **spec-auditing**: Verifies companion specs meet quality bar
 - **compression**: Exemplar for the dispatch pattern
-- **task-verification**: Exemplar for the audit/verify dispatch pattern
 
 ## Non-Goals
 
