@@ -93,6 +93,11 @@ Remaining: M errors (manual fix required)
 
 ## Constraints
 
+- Do not recommend, install, or invoke specific external
+  tools (e.g. npx, markdownlint-cli2). Use available
+  built-in tools and agent intelligence to identify and
+  fix violations. "markdownlint" here refers to the rule
+  set, not a specific CLI package.
 - Never suppress rules — fix them
 - Never modify content meaning — only formatting
 - Never introduce new violations while fixing others (e.g.,

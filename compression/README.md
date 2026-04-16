@@ -61,25 +61,25 @@ example.
 ## Structure
 
 - [`SKILL.md`](SKILL.md) — describes what compression is and how to dispatch it
-- [`compress.md`](compress.md) — defines how compression runs (git gate, tier resolution, post-flight verification)
+- [`instructions.txt`](instructions.txt) — defines how compression runs (git gate, tier resolution, post-flight verification)
 
-Always route through `compress.md`. Never load `rules.txt` and apply manually — the process enforces safety gates and post-flight checks that protect content integrity.
+Always route through `instructions.txt`. Never load `rules.txt` and apply manually — the process enforces safety gates and post-flight checks that protect content integrity.
 
 ## Quick Start
 
 1. Identify the target audience (human, general, or agent) and pick a tier
-2. Dispatch a background subagent: tell it to read and follow `compress.md` with `<file-path> [--tier <lite|full|ultra>]`
-3. The subagent reads the compress.md itself — don't read it first and repeat it in the prompt
+2. Dispatch a background subagent: tell it to read and follow `instructions.txt` with `<file-path> [--tier <lite|full|ultra>]`
+3. The subagent reads the instructions.txt itself — don't read it first and repeat it in the prompt
 4. The process handles the git gate, applies the tier's `rules.txt`, and runs post-flight verification
 5. Review the reported byte reduction and any fix or rejection notices
 
 ## Optimizing Dispatch
 
-`compress.md` only needs Read and Edit. Prefer an isolated subagent that doesn't inherit your full context. Dispatch in background, in parallel when batching multiple files.
+`instructions.txt` only needs Read and Edit. Prefer an isolated subagent that doesn't inherit your full context. Dispatch in background, in parallel when batching multiple files.
 
 ## Design Decisions
 
-**Why a separate agent file?** Loading `compress.md` into a subagent
+**Why a separate agent file?** Loading `instructions.txt` into a subagent
 keeps the compression process isolated from the caller's context. Custom subagents
 in Claude Code (and VS Code Copilot) get their own fresh context window —
 they don't inherit the parent's conversation history, accumulated reasoning,

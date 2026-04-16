@@ -12,6 +12,6 @@ Dispatch via Dispatch agent (zero context): "Read and follow
 - `result_file` (required): Absolute path for audit report
 - `spec_path` (optional): Companion spec if not co-located
 
-Returns: verdict (PASS / NEEDS_REVISION / FAIL), 8-point checklist, issues.
+Returns: verdict (PASS / NEEDS_REVISION / FAIL), 9-point checklist, issues.
 
 Related: `skill-writing`, `spec-auditing`, `compression`

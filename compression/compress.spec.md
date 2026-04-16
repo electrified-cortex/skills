@@ -1,6 +1,6 @@
 ---
 title: Compression Process Spec
-companion: compress.md
+companion: instructions.txt
 last-updated: 2026-04-14
 ---
 

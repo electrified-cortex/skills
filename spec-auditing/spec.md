@@ -76,7 +76,7 @@ The auditor must identify:
 
 Unless otherwise stated:
 
-1. `AGENT.spec.md` defines how the audit must be conducted
+1. `spec.md` defines how the audit must be conducted
 2. The spec file defines what is authoritative about the subject matter
 3. The target file is subordinate to the spec
 

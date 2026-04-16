@@ -10,7 +10,7 @@ Dispatch (Dispatch agent, zero context): "Read and follow `instructions.txt` (in
 `spec_path` (optional): companion spec if not co-located
 
 Returns: verdict (PASS / NEEDS_REVISION / FAIL),
-8-point checklist, issues.
+9-point checklist, issues.
 
 Tiered model pattern: Haiku for iteration, Sonnet for
 final sign-off. Run Haiku until PASS, then one Sonnet

@@ -26,8 +26,11 @@ no `--target` was given, create `<file>.fixed` alongside.
 
 ## Procedure
 
-1. Run `npx markdownlint-cli2 "<file_path>"` if available. Otherwise scan manually.
-2. Use any available linting tools (CLI, MCP, built-in) to identify violations.
+1. Read the file and scan for markdownlint violations
+   using your own knowledge of markdown rules.
+2. Use any tools already available to you (built-in,
+   MCP) to assist — do not install or invoke external
+   packages.
 3. Read the file.
 4. Fix every violation:
    - Add/remove blank lines around headings and code blocks (MD022, MD031)
@@ -82,4 +85,5 @@ Remaining: M errors (manual fix required)
 - Preserve code blocks, frontmatter, and technical strings exactly.
 - If a fix would change meaning, report as unfixable.
 - One file per dispatch.
-- Use available tools (markdownlint CLI, MCP tools, etc.) — don't rely on one tool.
+- Use available tools and your own knowledge — do not
+  install or invoke external packages.

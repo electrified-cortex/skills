@@ -10,10 +10,9 @@ the full story.
 
 | Skill | Description |
 | --- | --- |
-| [agent-optimizer](agent-optimizer/) | Analyze agent files for per-turn token cost — recommend content placement across three tiers (agent file, manifest, skills) |
 | [compression](compression/) | Token-saving compression for `.md` files — three tiers (Lite, Full, Ultra) for different audiences |
 | [gh-cli](gh-cli/) | GitHub CLI operations — routes to domain-specific sub-skills via agent dispatch |
-| [spec-auditor](spec-auditor/) | Audit spec/companion pairs for drift and consistency |
+| [spec-auditing](spec-auditing/) | Audit spec/companion pairs for drift and consistency |
 | [spec-writing](spec-writing/) | Write behavioral specs (`.spec.md` files) for any file, feature, or system — plus specialized sub-skills for compiling specs into agent and skill files |
 
 | **Agent** | **Description** |
