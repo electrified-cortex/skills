@@ -9,6 +9,11 @@ Dispatch (Dispatch agent, zero context): "Read and follow `instructions.txt` (in
 `result_file` (required): path for audit report
 `spec_path` (optional): companion spec if not co-located
 
-Returns: verdict (PASS / NEEDS_REVISION / FAIL), 8-point checklist, issues.
+Returns: verdict (PASS / NEEDS_REVISION / FAIL),
+8-point checklist, issues.
+
+Tiered model pattern: Haiku for iteration, Sonnet for
+final sign-off. Run Haiku until PASS, then one Sonnet
+pass to confirm. Only Sonnet PASS = production-ready.
 
 Related: `skill-writing`, `spec-auditing`, `compression`

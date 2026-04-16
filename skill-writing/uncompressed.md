@@ -22,9 +22,10 @@ When creating a new skill, follow this order. Never skip steps.
 3. **Compress** — use the `compression` skill (source→target mode:
    `--source uncompressed.md --target SKILL.md`). The SKILL.md is the
    compressed runtime agents load.
-4. **Audit** — use `skill-auditing` skill. Haiku-class for iteration
-   rounds, Sonnet-class for final sign-off.
-5. **Fix and re-audit** — address findings, re-audit until PASS.
+4. **Audit** — use `skill-auditing` skill to verify. Fix
+   findings, recompress, re-audit until PASS.
+5. **Final sign-off** — run `skill-auditing` one more time
+   after PASS. Issues → fix and repeat from step 4.
 
 For dispatch skills, also write the companion agent file (see Dispatch
 Skill section).

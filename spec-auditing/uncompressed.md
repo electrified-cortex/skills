@@ -24,7 +24,7 @@ produce shallow, inconsistent audits.
 - Validating skill implementations against skill specs
 - Detecting drift between spec and implementation
 
-Multi-pass audit: Haiku iterations until clean, Sonnet final.
+Multi-pass audit: fix findings, re-audit until PASS.
 
 Related: `spec-writing` (governs specs), `skill-auditing` (audits skills),
 `compression` (exemplar dispatch pattern)

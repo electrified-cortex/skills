@@ -68,16 +68,14 @@ Always route through `compress.md`. Never load `rules.txt` and apply manually â€
 ## Quick Start
 
 1. Identify the target audience (human, general, or agent) and pick a tier
-2. Dispatch a background subagent (Sonnet): tell it to read and follow `compress.md` with `<file-path> [--tier <lite|full|ultra>]`
+2. Dispatch a background subagent: tell it to read and follow `compress.md` with `<file-path> [--tier <lite|full|ultra>]`
 3. The subagent reads the compress.md itself â€” don't read it first and repeat it in the prompt
 4. The process handles the git gate, applies the tier's `rules.txt`, and runs post-flight verification
 5. Review the reported byte reduction and any fix or rejection notices
 
 ## Optimizing Dispatch
 
-`compress.md` only needs Read and Edit. Prefer an isolated subagent (Sonnet-class
-or lower) that doesn't inherit your full context. Dispatch in background, in
-parallel when batching multiple files.
+`compress.md` only needs Read and Edit. Prefer an isolated subagent that doesn't inherit your full context. Dispatch in background, in parallel when batching multiple files.
 
 ## Design Decisions
 
@@ -93,9 +91,7 @@ adding permanent token cost for instructions that only matter during the
 brief compression run. Delegating to a subagent keeps the caller's context
 lean.
 
-**Why Sonnet-class?** Compression is mechanical: read rules, apply transforms,
-verify output. It doesn't require advanced reasoning. Using Sonnet (or lower)
-instead of Opus cuts cost without affecting quality.
+**Why an isolated subagent?** Compression is mechanical: read rules, apply transforms, verify output. It doesn't require advanced reasoning or the caller's accumulated context.
 
 ## Standards
 

@@ -38,11 +38,9 @@ order. No step may be skipped.
 3. **Compress** — use the `compression` skill in source→target mode
    (`--source uncompressed.md --target SKILL.md`) to produce the
    compressed runtime file. SKILL.md is what agents load at runtime.
-4. **Audit** — use the `skill-auditing` skill to verify the SKILL.md
-   against the spec. Use a Haiku-class model for iteration rounds (cheaper, faster).
-   Use a Sonnet-class model for the final sign-off audit.
-5. **Fix and re-audit** — address audit findings in the uncompressed.md,
-   recompress, re-audit. Repeat until the audit returns PASS.
+4. **Audit** — use the `skill-auditing` skill to verify
+   the SKILL.md against the spec. Fix findings, recompress,
+   re-audit until the audit returns PASS.
 
 For dispatch skills, the companion agent file must also be written
 (step 2) and verified as reachable (step 4).

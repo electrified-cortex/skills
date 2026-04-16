@@ -13,6 +13,6 @@ Modes: Audit (default) — read-only, returns Pass / Pass with Findings / Fail; 
 
 When to use: pre-commit compressed file verification; agent files vs `.spec.md` companions; skill impls vs skill specs; drift detection between spec and impl.
 
-Multi-pass audit: Haiku iterations until clean, Sonnet final.
+Multi-pass audit: fix findings, re-audit until PASS.
 
 Related: `spec-writing` (governs specs), `skill-auditing` (audits skills), `compression` (exemplar dispatch pattern)

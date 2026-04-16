@@ -191,9 +191,29 @@ itself. If the auditor fails its own audit, fix it before auditing others.
 - **spec-auditing** — audits companion specs (complementary, not overlapping)
 - **compression** — exemplar dispatch pattern to compare against
 
+## Tiered Model Strategy
+
+Audits CAN use a tiered model approach to optimize cost:
+
+1. **Haiku passes** — use Haiku (cheapest model) for iterative
+   audit-fix cycles. When the auditor returns NEEDS_REVISION,
+   fix the issues and re-run with Haiku. Repeat until Haiku
+   returns PASS.
+2. **Sonnet final** — after Haiku passes, run one final audit
+   with Sonnet (higher-capability model) as the sign-off pass.
+   Only Sonnet PASS is production-ready.
+
+Rationale: Haiku catches structural and obvious issues cheaply.
+Sonnet catches subtle compliance gaps. Running Sonnet on every
+iteration wastes tokens on issues Haiku already found.
+
+The orchestrating agent (not the auditor itself) controls which
+model is used per dispatch. The auditor skill is model-agnostic.
+
 ## Constraints
 
 - Auditor is read-only — never modifies the skill being audited
-- One skill per dispatch — don't batch audit multiple skills in one run
+- One skill per dispatch — don't batch audit multiple skills
+  in one run
 - Verdict must be justified with evidence from the skill file
 - When in doubt, NEEDS_REVISION over PASS — be adversarial

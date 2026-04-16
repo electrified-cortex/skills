@@ -12,8 +12,8 @@ Workflow: never skip steps.
 1. Spec first — write `spec.md` via `spec-writing` skill.
 2. Write `uncompressed.md` from spec (human-readable baseline).
 3. Compress — `compression` skill, source→target: `--source uncompressed.md --target SKILL.md`.
-4. Audit — `skill-auditing`. Haiku-class for iteration, Sonnet-class for final sign-off.
-5. Fix and re-audit until PASS.
+4. Audit — use `skill-auditing` skill to verify, fix findings, recompress, re-audit until PASS.
+5. Final sign-off — run `skill-auditing` one more time after PASS. Issues → back to step 4.
 Dispatch skills: also write companion agent file.
 Revising: update spec → update uncompressed.md → recompress → re-audit. Never modify SKILL.md directly — it's a compiled artifact.
 
