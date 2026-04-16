@@ -40,20 +40,28 @@ errors remain. Self-contained input/output. Textbook dispatch pattern.
 
 ### Rules to enforce (non-exhaustive, all markdownlint rules apply)
 
-- MD001: Heading levels should only increment by one
+- MD001: Heading levels increment by one only
 - MD003: Heading style consistency
 - MD004: Unordered list style consistency
-- MD009: Trailing spaces
-- MD010: Hard tabs
-- MD012: Multiple consecutive blank lines
-- MD022: Headings should be surrounded by blank lines
-- MD023: Headings must start at the beginning of the line
-- MD025: Single top-level heading (per file)
-- MD029: Ordered list item prefix (1. 2. 3. not 1. 1. 1.)
-- MD031: Fenced code blocks should be surrounded by blank lines
-- MD032: Lists should be surrounded by blank lines
-- MD034: Bare URLs
-- MD047: Files should end with a single newline
+- MD009: No trailing spaces
+- MD010: No hard tabs
+- MD012: No multiple consecutive blank lines
+- MD022: Blank lines around headings
+- MD023: Headings start at line beginning
+- MD024: No duplicate heading text
+- MD025: Single top-level heading per file
+- MD026: No trailing punctuation in headings
+- MD029: Ordered list prefix consistency
+- MD031: Blank lines around fenced code blocks
+- MD032: Blank lines around lists
+- MD033: No inline HTML
+- MD034: No bare URLs
+- MD040: Fenced code blocks must specify language
+- MD047: Single trailing newline at end of file
+- MD055: Consistent table pipe style
+- MD056: Equal column count across table rows
+- MD058: Blank lines around tables
+- MD060: Table column style (consistent pipe spacing)
 
 ### Output
 
@@ -87,13 +95,16 @@ Remaining: M errors (manual fix required)
 
 - Never suppress rules — fix them
 - Never modify content meaning — only formatting
+- Never introduce new violations while fixing others (e.g.,
+  adding blank lines while reflowing causes MD012)
 - Preserve all technical strings, code blocks, frontmatter
-- If a fix would change meaning (e.g., reordering list items), report
-  it as unfixable instead of guessing
+- If a fix would change meaning (e.g., reordering list items),
+  report it as unfixable instead of guessing
 
 ## Integration
 
 Markdown hygiene should run:
+
 1. After compression (compressed files may have lint issues)
 2. Before stamping (only stamp clean files)
 3. As part of skill-auditing checklist (future addition)

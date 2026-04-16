@@ -1,29 +1,57 @@
-Markdown Hygiene Agent
+Fix all markdownlint violations in a .md file. Zero errors is gate.
 
-Fix all markdownlint violations in a .md file. Gate: zero errors.
+Params:
+`file_path` (required): absolute path to .md file
+`result_file` (required): absolute path for report
+`--source X --target Y` (optional): read X, fix, write Y; X untouched, no git check
 
-Dispatch Parameters:
-`file_path` (required): absolute path to .md file to fix
-`result_file` (required): absolute path to write report
+Modes:
+Source→Target: `--source X --target Y` → fix all violations, write to Y. Source untouched.
+In-place (default): run `git status --porcelain -- <file>`. Empty or `M ` (staged only) → fix directly.
+Fallback: unstaged changes or `??` and no `--target` → create `<file>.fixed` alongside.
 
 Procedure:
-1. Run `npx markdownlint-cli2 "<file_path>"` — get current violations
-2. Read file at `file_path`
-3. Fix all violations: headings (MD001,MD003,MD022,MD023,MD025); lists (MD004,MD029,MD032); whitespace (MD009,MD010,MD012,MD047); code blocks (MD031); bare URLs (MD034); all other markdownlint rules
-4. Apply: blank lines around headings/code blocks; heading level increments; normalize list markers+ordered prefixes; remove trailing spaces+hard tabs; collapse multiple blank lines → one; file ends single newline; wrap bare URLs in angle brackets
-5. Re-run `npx markdownlint-cli2 "<file_path>"` — verify zero errors
-6. If unfixable errors remain, list them
-7. Write file back in-place
-8. Write report to `result_file`
+1. Run `npx markdownlint-cli2 "<file_path>"` if available, else scan manually.
+2. Use any available linting tools (CLI, MCP, built-in) to identify violations.
+3. Read file.
+4. Fix every violation:
+   - Blank lines around headings/code blocks (MD022, MD031)
+   - Heading level increments (MD001)
+   - List markers + ordered list prefixes (MD004, MD029)
+   - Trailing spaces + hard tabs (MD009, MD010)
+   - Collapse multiple blank lines to one (MD012)
+   - File ends with single newline (MD047)
+   - Bare URLs in angle brackets (MD034)
+   - Language IDs on fenced code blocks (MD040)
+   - Table pipe spacing (MD060), blank lines around tables (MD058), equal column count (MD056), consistent pipe style (MD055)
+   - No trailing punctuation in headings (MD026)
+   - No inline HTML where markdown works (MD033)
+   - All other markdownlint rules
+5. Write to target (in-place, `.fixed`, or `--target`).
+6. Verify: re-run linter on output, confirm zero errors.
+7. Write report to `result_file`.
 
 Report Format:
-Clean:   `CLEAN: <file_path> (0 errors)`
-Fixed:   `FIXED: <file_path>\n- <rule>: <description> (N occurrences)\nErrors: <before> → 0`
-Partial: `PARTIAL: <file_path>\nFixed: N errors\nRemaining: M errors (manual fix required)\n- <rule>: <description> (line N)`
+Clean: `CLEAN: <file_path> (0 errors)`
+Fixed:
+```text
+FIXED: <file_path>
+- <rule>: <description> (N occurrences)
+Errors: <before> → 0
+```
+Partial:
+```text
+PARTIAL: <file_path>
+Fixed: N errors
+Remaining: M errors (manual fix required)
+- <rule>: <description> (line N)
+```
 
 Rules:
 Fix every violation. Never suppress a rule.
-Never change content meaning — formatting only.
+Never change content meaning — only formatting.
+Never introduce new violations while fixing others.
 Preserve code blocks, frontmatter, technical strings exactly.
-Fix would change meaning → report as unfixable.
+If fix would change meaning, report as unfixable.
 One file per dispatch.
+Use available tools — don't rely on one.

@@ -209,7 +209,9 @@ derived artifact that can always be regenerated.
 ### Mode 2: In-place (default, tracked+clean)
 
 Compress the file directly. Requires the file to be tracked by git with no
-uncommitted changes (`git status --porcelain` returns empty or `M  <file>`).
+uncommitted changes (`git status --porcelain` returns empty,
+or the first character is `M` and the second character is a
+space — meaning staged only, working tree clean).
 This is the original behavior and remains the default when no `--source` or
 `--target` flags are provided.
 

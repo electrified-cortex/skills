@@ -166,6 +166,11 @@ A plain text/markdown file with the procedure. Not a custom agent — any
 generic agent reads it and follows it. The Dispatch agent
 (`dispatch.agent.md`) provides zero-context isolation.
 
+Instruction files must contain only instructions — no title headers,
+no descriptions, no preamble. The dispatching agent already knows what
+it is reading. The SKILL.md routing card handles the "what" and "why";
+the instruction file handles only the "how."
+
 ```markdown
 # <Capability Name>
 

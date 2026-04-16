@@ -1,6 +1,5 @@
-# Markdown Hygiene
-
-Fix all markdownlint violations in a markdown file. Zero errors is the gate.
+Fix all markdownlint violations in a markdown file. Zero
+errors is the gate.
 
 ## Dispatch Parameters
 
@@ -10,9 +9,18 @@ Fix all markdownlint violations in a markdown file. Zero errors is the gate.
 
 ## Modes
 
-**Source→Target:** `--source X --target Y` → read X, fix all violations, write clean version to Y. Source untouched. No git check.
-**In-place (default):** If file is tracked+clean (`git status --porcelain` empty or `M `), fix directly.
-**Fallback:** If file is untracked/dirty and no `--target`, create `<file>.fixed` alongside.
+**Source→Target:** `--source X --target Y` → read X, fix
+all violations, write clean version to Y. Source untouched.
+
+**In-place (default):** Run
+`git status --porcelain -- <file>`. If output is empty
+(completely clean) or the first character is `M` and the
+second character is a space (staged only, working tree
+clean), fix directly.
+
+**Fallback:** If the second character is not a space
+(unstaged changes), or output shows `??` (untracked), and
+no `--target` was given, create `<file>.fixed` alongside.
 
 ## Procedure
 
@@ -28,6 +36,12 @@ Fix all markdownlint violations in a markdown file. Zero errors is the gate.
    - Ensure file ends with single newline (MD047)
    - Wrap bare URLs in angle brackets (MD034)
    - Add language identifiers to fenced code blocks (MD040)
+   - Fix table pipe spacing for consistent style (MD060)
+   - Ensure blank lines around tables (MD058)
+   - Ensure equal column count across table rows (MD056)
+   - Ensure consistent table pipe style (MD055)
+   - No trailing punctuation in headings (MD026)
+   - No inline HTML where markdown works (MD033)
    - Fix all other markdownlint rules
 5. Write to target (in-place, `.fixed`, or `--target` path).
 6. Verify: re-run linter on output to confirm zero errors.
@@ -62,6 +76,7 @@ Remaining: M errors (manual fix required)
 
 - Fix every violation. Never suppress a rule.
 - Never change content meaning — only formatting.
+- Never introduce new violations while fixing others.
 - Preserve code blocks, frontmatter, and technical strings exactly.
 - If a fix would change meaning, report as unfixable.
 - One file per dispatch.
