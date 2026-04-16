@@ -86,7 +86,7 @@ auditing, code review, security review.
 
 ### Inline Skill
 
-```
+```yaml
 ---
 name: <skill-name>
 description: <one-line description>
@@ -98,7 +98,7 @@ This IS the skill — the agent reads and applies it.>
 
 ### Dispatch Skill (Routing Card)
 
-```
+```yaml
 ---
 name: <skill-name>
 description: <one-line description>
@@ -128,7 +128,7 @@ A plain text/markdown file with the procedure. Not a custom agent — any
 generic agent reads it and follows it. The Dispatch agent
 (`dispatch.agent.md`) provides zero-context isolation.
 
-```
+```markdown
 # <Capability Name>
 
 ## Dispatch Parameters

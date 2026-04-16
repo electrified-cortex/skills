@@ -58,11 +58,14 @@ errors remain. Self-contained input/output. Textbook dispatch pattern.
 ### Output
 
 Report format:
-```
+
+```text
 CLEAN: <file_path> (0 errors)
 ```
+
 or
-```
+
+```text
 FIXED: <file_path>
 - <rule>: <description of fix> (N occurrences)
 - <rule>: <description of fix> (N occurrences)
@@ -72,7 +75,8 @@ Errors: <before> → 0
 ### Gate
 
 Zero errors after fixing. If any error cannot be auto-fixed:
-```
+
+```text
 PARTIAL: <file_path>
 Fixed: N errors
 Remaining: M errors (manual fix required)

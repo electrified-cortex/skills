@@ -26,13 +26,14 @@ Read the target skill, evaluate against the 8-point checklist, write verdict.
 ### 1. Classification
 
 Apply: "Could someone with no context do this from just the inputs?"
+
 - Yes → should be dispatch. No → should be inline.
 - Flag misclassification.
 
 ### 2. Structure
 
 **Inline:** frontmatter (`name`, `description`), direct instructions, self-contained.
-**Dispatch:** SKILL.md ≤15 lines routing content. Instruction file exists. Params
+**Dispatch:** SKILL.md ~15 lines routing content (note if over 15, not verdict-affecting). Instruction file exists. Params
 typed with required/optional/defaults. Output format specified. Uses Dispatch agent
 (isolated), not background agent with host context.
 
@@ -81,9 +82,17 @@ typed with required/optional/defaults. Output format specified. Uses Dispatch ag
 - Zero errors on uncompressed.md, spec.md, and instructions.uncompressed.md
 - Compressed files (SKILL.md, instructions.txt) are exempt (may strip formatting)
 
+### 10. No Dispatch References in Instructions
+
+- `instructions.txt` must not tell the agent to dispatch other skills
+- Subagents can't dispatch — only the host agent can
+- References to other skills as "Related" context are OK
+- References as "run this skill" or "dispatch this" → FAIL
+- Remediation: move dispatch steps to SKILL.md where the host agent orchestrates the sequence
+
 ## Verdict Rules
 
-- **PASS**: All 9 checks pass
+- **PASS**: All 10 checks pass
 - **NEEDS_REVISION**: 1-2 non-critical issues. List fixes.
 - **FAIL**: Classification error, missing instruction file, structural breakdown
 

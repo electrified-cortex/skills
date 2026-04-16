@@ -51,11 +51,13 @@ Apply the decision tree from the skill-writing spec:
 ### 2. Structure
 
 **For inline skills:**
+
 - Has frontmatter with `name` and `description`
 - Instructions are direct and actionable
 - Self-contained (no dependency on companion spec at runtime)
 
 **For dispatch skills (routing cards):**
+
 - SKILL.md is ≤15 lines of routing content
 - Dispatch instruction file exists and is reachable
 - Parameters documented with types, required/optional, and defaults

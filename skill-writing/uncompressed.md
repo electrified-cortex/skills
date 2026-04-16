@@ -18,7 +18,7 @@ Never reference `spec.md` at runtime. Minimize tokens.
 
 ## Skill Folder Convention
 
-```
+```text
 skill-name/
 ├── SKILL.md            ← compressed runtime (what agents load)
 ├── instructions.txt    ← dispatch procedure (dispatch skills only)

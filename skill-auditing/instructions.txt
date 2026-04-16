@@ -1,13 +1,13 @@
-Read target skill, evaluate against 8-point checklist, write verdict.
+Read target skill, evaluate against 10-point checklist, write verdict.
 
 Params: `skill_path` (required); `result_file` (required); `spec_path` (optional, if not beside SKILL.md)
 
 Procedure:
 1. Read skill at `skill_path`; determine type: inline or dispatch
 2. Check companion spec in order: `spec_path` if provided → `spec.md` in same dir → `<skill-name>.spec.md` in same dir. If found, read it. If not found: N/A for simple inline (<30 lines), FAIL for dispatch/complex inline.
-3. Run 8-point checklist → assign verdict → write report to `result_file`
+3. Run 10-point checklist → assign verdict → write report to `result_file`
 
-8-Point Checklist:
+10-Point Checklist:
 
 1. Classification — "Could someone with no context do this from just the inputs?" Yes → dispatch, No → inline. Flag misclassification.
 
@@ -27,8 +27,12 @@ Dispatch: SKILL.md ≤15 lines. Instruction file exists. Params typed with requi
 
 8. No Duplication — Not duplicating existing capability; if similar exists, recommend merge or distinguish.
 
+9. Markdown Hygiene — All `.md` files in skill folder pass `npx markdownlint-cli2`; zero errors on uncompressed.md, spec.md, instructions.uncompressed.md; compressed files (SKILL.md, instructions.txt) exempt.
+
+10. No Dispatch References in Instructions — `instructions.txt` mustn't tell agent to dispatch other skills; subagents can't dispatch, only host agent can; "Related" context refs OK; "run this skill"/"dispatch this" → FAIL; remediation: move dispatch steps to SKILL.md.
+
 Verdict Rules:
-- PASS: All 8 checks pass
+- PASS: All 10 checks pass
 - NEEDS_REVISION: 1-2 non-critical issues. List fixes.
 - FAIL: Classification error, missing instruction file, structural breakdown
 

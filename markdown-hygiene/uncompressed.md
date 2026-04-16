@@ -5,10 +5,13 @@ description: Fix all markdownlint violations in a .md file. Zero errors gate. Di
 
 # Markdown Hygiene
 
-Dispatch via Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory). Input: `file_path=<path> result_file=<path>`"
+Dispatch via Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory). Input: `file_path=<path> result_file=<path> [--source <src> --target <dst>]`"
 
 - `file_path` (required): Absolute path to .md file
 - `result_file` (required): Absolute path for report
+- `--source X --target Y` (optional): Read X, fix, write to Y. No git check.
+
+Modes: `--source/--target` → source untouched; default → in-place if tracked+clean; fallback → `.fixed` alongside.
 
 Returns: CLEAN (0 errors), FIXED (errors→0), or PARTIAL (unfixable remain).
 
