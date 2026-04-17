@@ -26,7 +26,7 @@ If you already know the domain, dispatch the sub-skill directly.
 
 ## How Dispatch Works
 
-This skill is invoked via `AGENT.md`. The agent reads the request, identifies
+This skill is invoked via `instructions.txt`. The agent reads the request, identifies
 the domain, and dispatches a subagent to the appropriate sub-skill's `SKILL.md`.
 
 Do not load this skill expecting it to run `gh` commands itself. It routes.
