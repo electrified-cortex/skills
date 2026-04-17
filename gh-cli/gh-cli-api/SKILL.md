@@ -49,7 +49,7 @@ gh api graphql -f query='
 
 GitHub Enterprise: add `--hostname enterprise.internal` to any call.
 
-Token safety — never pass tokens as command arguments. Use env var:
-```
-GH_TOKEN=<token> gh api /user
-```
+Token safety — never pass tokens as command arguments
+or inline env vars (leaks to shell history). Prefer
+`gh auth login` or set `GH_TOKEN` in your environment
+config before invoking commands.
