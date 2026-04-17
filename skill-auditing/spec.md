@@ -70,13 +70,22 @@ Quick structural verification of the SKILL.md.
 1. **Classification** — apply the decision tree from the skill-writing
    spec: "Could someone with no context do this from just the inputs?"
    Yes → should be dispatch. No → should be inline. Flag misclassification.
-2. **Structure** — for inline: has frontmatter (`name`, `description`),
+2. **Inline/dispatch file consistency** — file-system evidence determines
+   type: any allowed dispatch instruction file present (`instructions.txt`,
+   `<name>.md` in the skill directory, or the instruction file explicitly
+   referenced by SKILL.md) → dispatch; no such file found → inline. If
+   Check #1 and this check disagree, flag the conflict as a finding but do
+   NOT double-fail — note the conflict. If dispatch: verify SKILL.md is a
+   short routing card. If inline: verify SKILL.md contains the full
+   procedure. Mismatch between file-system evidence and SKILL.md structure
+   → FAIL.
+3. **Structure** — for inline: has frontmatter (`name`, `description`),
    direct instructions, self-contained. For dispatch: SKILL.md ≤15 lines
-   of routing content, instruction file exists and is reachable,
-   parameters typed with required/optional/defaults, output format
-   specified, uses Dispatch agent (isolated).
-3. **Frontmatter** — `name` and `description` present and accurate.
-4. **No duplication** — skill does not duplicate an existing capability.
+   of routing content, an allowed dispatch instruction file exists and is
+   reachable, parameters typed with required/optional/defaults, output
+   format specified, uses Dispatch agent (isolated).
+4. **Frontmatter** — `name` and `description` present and accurate.
+5. **No duplication** — skill does not duplicate an existing capability.
    If similar skill exists, recommend merge or distinguish clearly.
 
 If any smoke check fails, the verdict is FAIL. Do not proceed to
@@ -147,6 +156,7 @@ This is the final quality gate.
 | Check | Result | Notes |
 | --- | --- | --- |
 | Classification | PASS/FAIL | |
+| Inline/dispatch consistency | PASS/FAIL | |
 | Structure | PASS/FAIL | |
 | Frontmatter | PASS/FAIL | |
 | No duplication | PASS/FAIL | |

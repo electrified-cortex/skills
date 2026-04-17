@@ -64,11 +64,12 @@ should be dispatch. No → should be inline. Flag misclassification.
 
 ### 2. Inline/dispatch file consistency
 
-File presence is definitive for type: `instructions.txt` present → skill
-is **dispatch**; absent → skill is **inline**. If Check #1 (Classification)
-and this check disagree (e.g., task seems inline but `instructions.txt`
-exists), flag the conflict as a finding but do NOT double-fail — note the
-conflict and let the auditor decide.
+File presence is definitive for type: any allowed dispatch instruction file
+present (`instructions.txt` or `<name>.md` in the skill directory, or the
+instruction file explicitly referenced by SKILL.md) → skill is **dispatch**;
+no such file found → skill is **inline**. If Check #1 (Classification) and
+this check disagree, flag the conflict as a finding but do NOT double-fail —
+note the conflict and let the auditor decide.
 
 If dispatch: verify SKILL.md is a short routing card (structural details
 in Check #3). If inline: verify SKILL.md contains the full procedure.
