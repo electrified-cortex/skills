@@ -17,11 +17,12 @@ Phase 1 fail → verdict FAIL, report which check failed, don't proceed to Phase
 
 Phase 2 — Skill Smoke Check: quick structural verification.
 1. Classification — "Could someone with no context do this from just the inputs?" Yes → should be dispatch; No → should be inline. Flag misclassification.
-2. Structure
+2. Inline/dispatch file consistency — File presence is definitive: `instructions.txt` present → dispatch; absent → inline. If Check #1 and this check disagree, flag the conflict as a finding but do NOT double-fail — note conflict and let auditor decide. If dispatch: verify SKILL.md is a short routing card (structural details in Check #3). If inline: verify SKILL.md contains full procedure. Mismatch between file-system evidence and SKILL.md structure → FAIL.
+3. Structure
    Inline: frontmatter (`name`, `description`), direct instructions, self-contained.
    Dispatch: SKILL.md ≤15 lines routing content; instruction file exists and reachable; params typed with required/optional/defaults; output format specified; uses Dispatch agent (isolated), not background agent with host context.
-3. Frontmatter — `name` and `description` present and accurate.
-4. No duplication — not duplicating existing capability; if similar exists, recommend merge or distinguish.
+4. Frontmatter — `name` and `description` present and accurate.
+5. No duplication — not duplicating existing capability; if similar exists, recommend merge or distinguish.
 Phase 2 fail → verdict FAIL, don't proceed to Phase 3.
 
 Phase 3 — Spec Compliance Audit: deep verification SKILL.md faithfully represents spec.
@@ -64,6 +65,7 @@ Report Format:
 | Check | Result | Notes |
 | --- | --- | --- |
 | Classification | PASS/FAIL | |
+| Inline/dispatch consistency | PASS/FAIL | |
 | Structure | PASS/FAIL | |
 | Frontmatter | PASS/FAIL | |
 | No duplication | PASS/FAIL | |

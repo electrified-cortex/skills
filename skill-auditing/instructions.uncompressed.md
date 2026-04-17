@@ -62,7 +62,19 @@ Quick structural verification of the SKILL.md.
 Apply: "Could someone with no context do this from just the inputs?" Yes →
 should be dispatch. No → should be inline. Flag misclassification.
 
-### 2. Structure
+### 2. Inline/dispatch file consistency
+
+File presence is definitive for type: `instructions.txt` present → skill
+is **dispatch**; absent → skill is **inline**. If Check #1 (Classification)
+and this check disagree (e.g., task seems inline but `instructions.txt`
+exists), flag the conflict as a finding but do NOT double-fail — note the
+conflict and let the auditor decide.
+
+If dispatch: verify SKILL.md is a short routing card (structural details
+in Check #3). If inline: verify SKILL.md contains the full procedure.
+Mismatch between file-system evidence and SKILL.md structure → FAIL.
+
+### 3. Structure
 
 **Inline:** frontmatter (`name`, `description`), direct instructions,
 self-contained.
@@ -71,11 +83,11 @@ and is reachable. Params typed with required/optional/defaults. Output
 format specified. Uses Dispatch agent (isolated), not background agent with
 host context.
 
-### 3. Frontmatter
+### 4. Frontmatter
 
 `name` and `description` present and accurate.
 
-### 4. No duplication
+### 5. No duplication
 
 Not duplicating existing capability. If similar exists, recommend merge or
 distinguish.
@@ -167,6 +179,7 @@ FAIL. Remediation: move dispatch steps to SKILL.md.
 | Check | Result | Notes |
 | --- | --- | --- |
 | Classification | PASS/FAIL | |
+| Inline/dispatch consistency | PASS/FAIL | |
 | Structure | PASS/FAIL | |
 | Frontmatter | PASS/FAIL | |
 | No duplication | PASS/FAIL | |
