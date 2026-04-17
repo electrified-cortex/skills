@@ -1,64 +1,39 @@
-# GH CLI PR Review
+GH CLI PR Review — perform and dismiss PR reviews via `gh pr review`.
 
-Perform and dismiss pull request reviews using `gh pr review`.
-
-## Approving a Pull Request
-
-Approve with optional body message:
-
+Approve:
 ```bash
 gh pr review 123 --approve --body "LGTM"
 ```
 
-## Requesting Changes
-
-Request changes. A body is required to explain what needs to be addressed:
-
+Request changes — body required to explain what needs addressing:
 ```bash
 gh pr review 123 --request-changes --body "Please address X before merging"
 ```
 
-## Comment-Only Review (No Verdict)
-
-Submit a review comment without approving or requesting changes:
-
+Comment-only (no verdict):
 ```bash
 gh pr review 123 --comment --body "Thoughts inline"
 ```
 
-## Dismissing a Review
-
-Dismiss a previously submitted review. `--review-id` is required — `gh` won't accept `--dismiss` without it:
-
+Dismiss review — `--review-id` required; `gh` won't accept `--dismiss` without it:
 ```bash
 gh pr review 123 --dismiss --review-id <review-id> --body "reason"
 ```
-
-To obtain review ID:
-
+Obtain review ID:
 ```bash
 gh pr view 123 --json reviews --jq '.reviews[].id'
 ```
 
-## Adding Reviewers
-
-To add reviewers at PR creation time, use `gh pr create --reviewer`. To add after creation:
-
+Add reviewers — at creation use `gh pr create --reviewer`; after creation:
 ```bash
 gh pr edit 123 --add-reviewer user
 ```
+Covered by `gh-cli-prs-create`, not this skill.
 
-These are covered by `gh-cli-prs-create`, not this skill.
-
-## Resolving Review Threads
-
-Resolving review threads has no `gh pr` command. Use `resolveReviewThread` GraphQL mutation via `gh-cli-api`:
-
+Resolve review threads — no `gh pr` command; use GraphQL via `gh-cli-api`:
 ```bash
 gh api graphql -f query='
   mutation { resolveReviewThread(input: {threadId: "THREAD_ID"}) { thread { isResolved } } }'
 ```
 
-## Scope Boundaries
-
-Covers `gh pr review` only. Doesn't cover inline review comments (adding comments to specific code lines), requesting reviewers (see `gh-cli-prs-create`), or resolving review threads (see `gh-cli-api`).
+Scope: `gh pr review` only. Excludes inline review comments (specific code lines), requesting reviewers (→ `gh-cli-prs-create`), resolving threads (→ `gh-cli-api`).

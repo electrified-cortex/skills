@@ -1,21 +1,10 @@
-# GH CLI Router
+GH CLI Router — routes GitHub CLI tasks to correct domain sub-skill; doesn't run `gh` commands itself.
 
-Routes GitHub CLI tasks to correct domain sub-skill. Doesn't run `gh` commands itself.
+Use when: task domain unclear, or want auto-routing. Know domain → dispatch sub-skill directly.
 
-## When to Use
+Flow: parse task → identify domain → if unclear, ask caller → load+invoke sub-skill → sub-skill executes+reports. Multi-domain: complete primary first, report remaining to caller.
 
-Use when you have a GitHub CLI task and aren't sure which sub-skill owns it, or want routing handled automatically. If you already know the domain, dispatch sub-skill directly.
-
-## How It Works
-
-1. Parse task to identify domain.
-2. If domain unclear, ask caller for clarification before proceeding.
-3. Load and invoke domain sub-skill; follow its instructions.
-4. Sub-skill executes commands and reports results.
-5. If task spans multiple domains, handle primary domain and report remaining work to caller.
-
-## Domain Routing
-
+Domain Routing:
 | Domain | Sub-skill | Use for |
 | --- | --- | --- |
 | actions | gh-cli-actions/ | Workflows, runs, secrets, variables, caches |
@@ -25,19 +14,15 @@ Use when you have a GitHub CLI task and aren't sure which sub-skill owns it, or 
 | prs | gh-cli-prs/ | Pull request lifecycle router |
 | releases | gh-cli-releases/ | Release lifecycle: create, publish, upload assets |
 | repos | gh-cli-repos/ | Repository management: create, clone, fork, sync |
-| setup | gh-cli-setup/ | Install, authenticate, and configure gh |
+| setup | gh-cli-setup/ | Install, authenticate, configure gh |
 
-## PR Sub-skills
+PR sub-skills under gh-cli-prs/:
+gh-cli-prs-comments/ — add, edit, delete PR comments
+gh-cli-prs-create/ — open new PRs
+gh-cli-prs-merge/ — merge strategies, branch updates, revert
+gh-cli-prs-review/ — approve, request changes, dismiss reviews
 
-prs domain has its own sub-skills under gh-cli-prs/:
-
-- gh-cli-prs-comments/ — adding, editing, deleting PR comments
-- gh-cli-prs-create/ — opening new pull requests
-- gh-cli-prs-merge/ — merge strategies, branch updates, revert
-- gh-cli-prs-review/ — approve, request changes, dismiss reviews
-
-## Rules
-
-- Always verify `gh auth status` before executing commands if setup skill wasn't already loaded.
-- Never improvise commands — use only what domain skill documents.
-- One domain per invocation. If task spans multiple domains, complete primary one first and note remaining work.
+Rules:
+Verify `gh auth status` before commands if setup skill not yet loaded.
+Never improvise commands — use only what domain skill documents.
+One domain per invocation; multi-domain → complete primary, note remaining.

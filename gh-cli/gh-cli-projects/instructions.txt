@@ -1,94 +1,52 @@
-# GH CLI Projects
+GH CLI Projects — GitHub Projects v2 via `gh project`: create, manage items, edit fields, archive, delete.
 
-Manage GitHub Projects v2 using `gh project`. Covers creating projects, managing items (issues and PRs), editing fields, and deleting or archiving content.
-
-## Important: Projects Use Numeric IDs
-
-Most `gh project` commands operate on project numbers, not names. Resolve project name to its number before running other commands:
-
+Projects use numeric IDs — resolve name → number before other commands:
 ```bash
 gh project list --owner owner --format json --jq '.projects[] | select(.title=="My Project") | .number'
 ```
 
-## Creating a Project
-
-Create a project for a user or organization:
-
+Create:
 ```bash
 gh project create --owner owner --title "My Project"
 gh project create --owner orgname --title "Project"
 ```
 
-## Adding Items
-
-Add an issue or PR to a project by URL:
-
+Add item (issue or PR) by URL:
 ```bash
 gh project item-add PROJECT_NUM --owner owner --url https://github.com/owner/repo/issues/123
 ```
 
-## Listing Items
-
-List all items in a project:
-
+List items:
 ```bash
 gh project item-list PROJECT_NUM --owner owner
 ```
 
-## Creating Fields
-
-Create a custom field on a project:
-
+Create field:
 ```bash
 gh project field-create PROJECT_NUM --owner owner --name "Status" --data-type "SINGLE_SELECT"
 ```
+Supported types: `TEXT`, `NUMBER`, `DATE`, `SINGLE_SELECT`, `ITERATION`.
 
-Supported data types: `TEXT`, `NUMBER`, `DATE`, `SINGLE_SELECT`, `ITERATION`.
-
-## Editing Item Fields
-
-Single-select fields require option ID, not label text. Retrieve option ID first:
-
+Edit item field — single-select requires option ID, not label text; retrieve first:
 ```bash
 gh project field-list PROJECT_NUM --owner owner --format json --jq '.fields[] | select(.name=="Status") | .options'
-```
-
-Then update the item:
-
-```bash
 gh project item-edit PROJECT_NUM --owner owner --id ITEM_ID --field-id FIELD_ID --single-select-option-id OPTION_ID
 ```
 
-## Archiving vs. Deleting Items
-
-Archiving hides an item but keeps it in the project:
-
+Archive vs delete:
 ```bash
-gh project item-archive PROJECT_NUM --owner owner --id ITEM_ID
+gh project item-archive PROJECT_NUM --owner owner --id ITEM_ID   # hides, keeps in project
+gh project item-delete PROJECT_NUM --owner owner --id ITEM_ID    # permanent
 ```
 
-Deleting removes it permanently:
-
-```bash
-gh project item-delete PROJECT_NUM --owner owner --id ITEM_ID
-```
-
-## Copying a Project as Template
-
-Copy an existing project to a new one:
-
+Copy project as template:
 ```bash
 gh project copy PROJECT_NUM --source-owner owner --target-owner owner --title "New Project"
 ```
 
-## Deleting a Project
-
-Delete an entire project permanently:
-
+Delete project:
 ```bash
 gh project delete PROJECT_NUM --owner owner
 ```
 
-## Scope Boundaries
-
-Covers `gh project` only. Doesn't manage GitHub Projects v1 (classic boards), configure project automation rules, or link issues to projects — item addition is the linking mechanism.
+Scope: `gh project` only. Excludes Projects v1 (classic boards), automation rules, and direct issue→project linking — use item-add for linking.

@@ -1,67 +1,40 @@
-# GH CLI PR Merge
+GH CLI PR Merge — finalize PRs via `gh pr merge`, `gh pr update-branch`, `gh pr revert`: merge, branch sync, revert, close.
 
-Finalize pull requests using `gh pr merge`, `gh pr update-branch`, and `gh pr revert`. Covers merging, keeping branch current, reverting merged PRs, and closing without merging.
+Merge — choose strategy matching repo policy:
 
-## Merging a Pull Request
-
-Choose merge strategy matching repository policy:
-
-**Merge commit** — preserves full commit history:
-
+Merge commit (preserves full history):
 ```bash
 gh pr merge 123 --merge --delete-branch
 ```
 
-**Squash** — combines all commits into one:
-
+Squash (all commits → one):
 ```bash
 gh pr merge 123 --squash --delete-branch
 ```
 
-**Rebase** — replays commits on top of base branch:
-
+Rebase (replays commits on base):
 ```bash
 gh pr merge 123 --rebase
 ```
+`--delete-branch` removes source branch after successful merge.
 
-Use `--delete-branch` to remove source branch after successful merge.
-
-## Updating a Branch That Is Behind
-
-When PR branch has fallen behind its base branch:
-
+Update branch behind base:
 ```bash
 gh pr update-branch 123
-```
-
-If there are conflicts and you need to force the update:
-
-```bash
 gh pr update-branch 123 --force
 ```
+`--force` may overwrite local changes — use with care.
 
-Use `--force` with care — it may overwrite local changes.
-
-## Reverting a Merged PR
-
-Open a new revert PR undoing changes from a previously merged PR:
-
+Revert merged PR — opens new revert PR:
 ```bash
 gh pr revert 123 --branch revert-pr-123
 ```
 
-## Closing Without Merging
-
-Close without merging, with optional explanation comment:
-
+Close without merging:
 ```bash
 gh pr close 123 --comment "Superseded by #456"
 ```
 
-## Checking Readiness Before Merge
+Check CI before merge via `gh pr checks 123` — covered by `gh-cli-prs` inspection, not this sub-skill.
 
-Check CI status before merging using `gh pr checks 123`. That command is covered by `gh-cli-prs` inspection commands, not this sub-skill.
-
-## Scope Boundaries
-
-Covers `gh pr merge`, `gh pr update-branch`, `gh pr revert`, and `gh pr close`. Doesn't cover reviewing before merge (see `gh-cli-prs-review`) or git operations after merge such as pulling updated base locally.
+Scope: `gh pr merge`, `gh pr update-branch`, `gh pr revert`, `gh pr close` only. Excludes pre-merge review (→ `gh-cli-prs-review`) and post-merge git ops (e.g., pulling updated base locally).

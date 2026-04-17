@@ -1,96 +1,51 @@
-# GH CLI Releases
+GH CLI Releases — full release lifecycle via `gh release`: create, publish, upload assets, edit, delete.
 
-Manage GitHub releases using `gh release`. Covers full release lifecycle: creating, publishing, uploading assets, editing, and deleting releases.
-
-## Listing Releases
-
-List all releases:
-
+List:
 ```bash
 gh release list
-```
-
-Identify latest published release (filtering out drafts):
-
-```bash
 gh release list --exclude-drafts --limit 1
 ```
+`gh release view` without tag returns empty if latest is draft — use `--exclude-drafts` to reliably find latest published.
 
-Note: `gh release view` without a tag shows the latest release, but returns empty if latest release is a draft. Use `--exclude-drafts` to reliably find the latest published release.
-
-## Creating a Release — Direct Publish
-
-Create and publish immediately from an existing tag:
-
+Create — direct publish from existing tag:
 ```bash
 gh release create v1.0.0 --title "v1.0.0" --notes "Release notes" --target main
-```
-
-Write release notes from a file:
-
-```bash
 gh release create v1.0.0 --notes-file CHANGELOG.md
 ```
+`gh release create` uses existing Git tag — ensure tag exists and pushed before running.
 
-Important: `gh release create` uses an existing Git tag. Ensure tag exists and is pushed before running this command.
-
-## Creating a Release — Draft then Publish
-
-Create a draft for review first, then publish when ready:
-
+Create — draft then publish:
 ```bash
 gh release create v1.0.0 --draft --notes "..."
 gh release edit v1.0.0 --draft=false
 ```
 
-## Pre-releases
-
-Mark a release as a pre-release:
-
+Pre-release:
 ```bash
 gh release create v1.0.0-rc1 --prerelease --notes "..."
 ```
 
-## Uploading Assets
-
-Upload one or more files to an existing release:
-
+Upload assets:
 ```bash
 gh release upload v1.0.0 ./dist/app.tar.gz ./dist/app.zip
 ```
 
-## Editing a Published Release
-
-Update title, notes, or pre-release status:
-
+Edit published release:
 ```bash
 gh release edit v1.0.0 --title "new title" --notes "updated notes"
 gh release edit v1.0.0 --prerelease=false
 ```
 
-## Deleting Releases and Assets
-
-Delete a release:
-
+Delete:
 ```bash
 gh release delete v1.0.0 --yes
-```
-
-Delete a single asset from a release:
-
-```bash
 gh release delete-asset v1.0.0 app.tar.gz
 ```
 
-## Downloading Release Assets
-
-Download assets matching a pattern or as an archive:
-
+Download assets:
 ```bash
 gh release download v1.0.0 --pattern "*.tar.gz" --dir ./downloads
 gh release download v1.0.0 --archive zip
 ```
 
-## Scope Boundaries
-
-Covers `gh release` only. Doesn't manage Git tags directly, generate changelogs automatically from commits, handle release attestations or artifact signing, or configure release automation in CI/CD pipelines.
+Scope: `gh release` only. Excludes: direct Git tag mgmt, auto-changelog from commits, release attestations/signing, CI/CD release automation.

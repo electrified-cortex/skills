@@ -1,45 +1,17 @@
-# GH CLI PRs
+GH CLI PRs — entry point for PR management via GitHub CLI. Handles PR inspection; routes write ops to sub-skills.
 
-Entry point for pull request management via GitHub CLI. Handles common PR inspection commands and routes write operations to appropriate sub-skill.
+Use when: inspecting PRs (list, view, diff, check status) or want auto-routing for write ops. Know sub-skill → dispatch directly.
 
-## When to Use
-
-Use when you need to inspect PRs (list, view, diff, check status) or want routing handled automatically for write operations. If you already know the sub-skill, dispatch it directly.
-
-## Common Inspection Commands
-
-List open PRs authored by you:
-
+Inspection commands:
 ```bash
 gh pr list --state open --author @me --json number,title,headRefName
-```
-
-View a PR with comments:
-
-```bash
 gh pr view 123 --comments
-```
-
-Show PR diff:
-
-```bash
 gh pr diff 123
-```
-
-Watch CI checks until complete:
-
-```bash
 gh pr checks 123 --watch
-```
-
-Check your own PR status summary:
-
-```bash
 gh pr status
 ```
 
-## Sub-skills
-
+Sub-skills:
 | Sub-skill | Handles |
 | --- | --- |
 | gh-cli-prs-create/ | Open new PRs, convert drafts to ready |
@@ -47,12 +19,7 @@ gh pr status
 | gh-cli-prs-comments/ | Add, edit, delete PR comments |
 | gh-cli-prs-merge/ | Merge, update branch, revert, close |
 
-## Notes
-
-- Use `--repo owner/name` when not inside a local clone of target repository.
-- `gh pr checks --watch` is correct way to block until CI completes.
-- Covers `gh pr` commands only. Git operations, branch protection rules, and CODEOWNERS configuration are out of scope.
-
-## Scope Boundaries
-
-Covers `gh pr` subcommands only. Doesn't touch git operations, branch protection, or CODEOWNERS.
+Notes:
+Use `--repo owner/name` when not inside local clone of target repo.
+`gh pr checks --watch` blocks until CI completes.
+Scope: `gh pr` subcommands only. Excludes git ops, branch protection, CODEOWNERS.

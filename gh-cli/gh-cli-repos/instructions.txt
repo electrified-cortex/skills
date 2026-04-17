@@ -1,92 +1,52 @@
-# GH CLI Repos
+GH CLI Repos — manage GitHub repos via `gh repo`: create, clone, fork, sync, edit metadata, delete.
 
-Manage GitHub repositories using `gh repo`. Covers creating, cloning, forking, syncing, editing metadata, and deleting repositories.
-
-## Creating a Repository
-
-Always specify visibility explicitly — no default is assumed:
-
+Create — always specify visibility explicitly; no default assumed:
 ```bash
 gh repo create owner/name --public --description "desc" --clone
 gh repo create owner/name --private --gitignore node --license mit
 ```
 
-## Cloning
-
-Clone to a local directory (optional):
-
+Clone:
 ```bash
 gh repo clone owner/repo [dir]
 ```
 
-## Forking
-
-Fork and configure upstream remote:
-
+Fork — configure upstream remote:
 ```bash
 gh repo fork owner/repo --clone --remote-name upstream
 ```
-
 `--remote-name upstream` sets original repo as `upstream` remote in cloned fork.
 
-## Syncing a Fork
-
-Sync current fork with its upstream:
-
+Sync fork with upstream:
 ```bash
 gh repo sync [--branch branch] [--force]
 ```
+`--force` overwrites local changes to match upstream — use with care.
 
-Use `--force` with care — it overwrites local changes to match upstream.
-
-## Editing Repository Metadata
-
-Update description, homepage, visibility, or default branch:
-
+Edit metadata:
 ```bash
 gh repo edit --description "new" --homepage https://example.com
 gh repo edit --visibility private
 gh repo edit --default-branch main
 ```
 
-## Rename, Archive, Delete
-
-Rename current repository:
-
+Rename, archive, delete:
 ```bash
 gh repo rename new-name
-```
-
-Archive or unarchive:
-
-```bash
 gh repo archive
 gh repo unarchive
-```
-
-Delete permanently:
-
-```bash
 gh repo delete owner/repo --yes
 ```
 
-## Listing Repositories
-
-List repositories for a user or organization and extract names:
-
+List repos:
 ```bash
 gh repo list [owner] --limit 50 --json name,visibility,owner --jq '.[].name'
 ```
 
-## Setting a Default Repository
-
-Set default repository for current directory so subsequent commands don't need `--repo`:
-
+Set default repo — suppresses need for `--repo` on subsequent commands:
 ```bash
 gh repo set-default owner/repo
 gh repo set-default --unset
 ```
 
-## Scope Boundaries
-
-Covers `gh repo` only. Doesn't manage repository content (files, branches, commits — those are git operations), repository secrets or deploy keys, GitHub Apps, webhooks, or repository integrations.
+Scope: `gh repo` only. Excludes: repo content (files, branches, commits — git ops), secrets, deploy keys, GitHub Apps, webhooks, integrations.
