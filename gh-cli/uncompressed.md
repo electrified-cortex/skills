@@ -10,8 +10,8 @@ Use this skill when you have a GitHub CLI task and you are not sure which sub-sk
 
 1. Parse the task to identify the domain.
 2. If the domain is unclear, ask the caller for clarification before proceeding.
-3. Load the domain sub-skill and follow its instructions.
-4. Execute the commands and report the results.
+3. Load and invoke the domain sub-skill and follow its instructions.
+4. The sub-skill executes the commands and reports the results.
 5. If the task spans multiple domains, handle the primary domain and report remaining work to the caller.
 
 ## Domain Routing

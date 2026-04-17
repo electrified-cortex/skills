@@ -4,7 +4,7 @@ Perform and dismiss pull request reviews using `gh pr review`.
 
 ## Approving a Pull Request
 
-Approve a PR with an optional body message:
+Approve with optional body message:
 
 ```bash
 gh pr review 123 --approve --body "LGTM"
@@ -12,7 +12,7 @@ gh pr review 123 --approve --body "LGTM"
 
 ## Requesting Changes
 
-Request changes on a PR. A body is required to explain what needs to be addressed:
+Request changes. A body is required to explain what needs to be addressed:
 
 ```bash
 gh pr review 123 --request-changes --body "Please address X before merging"
@@ -28,13 +28,13 @@ gh pr review 123 --comment --body "Thoughts inline"
 
 ## Dismissing a Review
 
-Dismiss a previously submitted review. `--review-id` is required — the `gh` CLI will not accept `--dismiss` without it:
+Dismiss a previously submitted review. `--review-id` is required — `gh` won't accept `--dismiss` without it:
 
 ```bash
 gh pr review 123 --dismiss --review-id <review-id> --body "reason"
 ```
 
-To obtain the review ID:
+To obtain review ID:
 
 ```bash
 gh pr view 123 --json reviews --jq '.reviews[].id'
@@ -42,17 +42,17 @@ gh pr view 123 --json reviews --jq '.reviews[].id'
 
 ## Adding Reviewers
 
-To add reviewers at PR creation time, use `gh pr create --reviewer`. To add reviewers after creation:
+To add reviewers at PR creation time, use `gh pr create --reviewer`. To add after creation:
 
 ```bash
 gh pr edit 123 --add-reviewer user
 ```
 
-These are covered by `gh-cli-prs-create`, not by this skill.
+These are covered by `gh-cli-prs-create`, not this skill.
 
 ## Resolving Review Threads
 
-Resolving review threads has no `gh pr` command. Use the `resolveReviewThread` GraphQL mutation via `gh-cli-api`:
+Resolving review threads has no `gh pr` command. Use `resolveReviewThread` GraphQL mutation via `gh-cli-api`:
 
 ```bash
 gh api graphql -f query='
@@ -61,4 +61,4 @@ gh api graphql -f query='
 
 ## Scope Boundaries
 
-This skill covers `gh pr review` only. It does not cover inline review comments (adding comments to specific lines of code), requesting reviewers (see `gh-cli-prs-create`), or resolving review threads (see `gh-cli-api`).
+Covers `gh pr review` only. Doesn't cover inline review comments (adding comments to specific code lines), requesting reviewers (see `gh-cli-prs-create`), or resolving review threads (see `gh-cli-api`).

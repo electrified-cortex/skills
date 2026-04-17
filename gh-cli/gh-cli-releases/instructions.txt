@@ -1,6 +1,6 @@
 # GH CLI Releases
 
-Manage GitHub releases using the `gh release` subcommand. Covers the full release lifecycle: creating, publishing, uploading assets, editing, and deleting releases.
+Manage GitHub releases using `gh release`. Covers full release lifecycle: creating, publishing, uploading assets, editing, and deleting releases.
 
 ## Listing Releases
 
@@ -10,17 +10,17 @@ List all releases:
 gh release list
 ```
 
-Identify the latest published release (filtering out drafts):
+Identify latest published release (filtering out drafts):
 
 ```bash
 gh release list --exclude-drafts --limit 1
 ```
 
-Note: `gh release view` without a tag shows the latest release, but returns empty if the latest release is a draft. Use `--exclude-drafts` to reliably find the latest published release.
+Note: `gh release view` without a tag shows the latest release, but returns empty if latest release is a draft. Use `--exclude-drafts` to reliably find the latest published release.
 
 ## Creating a Release — Direct Publish
 
-Create and publish a release immediately from an existing tag:
+Create and publish immediately from an existing tag:
 
 ```bash
 gh release create v1.0.0 --title "v1.0.0" --notes "Release notes" --target main
@@ -32,7 +32,7 @@ Write release notes from a file:
 gh release create v1.0.0 --notes-file CHANGELOG.md
 ```
 
-Important: `gh release create` uses an existing Git tag. Ensure the tag exists and is pushed before running this command.
+Important: `gh release create` uses an existing Git tag. Ensure tag exists and is pushed before running this command.
 
 ## Creating a Release — Draft then Publish
 
@@ -61,7 +61,7 @@ gh release upload v1.0.0 ./dist/app.tar.gz ./dist/app.zip
 
 ## Editing a Published Release
 
-Update the title, notes, or pre-release status:
+Update title, notes, or pre-release status:
 
 ```bash
 gh release edit v1.0.0 --title "new title" --notes "updated notes"
@@ -93,4 +93,4 @@ gh release download v1.0.0 --archive zip
 
 ## Scope Boundaries
 
-This skill covers `gh release` only. It does not manage Git tags directly, generate changelogs automatically from commits, handle release attestations or artifact signing, or configure release automation in CI/CD pipelines.
+Covers `gh release` only. Doesn't manage Git tags directly, generate changelogs automatically from commits, handle release attestations or artifact signing, or configure release automation in CI/CD pipelines.

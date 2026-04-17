@@ -1,25 +1,25 @@
 # GH CLI Actions
 
-Manage GitHub Actions workflows, runs, secrets, variables, and caches using the `gh` CLI.
+Manage GitHub Actions workflows, runs, secrets, variables, and caches using `gh`.
 
 ## Workflows
 
-List all workflows in the repository:
+List all workflows:
 
 ```bash
 gh workflow list
 ```
 
-Enable or disable a workflow by name or filename:
+Enable or disable by name or filename:
 
 ```bash
 gh workflow enable ci.yml
 gh workflow disable ci.yml
 ```
 
-## Triggering a Workflow and Capturing the Run ID
+## Triggering a Workflow and Capturing Run ID
 
-Trigger a workflow manually and immediately capture the resulting run ID for monitoring:
+Trigger manually and capture resulting run ID for monitoring:
 
 ```bash
 gh workflow run ci.yml --ref main --raw-field version="1.0.0"
@@ -34,7 +34,7 @@ List recent runs filtered by workflow, branch, or status:
 gh run list --workflow ci.yml --branch main --json databaseId,status,conclusion
 ```
 
-Watch a run in real time until it completes:
+Watch run in real time until completion:
 
 ```bash
 gh run watch "$RUN_ID"
@@ -42,13 +42,13 @@ gh run watch "$RUN_ID"
 
 ## Viewing Logs
 
-View logs for failed steps in a run:
+View logs for failed steps:
 
 ```bash
 gh run view "$RUN_ID" --log-failed
 ```
 
-View logs for a specific job by its ID:
+View logs for specific job by ID:
 
 ```bash
 gh run view "$RUN_ID" --job 987654321 --log
@@ -56,7 +56,7 @@ gh run view "$RUN_ID" --job 987654321 --log
 
 ## Rerunning and Canceling
 
-Rerun only the failed jobs in a run:
+Rerun only failed jobs:
 
 ```bash
 gh run rerun "$RUN_ID" --failed
@@ -70,13 +70,13 @@ gh run cancel "$RUN_ID"
 
 ## Downloading Artifacts
 
-Download all artifacts from a run to a directory:
+Download all artifacts to a directory:
 
 ```bash
 gh run download "$RUN_ID" --dir ./artifacts
 ```
 
-Download a specific artifact by name:
+Download specific artifact by name:
 
 ```bash
 gh run download "$RUN_ID" --name build
@@ -84,7 +84,7 @@ gh run download "$RUN_ID" --name build
 
 ## Secrets
 
-Never pass secret values as command-line arguments. Pipe from stdin or use an environment variable:
+Never pass secret values as command-line arguments. Pipe from stdin or use `--body`:
 
 ```bash
 echo "$SECRET_VALUE" | gh secret set MY_SECRET
@@ -115,7 +115,7 @@ gh variable delete MY_VAR
 
 ## Caches
 
-List caches for a branch and delete them individually or all at once:
+List caches for a branch and delete individually or all at once:
 
 ```bash
 gh cache list --branch main
@@ -125,4 +125,4 @@ gh cache delete --all
 
 ## Scope Boundaries
 
-This skill covers `gh run`, `gh workflow`, `gh secret`, `gh variable`, and `gh cache`. It does not cover writing workflow YAML, configuring self-hosted runners, or managing OIDC trust configurations.
+Covers `gh run`, `gh workflow`, `gh secret`, `gh variable`, and `gh cache`. Does not cover writing workflow YAML, configuring self-hosted runners, or managing OIDC trust configurations.
