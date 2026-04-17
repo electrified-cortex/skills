@@ -28,10 +28,10 @@ The skill must enable an agent to:
 
 | Sub-skill | Handles |
 | --- | --- |
-| gh-cli-prs-create | Opening new PRs, converting drafts to ready |
-| gh-cli-prs-review | Approving, requesting changes, dismissing reviews |
-| gh-cli-prs-comments | Adding, editing, deleting general PR comments |
-| gh-cli-prs-merge | Merging, updating branch, reverting, closing |
+| gh-cli-prs-create/ | Opening new PRs, converting drafts to ready |
+| gh-cli-prs-review/ | Approving, requesting changes, dismissing reviews |
+| gh-cli-prs-comments/ | Adding, editing, deleting general PR comments |
+| gh-cli-prs-merge/ | Merging, updating branch, reverting, closing |
 
 ## Requirements
 

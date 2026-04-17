@@ -19,7 +19,7 @@ The skill must enable an agent to:
 
 - Accept a natural language GitHub CLI task from a caller
 - Identify which domain the task belongs to
-- Load and execute the correct domain sub-skill
+- Load and dispatch to the correct domain sub-skill
 - Handle ambiguous tasks by asking for clarification rather than guessing
 - Note remaining work when a task spans multiple domains
 
