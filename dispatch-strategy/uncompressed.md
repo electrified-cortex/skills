@@ -44,7 +44,7 @@ Default (D3): when the host is in a long-poll loop or has any responsiveness obl
 ### Q6: Decision summary
 
 | Answer | Outcome |
-|---|---|
+| --- | --- |
 | Work is speculative or blocked | Defer |
 | Requires host conversation context | Inline |
 | Holds exclusive resource, no handoff | Inline |
@@ -98,7 +98,7 @@ The `model` parameter on the dispatch lets you specify a model class that differ
 ### Trade-off summary
 
 | Override direction | Trade-off |
-|---|---|
+| --- | --- |
 | Downgrade to cheapest (`haiku`) | Low cost, fast, risks shallow output |
 | Downgrade one tier (`sonnet`) | Moderate cost, moderate risk |
 | Same or upgrade | High cost, deepest output, rarely needed |
@@ -143,6 +143,7 @@ A dispatch prompt that omits any of these components will produce poor or incohe
 ### Prompt construction checklist
 
 Before dispatching, verify:
+
 - [ ] Can a stranger with no prior context read this prompt and know exactly what to do?
 - [ ] Have I referenced every needed file by absolute path?
 - [ ] Have I stated every constraint the task requires?

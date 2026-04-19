@@ -24,6 +24,7 @@ Live session, authenticated channel, open file lock — no clean handoff → don
 Every dispatch carries fixed overhead: system prompt injection, project context loading, output round-trip. Host can complete in fewer than ~3 turns → don't dispatch — perform inline. See F2.
 
 **Q5: Does result need to be acted on same host turn?**
+
 - Yes + must keep responding to driver: can't block. Defer or batch.
 - Yes + blocking acceptable: dispatch foreground — host blocks until result arrives.
 - No (result can arrive later): dispatch background — host continues, notified on completion.
@@ -33,7 +34,7 @@ Default (D3): in long-poll loop or any responsiveness obligation, prefer backgro
 ## Q6: Summary
 
 | Answer | Outcome |
-|---|---|
+| --- | --- |
 | Work speculative or blocked | Defer |
 | Requires host conversation context | Inline |
 | Holds exclusive resource, no handoff | Inline |
@@ -51,6 +52,7 @@ Empirical (2026-04-19, enumerate-context test): both `Dispatch`-type and `genera
 Don't hand-feed project-level rules into every dispatch prompt.
 
 Three dimensions for type selection:
+
 1. Tool scope: types are permitted different tools. Some are deliberately restricted (e.g., scope-isolated audit type may have no file-write tools). Match type to tools task actually needs — don't reach for broader-scoped type just because familiar.
 2. System prompt size: heavy system prompt = more tokens per dispatch. Prefer leaner types for simple tasks.
 3. Default model: some types pin a default model. Override if pinned model is heavier than task warrants (see Model Override).
@@ -68,7 +70,7 @@ Downgrade one tier (e.g., `sonnet` from `opus` host): correct for moderate reaso
 Same or upgrade (e.g., `opus` from `sonnet` host): correct when task requires reasoning depth equal to or exceeding host's, or when critical-path work and errors are expensive to retry. Upgrade is unusual; consider whether inline is better.
 
 | Override direction | Trade-off |
-|---|---|
+| --- | --- |
 | Downgrade to cheapest (`haiku`) | Low cost, fast, risks shallow output |
 | Downgrade one tier (`sonnet`) | Moderate cost, moderate risk |
 | Same or upgrade | High cost, deepest output, rarely needed |
@@ -87,6 +89,7 @@ If host can't afford inline cost: (a) dispatch with fully hand-fed context promp
 Omitting any required component produces poor or incoherent output.
 
 Required components:
+
 1. Goal: one sentence stating exactly what dispatched agent is to accomplish. No ambiguity. No implicit prior context.
 2. Hand-fed context: everything dispatched agent needs that it can't inherit:
    - Prior decisions constraining task
