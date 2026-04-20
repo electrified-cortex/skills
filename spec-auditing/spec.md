@@ -36,13 +36,19 @@ The agent must behave as an auditor, not as an author, unless explicitly asked t
 
 ## Scope
 
-The auditor evaluates two files together:
+The auditor operates in one of two modes:
+
+**Pair-audit mode** (default): evaluates a spec file and its companion file together.
+**Spec-only mode**: evaluates a single spec file for spec quality alone (see
+§ Spec-Only Mode).
+
+In pair-audit mode, the auditor evaluates:
 
 1. **Spec File**
    - The normative source describing rules, requirements, expectations, structure, or behavior
    - Usually a markdown file intended to serve as the specification
 
-2. **Target File**
+2. **Target File** (companion)
    - A related markdown file that implements, explains, summarizes, derives from, or operationalizes the spec
    - Examples:
      - an agent file
@@ -98,7 +104,9 @@ The auditor expects:
 - optional repository or project conventions
 - optional severity thresholds
 
-If an expected file is missing, the audit must fail with a clear explanation.
+If the spec file is missing, the audit must fail with a clear explanation.
+A missing companion file triggers companion auto-detect and possibly spec-only
+mode — it is not an immediate failure.
 
 ### Spec Lookup Convention
 
@@ -106,10 +114,27 @@ If no spec path is provided, the auditor should look for `<basename>.spec.md`
 in the same directory as the target file. This convention co-locates specs with
 their files and makes the relationship discoverable without a registry.
 
-### One Pair Per Invocation
+### Companion Auto-Detect
 
-The auditor evaluates exactly one spec-file pair per invocation. Callers chain
-multiple pairs as separate runs.
+When the target is a `spec.md` file and no `--spec` flag is provided, the
+auditor checks for a companion via this fallback chain (in order):
+
+1. `<basename-without-spec-suffix>.md` in the same directory
+2. `uncompressed.md` in the same directory
+3. `SKILL.md` in the same directory
+4. Any `*.agent.md` file in the same directory
+
+If a companion is found, the auditor proceeds in pair-audit mode and reports
+which candidate was auto-detected. If multiple candidates match, the first in
+the priority order above is used and the ambiguity is reported.
+
+If no companion is found, the auditor proceeds in spec-only mode and reports
+"no companion present — auditing spec alone."
+
+### One Per Invocation
+
+The auditor evaluates exactly one spec or spec-file pair per invocation.
+Callers chain multiple subjects as separate runs.
 
 ---
 
@@ -382,6 +407,9 @@ A short assessment of:
 - what parts are missing or weakly represented
 - whether the companion file is fit for purpose
 
+**Spec-only mode:** label this section "N/A — spec-only mode, no companion
+present." Do not include companion coverage assessment.
+
 ### 5. Drift and Risk Notes
 
 Any structural observations about likely future divergence.
@@ -529,6 +557,50 @@ Repair mechanics:
 The auditor never modifies the spec. Spec shortfalls are reported, not fixed.
 
 If no mode is specified, use the default balanced mode.
+
+---
+
+## Spec-Only Mode
+
+When the target is a `spec.md` file with no companion present (see §Companion
+Auto-Detect), the auditor operates in spec-only mode.
+
+### What is audited
+
+In spec-only mode the auditor evaluates the spec file against its own quality
+criteria:
+
+- **Completeness** — are all required sections present; are terms defined; are
+  procedures complete?
+- **Enforceability** — are requirements testable; is language precise; are
+  vague/aspirational statements flagged?
+- **Structural Integrity** — logical ordering; stable headings; no hidden
+  requirements in examples; normative language consistent.
+- **Terminology** — defined terms used consistently; undefined critical terms
+  flagged; synonym drift flagged.
+- **Internal Consistency** — no contradictions within the spec itself.
+
+### What is not audited
+
+The following checks require a companion file and are skipped:
+
+- Semantic Alignment (spec vs companion)
+- Requirement Coverage (companion coverage of spec requirements)
+- Contradiction Detection (spec vs companion)
+- Unauthorized Additions (companion scope expansion)
+- Compression Fidelity (loss/gain/bloat)
+- Change Drift Risk (cross-file divergence)
+
+### Fix mode in spec-only
+
+`--fix` is not supported in spec-only mode. Fixing a spec is an authorial act
+requiring domain judgment. If `--fix` is passed, report it as unsupported and
+proceed with audit-only.
+
+### Output in spec-only mode
+
+Use the standard output structure. Set Coverage Summary to:
+"N/A — spec-only mode, no companion present."
 
 ---
 

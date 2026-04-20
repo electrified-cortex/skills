@@ -1,6 +1,8 @@
 ---
 name: spec-auditing
-description: Audit spec/companion pairs. Dispatch instructions.txt — don't audit inline.
+description: >-
+  Audit a spec/companion pair or a spec alone. Dispatch instructions.txt —
+  don't audit inline.
 ---
 
 # Spec Auditing
@@ -16,6 +18,17 @@ produce shallow, inconsistent audits.
 
 - **Audit** (default) — read-only. Returns Pass / Pass with Findings / Fail.
 - **Fix** (`--fix`) — modifies target to match spec. Up to 3 passes with re-audit.
+- **Spec-only** (auto-detected) — target is `spec.md` with no companion present.
+  Audits spec quality alone: completeness, enforceability, clarity, internal
+  consistency. No Coverage Summary. Auto-upgrades to Pair-Audit if a companion
+  is found via auto-detect fallback chain.
+
+### Companion Auto-Detect
+
+When target ends in `spec.md` and `--spec` is not provided, the auditor checks
+for a companion in this order: `<basename-without-spec-suffix>.md` (e.g.,
+`skill.md` for `skill.spec.md`) → `uncompressed.md` → `SKILL.md` → `*.agent.md`.
+Reports which was found (or reports none and uses spec-only mode).
 
 ## When to Use
 
@@ -23,6 +36,7 @@ produce shallow, inconsistent audits.
 - Checking agent files against their `.spec.md` companions
 - Validating skill implementations against skill specs
 - Detecting drift between spec and implementation
+- Auditing a spec in isolation (spec-first authoring workflow, before companion exists)
 
 Multi-pass audit: fix findings, re-audit until PASS.
 
