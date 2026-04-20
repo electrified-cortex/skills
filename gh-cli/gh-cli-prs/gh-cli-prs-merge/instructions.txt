@@ -1,0 +1,40 @@
+GH CLI PR Merge — finalize PRs via `gh pr merge`, `gh pr update-branch`, `gh pr revert`: merge, branch sync, revert, close.
+
+Merge — choose strategy matching repo policy:
+
+Merge commit (preserves full history):
+```bash
+gh pr merge 123 --merge --delete-branch
+```
+
+Squash (all commits → one):
+```bash
+gh pr merge 123 --squash --delete-branch
+```
+
+Rebase (replays commits on base):
+```bash
+gh pr merge 123 --rebase
+```
+`--delete-branch` removes source branch after successful merge.
+
+Update branch behind base:
+```bash
+gh pr update-branch 123
+gh pr update-branch 123 --force
+```
+`--force` may overwrite local changes — use with care.
+
+Revert merged PR — opens new revert PR:
+```bash
+gh pr revert 123 --branch revert-pr-123
+```
+
+Close without merging:
+```bash
+gh pr close 123 --comment "Superseded by #456"
+```
+
+Check CI before merge via `gh pr checks 123` — covered by `gh-cli-prs` inspection, not this sub-skill.
+
+Scope: `gh pr merge`, `gh pr update-branch`, `gh pr revert`, `gh pr close` only. Excludes pre-merge review (→ `gh-cli-prs-review`) and post-merge git ops (e.g., pulling updated base locally).
