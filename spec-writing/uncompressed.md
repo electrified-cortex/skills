@@ -26,8 +26,8 @@ Optional language: may, optional.
 ## Requirements
 
 Define behavior or constraints. Use enforceable language. Be internally consistent, structurally coherent, externally auditable. No reliance on implied intent. State all required behavior explicitly. Every requirement verifiable. Each requirement in one canonical location. Define and use terms consistently. Clearly distinguish required, prohibited, guidance, optional behavior.
-Include sections: Purpose, Scope, Definitions, Requirements, Constraints, Behavior, Defaults and Assumptions, Error Handling, Precedence Rules, Non-Goals.
-Each requirement atomic, testable, unambiguous.
+Include sections: Purpose, Scope, Definitions, Requirements, Constraints, Behavior, Defaults and Assumptions, Error Handling, Precedence Rules, Don'ts.
+Each requirement atomic, testable, unambiguous. Use subject-verb-object form; name actor, artifact acted upon, and trigger condition. Prefer two clear sentences over one dense nested clause. Dense or compressed phrasing in normative requirements is a defect. A reader must be able to parse any single requirement on first read without re-scanning surrounding text.
 For derived targets: map every normative requirement to source spec. Mappings one-to-one or one-to-many. Unmapped = Unauthorized Additions.
 
 ## Constraints
@@ -54,6 +54,8 @@ Ambiguous normative statement → rewrite. Behavior-affecting statement outside 
 ## Precedence
 
 Correctness and enforceability over readability. Normative content governs behavior. Non-normative content mustn't introduce hidden requirements. For derived targets, source spec authoritative, target subordinate. Normative statement with multiple reasonable interpretations → invalid, must rewrite.
+
+Derivation workflow: Write spec → dispatch spec-auditor (Haiku iterations first, Sonnet final pass) → fix all findings → re-audit until PASS → only then write derived artifact (skill, agent, or tool). Dispatch the appropriate artifact auditor (skill-auditor, agent-auditor, or tool-auditor) on the derived artifact as a separate pass. Skipping the spec-auditor pass before writing derivative artifacts is prohibited.
 
 Don't use descriptive, exploratory, or informational content as substitute for normative requirements. Don't use this skill to justify silent scope expansion. Don't use this skill to hide requirements in examples, notes, or descriptive prose.
 

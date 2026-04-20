@@ -177,7 +177,7 @@ Defined failure behavior.
 
 Conflict resolution.
 
-### Non-Goals
+### Don'ts
 
 Explicit exclusions.
 
@@ -191,6 +191,18 @@ Each requirement must:
 - be testable (satisfaction can be verified from document text alone without external judgment)
 - use normative language
 - avoid ambiguity
+
+---
+
+## Requirement Clarity
+
+Each normative requirement must be written using plain, explicit sentences.
+
+- Use subject-verb-object form. Name the actor. Name the artifact acted upon. Name the trigger condition.
+- Two clear sentences are preferred over one dense, nested clause.
+- A reader must be able to parse any single requirement on first read without re-scanning surrounding text.
+
+Dense or compressed phrasing in a normative requirement is a defect.
 
 ---
 
@@ -279,6 +291,23 @@ Assume:
 - every requirement will be challenged
 - every omission will be detected
 - every ambiguity will be flagged
+
+---
+
+## Derivation Workflow
+
+Before writing any artifact derived from a spec (skill, agent, or tool), the spec must pass a full audit.
+
+Required sequence:
+
+1. Write the spec.
+2. Dispatch the spec-auditor: Haiku iterations first, Sonnet for the final pass.
+3. Fix all findings.
+4. Re-audit until the result is PASS.
+5. Only after PASS: write the derived artifact.
+6. Dispatch the appropriate artifact auditor (skill-auditor, agent-auditor, or tool-auditor) on the derived artifact as a separate pass.
+
+Skipping the spec-auditor pass before writing a derived artifact is prohibited.
 
 ---
 

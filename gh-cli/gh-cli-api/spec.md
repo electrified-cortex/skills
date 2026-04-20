@@ -33,7 +33,7 @@ The skill must enable an agent to:
 - The skill must show how to safely pass secrets or tokens to API calls without leaking them into command history.
 - Pagination behavior must be explained: `--paginate` makes multiple requests automatically; the agent must understand this can be slow for large datasets.
 
-## Non-Goals
+## Don'ts
 
 - Does not cover creating or managing GitHub Apps, OAuth Apps, or personal access tokens.
 - Does not replace the domain-specific skills — `gh api` is for gaps, not everyday use.

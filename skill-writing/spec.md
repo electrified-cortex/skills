@@ -288,7 +288,7 @@ change history, credits, publication notes.
 - **spec-auditing**: Verifies companion specs meet quality bar
 - **compression**: Exemplar for the dispatch pattern
 
-## Non-Goals
+## Don'ts
 
 - This spec does not govern skill *content* (what a specific skill teaches)
 - This spec does not define how skills are discovered or loaded at runtime

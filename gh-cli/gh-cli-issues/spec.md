@@ -33,7 +33,7 @@ The skill must enable an agent to:
 - The skill must cover `@me` as an assignee filter for self-assignment patterns.
 - Listing must cover all states: open, closed, and all.
 
-## Non-Goals
+## Don'ts
 
 - Does not cover GitHub issue forms or issue templates configuration.
 - Does not manage milestones — only assigns issues to existing ones.

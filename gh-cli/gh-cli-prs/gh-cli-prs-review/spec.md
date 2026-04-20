@@ -22,7 +22,7 @@ The skill must enable an agent to:
 - Submit a comment-only review without a verdict
 - Dismiss a previous review
 
-## Non-Goals
+## Don'ts
 
 - Does not cover requesting reviewers — that belongs to `gh-cli-prs-create` (at creation) or cover the `gh pr edit --add-reviewer` path.
 - Does not cover resolving review threads — see `gh-cli-api` for the GraphQL mutation.

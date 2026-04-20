@@ -33,7 +33,7 @@ The skill must enable an agent to:
 - Sync operations must distinguish between syncing via `gh repo sync` and manual git fetch/merge flows.
 - The skill must not assume a default visibility — agents must explicitly choose public or private.
 
-## Non-Goals
+## Don'ts
 
 - Does not manage repository content (files, branches, commits) — that is git, not `gh repo`.
 - Does not cover repository secrets, deploy keys, or rulesets — those are out of scope for basic repo management.

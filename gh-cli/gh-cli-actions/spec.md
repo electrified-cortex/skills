@@ -37,7 +37,7 @@ The skill must enable an agent to:
 - The skill must distinguish between repository-level and environment-level secrets and variables.
 - The skill must show how to interpret `--json statusCheckRollup` output to determine overall run health.
 
-## Non-Goals
+## Don'ts
 
 - Does not cover writing or editing workflow YAML files.
 - Does not configure self-hosted runners or runner groups.

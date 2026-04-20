@@ -23,7 +23,7 @@ The skill must enable an agent to:
 - Revert a merged PR by opening a revert PR
 - Close a PR without merging
 
-## Non-Goals
+## Don'ts
 
 - Does not cover `gh pr checks` — checking readiness before merge is out of scope here.
 - Does not cover git operations after merge (e.g., pulling the updated base locally).

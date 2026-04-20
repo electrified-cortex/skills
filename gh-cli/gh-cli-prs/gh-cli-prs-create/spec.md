@@ -23,7 +23,7 @@ The skill must enable an agent to:
 - Use a body file for structured or templated descriptions
 - List existing PRs to confirm the branch isn't already open before creating
 
-## Non-Goals
+## Don'ts
 
 - Does not cover `gh pr edit` after creation — that is post-creation metadata management.
 - Does not cover branch creation or git push — assumes the branch already exists on remote.

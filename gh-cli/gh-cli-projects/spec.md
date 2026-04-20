@@ -33,7 +33,7 @@ The skill must enable an agent to:
 - The skill must demonstrate adding both issues and PRs as items using the correct owner/repo/number form.
 - The skill must distinguish between archiving an item (keeps it in the project, hidden) and deleting it (removes it permanently).
 
-## Non-Goals
+## Don'ts
 
 - Does not cover GitHub Projects v1 (classic boards with columns).
 - Does not configure project automation rules or status workflows.

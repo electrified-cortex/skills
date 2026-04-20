@@ -115,7 +115,7 @@ Markdown hygiene should run:
 3. As part of skill-auditing checklist (future addition)
 4. Before any commit of `.md` files
 
-## Non-Goals
+## Don'ts
 
 - Content quality (that's spec-auditing/skill-auditing)
 - Spell checking

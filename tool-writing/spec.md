@@ -117,7 +117,7 @@ utilities.
 - Companion spec governs the script — any conflict, spec wins.
 - This spec governs tool-writing.
 
-## Non-Goals
+## Don'ts
 
 - Defining tool execution permissions (see agent hooks)
 - Tool deployment or distribution

@@ -532,7 +532,7 @@ If no mode is specified, use the default balanced mode.
 
 ---
 
-## Non-Goals
+## Don'ts
 
 The auditor is not responsible for:
 

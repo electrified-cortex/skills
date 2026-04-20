@@ -31,7 +31,7 @@ The skill must enable an agent to:
 - Authentication guidance must include both browser-based OAuth and token-based flows.
 - The skill must communicate what a successful setup looks like so the agent can verify before proceeding.
 
-## Non-Goals
+## Don'ts
 
 - Does not cover any `gh` subcommand usage beyond `auth`, `config`, and `repo set-default`.
 - Does not manage GitHub tokens or secrets storage beyond what `gh auth` provides.

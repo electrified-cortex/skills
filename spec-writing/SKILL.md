@@ -24,13 +24,13 @@ Optional language: may, optional.
 
 Requirements:
 Define behavior or constraints. Use enforceable language. Internally consistent, structurally coherent, externally auditable. No implied intent. State all required behavior explicitly. Every requirement verifiable. Each requirement in one canonical location. Define and use terms consistently. Clearly distinguish required, prohibited, guidance, optional behavior.
-Include sections: Purpose, Scope, Definitions, Requirements, Constraints, Behavior, Defaults and Assumptions, Error Handling, Precedence Rules, Non-Goals.
-Each requirement atomic, testable, unambiguous.
+Include sections: Purpose, Scope, Definitions, Requirements, Constraints, Behavior, Defaults and Assumptions, Error Handling, Precedence Rules, Don'ts.
+Each requirement atomic, testable, unambiguous. Use subject-verb-object form; name the actor, the artifact acted upon, and the trigger condition. Two clear sentences preferred over one dense clause. Dense or compressed phrasing in a normative requirement is a defect. A reader must be able to parse any single requirement on first read without re-scanning surrounding text.
 Derived targets: map every normative requirement to source spec. Mappings one-to-one or one-to-many. Unmapped = Unauthorized Additions.
 
 Constraints:
 No vague terms; no implied behavior; no hidden requirements; no contradictions; no duplicated rules; no subjective language; no normative requirements in examples; no normative behavior implied in descriptive text; no normative requirements in exploratory sections.
-Derived targets: no new normative requirements, no term redefinition, no scope expansion, no changed constraints/defaults, no new concepts.
+Derived targets: no new requirements, no term redefinition, no scope expansion, no changed constraints/defaults, no new concepts.
 If extension allowed, define where and constraints on extension. Otherwise extension prohibited.
 
 Behavior:
@@ -48,6 +48,10 @@ Ambiguous normative statement → rewrite. Behavior-affecting statement outside 
 Precedence:
 Correctness and enforceability over readability. Normative content governs behavior. Non-normative content mustn't introduce hidden requirements. Derived targets: source spec authoritative, target subordinate. Normative statement with multiple reasonable interpretations → invalid, must rewrite.
 
+Derivation workflow:
+Write spec → spec-auditor (Haiku iterations first, Sonnet final pass) → fix findings → re-audit until PASS → only then write derived artifact. Dispatch artifact auditor (skill-auditor, agent-auditor, or tool-auditor) on derived artifact separately. Skipping spec-auditor before writing derivative artifacts is prohibited.
+
+Don'ts:
 Don't use descriptive, exploratory, or informational content as substitute for normative requirements. Don't use this skill to justify silent scope expansion. Don't hide requirements in examples, notes, or descriptive prose.
 
 Related: `spec-auditing` (verify spec quality), `skill-writing` (write skills from specs), `skill-auditing` (verify skill quality)

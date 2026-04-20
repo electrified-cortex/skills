@@ -34,7 +34,7 @@ The skill must enable an agent to:
 - The skill must clarify the relationship between a release and its Git tag — creating a release does not automatically create a tag unless one is specified.
 - The skill must show how to identify the latest published release reliably (not just most recent by date).
 
-## Non-Goals
+## Don'ts
 
 - Does not manage Git tags directly — only interacts with tags through `gh release`.
 - Does not generate changelogs or release notes automatically from commits.

@@ -25,7 +25,7 @@ The skill must enable an agent to:
 
 - Resolving review threads has no `gh pr` command. Use `resolveReviewThread` GraphQL mutation via `gh-cli-api`.
 
-## Non-Goals
+## Don'ts
 
 - Does not cover review-level comments (those with approve/request-changes verdicts).
 - Does not cover viewing comments — use `gh pr view --comments`.
