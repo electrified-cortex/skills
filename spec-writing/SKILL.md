@@ -8,6 +8,7 @@ Write specs: clear, complete, enforceable, internally consistent, externally aud
 Purpose: define intent precisely, testably, auditably.
 
 Scope: when writing spec or derived target doc governed by source spec. All scope must be explicitly declared.
+Not for: non-spec docs (design notes, ADRs, READMEs), auditing (see spec-auditing), retroactive application without re-audit.
 
 Definitions:
 Spec: normative doc defining rules, requirements, constraints, expected behavior.
@@ -42,6 +43,8 @@ Behavior:
 Statement affects behavior → move to Normative section. Define behavior including edge cases. State defaults explicitly. Define failure behavior explicitly. Define conflict resolution explicitly. State explicit exclusions.
 Derived targets, allowed transforms: reword for clarity, reorganize structure, aggregate related requirements, add descriptive explanations. Preserve meaning of all normative statements.
 Validate before accepting: all required sections present, all requirements use normative language, no vague wording, all terms defined, no duplicates, no contradictions, no implicit assumptions.
+
+Output Quality Gate:
 Accept only if: all requirements testable, no critical ambiguity, terminology stable, no contradictions, no unauthorized scope expansion.
 
 Defaults and Assumptions:
@@ -69,7 +72,7 @@ After writing any spec.md, run `markdown-hygiene` (dispatch) to ensure zero lint
 
 Footgun Convention:
 Specs may include optional `Footguns` section. Format:
-**F#: <title>** — failure mode description.
+**F#: {title}** — failure mode description.
 Why: why it's a footgun.
 Mitigation: specific fix (parameter, phrasing, constraint).
 Wrong-usage examples use `ANTI-PATTERN:` prefix.

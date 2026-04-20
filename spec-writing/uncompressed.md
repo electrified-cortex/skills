@@ -3,11 +3,16 @@ name: spec-writing
 description: Write precise, testable, auditable specification documents with explicit scope, stable terminology, and enforceable requirements.
 ---
 
+# spec-writing
+
 Write specs: clear, complete, enforceable, internally consistent, externally auditable.
 
 Purpose: define intent precisely, testably, auditably.
 
-Scope: use when writing spec or derived target doc governed by source spec. All scope must be explicitly declared.
+Scope: use when writing spec or derived target doc governed by source
+spec. All scope must be explicitly declared.
+Not for: non-spec docs (design notes, ADRs, READMEs), auditing (see
+spec-auditing), retroactive application without re-audit.
 
 ## Definitions
 
@@ -59,16 +64,40 @@ For derived targets: map every normative requirement to source spec. Mappings on
 
 ## Constraints
 
-No vague terms; no implied behavior; no hidden requirements; no contradictions; no duplicated rules; no subjective language; no normative requirements in examples; no normative behavior implied in descriptive text; no normative requirements in exploratory sections.
-For derived targets: no new normative requirements, no term redefinition, no scope expansion, no changed constraints/defaults, no new concepts.
-If extension is allowed, the spec must define where extension is permitted and what constraints apply to it. Otherwise extension is prohibited.
+The spec must not contain:
+
+- vague terms
+- implied behavior
+- hidden requirements
+- contradictions
+- duplicate rules
+- subjective language
+
+Normative requirements must not be:
+
+- embedded in examples
+- implied in descriptive text
+- introduced in exploratory sections
+
+For derived targets: no new normative requirements, no term
+redefinition, no scope expansion, no changed constraints/defaults,
+no new concepts.
+If extension is allowed, the spec must define where extension is
+permitted and what constraints apply to it. Otherwise extension is
+prohibited.
 
 ## Behavior
 
 Statement affects behavior → move to Normative section (see Content Modes). Define behavior including edge cases. State defaults explicitly. Define failure behavior explicitly. Define conflict resolution explicitly. State explicit exclusions.
 For derived targets, allowed transforms: reword for clarity, reorganize structure, aggregate related requirements, add descriptive explanations. Preserve meaning of all normative statements.
-Validate before accepting: all required sections present, all requirements use normative language, no vague wording, all terms defined, no duplicates, no contradictions, no implicit assumptions.
-Accept only if: all requirements testable, no critical ambiguity, terminology stable, no contradictions, no unauthorized scope expansion.
+Validate before accepting: all required sections present, all
+requirements use normative language, no vague wording, all terms
+defined, no duplicates, no contradictions, no implicit assumptions.
+
+Output Quality Gate:
+Accept only if: all requirements testable, no critical ambiguity,
+terminology stable, no contradictions, no unauthorized scope
+expansion.
 
 ## Defaults and Assumptions
 
@@ -76,13 +105,23 @@ Only explicit defaults allowed. Ambiguity allowed only in non-normative sections
 
 ## Error Handling
 
-Ambiguous normative statement → rewrite. Behavior-affecting statement outside Normative section → move to Normative section. Requirement not atomic, testable, or enforceable → rewrite before treating spec as valid.
+A spec containing unresolvable defects is invalid; artifact derivation
+is blocked until defects are fixed and the spec reaches PASS.
+
+Ambiguous normative statement → rewrite.
+Behavior-affecting statement outside Normative section → move to
+Normative section.
+Requirement not atomic, testable, or enforceable → rewrite before
+treating the spec as valid or deriving any artifact from it.
 
 ## Precedence
 
 Correctness and enforceability over readability. Normative content governs behavior. Non-normative content must not introduce hidden requirements. For derived targets, source spec authoritative, target subordinate. Normative statement with multiple reasonable interpretations → invalid, must rewrite.
 
 ## Derivation Workflow
+
+Before writing any artifact derived from a spec (skill, agent, or
+tool), the spec must pass a full audit.
 
 1. Write the spec.
 2. Dispatch spec-auditor: Haiku iterations first, Sonnet for the final pass.
@@ -97,16 +136,23 @@ Don't use descriptive, exploratory, or informational content as substitute for n
 
 After writing any spec.md, run `markdown-hygiene` (dispatch) to ensure zero lint errors.
 
+## Footguns
+
+Spec-writing failure modes belong in derived specs (skills, agents,
+tools) that implement or extend this spec, not in this meta-spec
+itself. Authors applying this skill should document failure modes
+specific to their domain using the Footgun Convention below.
+
 ## Footgun Convention
 
 Specs may include an optional `Footguns` section. Format:
 
-**F#: <title>** — failure mode description.
+**F#: {title}** — failure mode description.
 Why: Why it's a footgun.
 Mitigation: Specific fix (parameter, phrasing, constraint).
 
 Wrong-usage examples anywhere in the spec use `ANTI-PATTERN:` prefix.
-Canonical reference: `dispatch-strategy` skill (F1–F5 with Mitigation: lines).
+Canonical reference: `dispatch-strategy` skill (F1–F5 with Mitigation:
+lines and one ANTI-PATTERN: worked example).
 
 Related: `spec-auditing` (verify spec quality), `skill-writing` (write skills from specs), `skill-auditing` (verify skill quality), `markdown-hygiene` (zero-error lint gate)
-

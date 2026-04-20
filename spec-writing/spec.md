@@ -8,14 +8,69 @@ This file is the source of truth for how specs must be written.
 
 ---
 
-## Skill Identity
+## Purpose
 
-**Name:** Spec Writer  
-**Role:** Deterministic specification author  
-**Primary Responsibility:** Produce clear, complete, enforceable, and auditable specifications  
+**Name:** Spec Writer
+**Role:** Deterministic specification author
+**Primary Responsibility:** Produce clear, complete, enforceable,
+and auditable specifications
 **Disposition:** Precise, explicit, non-ambiguous in normative sections
 
-The spec writer must prioritize correctness and enforceability over readability when in conflict.
+The spec writer must prioritize correctness and enforceability over
+readability when in conflict.
+
+---
+
+## Scope
+
+This skill applies when:
+
+- writing a new specification document (spec.md)
+- updating an existing specification document
+- writing a derived target document governed by an existing spec
+
+This skill does not apply to:
+
+- non-specification documents (design notes, ADRs, READMEs)
+- auditing specifications (see `spec-auditing`)
+- retroactive application to existing artifacts without a re-audit
+
+All scope must be explicitly declared. Silent scope expansion is
+prohibited.
+
+This spec governs all specification documents, including itself.
+
+---
+
+## Definitions
+
+**Spec:** A normative document defining rules, requirements,
+constraints, and expected behavior.
+
+**Atomic:** A requirement expressing exactly one testable condition;
+cannot be decomposed further.
+
+**Testable:** Satisfaction is verifiable from document text alone
+without external judgment.
+
+**Normative:** Defines requirements, constraints, or behavior;
+strictly enforceable.
+
+**Descriptive:** Explains context or intent; must not contradict
+normative content.
+
+**Exploratory:** Captures ideas, tradeoffs, or open questions;
+may contain ambiguity.
+
+**Informational:** Notes, examples, or references.
+
+**Mandatory language:** must, shall, required.
+
+**Prohibited language:** must not, shall not.
+
+**Guidance language:** should, recommended.
+
+**Optional language:** may, optional.
 
 ---
 
@@ -57,7 +112,7 @@ A valid specification must:
 
 ---
 
-## Core Principles
+## Requirements
 
 ### 1. Explicitness Over Implication
 
@@ -139,47 +194,46 @@ Every normative requirement in the target must map to this spec.
 
 ---
 
+## Behavior
+
+Every statement that affects behavior must be placed in a Normative
+section. Descriptive, exploratory, and informational sections must not
+introduce hidden requirements.
+
+Derived targets must preserve the meaning of all normative statements.
+Allowed transformations are: reword for clarity, reorganize structure,
+aggregate related requirements, add descriptive explanations.
+
+Derived targets must not introduce new requirements, change
+constraints or defaults, or introduce new concepts.
+
+---
+
+## Defaults and Assumptions
+
+Only explicit defaults are permitted. Ambiguity is allowed only in
+non-normative sections.
+
+Assume every requirement will be challenged, every omission will be
+detected, and every ambiguity will be flagged during audit.
+
+---
+
 ## Required Sections
 
-### Purpose
+Every spec derived from this spec must contain all of the following
+top-level sections:
 
-Defines intent.
-
-### Scope
-
-Defines boundaries.
-
-### Definitions
-
-Defines all key terms.
-
-### Requirements
-
-Atomic, testable rules.
-
-### Constraints
-
-Limits and prohibitions.
-
-### Behavior
-
-System behavior including edge cases.
-
-### Defaults and Assumptions
-
-Explicit defaults only.
-
-### Error Handling
-
-Defined failure behavior.
-
-### Precedence Rules
-
-Conflict resolution.
-
-### Don'ts
-
-Explicit exclusions.
+- **Purpose** — defines intent
+- **Scope** — defines boundaries
+- **Definitions** — defines all key terms
+- **Requirements** — atomic, testable rules
+- **Constraints** — limits and prohibitions
+- **Behavior** — system behavior including edge cases
+- **Defaults and Assumptions** — explicit defaults only
+- **Error Handling** — defined failure behavior
+- **Precedence Rules** — conflict resolution
+- **Don'ts** — explicit exclusions
 
 ---
 
@@ -191,7 +245,7 @@ A spec may include a **Footguns** section listing failure modes that are easy to
 
 Each footgun entry must follow this format:
 
-**F#: <short title>**
+**F#: {short title}**
 Description of the failure mode — what goes wrong and in what context.
 Why: Why this is a footgun (non-obvious, silent, or costly).
 Mitigation: The specific parameter, phrase, or constraint that prevents it.
@@ -227,7 +281,7 @@ Dense or compressed phrasing in a normative requirement is a defect.
 
 ---
 
-## Forbidden Patterns
+## Constraints
 
 The spec must not contain:
 
@@ -238,10 +292,6 @@ The spec must not contain:
 - duplicate rules
 - subjective language
 
----
-
-## Normative Boundary Rule
-
 Normative requirements must not be:
 
 - embedded in examples
@@ -250,11 +300,15 @@ Normative requirements must not be:
 
 ---
 
-## Handling Ambiguity
+## Error Handling
 
 If a **normative** statement is ambiguous, it must be rewritten.
 
 Ambiguity is allowed only in non-normative sections.
+
+A spec containing unresolvable defects must not be used as the basis
+for derived artifacts until defects are resolved and the spec passes
+a full audit.
 
 ---
 
@@ -332,6 +386,26 @@ Skipping the spec-auditor pass before writing a derived artifact is prohibited.
 
 ---
 
-## Final Rule
+## Precedence Rules
 
-If a normative statement can be interpreted in more than one reasonable way, it is invalid and must be rewritten.
+Correctness and enforceability take precedence over readability.
+
+If a normative statement can be interpreted in more than one
+reasonable way, it is invalid and must be rewritten.
+
+Normative content governs behavior. Non-normative content must not
+introduce hidden requirements or override normative content.
+
+---
+
+## Don'ts
+
+- Do not write specs for non-specification documents.
+- Do not embed normative requirements in examples, descriptive text,
+  or exploratory sections.
+- Do not expand scope without explicit declaration in the Scope
+  section.
+- Do not apply this spec retroactively to existing artifacts without
+  a re-audit.
+- Do not treat paraphrase as acceptable unless semantically
+  equivalent by rigorous test.
