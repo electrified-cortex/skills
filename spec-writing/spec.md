@@ -183,6 +183,27 @@ Explicit exclusions.
 
 ---
 
+## Optional but Recommended Sections
+
+### Footguns
+
+A spec may include a **Footguns** section listing failure modes that are easy to trigger, non-obvious to diagnose, or costly to recover from. This section is optional but strongly recommended when the spec describes behavior with sharp edges.
+
+Each footgun entry must follow this format:
+
+**F#: <short title>**
+Description of the failure mode — what goes wrong and in what context.
+Why: Why this is a footgun (non-obvious, silent, or costly).
+Mitigation: The specific parameter, phrase, or constraint that prevents it.
+
+Multiple footguns are numbered sequentially (F1, F2, ...).
+
+Worked wrong-usage examples anywhere in the spec must be prefixed with `ANTI-PATTERN:`.
+
+**Canonical example:** See `dispatch-strategy` skill for the established footgun catalogue pattern (F1–F5 with Mitigation: lines and one ANTI-PATTERN: worked example).
+
+---
+
 ## Requirement Writing Rules
 
 Each requirement must:

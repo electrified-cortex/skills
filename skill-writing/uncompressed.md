@@ -24,15 +24,13 @@ When creating a new skill, follow this order. Never skip steps.
    compressed runtime agents load.
 4. **Audit** — use `skill-auditing` skill to verify. Fix
    findings, recompress, re-audit until PASS.
-5. **Final sign-off** — run `skill-auditing` one more time
-   after PASS. Issues → fix and repeat from step 4.
 
 For dispatch skills, also write the companion agent file (see Dispatch
 Skill section).
 
-When revising an existing skill: update spec first → update
-uncompressed.md → recompress → re-audit. Never modify SKILL.md directly
-— it is a compiled artifact.
+When revising an existing skill: update spec first (if the change affects
+requirements or constraints) → update uncompressed.md → recompress →
+re-audit. Never modify SKILL.md directly — it is a compiled artifact.
 
 ## Decision: Inline or Dispatch?
 
@@ -53,7 +51,7 @@ skill-name/
 └── spec.md             ← normative spec (never at runtime)
 ```
 
-`instructions.txt` present = dispatch skill. Absent = inline.
+`instructions.txt` or `<name>.md` present = dispatch skill. Absent = inline.
 Never use "SKILL" in any filename except `SKILL.md`.
 
 ## Inline Skill
@@ -69,6 +67,10 @@ Input: `<params>`"
 
 Parameters: types, required/optional, defaults. Output format specified.
 
+Dispatch instruction file must be in the same directory or a known path.
+Instruction files must contain only instructions — no title headers, no
+descriptions, no preamble.
+
 ## Requirements
 
 - Frontmatter: `name` + `description`
@@ -81,6 +83,13 @@ Parameters: types, required/optional, defaults. Output format specified.
 After writing any .md file, run `markdown-hygiene` (dispatch) before
 compressing or stamping.
 Verify completed skills with `skill-auditing`.
+
+## Footgun Mirroring
+
+If the companion spec has a `Footguns` section, mirror it in uncompressed.md/SKILL.md:
+
+- Preserve all F#: entries, Mitigation: lines, and any ANTI-PATTERN: examples
+- Canonical reference: `dispatch-strategy` skill
 
 ## Related
 

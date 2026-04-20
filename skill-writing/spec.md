@@ -258,6 +258,10 @@ Purpose, scope, definitions, requirements, constraints, procedures,
 ordered steps, thresholds, defaults, error handling, stop conditions,
 precedence rules, conflict resolution, explicit exclusions.
 
+If the companion spec defines a Footguns section, the skill body
+(uncompressed.md / SKILL.md) must mirror that section, preserving all
+F#: entries, Mitigation: lines, and any ANTI-PATTERN: examples.
+
 ### What stays in spec.md (non-program content)
 
 Design rationale, audit reports, bug histories, extended examples,
@@ -287,6 +291,8 @@ change history, credits, publication notes.
 - **spec-writing**: Governs how to write the companion spec
 - **spec-auditing**: Verifies companion specs meet quality bar
 - **compression**: Exemplar for the dispatch pattern
+- See `dispatch-strategy` as the canonical example of footgun catalogue
+  in a skill body.
 
 ## Don'ts
 
