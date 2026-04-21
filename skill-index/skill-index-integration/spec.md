@@ -23,7 +23,7 @@ parent-spec: skill-index
 
 Define the requirements for how an agent discovers and uses skills via the skill-index cascade. This spec governs the integration layer: how the index pointer enters the agent's context, what mandate drives the agent to consult it, and how discovery flows from task description to loaded skill content.
 
-This spec does not govern index construction (skill-index-building), structural validation (skill-index-auditing), or the crawl algorithm (skill-index-crawling). It governs the agent-side integration contract only.
+This spec does not govern index construction (skill-index-building), structural validation (skill-index-auditing), or the crawl algorithm (skill-index-crawling). It governs the agent-side integration contract only. The skill-index cascade system is defined in the parent spec `skill-index`.
 
 ---
 
@@ -61,6 +61,11 @@ This spec does not govern index construction (skill-index-building), structural 
 - **Operational domain**: the set of tasks an agent may be assigned or asked to perform, as defined by that agent's role. An agent's index must be scoped to skills relevant within this boundary. Skills outside the agent's operational domain must not appear in its index. Role definitions are maintained by each agent's configuration artifacts (e.g., `CLAUDE.md`, `AGENTS.md`). This spec does not define role boundaries; it only requires that index scope not exceed them.
 - **Index stamp**: a content hash or equivalent integrity marker attached to a `skill.index` file by the `skill-index-auditing` process after a validation PASS. Presence of a valid stamp indicates the index has been audited. Absence or mismatch indicates the index is unaudited since last build. See `skill-index-auditing` for stamp format and validation procedure.
 - **Stale index**: a `skill.index` file whose stamp is absent, invalid, or inconsistent with current index content. A stale index may still be used for keyword matching; the agent must note the stale condition.
+- **Cascade (skill-index cascade)**: the multi-level index tree structure in which each index node is self-contained and references only descendants within its own subtree. Defined fully in the parent spec `skill-index`.
+- **Root skill.index**: the top-level `skill.index` file for a given agent — the entry point to that agent's skill discovery cascade. Referenced by the agent's index pointer. Distinct from the workspace-level skills tree root.
+- **Sub-node**: a child index node at a nested level of the cascade hierarchy. Defined in `skill-index-crawling`.
+- **Subtree depth**: the level of a node in the cascade hierarchy, measured from the root node. Used in multi-match resolution. Defined in `skill-index-crawling`.
+- **Entry key**: the unique identifier field of a `skill.index` entry, as specified by the `skill-index-building` format. Each entry begins with its key, followed by a colon and its keyword list. The entry key is the technical identifier for a skill and is distinct from the keyword list.
 - **Natural-language keyword**: a keyword expressed as a phrase a user or operator would naturally say when describing the task, not a technical identifier.
 - **Task description**: the agent's interpretation of the current user or operator request, expressed as a short plain-language phrase, used as input to keyword matching. The agent extracts the task description by identifying the primary action or intent in the request. When a request contains multiple actions, the primary (first or highest-priority) action governs the task description. Precise extraction procedure is left to the agent's judgment; the requirement is that it be consistent for the same input.
 
@@ -96,7 +101,7 @@ R10. On receiving any task, the agent must perform a keyword scan against the in
 
 R11. A keyword scan consists of: (a) reading the `skill.index` at the pointer location, (b) parsing entries in the format defined by `skill-index-building`, (c) applying case-insensitive substring matching between the task description and each entry's key and keywords, and (d) selecting a match per the `skill-index-crawling` resolution rules.
 
-R12. The agent must not skip the keyword scan on the basis that the task appears simple, familiar, or small. This reasoning is a rationalization; the scan must run regardless.
+R12. The agent must not skip the keyword scan on the basis that the task appears simple, familiar, or small. The scan must run regardless.
 
 R13. If the `skill.index` is missing or unreadable, the agent must proceed without skill matching and must note the missing index in its output. The agent must not treat a missing index as a fatal error.
 
@@ -128,7 +133,7 @@ R23. Keywords must not duplicate the entry key verbatim. Paraphrases, synonyms, 
 
 R24. At least one keyword per entry must be a multi-word phrase of two or more words. Single-word keywords alone are insufficient to distinguish between overlapping skills.
 
-R25. Keyword quality for entries in agents' indexes is subject to audit by `skill-index-auditing`. This spec's keyword requirements (R21–R24) are the normative standard the auditor must enforce. Any conflict between this spec and the auditor's keyword quality checks must be resolved by updating the auditor to match this spec.
+R25. Keyword quality for entries in agents' indexes is subject to audit by `skill-index-auditing`. This spec's keyword requirements (R21–R24) are the normative standard the auditor must enforce. Any conflict between this spec and the auditor's keyword quality checks must be resolved by updating the auditor to match this spec, unless the conflict reveals an error in this spec, in which case this spec must be updated through the standard spec revision process before the auditor is modified.
 
 R26. When a keyword match is found and the skill content is loaded, the agent must announce the matched skill before taking action on the matched task. Minimum form: "Using [skill name] to [brief description of action]." The announcement must be visible to the user or operator.
 
@@ -142,14 +147,16 @@ C2. The discovery mandate may not be embedded only in prose documentation (READM
 
 C3. Skill content must not be pre-loaded into the agent's context window to avoid future keyword scans. Pre-loading bypasses the demand-loading requirement and wastes tokens.
 
-C4. The agent may not maintain an in-session cache of skill content across turns for skills not actively in use. Skills loaded in prior turns are not exempt from reloading if the session context has been compacted.
+C4. The agent must not cache skill content across turns. A skill loaded in a prior turn must be reloaded if needed in a subsequent turn, particularly after a context-window reset.
 
 ---
 
 ## Behavior
 
+All statements in this section are normative. Present-tense descriptions ("Agent reads...", "Agent proceeds...") have the force of "must."
+
 **Index present, keyword match found:**
-Agent reads the full skill content before responding. Agent must announce which skill it is loading before taking action (see R26). Minimum form: "Using [skill name] to [primary action]."
+Agent reads the full skill content before responding. Agent must announce which skill it is loading before taking action (see R26). Minimum form: "Using [skill name] to [brief description of action]."
 
 **Index present, no keyword match:**
 Agent proceeds without loading any skill content. No announcement required.
@@ -173,9 +180,9 @@ Agent follows the `skill-index-crawling` resolution rules. Descent behavior is g
 
 ## Defaults and Assumptions
 
-D1. Default placement: the index pointer and discovery mandate must be in a context artifact the platform guarantees survives context-window resets. On platforms that re-read the agent configuration file after every reset, the configuration file is the default location. On platforms that do not, a hook or system-prompt injection is required in addition.
+D1. Default placement follows R2. On platforms that re-read the agent configuration file at every session start and after every reset (satisfying R2's survival condition), the configuration file is the default location. On platforms that do not, a supplemental injection mechanism (hook output, system prompt, API field) is required in addition.
 
-D2. Default scope: each agent type (Curator, Worker, Overseer, Sentinel) maintains its own scoped `skill.index`. There is no global agent index. This spec assumes each agent has a single operational domain. Multi-domain agent support — agents that require multiple independent skill index pointers — is out of scope for this version.
+D2. Default scope: each agent type (Curator, Worker, Overseer, Sentinel) maintains its own scoped `skill.index`. There is no global agent index. This spec assumes each agent has a single operational domain. Multi-domain agent support — agents that require multiple independent skill index pointers — is out of scope.
 
 D3. Default mandate form: imperative, two sentences maximum. First sentence: instruct the scan. Second sentence: instruct the load on match.
 
@@ -183,19 +190,21 @@ Conformant example: "Before responding to any task, scan your skill index for ma
 
 Non-conformant examples (guidance language, not imperative): "Consider checking the skill index before responding." / "It may be helpful to look up skills in your index." / "You should probably check the skill index."
 
-D4. Keyword matching uses the `skill-index-crawling` procedure. This spec does not define an alternative matching algorithm.
+D4. See R11(d) — keyword matching defers to `skill-index-crawling`. No alternative algorithm is defined in this spec.
 
 ---
 
 ## Error Handling
 
-E1. Missing index: proceed, log, no halt.
-E2. Unreadable index: proceed, log, no halt.
-E3. Missing skill content after match: proceed without skill, log, no halt.
+"Note in output" in this section means: produce a statement visible to the user or operator. Shorthand entries (E1–E4) have the force of normative requirements.
+
+E1. Missing index: proceed, note in output, no halt.
+E2. Unreadable index: proceed, note in output, no halt.
+E3. Missing skill content after match: proceed without skill, note in output, no halt.
 E4. Multiple matches with ambiguous resolution: apply `skill-index-crawling` ambiguity rules. If still ambiguous, load all candidates.
 E5. Discovery mandate absent from a context injection that survives context-window resets: the integration is non-conformant. Agent behavior is undefined. Conformance requires the mandate be present in a reset-surviving injection.
 
-E6. Discovery mandate not found after a context-window reset: the agent must attempt to reload the mandate from its configured context injection artifact. If the mandate is still absent after the reload attempt, the agent must proceed without the discovery mandate, must log the absence ("Discovery mandate not found; skill scanning disabled for this session"), and must not halt. Conformance is compromised but agent operation continues.
+E6. Discovery mandate not found after a context-window reset: the agent must attempt to reload the mandate from its configured context injection artifact. If the mandate is still absent after the reload attempt, the agent must proceed without the discovery mandate, must note the absence in output ("Discovery mandate not found; skill scanning disabled for this session"), and must not halt. Conformance is compromised but agent operation continues. This error handling applies only to integrations that were conformant at startup (mandate correctly placed per R2 and R9). An integration where the mandate was never placed in a reset-surviving injection is a design-time non-conformance governed by E5; E6 does not constitute a conformance path for E5 violations.
 
 ---
 
@@ -245,6 +254,21 @@ Mitigation: Read `skill.index` only. Load SKILL.md only when a keyword match is 
 **F5: Mandate in exploratory or descriptive context** — Discovery mandate embedded in a README or design doc rather than an injected context artifact.
 Why: Agents do not actively read documentation in their skills library at every turn.
 Mitigation: Mandate must be in an injected context artifact (agent configuration file, system prompt, hook output) — not in passive documentation.
+
+---
+
+## Conformance
+
+A `skill-index-integration` is conformant when all of the following are satisfied:
+
+- The agent's context contains exactly one scoped index pointer (R1–R4) delivered via reset-surviving injection (R2).
+- The agent's context contains a discovery mandate (R5–R9) delivered via the same injection.
+- The agent performs a keyword scan before each task (R10–R12).
+- Demand loading is enforced: skill content loads only on keyword match (R14–R17).
+- The index is scoped to the agent's operational domain (R18–R20).
+- All index entries satisfy keyword quality requirements (R21–R24).
+
+Conformance applies to both the integration configuration (the context injection artifacts) and the agent's runtime behavior. Conformance is verified by the `skill-index-auditing` skill after integration is complete.
 
 ---
 
