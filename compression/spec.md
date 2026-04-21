@@ -225,6 +225,7 @@ The original file is never modified. This prevents accidental overwrites of
 work-in-progress files.
 
 **Decision tree:**
+
 1. `--source` + `--target` provided → Mode 1 (no git check)
 2. No flags, file tracked+clean → Mode 2 (in-place)
 3. No flags, file untracked/dirty → Mode 3 (alongside)
