@@ -40,6 +40,8 @@ prohibited.
 
 This spec governs all specification documents, including itself.
 
+> **Note:** Self-application means the Required Sections list is binding on this file itself; section removal or renaming requires a spec amendment.
+
 ---
 
 ## Definitions
@@ -116,27 +118,27 @@ A valid specification must:
 
 ### 1. Explicitness Over Implication
 
-All required behavior must be explicitly stated.
+When writing any spec governed by this spec, the spec author must state all required behavior explicitly; no behavior may be left to implication.
 
 ### 2. Testability
 
-Every requirement must be verifiable.
+When writing any spec governed by this spec, the spec author must write each requirement so it is verifiable against the spec's target from document text alone, without external judgment.
 
 ### 3. Single Source of Truth
 
-Each requirement must exist in one canonical location.
+When writing any spec governed by this spec, the spec author must place each requirement in exactly one canonical location; duplication of normative content is prohibited.
 
 ### 4. Terminology Stability
 
-Terms must be defined and used consistently.
+When writing any spec governed by this spec, the spec author must define every key term in the Definitions section and use each term consistently throughout the document.
 
 ### 5. No Silent Scope Expansion
 
-All scope must be explicitly declared.
+When writing any spec governed by this spec, the spec author must declare all scope explicitly in the Scope section; silent scope expansion is prohibited.
 
 ### 6. Normative Clarity
 
-Clearly distinguish required, prohibited, and optional behavior.
+When writing any spec governed by this spec, the spec author must clearly distinguish required, prohibited, and optional behavior using the normative language defined in this spec.
 
 ---
 
@@ -252,8 +254,6 @@ Mitigation: The specific parameter, phrase, or constraint that prevents it.
 
 Multiple footguns are numbered sequentially (F1, F2, ...).
 
-Worked wrong-usage examples anywhere in the spec must be prefixed with `ANTI-PATTERN:`.
-
 **Canonical example:** See `dispatch-strategy` skill for the established footgun catalogue pattern (F1–F5 with Mitigation: lines and one ANTI-PATTERN: worked example).
 
 ---
@@ -297,6 +297,8 @@ Normative requirements must not be:
 - embedded in examples
 - implied in descriptive text
 - introduced in exploratory sections
+
+Worked wrong-usage examples anywhere in the spec must be prefixed with `ANTI-PATTERN:`.
 
 ---
 
@@ -376,11 +378,12 @@ Before writing any artifact derived from a spec (skill, agent, or tool), the spe
 Required sequence:
 
 1. Write the spec.
-2. Dispatch the spec-auditor: Haiku iterations first, Sonnet for the final pass.
-3. Fix all findings.
-4. Re-audit until the result is PASS.
-5. Only after PASS: write the derived artifact.
-6. Dispatch the appropriate artifact auditor (skill-auditor, agent-auditor, or tool-auditor) on the derived artifact as a separate pass.
+2. Dispatch `markdown-hygiene` on the spec to ensure zero lint errors.
+3. Dispatch the spec-auditor: Haiku iterations first, Sonnet for the final pass.
+4. Fix all findings.
+5. Re-audit until the result is PASS.
+6. Only after PASS: write the derived artifact.
+7. Dispatch the appropriate artifact auditor (skill-auditor, agent-auditor, or tool-auditor) on the derived artifact as a separate pass.
 
 Skipping the spec-auditor pass before writing a derived artifact is prohibited.
 

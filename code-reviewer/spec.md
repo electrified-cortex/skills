@@ -52,9 +52,9 @@ different from those audit procedures and the difference is normative
   identifiable by file paths, refs, or other stable references.
 - **Smoke pass**: a fast, low-cost review pass intended to surface easy or
   surface-level findings (style, naming, obvious bugs, missing error
-  handling, lint-grade defects). Run by a Haiku-class model.
+  handling, lint-grade defects). Run by a haiku-class model.
 - **Substantive pass**: a deeper review pass intended to surface design,
-  correctness, security, and architectural findings. Run by a Sonnet-class
+  correctness, security, and architectural findings. Run by a sonnet-class
   model. Authoritative for sign-off.
 - **Finding**: a single reported issue with severity, location (file +
   line range when applicable), description, and recommended action.
@@ -80,18 +80,18 @@ different from those audit procedures and the difference is normative
   Sonnet pass has been dispatched, that pass is the sign-off; when more
   than one has been dispatched, the latest one is the sign-off and
   earlier Sonnet passes become historical context.
-- **Tier**: the model class (Haiku-class or Sonnet-class) assigned to a
+- **Tier**: the model class (haiku-class or sonnet-class) assigned to a
   given pass at dispatch.
 
 ## Requirements
 
 ### Procedure
 
-A code review on a non-empty change set requires exactly one Haiku-class
-smoke pass followed by at least one Sonnet-class substantive pass. A
+A code review on a non-empty change set requires exactly one haiku-class
+smoke pass followed by at least one sonnet-class substantive pass. A
 review on an empty change set requires zero passes.
 
-1. The calling agent must dispatch exactly one Haiku-class smoke pass
+1. The calling agent must dispatch exactly one haiku-class smoke pass
    first, before any Sonnet pass, for any code review where the change set
    is non-empty.
 2. The smoke pass must produce a findings report only. It must not modify
@@ -100,14 +100,14 @@ review on an empty change set requires zero passes.
    to act on. Acting on findings is outside the code-reviewer skill; the
    calling agent or another skill performs edits.
 4. After the smoke pass and any caller-driven fixes, the calling agent
-   must dispatch at least one Sonnet-class substantive pass.
+   must dispatch at least one sonnet-class substantive pass.
 5. The substantive pass must produce a findings report only. It must not
    modify any code.
-6. The calling agent may dispatch additional Sonnet-class passes after
+6. The calling agent may dispatch additional sonnet-class passes after
    the first substantive pass if findings warrant re-review of an
    updated change set. (The smoke pass having already run, Constraint 4
    forbids any further Haiku pass.)
-7. The final dispatched pass must be a Sonnet-class pass. This pass is the
+7. The final dispatched pass must be a sonnet-class pass. This pass is the
    sign-off. Its report is the authoritative review result.
 8. Each pass must be dispatched as an isolated agent with no ambient
    caller state beyond the enumerated bootstrap inputs (a Dispatch-style
@@ -261,9 +261,9 @@ values. The vocabulary is:
 
 ## Constraints
 
-1. The smoke pass tier is Haiku-class. The substantive pass tier is
-   Sonnet-class. Tier substitution is prohibited: the smoke pass must
-   not be Sonnet, and the substantive pass must not be Haiku.
+1. The smoke pass tier is haiku-class. The substantive pass tier is
+   sonnet-class. Tier substitution is prohibited: the smoke pass must
+   not be sonnet-class, and the substantive pass must not be haiku-class.
 2. Dispatched review agents must not commit, push, edit, stage, or
    otherwise mutate the working tree or the repository state. They are
    read-only.
@@ -340,8 +340,8 @@ prohibits passing the caller's dispute to the substantive pass.
 
 ## Defaults and Assumptions
 
-- Smoke pass tier defaults to Haiku-class. No override permitted.
-- Substantive pass tier defaults to Sonnet-class. No override permitted.
+- Smoke pass tier defaults to haiku-class. No override permitted.
+- Substantive pass tier defaults to sonnet-class. No override permitted.
 - Focus areas: default none (full review). Behavior constraints defined
   under Requirements > Inputs item 4.
 - See Calling agent obligations item 4 — no maximum pass count, no
@@ -393,8 +393,8 @@ prohibits passing the caller's dispute to the substantive pass.
 - Don't let dispatched agents fix code (see Constraints item 3).
 - Don't let dispatched agents commit, push, stage, or otherwise mutate
   repository state.
-- Don't introduce a third tier (for example, a Sonnet-class smoke pass
-  followed by an Opus-class substantive pass). The two-tier model is
+- Don't introduce a third tier (for example, a sonnet-class smoke pass
+  followed by an opus-class substantive pass). The two-tier model is
   fixed by this spec.
 - Don't conflate the code review pattern with the audit pattern. Audits
   permit Haiku iteration; code reviews do not. The two patterns are

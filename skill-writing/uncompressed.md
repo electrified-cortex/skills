@@ -22,15 +22,18 @@ When creating a new skill, follow this order. Never skip steps.
 3. **Compress** — use the `compression` skill (source→target mode:
    `--source uncompressed.md --target SKILL.md`). The SKILL.md is the
    compressed runtime agents load.
-4. **Audit** — use `skill-auditing` skill to verify. Fix
-   findings, recompress, re-audit until PASS.
+4. **Audit** — use the `skill-auditing` skill to verify. The audit
+   flags any markdown issues. Fix findings, recompress, re-audit
+   until PASS.
 
 For dispatch skills, also write the companion agent file (see Dispatch
 Skill section).
 
-When revising an existing skill: update spec first (if the change affects
-requirements or constraints) → update uncompressed.md → recompress →
-re-audit. Never modify SKILL.md directly — it is a compiled artifact.
+When revising an existing skill: always update the spec first. The only
+exception is changes limited to non-normative content (README, examples,
+typo fixes in informational sections) — in that case skip to step 2.
+Then update uncompressed.md → recompress → re-audit. Never modify
+SKILL.md directly — it is a compiled artifact.
 
 ## Decision: Inline or Dispatch?
 
@@ -52,7 +55,6 @@ skill-name/
 ```
 
 `instructions.txt` or `<name>.md` present = dispatch skill. Absent = inline.
-Never use "SKILL" in any filename except `SKILL.md`.
 
 ## Inline Skill
 
@@ -68,10 +70,28 @@ Input: `<params>`"
 Parameters: types, required/optional, defaults. Output format specified.
 
 Dispatch instruction file must be in the same directory or a known path.
-Instruction files must contain only instructions — no title headers, no
-descriptions, no preamble.
+Compressed `instructions.txt` contains only instructions — no title
+headers, no descriptions, no preamble. The uncompressed baseline
+`instructions.uncompressed.md` MAY include an H1 title so markdown-hygiene
+passes (MD041); strip the title after compression.
 
 ## Requirements
+
+### Naming
+
+- Skill directory name = kebab-case and **equal to the `name` frontmatter
+  field**. Discovery matches folder name to frontmatter name; a mismatch
+  makes the skill unreachable.
+- **Nested sub-skills** under a parent skill folder must use
+  fully-qualified names that include the parent as a prefix. Example:
+  under `electrified-cortex/skill-index/`, children are
+  `skill-index-auditing/`, `skill-index-building/` — not bare
+  `auditing/`, `building/`. Canonical reference: `electrified-cortex/gh-cli/`
+  (`gh-cli-actions`, `gh-cli-api`, etc.). Bare unqualified names inside a
+  parent folder do not resolve.
+- Never use "SKILL" in any filename except `SKILL.md`.
+
+### Content
 
 - Frontmatter: `name` + `description`
 - Self-contained: no spec dependency at runtime
@@ -80,9 +100,8 @@ descriptions, no preamble.
 - Breadcrumbs: end with related skills (verified, not stale)
 - No secrets
 
-After writing any .md file, run `markdown-hygiene` (dispatch) before
-compressing or stamping.
-Verify completed skills with `skill-auditing`.
+Verify completed skills with `skill-auditing`. The audit flags any
+markdown issues.
 
 ## Footgun Mirroring
 
@@ -95,4 +114,4 @@ If the companion spec has a `Footguns` section, mirror it in uncompressed.md/SKI
 
 - `spec-writing` — write the spec first (step 1 of workflow)
 - `compression` — compress uncompressed.md to SKILL.md (step 3)
-- `skill-auditing` — verify skill quality (step 4, dispatch, dogfoods itself)
+- `skill-auditing` — verify skill quality (step 4, dispatch)

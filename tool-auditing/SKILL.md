@@ -2,13 +2,12 @@
 name: tool-auditing
 description: >-
   Audit tool scripts for companion spec, conventions, error handling.
-  Lightweight — Haiku class can run it.
+  Lightweight — haiku-class model can run it.
 ---
 
 # Tool Auditing
 
-Verify tool scripts follow conventions. Spec: `spec.md` (same dir).
-Dispatch with Haiku class.
+Verify tool scripts follow conventions. Dispatch with haiku-class model.
 
 ## Checklist (per script)
 

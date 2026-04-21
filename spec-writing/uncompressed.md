@@ -124,26 +124,20 @@ Before writing any artifact derived from a spec (skill, agent, or
 tool), the spec must pass a full audit.
 
 1. Write the spec.
-2. Dispatch spec-auditor: Haiku iterations first, Sonnet for the final pass.
-3. Fix all findings.
-4. Re-audit until the result is PASS.
-5. Write the derived artifact (skill, agent, or tool) only after PASS.
-6. Dispatch the appropriate artifact auditor (skill-auditor, agent-auditor, or tool-auditor) on the derived artifact as a separate pass.
+2. Dispatch `markdown-hygiene` on the spec to ensure zero lint errors.
+3. Dispatch spec-auditor: Haiku iterations first, Sonnet for the final pass.
+4. Fix all findings.
+5. Re-audit until the result is PASS.
+6. Write the derived artifact (skill, agent, or tool) only after PASS.
+7. Dispatch the appropriate artifact auditor (skill-auditor, agent-auditor, or tool-auditor) on the derived artifact as a separate pass.
 
 Skipping the spec-auditor pass before writing a derived artifact is prohibited.
 
-Don't use descriptive, exploratory, or informational content as substitute for normative requirements. Don't use this skill to justify silent scope expansion. Don't use this skill to hide requirements in examples, notes, or descriptive prose.
-
-After writing any spec.md, run `markdown-hygiene` (dispatch) to ensure zero lint errors.
-
-## Footguns
-
-Spec-writing failure modes belong in derived specs (skills, agents,
-tools) that implement or extend this spec, not in this meta-spec
-itself. Authors applying this skill should document failure modes
-specific to their domain using the Footgun Convention below.
+Don't use descriptive, exploratory, or informational content as substitute for normative requirements. Don't use this skill to justify silent scope expansion. Do not embed normative requirements in examples, descriptive text, or exploratory sections.
 
 ## Footgun Convention
+
+Spec-writing failure modes belong in derived specs (skills, agents, tools) that implement or extend this spec, not in this meta-spec itself; authors applying this skill should document failure modes specific to their domain using the convention below.
 
 Specs may include an optional `Footguns` section. Format:
 

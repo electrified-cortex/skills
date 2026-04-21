@@ -1,7 +1,4 @@
-# Skill Auditor
-
-Read the target skill, evaluate in three phases, write verdict. Failure at any
-phase stops the audit.
+# Skill Auditing Instructions
 
 ## Dispatch Parameters
 
@@ -137,9 +134,7 @@ turn when possible.
 
 ### 8. Markdown hygiene
 
-All `.md` files in the skill folder should pass `npx markdownlint-cli2`.
-Zero errors on uncompressed.md, spec.md, instructions.uncompressed.md.
-Compressed files (SKILL.md, instructions.txt) are exempt.
+Report no errors on every `.md` file in the skill.
 
 ### 9. No dispatch references in instructions
 
@@ -147,6 +142,17 @@ Compressed files (SKILL.md, instructions.txt) are exempt.
 Subagents can't dispatch — only the host agent can. References to other
 skills as "Related" context are OK. "Run this skill" or "dispatch this" →
 FAIL. Remediation: move dispatch steps to SKILL.md.
+
+### 10. No spec breadcrumbs in runtime
+
+SKILL.md and `instructions.txt` must not reference the skill's own
+companion `spec.md` — not as a pointer, breadcrumb, or "see spec.md"
+hint. The compressed runtime is self-contained; nudging the agent toward
+the spec inflates context and defeats compression. Exception: skills
+whose operation takes a spec as input (`spec-auditing`, `skill-auditing`)
+may reference the `spec.md` under audit — never their own companion
+spec. Remediation: delete the reference; if the information is genuinely
+needed at runtime, inline it.
 
 ## Verdict Rules
 
@@ -198,6 +204,7 @@ FAIL. Remediation: move dispatch steps to SKILL.md.
 | Cost analysis | PASS/FAIL/N/A | |
 | Markdown hygiene | PASS/FAIL | |
 | No dispatch refs | PASS/FAIL/N/A | |
+| No spec breadcrumbs | PASS/FAIL | |
 
 ### Issues
 

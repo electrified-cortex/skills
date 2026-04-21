@@ -14,14 +14,23 @@ Dispatch an isolated agent (Dispatch agent, zero context): "Read and follow
 strict disposition (skeptical, evidence-based, non-creative). Inline attempts
 produce shallow, inconsistent audits.
 
+## Parameters
+
+- `target-path` (string, required): path to spec file or companion file to audit
+- `--spec <spec-path>` (string, optional): explicit path to spec file (pair-audit mode)
+- `--fix` (flag, optional): enable fix mode — modifies target to match spec, up to 3 passes
+
+**Returns:** Pass / Pass with Findings / Fail verdict with numbered findings (Severity, Evidence, Recommended fix per finding)
+
 ## Modes
 
 - **Audit** (default) — read-only. Returns Pass / Pass with Findings / Fail.
 - **Fix** (`--fix`) — modifies target to match spec. Up to 3 passes with re-audit.
 - **Spec-only** (auto-detected) — target is `spec.md` with no companion present.
-  Audits spec quality alone: completeness, enforceability, clarity, internal
-  consistency. No Coverage Summary. Auto-upgrades to Pair-Audit if a companion
-  is found via auto-detect fallback chain.
+  Audits spec quality alone: Completeness, Enforceability, Structural Integrity,
+  Terminology, Internal Consistency. No Coverage Summary. Auto-upgrades to
+  Pair-Audit if a companion is found via auto-detect fallback chain:
+  `<basename-without-spec-suffix>.md` → `uncompressed.md` → `SKILL.md` → `*.agent.md`.
 
 ### Companion Auto-Detect
 

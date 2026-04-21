@@ -39,6 +39,7 @@ Gates:
 4. Precedence: this file controls procedure, spec controls domain, target subordinate. Report every conflict; never normalize.
 5. `--fix` requires target git-tracked and clean. Untracked/modified/deleted/conflicted → STOP: target must be tracked and clean.
 6. Reject approve/stamp requests → STOP: approve mode not supported.
+7. Spec-only mode: skip companion-dependent gates (gate 3 reads spec only; skip gate 5 — no writes will occur; gate 6 unchanged). `--fix` in spec-only → report unsupported, proceed audit-only.
 
 Interpretation:
 
@@ -54,7 +55,7 @@ Interpretation:
 10. Never silently normalize contradictions.
 11. Never propose rewrites until audit is complete.
 
-Audit:
+Audit (pair-audit mode):
 
 1. Extract from spec: requirements, prohibitions, defaults, precedence, definitions, procedures, exceptions, audience.
 2. Extract from target: rules, terminology, structure, constraints, defaults, behaviors.
@@ -68,6 +69,16 @@ Audit:
 10. Change Drift Risk: duplicated text, loose paraphrases, isolated assumptions, missing cross-refs, future divergence hotspots.
 11. Unauthorized Additions: classify target-only additions as `Valid Extension`, `Derived but Unstated`, or `Unauthorized Addition`.
 12. Compression fidelity: flag loss, gain, bloat. Loss/gain = governance failures (High+); bloat = quality issue (Medium).
+
+Audit (spec-only mode — apply instead of pair-audit when no companion):
+Five checks only. Steps numbered to match pair-audit for cross-reference; skip steps 2–5, 10–12 (require companion).
+1. Extract from spec: requirements, prohibitions, definitions, procedures, exceptions.
+6. Completeness: missing required sections, dangling refs, undefined terms, incomplete procedures, missing decision criteria.
+7. Enforceability: vague/subjective/aspirational/non-testable requirements; binding behavior without auditable criteria.
+8. Structural Integrity: logical order, stable headings, duplicate rules, hidden requirements in examples, normative-language consistency.
+9. Terminology: stable defined terms, undefined critical terms, synonym drift.
+   Internal Consistency: no contradictions within the spec itself.
+(No Semantic Alignment, Requirement Coverage, Contradiction Detection, Unauthorized Additions, Compression Fidelity, or Change Drift Risk — all require a companion.)
 
 Assumptions (unless overridden):
 Both files describe same system/behavior/contract.
@@ -107,14 +118,14 @@ Evidence:
 
 Output:
 
-1. Sections in order: `Audit Result`, `Executive Summary`, `Findings`, `Coverage Summary`, `Drift Notes`, `Repair Priorities`.
+1. Sections in order: `Audit Result`, `Executive Summary`, `Findings`, `Coverage Summary`, `Drift and Risk Notes`, `Repair Priorities`.
 2. `Audit Result`: `Pass`, `Pass with Findings`, or `Fail`.
 3. `Executive Summary`: alignment state (or spec quality state in spec-only mode), mode used,
    biggest risks, threshold if customized.
 4. `Findings`: numbered; each has `ID`, `Severity`, `Title`, `Affected file(s)`, `Evidence`, `Explanation`, `Recommended fix`.
 5. `Coverage Summary`: well-covered, missing/weak, fit for purpose.
    Spec-only mode: set to "N/A — spec-only mode, no companion present."
-6. `Drift Notes`: duplication, paraphrase drift, isolated assumptions, cross-ref gaps, likely future divergence.
+6. `Drift and Risk Notes`: duplication, paraphrase drift, isolated assumptions, cross-ref gaps, likely future divergence.
    Spec-only mode: internal consistency observations only (no cross-file drift).
 7. `Repair Priorities`: highest-value fix order first.
 8. Quote evidence inline for every finding.

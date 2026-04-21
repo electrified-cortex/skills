@@ -58,17 +58,16 @@ Correctness and enforceability over readability. Normative content governs behav
 
 Derivation workflow:
 1. Write spec.
-2. Dispatch spec-auditor: Haiku first, Sonnet final pass.
-3. Fix all findings.
-4. Re-audit until PASS.
-5. Write derived artifact only after PASS.
-6. Dispatch artifact auditor (skill-auditor, agent-auditor, or tool-auditor) on derived artifact separately.
+2. Dispatch `markdown-hygiene` on the spec to ensure zero lint errors.
+3. Dispatch spec-auditor: Haiku first, Sonnet final pass.
+4. Fix all findings.
+5. Re-audit until PASS.
+6. Write derived artifact only after PASS.
+7. Dispatch artifact auditor (skill-auditor, agent-auditor, or tool-auditor) on derived artifact separately.
 Skipping spec-auditor before derived artifacts is prohibited.
 
 Don'ts:
-Don't use descriptive, exploratory, or informational content as substitute for normative requirements. Don't use this skill to justify silent scope expansion. Don't hide requirements in examples, notes, or descriptive prose.
-
-After writing any spec.md, run `markdown-hygiene` (dispatch) to ensure zero lint errors.
+Don't use descriptive, exploratory, or informational content as substitute for normative requirements. Don't use this skill to justify silent scope expansion. Do not embed normative requirements in examples, descriptive text, or exploratory sections.
 
 Footgun Convention:
 Specs may include optional `Footguns` section. Format:

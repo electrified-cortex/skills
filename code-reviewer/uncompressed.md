@@ -7,7 +7,7 @@ description: Tiered code review on a change set. Haiku smoke pass surfaces easy 
 
 Two-tier code review on a change set. Calling agent orchestrates the passes; each pass is dispatched as an isolated agent with zero caller context.
 
-This is a code review skill (NOT an audit skill). Code reviews use exactly one Haiku smoke pass before any Sonnet pass; Haiku iteration after that is forbidden. Audits use a different pattern (up to two Haiku iterations before Sonnet) and live in `spec-auditing` and `skill-auditing`. Do not conflate the patterns.
+Code reviews use exactly one haiku-class smoke pass followed by one or more sonnet-class substantive passes. Haiku iteration after the smoke pass is forbidden. Audits are a separate pattern (up to two iterations at the cheap tier before escalating) — see `spec-auditing` and `skill-auditing`.
 
 ## When to use
 
@@ -15,9 +15,9 @@ Reviewing a change set that consists of executable or compilable code: source fi
 
 ## Procedure (calling agent orchestrates)
 
-1. **Smoke pass** — dispatch exactly one Haiku-class Dispatch agent. Pass the change set and `tier=smoke`.
+1. **Smoke pass** — dispatch exactly one haiku-class Dispatch agent. Pass the change set and `tier=smoke`.
 2. **Caller acts (optional)** — read the smoke findings; decide which to act on; perform any edits yourself or via another skill. Dispatched review agents never edit.
-3. **Substantive pass** — dispatch a Sonnet-class Dispatch agent. Pass the change set, `tier=substantive`, and the prior pass's findings unmodified.
+3. **Substantive pass** — dispatch a sonnet-class Dispatch agent. Pass the change set, `tier=substantive`, and the prior pass's findings unmodified.
 4. **Iterate Sonnet-only (optional)** — if findings warrant re-review of an updated change set, dispatch another Sonnet pass. Forward all prior-pass findings unmodified. Never re-introduce Haiku.
 5. **Sign-off** — the most recent Sonnet pass is the authoritative sign-off. Record its report.
 

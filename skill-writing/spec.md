@@ -38,9 +38,9 @@ order. No step may be skipped.
 3. **Compress** — use the `compression` skill in source→target mode
    (`--source uncompressed.md --target SKILL.md`) to produce the
    compressed runtime file. SKILL.md is what agents load at runtime.
-4. **Audit** — use the `skill-auditing` skill to verify
-   the SKILL.md against the spec. Fix findings, recompress,
-   re-audit until the audit returns PASS.
+4. **Audit** — use the `skill-auditing` skill to verify the SKILL.md
+   against the spec. The audit flags any markdown issues. Fix findings,
+   recompress, re-audit until the audit returns PASS.
 
 For dispatch skills, the companion agent file must also be written
 (step 2) and verified as reachable (step 4).
@@ -49,10 +49,12 @@ For dispatch skills, the companion agent file must also be written
 
 When modifying an existing skill:
 
-1. Update the spec first if the change affects requirements or constraints
-2. Update uncompressed.md to reflect the spec change
-3. Recompress to SKILL.md
-4. Re-audit
+1. Always update the spec first. The only exception is changes limited
+   to non-normative content (README, examples, typo fixes in
+   informational sections). In that case skip to step 2.
+2. Update uncompressed.md to reflect the spec change.
+3. Recompress to SKILL.md.
+4. Re-audit.
 
 Never modify SKILL.md directly — it is a compiled artifact. Changes
 flow: spec → uncompressed → compressed.
@@ -68,8 +70,8 @@ flow: spec → uncompressed → compressed.
   holds the procedure.
 - **Dispatch instruction file**: A text file (any name, commonly
   `<name>.md` or `<name>.agent.md`) containing the full procedure for a
-  dispatched capability. Not a custom agent — any generic agent (Sonnet,
-  Haiku) reads it and follows it. Like a recipe, not a robot.
+  dispatched capability. Not a custom agent — any generic agent reads
+  it and follows it. Like a recipe, not a robot.
 - **Routing card**: A minimal SKILL.md (~10-15 lines) that tells the host
   agent: what this does, what file to dispatch, what params to pass, what
   to expect back.
@@ -164,14 +166,19 @@ A plain text/markdown file with the procedure. Not a custom agent — any
 generic agent reads it and follows it. The Dispatch agent
 (`dispatch.agent.md`) provides zero-context isolation.
 
-Instruction files must contain only instructions — no title headers,
-no descriptions, no preamble. The dispatching agent already knows what
-it is reading. The SKILL.md routing card handles the "what" and "why";
-the instruction file handles only the "how."
+The compressed instruction file (`instructions.txt`) must contain only
+instructions — no title headers, no descriptions, no preamble. The
+dispatching agent already knows what it is reading. The SKILL.md
+routing card handles the "what" and "why"; the instruction file handles
+only the "how."
+
+The uncompressed baseline (`instructions.uncompressed.md`) MAY include
+an H1 title so that markdown-hygiene passes (markdownlint rule MD041
+requires a top-level heading). Strip the title after compression to
+`instructions.txt`. This keeps the compressed runtime minimal while
+preserving markdown correctness in the authored source.
 
 ```markdown
-# <Capability Name>
-
 ## Dispatch Parameters
 - `param1` (required): <description>
 - `param2` (optional, default: "X"): <description>
@@ -202,7 +209,17 @@ the instruction file handles only the "how."
 
 ### Naming
 
-- Skill directory name = kebab-case, descriptive
+- Skill directory name = kebab-case, descriptive, and **equal to the `name`
+  field in the SKILL.md frontmatter**. Discovery resolves skills by matching
+  the directory name against the frontmatter name; a mismatch causes the
+  skill to be unreachable.
+- **Nested sub-skills** under a parent skill folder must use the
+  fully-qualified name that includes the parent as a prefix. Example: under
+  `electrified-cortex/skill-index/`, children are `skill-index-auditing/`,
+  `skill-index-building/`, `skill-index-crawling/` — not bare `auditing/`,
+  `building/`, `crawling/`. The canonical reference implementation is
+  `electrified-cortex/gh-cli/` (`gh-cli-actions`, `gh-cli-api`, etc.). Bare
+  unqualified names inside a parent folder do not resolve.
 - `SKILL.md` = the runtime file (always this exact name)
 - `spec.md` = companion spec (always this exact name — no prefix, no
   "SKILL" in the filename). Required for dispatch and complex inline
@@ -278,6 +295,96 @@ change history, credits, publication notes.
 6. Self-containment wins over aggressive compression
 7. Correctness wins over brevity
 
+## Behavior
+
+### Skill creation workflow
+
+1. Write `spec.md` using the `spec-writing` skill. No downstream work
+   starts until the spec exists.
+2. Derive `uncompressed.md` from the spec. Every normative requirement
+   in the spec must be represented. No new requirements may be introduced
+   that are not in the spec.
+3. Compress using the `compression` skill (`--source uncompressed.md
+   --target SKILL.md`).
+4. Audit with `skill-auditing`. Fix findings, recompress, re-audit
+   until PASS.
+
+For dispatch skills: also write the companion agent/instruction file
+(step 2) and verify it is reachable (step 4).
+
+### Behavior revision workflow
+
+1. Always update the spec first. Exception: changes limited to
+   non-normative content (README, examples, typo fixes in informational
+   sections) — in that case skip to step 2.
+2. Update `uncompressed.md` to reflect the spec change.
+3. Recompress to `SKILL.md`.
+4. Re-audit.
+
+Never modify `SKILL.md` directly — it is a compiled artifact.
+Flow: spec → uncompressed → compressed.
+
+### Dispatch vs inline decision flow
+
+Ask: "Could someone with no context do this from just the inputs given?"
+
+- Yes → dispatch skill (isolated agent, mechanical processing)
+- No → inline skill (caller context and judgment required)
+
+Use the Decision Tree section for detailed criteria.
+
+## Defaults and Assumptions
+
+- **Companion spec omission threshold**: a simple inline skill may omit
+  `spec.md` only when its `SKILL.md` is self-evidently complete and is
+  under approximately 30 lines with no design decisions worth recording.
+  Above that threshold a companion spec is required.
+- **Routing card size**: dispatch skill `SKILL.md` routing cards are
+  approximately 10–15 lines. Procedure lives in the dispatch instruction
+  file, not the routing card.
+- **Skill discovery assumption**: the system discovers skills by matching
+  the folder name against the `name` frontmatter field. A mismatch
+  causes the skill to be unreachable. Folder name and `name` must be
+  identical.
+- **Default audit cadence**: iterate the audit until no CRIT or HIGH
+  findings remain, then do one final sign-off pass. How that iteration
+  is staffed (single agent, multiple agents, cheap pass then expensive
+  pass) is a caller choice, not a requirement of this spec.
+- **Instruction file location**: dispatch instruction files are assumed
+  to reside in the same directory as `SKILL.md` unless a known path is
+  explicitly stated in the routing card.
+
+## Error Handling
+
+- **Audit never reaches PASS**: do not silently accept a stalled audit.
+  Report the blockage and escalate. Do not ship a skill with unresolved
+  CRIT or HIGH findings.
+- **Dispatch path unavailable**: if no dispatch channel is reachable,
+  the host records the exception in its output and may self-execute
+  steps 2–4. The routing defect is triaged afterward.
+- **Skill already exists with the proposed name**: this is a constraint
+  violation (see Constraints — "don't create skills that duplicate
+  existing ones"). Check existing skills before writing. If the intent
+  is to replace or extend an existing skill, use the revision workflow.
+- **Sign-off pass introduces new CRIT or HIGH**: return to iteration
+  with the new findings incorporated. Do not stamp until the sign-off
+  pass is clean.
+
+## Precedence Rules
+
+- `spec.md` is the source of truth. It governs `uncompressed.md`, which
+  governs `SKILL.md`. Conflicts resolve in that order.
+- `spec-writing/spec.md` governs the form and structure of all derived
+  skills produced by this skill. When this spec conflicts with a skill
+  it produced, this spec wins.
+- Spec-clarity precedence: if the compile step (steps 2–3) feels like
+  it needs more judgment than expected, the fix is to sharpen the
+  spec. A well-formed spec makes steps 2–3 deterministic for any
+  executor.
+- Footgun mirroring takes precedence over compression pressure: if the
+  companion spec has a Footguns section, the SKILL.md must mirror it
+  even at the cost of increased size.
+
 ## Constraints
 
 - Don't create dispatch skills for tasks that need caller context
@@ -285,6 +392,8 @@ change history, credits, publication notes.
 - Don't create inline skills for mechanical processing — dispatch it
 - Don't skip the companion spec for dispatch or complex inline skills
 - Don't create skills that duplicate existing ones — check first
+- Never modify `SKILL.md` directly — it is a compiled artifact; changes
+  flow through spec → uncompressed → compressed
 
 ## Relationship to Other Skills
 

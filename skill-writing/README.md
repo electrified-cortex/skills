@@ -1,7 +1,9 @@
 # skill-writing
 
-Guide for writing new skills. Use this as a reference when authoring or editing
-a skill — it describes conventions, workflow, and classification rules.
+> Non-normative. For orientation only. The authoritative requirements are in `spec.md`.
+
+Guide for writing new skills. Use this when authoring or editing a skill — it
+describes conventions, workflow, and classification rules.
 
 ## When to Use
 
@@ -11,35 +13,37 @@ a skill — it describes conventions, workflow, and classification rules.
 
 ## Workflow
 
-The guide defines a five-stage pipeline:
+Four steps, in order. No step may be skipped.
 
-1. **Spec** — write the `.spec.md` companion first; it captures rationale,
-   design decisions, and requirements in full natural language
-2. **Uncompressed draft** — write `SKILL.md` in normal prose, following the
-   classification rules (dispatch vs inline, tool declarations, etc.)
-3. **Compress** — run the `compression` skill at the appropriate tier
-4. **Audit** — run `skill-auditing` to validate quality and spec compliance
-5. **Sign-off** — resolve all `NEEDS_REVISION` or `FAIL` verdicts, then tag
-   the skill as ready
+1. **Spec** — write `spec.md` using the `spec-writing` skill. Captures
+   requirements, constraints, and acceptance criteria.
+2. **Uncompressed draft** — write `uncompressed.md` derived from the spec.
+   This is the human-readable baseline. `uncompressed.md` is the draft;
+   `SKILL.md` is the compiled output (not the draft).
+3. **Compress** — run the `compression` skill (`--source uncompressed.md
+   --target SKILL.md`) to produce the compressed runtime file agents load.
+4. **Audit** — run `skill-auditing` to validate quality and spec compliance.
+   Fix findings, recompress, re-audit until PASS.
 
 ## Key Conventions
 
-- Every skill has a `SKILL.md` and a `.spec.md` in the same folder
-- Dispatch skills declare the tools their subagents will use
-- Inline skills are loaded into the caller's context; they do not spawn subagents
+- Every skill folder contains `SKILL.md` (runtime), `uncompressed.md`
+  (baseline), and `spec.md` (normative spec — required for dispatch and
+  complex inline skills)
+- Dispatch skills use a routing card `SKILL.md` (~10–15 lines) plus a
+  separate instruction file (`instructions.txt` or `<name>.md`)
+- Inline skills load into the caller's context; dispatch skills spawn an
+  isolated agent
 - Specs are never compressed — they preserve the full reasoning record
-- Skill content is compressed at `ultra` tier; human-facing content at `full` or `lite`
+- Nested sub-skills use fully-qualified names with the parent as a prefix
+  (e.g., `skill-index-auditing/`, not `auditing/`)
 
 ## Related Skills
 
-- [`spec-writing`](../spec-writing/) — guide for writing the spec companion
-- [`compression`](../compression/) — compress the finished skill
-- [`skill-auditing`](../skill-auditing/) — audit the finished skill
+- [`spec-writing`](../spec-writing/) — write the spec first (step 1)
+- [`compression`](../compression/) — compress uncompressed.md to SKILL.md (step 3)
+- [`skill-auditing`](../skill-auditing/) — audit the finished skill (step 4)
 - [`markdown-hygiene`](../markdown-hygiene/) — clean up lint violations before auditing
-
-## Standards
-
-This skill follows the [Agent Skills](https://agentskills.io) open standard.
 
 ## License
 

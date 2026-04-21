@@ -7,7 +7,7 @@ description: >-
 
 # Tool Writing
 
-Conventions for creating tool scripts. Spec: `spec.md` (same dir).
+Conventions for creating tool scripts.
 
 ## Checklist
 

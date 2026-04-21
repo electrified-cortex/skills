@@ -12,8 +12,6 @@ Dispatch (Dispatch agent, zero context): "Read and follow `instructions.txt` (in
 Returns: verdict (PASS / NEEDS_REVISION / FAIL),
 9-point checklist, issues.
 
-Tiered model pattern: Haiku for iteration, Sonnet for
-final sign-off. Run Haiku until PASS, then one Sonnet
-pass to confirm. Only Sonnet PASS = production-ready.
+Tiered model strategy: dispatch inexpensive/fast model for iterate passes, default model for final sign-off.
 
 Related: `skill-writing`, `spec-auditing`, `compression`

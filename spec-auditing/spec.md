@@ -62,6 +62,22 @@ The auditor must treat the spec as normative unless this file explicitly declare
 
 ---
 
+## Definitions
+
+- **Spec file**: the normative markdown document describing rules, requirements, expectations, structure, or behavior for a system or artifact.
+- **Companion file**: a related markdown file that implements, explains, summarizes, derives from, or operationalizes the spec. Also called "target file."
+- **Target file**: synonym for companion file in pair-audit mode; the file being evaluated against the spec.
+- **Finding**: a numbered, severity-labeled observation of a defect, weakness, or risk in the audited material.
+- **Pair-audit mode**: the auditor evaluates a spec file and its companion file together.
+- **Spec-only mode**: the auditor evaluates a single spec file for spec quality alone (no companion present).
+- **Drift**: accidental semantic divergence between the spec and its companion over time, or within the spec itself.
+- **Compression fidelity**: the degree to which the companion faithfully preserves the meaning of the spec without loss (dropped requirements) or gain (unauthorized additions).
+- **Unauthorized addition**: content in the companion that has no basis in the spec and that the spec does not permit via extension. A defect.
+- **Valid extension**: an addition in the companion that fits within an extension point explicitly permitted by the spec.
+- **Derived but unstated**: an addition in the companion that is a reasonable inference from the spec but is not explicitly stated. Must be flagged.
+
+---
+
 ## Audit Objective
 
 The objective is to determine whether the companion file faithfully reflects and supports the spec without introducing contradiction, omission, ambiguity, or unjustified drift.
@@ -78,7 +94,7 @@ The auditor must identify:
 
 ---
 
-## Source of Truth and Precedence
+## Precedence Rules
 
 Unless otherwise stated:
 
@@ -138,7 +154,7 @@ Callers chain multiple subjects as separate runs.
 
 ---
 
-## Assumptions
+## Defaults and Assumptions
 
 Unless explicitly overridden, the auditor may assume:
 
@@ -442,6 +458,90 @@ The auditor must not:
 
 ---
 
+## Requirements
+
+Atomic, testable requirements for the auditor:
+
+1. The auditor must evaluate every dimension listed in §Required Audit Dimensions that applies to the current mode.
+2. Every non-trivial finding must carry a severity label (Critical, High, Medium, Low, or Informational).
+3. Every finding must include: ID, Severity, Title, Affected file(s), Evidence (with quote), Explanation, Recommended fix.
+4. The auditor must read all resolved input files fully before issuing any judgment.
+5. The auditor must never modify the spec file under any circumstances.
+6. The auditor must report every conflict between files; silent normalization is prohibited.
+7. The auditor must classify each companion-only addition as Valid Extension, Derived but Unstated, or Unauthorized Addition.
+8. The auditor must apply the pass/fail gate rules in §Pass / Fail Rules and state the result as Pass, Pass with Findings, or Fail.
+9. The auditor must emit output sections in the order: Audit Result, Executive Summary, Findings, Coverage Summary, Drift and Risk Notes, Repair Priorities.
+10. When `--fix` is active, the auditor must re-audit after each fix pass; maximum 3 passes.
+11. In fix mode, fixes must be applied in severity order: Critical → High → Medium → Low; within severity: semantic → terminology → structural → stylistic.
+12. The auditor must not propose rewrites until the full audit is complete.
+13. Evidence must be labeled: direct evidence, reasonable inference, or uncertainty. Inference must never be presented as fact.
+14. When a spec lacks sufficient information to audit the companion, the auditor must say so explicitly, state what is missing, and assess whether the result can still pass.
+
+---
+
+## Constraints
+
+1. The auditor must never modify the spec file. In `--fix` mode, modifications apply to the companion/target file only; the spec remains immutable. If the audit surfaces a defect in the spec itself, the auditor reports it as a finding for the caller to act on — it does not attempt to repair the spec.
+2. The auditor must not approve or stamp any file — approve mode is not supported.
+3. The auditor must not silently reconcile conflicts between files.
+4. The auditor must not choose an interpretation silently when multiple plausible interpretations exist.
+5. The auditor must not assume additions are acceptable unless the spec explicitly allows extension.
+6. The auditor must not treat examples as authoritative unless explicitly marked normative.
+7. The auditor must not assume a companion paraphrase is acceptable merely because it sounds similar.
+8. The auditor must not downgrade a finding's severity merely because the likely intent seems obvious.
+9. The auditor must not apply `--fix` in spec-only mode.
+10. The auditor must not invent product requirements or resolve domain disputes without textual basis.
+11. One spec or spec/target pair per invocation. Multi-subject audits must be chained as separate runs.
+
+---
+
+## Behavior
+
+### Audit flow
+
+1. Resolve input paths and detect mode (pair-audit or spec-only) per §Inputs and §Spec-Only Mode.
+2. Read all resolved files fully.
+3. Extract normative content (requirements, prohibitions, definitions, defaults, procedures, exceptions).
+4. Evaluate all applicable audit dimensions in sequence.
+5. Assign severity and evidence to each finding.
+6. Apply pass/fail gate rules.
+7. Emit output in required section order.
+
+### Pass/Fail gate
+
+- **Fail** if any Critical finding exists.
+- **Fail** if two or more High findings exist.
+- **Pass with Findings** if all findings are Medium, Low, or Informational.
+- **Pass** only if no material issues are found.
+- Custom thresholds may tighten (never loosen) these rules; the threshold used must be stated.
+
+### Fix mode behavior
+
+When `--fix` is active:
+
+1. Run full audit first.
+2. Apply fixes to the target file only; spec is immutable.
+3. Re-audit after each pass. Stop at 3 passes or earlier alignment.
+4. When the spec lacks sufficient detail to guide a fix, report as a spec critique rather than guessing.
+
+---
+
+## Error Handling
+
+| Condition | Action |
+|---|---|
+| Target file missing or unreadable | STOP: report "target file missing" |
+| Spec file path explicitly provided but missing | STOP: report "spec file missing" |
+| Target not ending in `spec.md` and sibling `<basename>.spec.md` absent | STOP: report "spec file missing" |
+| Input files only partially readable | STOP: report "incomplete input — cannot audit partial content" |
+| Companion auto-detect finds no candidate | Proceed in spec-only mode; report "no companion present — auditing spec alone" |
+| Multiple companion candidates found | Use first in priority order; report ambiguity |
+| `--fix` passed in spec-only mode | Ignore the flag; report "fix mode unavailable in spec-only mode — no companion to modify"; continue with a read-only audit |
+| `--fix` passed with untracked/modified/conflicted target | STOP: report "target must be git-tracked and clean" |
+| Approve/stamp request received | STOP: report "approve mode not supported" |
+
+---
+
 ## Normative Language Interpretation
 
 Unless the files define otherwise, interpret language as follows:
@@ -593,9 +693,14 @@ The following checks require a companion file and are skipped:
 
 ### Fix mode in spec-only
 
-`--fix` is not supported in spec-only mode. Fixing a spec is an authorial act
-requiring domain judgment. If `--fix` is passed, report it as unsupported and
-proceed with audit-only.
+`--fix` modifies the companion file to align it with the spec. In spec-only
+mode there is no companion, so there is nothing for `--fix` to act on. Fixing
+the spec itself is an authorial act requiring domain judgment and is never
+done by the auditor.
+
+If `--fix` is passed in spec-only mode: ignore the flag, report that fix mode
+is unavailable in this mode, and run a read-only audit. Any spec defects
+surface as findings for the caller to act on.
 
 ### Output in spec-only mode
 

@@ -1,5 +1,3 @@
-Skill Auditor: read target skill, evaluate in 3 phases, write verdict. Failure at any phase stops audit.
-
 Params: `skill_path` (required); `result_file` (required); `spec_path` (optional)
 
 Procedure:
@@ -33,8 +31,9 @@ Phase 3 — Spec Compliance Audit: deep verification SKILL.md faithfully represe
 5. Completeness — all runtime instructions present; no implicit assumptions; edge cases addressed or excluded; defaults stated.
 6. Breadcrumbs — ends with related skills/topics; references valid (targets exist); no stale references.
 7. Cost analysis (dispatch only) — uses Dispatch agent (zero-context isolation); instruction file <500 lines; sub-skills by pointer, not inlined; single dispatch turn when possible.
-8. Markdown hygiene — all `.md` files in skill folder pass `npx markdownlint-cli2`; zero errors on uncompressed.md, spec.md, instructions.uncompressed.md; compressed files (SKILL.md, instructions.txt) exempt.
+8. Markdown hygiene — report no errors on every `.md` file in the skill.
 9. No dispatch refs in instructions — `instructions.txt` mustn't tell agent to dispatch other skills; subagents can't dispatch, only host agent can; "Related" context refs OK; "run this skill"/"dispatch this" → FAIL; remediation: move dispatch steps to SKILL.md.
+10. No spec breadcrumbs in runtime — SKILL.md and `instructions.txt` must not reference the skill's own companion `spec.md` (pointer, breadcrumb, "see spec.md"); compressed runtime is self-contained. Exception: skills operating on specs as input (spec-auditing, skill-auditing) may reference the spec under audit, never their own companion.
 
 Verdict Rules:
 PASS: all 3 phases pass.
@@ -83,6 +82,7 @@ Report Format:
 | Cost analysis | PASS/FAIL/N/A | |
 | Markdown hygiene | PASS/FAIL | |
 | No dispatch refs | PASS/FAIL/N/A | |
+| No spec breadcrumbs | PASS/FAIL | |
 
 ### Issues
 - <issue and fix>

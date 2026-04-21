@@ -7,15 +7,15 @@ description: Tiered code review on a change set. Haiku smoke pass surfaces easy 
 
 Two-tier code review on a change set. Calling agent orchestrates; each pass dispatched as isolated agent, zero caller context.
 
-Code review skill (NOT audit). Exactly one Haiku smoke pass before any Sonnet pass; Haiku iteration after that is forbidden. Audits differ (up to two Haiku iterations before Sonnet) — live in `spec-auditing`/`skill-auditing`. Don't conflate.
+Code reviews use exactly one haiku-class smoke pass followed by one or more sonnet-class substantive passes. Haiku iteration after the smoke pass is forbidden. Audits are a separate pattern — see `spec-auditing` and `skill-auditing`.
 
 When to use:
 Executable or compilable code: source files, build scripts, CI config, infra-as-code manifests. Non-code (specs, skills, docs) → `spec-auditing` or `skill-auditing`.
 
 Procedure (calling agent orchestrates):
-1. Smoke pass — dispatch exactly one Haiku-class agent. Pass change set + `tier=smoke`.
+1. Smoke pass — dispatch exactly one haiku-class agent. Pass change set + `tier=smoke`.
 2. Caller acts (optional) — read smoke findings; decide which to act on; edit yourself or via another skill. Dispatched review agents never edit.
-3. Substantive pass — dispatch Sonnet-class agent. Pass change set, `tier=substantive`, prior findings unmodified.
+3. Substantive pass — dispatch sonnet-class agent. Pass change set, `tier=substantive`, prior findings unmodified.
 4. Iterate Sonnet-only (optional) — re-review updated change set: dispatch another Sonnet pass, forward all prior findings unmodified. Never re-introduce Haiku.
 5. Sign-off — most recent Sonnet pass is authoritative. Record its report.
 
