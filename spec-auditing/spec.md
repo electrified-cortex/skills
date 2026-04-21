@@ -152,6 +152,10 @@ If no companion is found, the auditor proceeds in spec-only mode and reports
 The auditor evaluates exactly one spec or spec-file pair per invocation.
 Callers chain multiple subjects as separate runs.
 
+### Caller Responsibilities
+
+The caller must not read `instructions.txt` themselves. Pass the file path to a dispatch agent and let it read the file.
+
 ---
 
 ## Defaults and Assumptions

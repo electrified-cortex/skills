@@ -36,6 +36,10 @@ Produce artifacts a reader can consume without opening any skill's contents. Nam
 
 Applies to any directory passed as the builder's invocation root. The builder walks downward and writes artifacts at every directory that contains at least one indexable child, plus the invocation root itself.
 
+### Caller Responsibilities
+
+The caller must not read `instructions.txt` themselves. Pass the file path to a dispatch agent and let it read the file.
+
 ---
 
 ## Definitions
@@ -83,6 +87,23 @@ R10. The builder must write each section as a single paragraph. One sentence is 
 R11. The builder must not describe index mechanics (trailing slashes, dot entries, navigation) inside overlay sections.
 
 R12. The builder must subject the overlay to a full-compression pass before committing it. An overlay that does not pass compression must not be written.
+
+### Overlay as Trigger Surface
+
+The overlay is the artifact loaded into an agent's active context (via `skill-index-integration`) and is consulted on every task after context-window resets. It must drive skill selection — not describe the skills. Sections therefore state *triggering conditions*, not summaries.
+
+R22. Each `## name` section must express the conditions under which the named skill should be loaded, not a description of what the skill does. A section that reads as a summary ("This skill handles X", "PR has unresolved Copilot comments; about to request a review") without stating the trigger is non-conformant. Readers learn what a skill does by loading it; the overlay exists to route them there.
+
+R23. Trigger conditions fall into two kinds, and a section may use either or both:
+
+- **Human-triggered** — quoted or paraphrased operator/user phrases the agent listens for (e.g., `"is the PR ready?"`, `"spawn a worker"`). Quoted phrases are preferred over paraphrase because the agent matches against operator wording.
+- **Agent-self-triggered** — plain imperative statements the agent applies to its own state (e.g., `Use this whenever no entry above matches and you need to find a skill.`, `Run at the start of every idle cycle.`). Used when no operator prompt initiates the skill.
+
+R24. When a preamble is used per R8, it should establish the trigger convention in one sentence (e.g., `Match the operator's words or your current situation to an entry, then load that skill.`) so the per-section framing does not repeat it. Repeated per-entry prefixes ("Read this when…", "Use when…") are token bloat and must be consolidated into the preamble when every section would otherwise carry the same prefix.
+
+R25. Section prose must be compact and scannable. Comma- or semicolon-separated trigger lists are conformant and preferred over full sentences when multiple triggers apply.
+
+R26. The builder must not reorder or rewrite shortcut-entry overlay sections, consistent with R20 for raw-index keywords. Curator-authored trigger prose in preserved shortcut entries is opaque text.
 
 ### Traversal
 

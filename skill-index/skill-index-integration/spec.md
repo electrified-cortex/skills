@@ -5,7 +5,7 @@ description: >-
   pointer placement, discovery mandate, keyword-match flow, and demand loading.
 type: spec
 status: draft
-version: 1.3.1
+version: 1.4
 parent-spec: skill-index
 ---
 
@@ -18,6 +18,8 @@ parent-spec: skill-index
 - v1.2: Fixed audit findings (Haiku pass): defined "operational domain," "index stamp," "stale index"; clarified task description extraction; added R26 (announcement); clarified multi-skill resolution in Behavior; added E6 (mandate-loss recovery); added D3 mandate examples; added D2 single-domain scope note; linked Don'ts to Footguns; noted deliberate omission of platform table.
 - v1.3: Fixed audit findings (Sonnet pass): added definitions for entry key, cascade, sub-node, subtree depth, root skill.index; standardized note/log terminology; resolved E5/E6 scope boundary; aligned R26 and Behavior minimum forms; aligned R2/D1 conditional; added Behavior preamble; simplified C4; added Conformance section; R12 simplified; R25 added escape clause; misc. low/informational fixes.
 - v1.3.1: Fixed remaining findings (final pass): resolved C4 "if needed" contradiction; added E6 reload mechanism criteria; added Integration definition; clarified Behavior/E4 multi-match ordering.
+- v1.4: Added R27–R30 covering the overlay as the primary discovery surface. The raw index is a substring-match lookup; the overlay (`skill.index.md`) is the human-readable trigger map loaded into agent context on every reset. Updated discovery-mandate language to reference situational routing, not just keyword substring matching.
+- v1.4: Added R27–R30 covering the overlay as the primary discovery surface. The raw index is a substring-match lookup; the overlay (`skill.index.md`) is the human-readable trigger map loaded into agent context on every reset. Updated discovery-mandate language to reference situational routing, not just keyword substring matching.
 
 ---
 
@@ -139,6 +141,34 @@ R24. At least one keyword per entry must be a multi-word phrase of two or more w
 R25. Keyword quality for entries in agents' indexes is subject to audit by `skill-index-auditing`. This spec's keyword requirements (R21–R24) are the normative standard the auditor must enforce. Any conflict between this spec and the auditor's keyword quality checks must be resolved by updating the auditor to match this spec, unless the conflict reveals an error in this spec, in which case this spec must be updated through the standard spec revision process before the auditor is modified.
 
 R26. When a keyword match is found and the skill content is loaded, the agent must announce the matched skill before taking action on the matched task. Minimum form: "Using [skill name] to [brief description of action]." The announcement must be visible to the user or operator.
+
+### Overlay as Discovery Surface
+
+The raw `skill.index` is the substring-match lookup; the overlay `skill.index.md` is the trigger map the agent actually routes on. The overlay is loaded into active context via the same reset-surviving injection as the index pointer (per R2), so it survives context-window resets and is present on every task.
+
+R27. The agent's context injection must include the overlay (`skill.index.md`) content — or a reference that causes it to be loaded on every reset — alongside the index pointer and discovery mandate. A raw-index pointer without the overlay is a degraded integration: substring matching alone misses situational triggers that only the overlay expresses ("Worker reported DONE", "idle cycle", "no workers available").
+
+R28. The discovery mandate must instruct the agent to match its **current situation** (operator phrasing or self-observed state) to a section in the overlay, and to load that section's skill. Keyword-substring matching against the raw index is a fallback when no overlay section matches. Mandate language must reflect situational routing, not only substring lookup.
+
+Conformant example: "On every task, match the operator's words or your current situation to an entry in your skill index overlay; load the matching skill's content before proceeding. If no overlay entry matches, substring-scan the raw `skill.index` as a fallback."
+
+R29. Overlay sections in an agent's scoped index must be trigger-shaped per `skill-index-building` spec R22–R25. Description-shaped sections are non-conformant and must be rewritten before the integration passes audit. Operator-quoted phrases are preferred for human-triggered skills; plain imperatives are preferred for agent-self-triggered skills (those with no operator prompt, e.g., idle-cycle scanners).
+
+R30. A preamble in the overlay (per `skill-index-building` spec R8, R24) may establish the routing convention once, so per-section prose does not repeat framing. Preambles reduce context-load cost and are preferred over repeated per-entry prefixes.
+
+### Overlay as Discovery Surface
+
+The raw `skill.index` is the substring-match lookup; the overlay `skill.index.md` is the trigger map the agent actually routes on. The overlay is loaded into active context via the same reset-surviving injection as the index pointer (per R2), so it survives context-window resets and is present on every task.
+
+R27. The agent's context injection must include the overlay (`skill.index.md`) content — or a reference that causes it to be loaded on every reset — alongside the index pointer and discovery mandate. A raw-index pointer without the overlay is a degraded integration: substring matching alone misses situational triggers that only the overlay expresses ("Worker reported DONE", "idle cycle", "no workers available").
+
+R28. The discovery mandate must instruct the agent to match its **current situation** (operator phrasing or self-observed state) to a section in the overlay, and to load that section's skill. Keyword-substring matching against the raw index is a fallback when no overlay section matches. Mandate language must reflect situational routing, not only substring lookup.
+
+Conformant example: "On every task, match the operator's words or your current situation to an entry in your skill index overlay; load the matching skill's content before proceeding. If no overlay entry matches, substring-scan the raw `skill.index` as a fallback."
+
+R29. Overlay sections in an agent's scoped index must be trigger-shaped per `skill-index-building` spec R22–R25. Description-shaped sections are non-conformant and must be rewritten before the integration passes audit. Operator-quoted phrases are preferred for human-triggered skills; plain imperatives are preferred for agent-self-triggered skills (those with no operator prompt, e.g., idle-cycle scanners).
+
+R30. A preamble in the overlay (per `skill-index-building` spec R8, R24) may establish the routing convention once, so per-section prose does not repeat framing. Preambles reduce context-load cost and are preferred over repeated per-entry prefixes.
 
 ---
 

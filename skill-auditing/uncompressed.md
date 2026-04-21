@@ -5,8 +5,8 @@ description: Audit a skill for quality, classification, cost, and compliance wit
 
 # Skill Auditing
 
-Dispatch via Dispatch agent (zero context): "Read and follow
-`instructions.txt` (in this directory). Input: `skill_path=<path> result_file=<path> [--fix]`"
+Without reading `instructions.txt` yourself, use a Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory).
+Input: `skill_path=<path> result_file=<path> [--fix]`"
 
 - `skill_path` (required): Absolute path to SKILL.md
 - `result_file` (required): Absolute path for audit report

@@ -13,6 +13,7 @@ Normative spec for the auditor. The auditor validates existing index artifacts a
 
 ## Changelog
 
+- R24–R25 added: overlay sections checked for trigger shape (continue-past); raw-index keyword quality checked per integration spec R21–R24 (continue-past). Both escalate to `rebuild-needed` if found after a clean fail-fast walk.
 - R22 added: auditor writes `skill.index.sha256` on PASS.
 - R23 added: auditor does not write (and does not delete) the stamp on FAIL or inconclusive.
 - C2 updated: auditor must not modify any artifact except writing the stamp on PASS.
@@ -57,6 +58,10 @@ R1. The auditor must accept an invocation root and restrict its work to the subt
 
 R2. The auditor must not modify any file during its validation walk. After the walk completes and a PASS verdict is determined, the auditor writes `skill.index.sha256` per R22. On any non-PASS verdict, no files are modified at any point.
 
+### Caller Responsibilities
+
+The caller must not read `instructions.txt` themselves. Pass the file path to a dispatch agent and let it read the file.
+
 ### Per-Node Checks (Fail-Fast)
 
 R3. The auditor must verify that each visited raw index has an accompanying integrity stamp. Missing stamp is `rebuild-needed`.
@@ -85,6 +90,12 @@ R12. The auditor must record any malformed raw index line (key missing, colon mi
 
 R13. The auditor must record any phantom index (an index file within the invocation root's subtree not reachable from the root node's cascade) without halting. Phantom indexes are reported but are not by themselves a `rebuild-needed` trigger — they are janitorial signals, comparable to orphans.
 
+R24. The auditor must record any overlay section that fails the trigger-shape check defined in `skill-index-building` spec R22–R25. A section is non-conformant if it reads as a description or summary of the skill rather than a triggering condition (operator phrase or agent-self-triggered imperative). The check is heuristic: sections that state only what the skill *does* without stating *when* to load it are flagged. Findings are continue-past; if present after a clean fail-fast walk, they escalate the verdict to `rebuild-needed` per R19.
+
+Why: the overlay is the discovery artifact loaded into agent context on every reset. Description-shaped sections force the agent to read every skill to decide relevance, defeating demand loading. Trigger-shaped sections let the agent route on the overlay alone.
+
+R25. The auditor must record any raw-index entry whose keyword list fails the quality requirements in `skill-index-integration` spec R21–R24: fewer than three keywords, a keyword that duplicates the entry key verbatim, all keywords single-word, or keywords that are only the technical identifier with punctuation stripped. Findings are continue-past; if present after a clean fail-fast walk, they escalate the verdict to `rebuild-needed` per R19. This check closes the enforcement loop mandated by integration spec R25.
+
 ### Check Ordering
 
 R14. Within a single node, the auditor must evaluate fail-fast checks before continue-past checks. When a fail-fast check fails, the auditor halts per R18 without running the continue-past checks at that node.
@@ -101,7 +112,7 @@ R17. The auditor must apply the same dot-folder skip and allow-list rules as the
 
 R18. On the first fail-fast failure, the auditor must halt and return an audit report with verdict `rebuild-needed`, the reason, and the path of the failing node.
 
-R19. If the walk completes with no fail-fast failure, the auditor must return an audit report with the continue-past findings attached. The verdict is `rebuild-needed` if any node produced a malformed-line finding under R12; otherwise the verdict is `ok`. Orphans and phantom indexes alone do not escalate the verdict.
+R19. If the walk completes with no fail-fast failure, the auditor must return an audit report with the continue-past findings attached. The verdict is `rebuild-needed` if any node produced a malformed-line finding under R12, an overlay trigger-shape finding under R24, or a keyword-quality finding under R25; otherwise the verdict is `ok`. Orphans and phantom indexes alone do not escalate the verdict.
 
 R20. If the auditor cannot reach a fail-fast conclusion (for example, a directory it was asked to audit is unreadable at the root), it must return verdict `inconclusive` with the reason.
 

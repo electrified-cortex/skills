@@ -1,6 +1,6 @@
 # Skill Index Auditing
 
-Dispatch skill. Validator for a skill-index cascade. Returns `ok`, `rebuild-needed`, or `inconclusive`. On a PASS verdict, writes `skill.index.sha256` alongside each validated raw index as a sign-off artifact. Never invokes the builder. Conforms to the root `skill-index` spec.
+Dispatch skill. Validator for a skill-index cascade. Returns `ok`, `rebuild-needed`, or `inconclusive`. On a PASS verdict, writes `skill.index.sha256` alongside each validated raw index as a sign-off artifact. Never invokes the builder.
 
 ## Purpose
 
@@ -8,7 +8,7 @@ Provide a cheap, fast check: is this cascade structurally valid, or does the bui
 
 ## Invocation
 
-Dispatch via Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory). Input: `root=<path> result_file=<path> [--dot-allow <name,...>]`"
+Without reading `instructions.txt` yourself, use a Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory). Input: `root=<path> result_file=<path> [--dot-allow <name,...>]`"
 
 Parameters:
 
@@ -55,6 +55,8 @@ These findings do not halt the audit but are reported in the audit report:
 1. **Orphans:** a `skill.index.sha256` or `skill.index.md` with no corresponding `skill.index`. Janitorial signal; does not trigger `rebuild-needed` by itself.
 2. **Malformed lines:** a raw index line with missing key, missing colon, or forbidden characters. Recorded without halting. If the node completes inspection without a fail-fast failure, any malformed-line finding raises the final verdict to `rebuild-needed`.
 3. **Phantom indexes:** a `skill.index` within the invocation root's subtree not reachable from the root node's cascade. Janitorial signal; does not trigger `rebuild-needed` by itself.
+4. **Overlay trigger shape (R24):** an overlay section that describes what the skill does rather than when to load it (i.e., does not express triggering conditions per `skill-index-building` spec R22–R25). Findings escalate the verdict to `rebuild-needed` after a clean fail-fast walk.
+5. **Keyword quality (R25):** a raw-index entry whose keyword list fails quality requirements: fewer than three keywords; a keyword that duplicates the entry key verbatim; all keywords single-word; or keywords that are only the technical identifier with punctuation stripped. Findings escalate the verdict to `rebuild-needed` after a clean fail-fast walk.
 
 ## Check Ordering
 

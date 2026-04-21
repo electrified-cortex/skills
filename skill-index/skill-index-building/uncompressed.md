@@ -1,6 +1,6 @@
 # Skill Index Building
 
-Dispatch skill. Creates or updates two index artifacts at every indexed directory in a skill tree: `skill.index` (raw index) and `skill.index.md` (metadata overlay). The integrity stamp (`skill.index.sha256`) is written by the auditor after a PASS — not by the builder. Conforms to the root `skill-index` spec.
+Dispatch skill. Creates or updates two index artifacts at every indexed directory in a skill tree: `skill.index` (raw index) and `skill.index.md` (metadata overlay). The integrity stamp (`skill.index.sha256`) is written by the auditor after a PASS — not by the builder.
 
 ## Artifacts
 
@@ -15,7 +15,7 @@ The integrity stamp (`skill.index.sha256`) is written by the auditor after a PAS
 
 ## Invocation
 
-Dispatch via Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory). Input: `root=<path> [--dot-allow <name,...>] [--rebuild]`"
+Without reading `instructions.txt` yourself, use a Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory). Input: `root=<path> [--dot-allow <name,...>] [--rebuild]`"
 
 Parameters:
 

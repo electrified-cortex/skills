@@ -7,7 +7,8 @@ description: >-
 
 # Spec Auditing
 
-Dispatch isolated agent (Dispatch agent, zero context): "Read and follow `instructions.txt` (in this directory). Input: `<target-path> [--spec <spec-path>] [--fix]`"
+Without reading `instructions.txt` yourself, use a Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory).
+Input: `<target-path> [--spec <spec-path>] [--fix]`"
 
 Don't attempt spec auditing inline — inline attempts produce shallow, inconsistent audits. The dispatched agent runs in isolated context with its own strict disposition (defined in `instructions.txt`).
 

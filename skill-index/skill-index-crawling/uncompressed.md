@@ -1,6 +1,6 @@
 # Skill Index Crawling
 
-Dispatch skill. Reads an existing skill-index cascade to locate the skill that matches an agent's stated need. Read-only — the crawler produces no files and modifies nothing. Conforms to the root `skill-index` spec.
+Dispatch skill. Reads an existing skill-index cascade to locate the skill that matches an agent's stated need. Read-only — the crawler produces no files and modifies nothing.
 
 ## Purpose
 
