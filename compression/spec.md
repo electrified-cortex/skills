@@ -45,8 +45,10 @@ compression by convention, not this skill.
 The skill is pure technique — what to remove, transform, and preserve. It has
 no opinions about *when* or *whether* compression should happen.
 
-Process gates live in the **compression agent** — see
-`subagents/compression.agent.spec.md` for full gate design and rationale.
+Process gates live in the **compression dispatch** — see `compress.spec.md`
+(in this directory) for full gate design and rationale. The skill's
+`instructions.txt` is the executable companion; the spec here defines what
+compression is.
 
 This separation means: if someone invokes the skill directly, they get raw
 compression with no safety net. That's by design — the skill is a tool, not
@@ -155,12 +157,12 @@ These rules apply at all tiers — even Lite must preserve logic words and actor
 
 The compression skill is invoked by:
 
-1. **Compression agent** (`subagents/compression.agent.md`) — the primary consumer.
-   Enforces both gates, applies the skill, reports results.
-2. **Agent Refinement Auditor** (`subagents/agent-refinement-auditor.agent.md`) —
-   Phase 2 of the audit→compress→re-audit cycle references this skill.
-3. **File audit skill** (`skills/file-audit/SKILL.md`) — Step 3 dispatches
-   compression via this skill.
+1. **Compression dispatch** (`compress.spec.md` + `instructions.txt`) — the
+   primary consumer. Enforces gates, applies the skill, reports results.
+2. **Dispatch agents** — invoked via this skill's `instructions.txt` during
+   the audit → compress → re-audit cycle.
+3. **File audit skill** (`auditing/file-audit/`) — dispatches compression
+   via this skill when a target needs to be reduced.
 4. **Copilot caveman-compress** (`cortex.lan/.github/skills/caveman-compress/`) —
    Copilot-specific wrapper that references this as the canonical source.
 

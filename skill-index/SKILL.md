@@ -8,7 +8,7 @@ description: >-
 
 # Skill Index
 
-Root of the skill-index toolkit. Three sub-skills: `skill-index-building` (produce artifacts), `skill-index-crawling` (consume cascade to locate a skill), `skill-index-auditing` (validate cascade, signal rebuild-needed).
+Inline toolkit overview (read, do not dispatch). Three sub-skills handle the work: `skill-index-building` (produce artifacts), `skill-index-crawling` (consume cascade to locate a skill), `skill-index-auditing` (validate cascade, signal rebuild-needed).
 
 **Artifact triple per directory:** `skill.index` (raw, authoritative) | `skill.index.md` (overlay, LLM-authored) | `skill.index.sha256` (SHA-256 of raw bytes)
 
