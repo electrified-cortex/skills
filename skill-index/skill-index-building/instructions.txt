@@ -4,7 +4,7 @@ Artifact pair per directory: `skill.index` | `skill.index.md` — no other filen
 
 Raw index format (`skill.index`):
 - One entry per line: `key: keyword, keyword, keyword` — single space after colon, `, ` between keywords.
-- Self entry (key `.`) first when current directory has a skill manifest.
+- Self entry (key `.`) first when current directory is a combo node (manifest present AND indexable children exist). Pure leaf directories (manifest, no indexable children) do not get a `skill.index` and do not emit a self entry.
 - Append `/` to key when child directory has its own `skill.index` (sub-node marker).
 - Sort remaining entries byte-lexicographically on full UTF-8 key. Self entry always precedes sorted block.
   Shortcut keys sort in the same space. `/` (0x2F) compares by byte value. Shorter prefix sorts first.
@@ -22,7 +22,7 @@ Overlay format (`skill.index.md`):
 Stamp (`skill.index.sha256`): NOT written by the builder. The auditor writes the stamp after a PASS verdict. Absence of a stamp after a build means "unaudited since last build," not "needs rebuild."
 
 Build procedure (per node):
-1. Compute mechanical portion: self entry (if manifest present) + direct-child entries.
+1. Compute mechanical portion: self entry (if combo node — manifest present AND indexable children exist) + direct-child entries.
 2. Merge with any preserved shortcut entries verbatim from existing `skill.index`.
 3. Sort combined list (self entry first, rest byte-lex). Serialize one line per entry.
 4. Compute SHA-256 of serialized content. Compare against SHA-256 of stored `skill.index` bytes.
@@ -38,7 +38,7 @@ Traversal:
 - Do not follow symlinks.
 - Combo node (has manifest + manifest-bearing children): emit self entry in own index, sub-node-marked entry in parent's index, traverse subdirectories.
 - No indexable children + no manifest: empty `skill.index` (zero bytes), H1-only overlay.
-- No indexable children + manifest: `skill.index` with self entry only; overlay and stamp per normal write order.
+- No indexable children + manifest (pure leaf): do not write `skill.index`. Parent's index references the leaf as a plain entry; leaf's own manifest describes it.
 
 Shortcut entries (curator-added, multi-segment keys):
 - Preserve verbatim across all runs — same key, same keywords, same character sequence.

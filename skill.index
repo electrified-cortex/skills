@@ -4,6 +4,7 @@ dispatch-strategy: dispatch, dispatch agent, subagent, background agent, foregro
 gh-cli/: github, gh, pr, pull request, issue, release, repo, workflow, actions, api, github cli
 markdown-hygiene: markdown, fix markdown, clean markdown, well formatted markdown, markdown formatting
 skill-auditing: audit skill, review skill, evaluate skill, skill quality, skill drift, check skill
+skill-index/: skill index, per-directory index, cascading index, agent skill discovery, find skill
 skill-writing: write skill, create skill, author skill, new skill, writing a skill
 spec-auditing: audit spec, verify spec, check spec, spec drift, validate spec, review spec, spec changed
 spec-writing: write spec, create spec, author spec, specify, specification, requirements, new spec

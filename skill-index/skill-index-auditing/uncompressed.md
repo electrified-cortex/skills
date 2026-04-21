@@ -42,6 +42,7 @@ These checks, if failed, immediately produce `rebuild-needed` with the reason an
 2. **Stamp matches:** SHA-256 of the raw index's stored bytes must equal the stored stamp.
 3. **Entry targets resolve:** every entry must resolve to an on-disk target within the current node's subtree. Plain entry → leaf-skill directory. Descent-marked entry → descendant directory with its own `skill.index`. Combo entry → satisfies both. Shortcut entries (multi-segment keys) resolved by path-walk from the current node. Missing or out-of-subtree target → `rebuild-needed`.
 4. **No missing direct children:** every manifest-bearing direct child must appear as an entry in this node's raw index, unless already reachable via a shortcut entry elsewhere in the cascade.
+4a. **No index at pure leaf:** no manifest-bearing directory with zero manifest-bearing children may have a `skill.index`. A `skill.index` found at such a directory is a stale or erroneous index node the builder should not have produced → `rebuild-needed`.
 5. **Combo self entry:** every combo node must have a self entry (key `.`) in its own raw index.
 6. **Combo enumerates subdirectories:** every combo node must enumerate its manifest-bearing subdirectories in its own raw index (direct-child or shortcut entries).
 7. **Combo classified in parent:** every combo node must be classified as combo in its parent's raw index.
@@ -65,9 +66,9 @@ The auditor maintains the ordered set of nodes visited on the current resolution
 
 ## Stamp Sign-Off
 
-On a PASS verdict, the auditor writes `skill.index.sha256` alongside each raw index it successfully validated. The stamp content is the SHA-256 hex digest of the exact bytes of the stored `skill.index` for that node — no trailing newline unless the raw index itself ends with one; no other content. This write is the auditor's sign-off artifact, confirming the cascade was structurally valid at time of audit.
+After the walk completes and a PASS verdict is determined, the auditor writes `skill.index.sha256` alongside each raw index it validated during the walk. Stamps are written only after the verdict is known — not incrementally during the walk — so that a non-PASS verdict never leaves partial stamp state. The stamp content is the SHA-256 hex digest of the exact bytes of the stored `skill.index` for that node — no trailing newline unless the raw index itself ends with one; no other content. This write is the auditor's sign-off artifact, confirming the cascade was structurally valid at time of audit.
 
-On any non-PASS verdict (`rebuild-needed` or `inconclusive`), the auditor must not write or delete any stamp. A stale or absent stamp after a non-PASS verdict is intentional — it signals "unaudited since last build," giving the host agent a clear trigger that a build-then-audit cycle is required.
+On any non-PASS verdict (`rebuild-needed` or `inconclusive`), the auditor must not write any stamp. Existing stamps are left untouched — stale stamps remain stale, absent stamps remain absent. A stale or absent stamp after a non-PASS verdict is intentional: it signals "unaudited since last build," giving the host agent a clear trigger that a build-then-audit cycle is required.
 
 Writing the stamp is the only file-write the auditor ever performs.
 
@@ -83,6 +84,7 @@ Writing the stamp is the only file-write the auditor ever performs.
 - Invocation root unreadable: return `inconclusive` with reason, halt.
 - Per-subtree unreadable: record as `inconclusive` for that subtree, continue with siblings.
 - Audit report not producible: emit non-zero exit signal; do not silently succeed.
+- Stamp write failure after PASS: downgrade verdict to `inconclusive`, list failed nodes in audit report, emit non-zero exit signal. A partial stamp state (some nodes stamped, others not) is not acceptable — incomplete sign-off is treated as no sign-off.
 
 ## Precedence Rules
 

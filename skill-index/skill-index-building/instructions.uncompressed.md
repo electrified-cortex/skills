@@ -29,15 +29,16 @@ You do not write `skill.index.sha256`. That stamp is written by the auditor afte
 
 Each entry is exactly one line:
 
-```
+```txt
 key: keyword, keyword, keyword
 ```
 
 Rules:
+
 - Single space after the colon. Keywords separated by `, ` (comma + space).
 - Entry key is the child's directory name (or `.` for self entry, or a multi-segment path for curator-added shortcuts).
 - Append `/` to the entry key when that child directory contains its own `skill.index` (sub-node marker).
-- Self entry: if the current directory contains a skill manifest, emit a `.` entry as the very first line.
+- Self entry: if the current directory is a combo node (skill manifest present AND at least one indexable child), emit a `.` entry as the very first line. Do not emit a self entry at a pure leaf directory (manifest present, zero indexable children).
 - Sort: sort entries by key using byte-lexicographic comparison of the full UTF-8 key string. The self entry (`.`) always appears first before the sorted block. Multi-segment shortcut keys sort in the same space as single-segment keys; `/` (0x2F) is compared by byte value. When one key is a proper prefix of another, the shorter key sorts first.
 - Keywords: natural-language trigger phrases and synonyms. Must not duplicate the entry key verbatim. Synonyms, phrasings, and related concepts are accepted.
 - No blank lines, no header, no footer.
@@ -61,7 +62,7 @@ Rules:
 
 For each node:
 
-1. Compute the mechanical portion: self entry (if manifest present) + direct-child entries.
+1. Compute the mechanical portion: self entry (if combo node — manifest present AND at least one indexable child) + direct-child entries.
 2. Merge with any preserved shortcut entries from the existing `skill.index` (see Shortcut Entries below).
 3. Sort the combined list per the sort rule.
 4. Serialize as one line per entry.
@@ -90,11 +91,12 @@ No early termination between these two writes for a single node.
 - Do not follow symlinks.
 - When a directory has indexable children, write artifacts there and descend.
 - When a directory has no indexable children and no skill manifest: write empty `skill.index` (zero bytes) and an overlay containing only the H1 and no sections.
-- When a directory has no indexable children but has a skill manifest: write `skill.index` containing only a self entry; overlay and stamp follow normal write order.
+- When a directory has no indexable children but has a skill manifest (a pure leaf skill): do not write a `skill.index` at that directory. The parent's index already references the leaf as a plain entry; the leaf's own skill manifest describes it.
 
 ### Combo Nodes
 
 A combo node is a directory that has both a skill manifest of its own and at least one manifest-bearing child. A combo node:
+
 - Emits a `.` self entry in its own `skill.index`.
 - Emits a sub-node-marked entry (key ending in `/`) in its parent's `skill.index`.
 - Has its manifest-bearing subdirectories traversed normally.
@@ -106,6 +108,7 @@ A combo node is a directory that has both a skill manifest of its own and at lea
 Shortcut entries have multi-segment keys (e.g. `tools/compression/`). They are curator-added and are never mechanically generated.
 
 When the existing `skill.index` at a node already contains shortcut entries:
+
 - Preserve them verbatim: same key, same keyword list, same character sequence.
 - Merge with the freshly generated mechanical portion.
 - Sort the combined list per the sort rule. Self entry (if any) remains first.
@@ -139,6 +142,7 @@ When the existing `skill.index` at a node already contains shortcut entries:
 The builder's output is a change manifest. Return it as structured text with one entry per node.
 
 Fields per node:
+
 - `path`: directory path
 - `status`: one of `created` | `updated` | `unchanged` | `blocked` | `drifted` | `skipped`
 - `notes`: free text for broken-shortcut, orphan, or phantom findings

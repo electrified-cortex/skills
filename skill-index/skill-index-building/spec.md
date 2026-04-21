@@ -21,6 +21,8 @@ Normative spec for the builder. The builder creates or updates two artifacts at 
 - E3: stamp-write error handling removed (no longer builder's responsibility).
 - P2: updated — stamp reflects auditor sign-off, not builder freshness.
 - N6 added: builder does not write the integrity stamp.
+- B5 replaced: pure leaf directories (manifest present, zero indexable children) must not receive a `skill.index`. Prior rule that wrote a self-only index at such directories is revoked; parent's index already references the leaf, and the leaf's own SKILL.md describes it.
+- R4 narrowed: self entry is emitted only at combo nodes (manifest present AND at least one indexable child), not at pure leaf directories.
 
 ---
 
@@ -42,7 +44,7 @@ Applies to any directory passed as the builder's invocation root. The builder wa
 - **Entry** — one line in `skill.index` describing a single indexable child of the current directory.
 - **Entry key** — the child's directory name.
 - **Sub-node marker** — a trailing `/` appended to the entry key when the child has its own `skill.index` beneath it.
-- **Self entry** — an entry whose key is literally `.`, used when the current directory itself contains a skill manifest. Appears first if present.
+- **Self entry** — an entry whose key is literally `.`, used when the current directory is a combo node (skill manifest present and at least one indexable child). Appears first if present. Pure leaf directories do not receive an index node and therefore do not emit a self entry.
 - **Combo node** — a directory that is simultaneously a skill (its own manifest present) and a parent of at least one further indexed child. Emits a self entry in its own `skill.index` and a sub-node-marked entry in its parent's `skill.index`.
 - **Shortcut entry** — an entry whose key is a multi-segment relative path (per root spec R33). Curator-added, not mechanically emitted by the builder.
 - **Mechanical portion** — the subset of a `skill.index`'s entries that the builder would produce deterministically given only the filesystem: self entry (if applicable) plus direct-child entries. Excludes curator-added shortcut entries.
@@ -62,7 +64,7 @@ R2. The builder must format each entry as `key: keyword, keyword, keyword`, with
 
 R3. The builder must append `/` to the entry key of any child directory that itself contains a `skill.index`.
 
-R4. The builder must emit a `.` self entry as the first line of a node's `skill.index` whenever the current directory contains a skill manifest.
+R4. The builder must emit a `.` self entry as the first line of a node's `skill.index` when the current directory is a combo node (skill manifest present AND at least one indexable child). The builder must not emit a self entry at a pure leaf directory (manifest present, zero indexable children), because pure leaf directories do not receive an index node per root spec R8.
 
 R5. The builder must sort entries by key using byte-lexicographic comparison of the full UTF-8-encoded key string, placing any self entry (key `.`) before the sorted block. Multi-segment shortcut keys participate in the same sort space as single-segment keys; the `/` separator (0x2F) compares by its byte value against other key characters. When one key is a proper prefix of another, the shorter key sorts first. Sort is stable with respect to input order for ties (ties should not occur; R32 of the root spec forbids duplicate keys at a node).
 
@@ -126,7 +128,7 @@ B3. When the overlay fails its compression check, the builder aborts the node, r
 
 B4. When a directory has zero indexable children and no skill manifest of its own, the builder produces: an empty `skill.index` (zero bytes) and an overlay containing only the H1 and no sections. The two artifacts are subject to B2's write order and compression gate exactly as for any non-empty node: the H1-only overlay must pass the compression check per R12 (an H1-only overlay trivially satisfies compression, since there is no content to compress; this is stated here to make the chain explicit), then the raw index and overlay are written in that order. If compression fails on the H1-only overlay for any implementation reason, B3 governs and no writes occur.
 
-B5. When a directory has zero indexable children but does have a skill manifest of its own, the builder writes a `skill.index` containing only a self entry. The overlay follows B2's write order and compression gate without modification.
+B5. When a directory has zero indexable children but does have a skill manifest of its own (a pure leaf skill), the builder must not write a `skill.index` at that directory. The parent's index already references the leaf as an entry, and the leaf's own skill manifest describes it.
 
 ---
 

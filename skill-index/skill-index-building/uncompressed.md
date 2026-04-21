@@ -36,7 +36,7 @@ key: keyword, keyword, keyword
 - Single space after the colon. `, ` between keywords.
 - Entry key is the child's directory name.
 - Sub-node marker: append `/` to the key when that child directory contains its own `skill.index`.
-- Self entry: key is literally `.` when the current directory contains a skill manifest. Self entry appears first, before the sorted block.
+- Self entry: key is literally `.` when the current directory is a combo node (skill manifest present and at least one indexable child). Self entry appears first, before the sorted block. Pure leaf directories (manifest present, no indexable children) do not receive an index node and do not emit a self entry.
 - Sort: entries sorted by key using byte-lexicographic comparison of the full UTF-8 key string. Self entry (`.`) always first. Multi-segment shortcut keys participate in the same sort space as single-segment keys; `/` (0x2F) compares by byte value. Shorter key sorts first when one key is a proper prefix of another.
 - Keywords: natural-language trigger phrases. Must not duplicate the entry key verbatim. Synonyms, phrasings, related concepts.
 
@@ -55,7 +55,7 @@ key: keyword, keyword, keyword
 
 For each node:
 
-1. Compute the mechanical portion: self entry (if manifest present) + direct-child entries.
+1. Compute the mechanical portion: self entry (if combo node — manifest present AND at least one indexable child) + direct-child entries.
 2. Merge with any preserved shortcut entries from the existing `skill.index` (see Shortcut Entries below).
 3. Sort the combined list per the sort rule.
 4. Serialize as one line per entry.
@@ -82,7 +82,7 @@ No early termination between these two writes for a single node.
 - Do not follow symlinks.
 - When a directory has indexable children, write artifacts there and descend.
 - When a directory has no indexable children and no skill manifest: write empty `skill.index` (zero bytes) and an overlay containing only the H1 and no sections.
-- When a directory has no indexable children but has a skill manifest: write `skill.index` containing only a self entry; overlay follows normal write order.
+- When a directory has no indexable children but has a skill manifest (a pure leaf skill): do not write any `skill.index` at that directory. The parent's index already references the leaf as a plain entry; the leaf's own skill manifest describes it.
 
 ### Combo Nodes
 

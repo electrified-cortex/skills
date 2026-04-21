@@ -9,6 +9,12 @@ type: spec
 
 # Skill Index Specification
 
+## Changelog
+
+- R8 removed: pure leaf skills do not receive their own index node. Index nodes exist at the invocation root and every directory on the path down to each leaf skill's parent. A combo node (manifest + descendants) retains its own index because it is also a parent.
+- R9 updated: no longer references the deleted R8; self entry requirement stands for combo nodes only.
+- Definitions: "Self entry" narrowed to combo nodes.
+
 Normative specification of the skill-index toolkit. This document defines requirements only. All implementation detail (tool invocation, scripting language, file names, directory layout, command flags, output formats, integration points) lives in derived documents (SKILL.md, companion sub-skills, companion tools).
 
 This skill is a **root skill**. It defines the contract for a small family of companion skills and tools that together form the skill-index toolkit. The two canonical sub-skills are the **builder** (creates and updates index artifacts; see `skill-index-building`) and the **crawler** (consumes index artifacts; see `skill-index-crawling`). Every sub-skill or sub-tool must conform to this spec.
@@ -39,12 +45,12 @@ Applies to any directory tree that contains one or more leaf skills. A leaf skil
 - **Index node** — a plain-text index file at a directory level enumerating referenced descendants: sub-nodes (directories that themselves contain at least one leaf skill) and leaf skills. The common case references direct children; a node may also reference deeper descendants via shortcut entries per R33.
 - **Raw index** — the mechanically-generated, deterministic form of an index node. Its content depends only on the presence and names of children.
 - **Metadata overlay** — a derived artifact accompanying a raw index, providing human- or agent-facing descriptive content (short descriptions, tags, classifications) not present in the raw index itself.
-- **Integrity stamp** — a content hash over a raw index, written by the auditor after a PASS. Signals both that the raw index is structurally valid and that the metadata overlay (if present) was in sync at time of audit. Absence of a stamp means "unaudited since last build," not "needs rebuild."
+- **Integrity stamp** — a content hash over a raw index, written by the auditor after a PASS. Signals both that the raw index is structurally valid and that the metadata overlay (if present) was in sync at time of audit. Absence of a stamp means "unaudited since last build," not "raw index content is stale." The auditor's verdict determines whether a build-cycle is needed; stamp absence alone does not.
 - **Change manifest** — the output returned by a run of the index toolkit summarizing which index nodes were created, updated, or unchanged.
 - **Root node** — the index node at the directory where the toolkit was invoked. Serves as the entry point for downstream consumers.
 - **Cascade** — the property that each index node is self-contained: it references only descendants within its own subtree, never ancestors or siblings, and the resulting graph is acyclic (forward reference to R34, which mandates acyclicity).
 - **Drift** — the state in which a metadata overlay no longer corresponds to its raw index. Detected by integrity stamp mismatch.
-- **Self entry** — an index-node entry that represents the current directory itself (when the current directory is also a leaf skill). Distinct from an entry for a child.
+- **Self entry** — an index-node entry that represents the current directory itself. Applies only to combo nodes (a directory that is simultaneously a leaf skill and a parent of further leaf skills). Distinct from an entry for a child. Pure leaf skills — directories with a manifest but no descendant leaf skills — do not receive an index node and therefore do not have a self entry.
 - **Combo node** — a directory that is simultaneously a leaf skill (its manifest is present) and a sub-node (it contains at least one descendant leaf skill). A combo node is represented as a self entry in its own index node and as a sub-node-style entry in its parent's index node.
 - **Refreshed overlay** — a metadata overlay whose content was generated against a specific raw index and has passed whatever validation that toolkit applies (for example, a compression pass) within the same build step.
 - **Shortcut entry** — an entry whose key is a relative path traversing more than one segment. Resolves to a manifest-bearing or index-bearing descendant deeper than a direct child. Enables a node to surface a high-frequency skill or skip a pass-through intermediate layer without requiring an index at every level.
@@ -73,9 +79,9 @@ R7. The direct-child portion of a raw index must be deterministic: identical tre
 
 ### Self Entries and Combo Nodes
 
-R8. When a directory is a leaf skill, its own index node must contain a self entry representing that directory. The self entry must be distinguishable from entries for children.
+R8. Reserved. Pure leaf skills (directories that have a skill manifest but no descendant leaf skills) must not receive their own index node. Index nodes exist at the invocation root and every directory on the path down to each leaf skill's parent; pure leaves are not on that path as parents. A combo node is not a pure leaf (it has descendants) and is not affected by this rule.
 
-R9. When a directory is a combo node, its own index node must contain a self entry per R8.
+R9. When a directory is a combo node, its own index node must contain a self entry representing that directory. The self entry must be distinguishable from entries for children.
 
 R10. When a directory is a combo node, its own index node must also enumerate its manifest-bearing subdirectories as children.
 

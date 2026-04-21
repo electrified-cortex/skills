@@ -14,7 +14,7 @@ Dispatch (Dispatch agent, zero context): "Read and follow `instructions.txt` (in
 
 Artifact pair per directory: `skill.index` | `skill.index.md` — no other filenames. The builder doesn't write `skill.index.sha256`; that is the auditor's sign-off artifact.
 
-Raw index format: `key: keyword, keyword, keyword` — one line per entry, no blanks; self entry `.` first; sub-node marker `/` appended to key when child has own index; byte-lex sort. Keywords must not duplicate the entry key verbatim — synonyms, phrasings, related concepts only.
+Raw index format: `key: keyword, keyword, keyword` — one line per entry, no blanks; self entry `.` first (combo nodes only); sub-node marker `/` appended to key when child has own index; byte-lex sort. Keywords must not duplicate the entry key verbatim — synonyms, phrasings, related concepts only.
 
 Overlay format: H1 + optional preamble (≤2 sentences, helps locate skills only) + one `## name` section per entry (same order as raw index); single-sentence paragraphs; no index-mechanic prose; must pass compression check before write.
 
@@ -26,12 +26,12 @@ Combo node: emits self entry in own index + sub-node-marked entry in parent inde
 
 Edge cases:
 - No indexable children + no manifest: empty `skill.index` (zero bytes) + H1-only overlay.
-- No indexable children + manifest: `skill.index` with self entry only; overlay follows normal write order.
+- No indexable children + manifest (pure leaf): do not write `skill.index`. Parent's index references the leaf; leaf's own manifest describes it.
 
 Returns: change manifest (created / updated / unchanged / blocked / broken-shortcut / skipped).
 
 Build procedure (per node):
-1. Compute mechanical portion: self entry (if manifest present) + direct-child entries.
+1. Compute mechanical portion: self entry (if combo node — manifest present AND indexable children) + direct-child entries.
 2. Merge with preserved shortcut entries verbatim from existing `skill.index`.
 3. Sort combined list (self entry first, rest byte-lex). Serialize one line per entry.
 4. Compute SHA-256 of serialized content. Compare against SHA-256 of stored `skill.index` bytes. Never consult stored stamp for change detection — it's the auditor's artifact.

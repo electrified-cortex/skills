@@ -63,6 +63,8 @@ For each node reached during the walk:
 
 4. **No missing direct children**: every manifest-bearing direct child directory of the current directory must appear as an entry in this node's raw index, unless that child is already reachable via a shortcut entry present elsewhere in the cascade. Missing → `rebuild-needed`; record reason and failing-node path; halt.
 
+4a. **No index at pure leaf**: no manifest-bearing directory with zero manifest-bearing children may have a `skill.index`. If the auditor encounters a `skill.index` at such a directory, the cascade contains a stale or erroneous index node the builder should not have produced → `rebuild-needed`; record reason and the path of the offending directory; halt.
+
 5. **Combo self entry**: if the current directory is a combo node (has a skill manifest and at least one manifest-bearing child), it must have a self entry (key `.`) in its own raw index. Missing → `rebuild-needed`; record reason and failing-node path; halt.
 
 6. **Combo enumerates subdirectories**: a combo node's raw index must enumerate all its manifest-bearing subdirectories, either as direct-child entries or as shortcut entries. Missing entry → `rebuild-needed`; record reason and failing-node path; halt.

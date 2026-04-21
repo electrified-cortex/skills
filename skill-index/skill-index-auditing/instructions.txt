@@ -20,6 +20,8 @@ A. Fail-Fast Checks (halt on first failure):
    no `..`, no absolute path, no escape above invocation root. Missing or out-of-subtree → fail.
 4. No missing direct children: every manifest-bearing direct child must appear as an entry in this
    node's raw index, unless already reachable via a shortcut elsewhere in the cascade.
+4a. No index at pure leaf: no manifest-bearing directory with zero manifest-bearing children may have
+    a `skill.index`. A `skill.index` there is stale or erroneous → `rebuild-needed`; halt.
 5. Combo self entry: combo node must have a self entry (key `.`) in its own raw index.
 6. Combo enumerates subdirectories: combo node's raw index must list all manifest-bearing
    subdirectories (direct-child or shortcut entries).

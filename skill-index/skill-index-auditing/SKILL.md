@@ -27,6 +27,7 @@ Fail-fast checks (halt on first failure → `rebuild-needed`):
 2. Stamp matches: SHA-256 of raw index bytes equals stored stamp.
 3. Entry targets resolve: every entry maps to on-disk target within subtree; shortcut entries resolved by path-walk.
 4. No missing direct children: every manifest-bearing direct child has entry in this node's raw index.
+4a. No index at pure leaf: no manifest-bearing directory with zero manifest-bearing children may have a `skill.index`. Such a file is a stale or erroneous index node → `rebuild-needed`.
 5. Combo self entry: combo node has `.` self entry in its own raw index.
 6. Combo enumerates subdirectories: combo node's raw index lists manifest-bearing subdirectories.
 7. Combo parent classification: combo node is classified as combo in parent's raw index.
@@ -38,7 +39,7 @@ Walk: depth-first, parents before children. Symlinks not followed. Dot-folders s
 
 Visited-node tracking: ordered set of nodes on current resolution path. New node appended before inspection. Revisit → loop declared, halt. Set resets when entering sibling subtree.
 
-Stamp sign-off: on PASS, writes `skill.index.sha256` alongside each validated raw index. Content: SHA-256 hex digest of exact stored bytes of `skill.index` — no trailing newline unless raw index ends with one; no other content. This is the only file-write the auditor ever performs. On non-PASS, mustn't write or delete any stamp — stale stamp signals "unaudited since last build."
+Stamp sign-off: after walk completes and PASS verdict determined, writes `skill.index.sha256` alongside each validated raw index. Stamps written only after verdict known (not incrementally during walk) — non-PASS verdict never leaves partial stamp state. Content: SHA-256 hex digest of exact stored bytes of `skill.index` — no trailing newline unless raw index ends with one; no other content. This is the only file-write the auditor ever performs. On non-PASS, mustn't write any stamp — existing stamps left untouched — stale stamp signals "unaudited since last build."
 
 Check ordering: fail-fast runs before continue-past at each node. Fail-fast failure halts without running continue-past.
 
@@ -48,6 +49,7 @@ Error handling:
 - Invocation root unreadable → `inconclusive`, halt.
 - Per-subtree unreadable → record `inconclusive` for subtree, continue siblings.
 - Audit report not producible → non-zero exit, don't silently succeed.
+- Stamp write failure after PASS → downgrade to `inconclusive`, list failed nodes in report, non-zero exit. Partial stamp state unacceptable — incomplete sign-off = no sign-off.
 
 Footguns:
 F1: Auditor rebuilds instead of signalling. Only file-write is stamp on PASS. Never invoke builder.

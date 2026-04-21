@@ -18,6 +18,7 @@ Normative spec for the auditor. The auditor validates existing index artifacts a
 - C2 updated: auditor must not modify any artifact except writing the stamp on PASS.
 - N2 updated: auditor does not modify any file except the stamp on PASS.
 - D1 updated: lightweight check budget, plus one write on PASS.
+- R6 note added: a pure leaf skill (manifest present, zero manifest-bearing children) must not have a `skill.index`. If the auditor encounters a `skill.index` at such a directory that is reachable from the cascade (i.e., the parent's index classifies it as a sub-node or combo), that is a `rebuild-needed` condition — the builder wrote an index it should not have.
 
 ---
 
@@ -65,6 +66,8 @@ R4. The auditor must verify that the integrity stamp matches the SHA-256 of the 
 R5. The auditor must verify that every entry in a raw index resolves to an on-disk target within the current node's subtree: a leaf skill's directory (for a leaf or combo classification), a descendant directory with its own raw index (for a sub-node classification), or both (for a combo classification). A shortcut entry (multi-segment relative path per root spec R33) must resolve by walking the path from the current node. A missing or out-of-subtree target is `rebuild-needed`.
 
 R6. The auditor must verify that every manifest-bearing direct child of the current directory is represented by an entry in this node's raw index — unless that child is reached by a shortcut entry already present elsewhere in the cascade. A manifest-bearing direct child with no reachable entry is `rebuild-needed`.
+
+R6a. The auditor must verify that no pure leaf skill directory (manifest present, zero manifest-bearing children) has a `skill.index`. If the auditor discovers a `skill.index` at a directory that has a skill manifest and no manifest-bearing children, the cascade contains a stale or erroneous index node that the builder should not have produced. This is `rebuild-needed`. Note: when the parent correctly classifies such a directory as a plain leaf entry (no descent marker), any `skill.index` present there is also a phantom index per R13 and caught by the continue-past check; R6a is the fail-fast check for the case where the parent's index still references the directory with a descent marker.
 
 R7. The auditor must verify that every combo node has a self entry in its own raw index (per root spec R9). A missing self entry is `rebuild-needed`.
 

@@ -24,6 +24,10 @@ Fix any formatting problems in a markdown file without changing the content itse
 
 Evaluates a skill — is it well-written, on-spec, correctly classified. Read-only output.
 
+## skill-index
+
+Cascading per-directory index system — lets agents discover skills without walking the filesystem.
+
 ## skill-writing
 
 Read before writing or authoring any skill. Skills drift in style over time; do not copy an existing one as a template.
