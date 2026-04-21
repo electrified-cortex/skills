@@ -17,11 +17,13 @@ It runs as a separate agent — provide a spec file path and it returns a verdic
 The audit operates in two modes:
 
 **Read-only mode** — reports issues without making changes:
+
 - Missing requirements (in spec but not in skill, or vice versa)
 - Contradictions between spec and skill
 - Spec language that is too vague to be testable
 
 **Fix mode** — attempts to resolve issues automatically (up to 3 passes):
+
 - Adds missing content to the appropriate file
 - Flags contradictions that require human judgment
 - Re-audits after each fix pass
@@ -38,7 +40,7 @@ Returns one of three outcomes:
 
 Invoke with the spec file path:
 
-```
+```txt
 Read and follow spec-auditing/SKILL.md for: path/to/skill/spec.md
 ```
 
