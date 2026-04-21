@@ -14,6 +14,7 @@ parent-spec: skill-index
 ## Changelog
 
 - v1: Initial draft. Covers integration contract between agent context and the skill-index toolkit.
+- v1.1: Removed platform-specific terms (Claude Code hooks, startup/recovery context). Replaced with platform-agnostic abstractions: agent configuration file, context-reset recovery.
 
 ---
 
@@ -28,7 +29,7 @@ This spec does not govern index construction (skill-index-building), structural 
 ## Scope
 
 **In scope:**
-- Index pointer placement in agent context (startup vs. recovery context)
+- Index pointer placement in agent context (agent configuration file, context injection)
 - Discovery mandate: the instruction that compels the agent to check the index
 - Keyword-match trigger: when and how the agent scans for matches
 - Demand loading: the rule that skill content loads only on match, not at startup
@@ -48,8 +49,9 @@ This spec does not govern index construction (skill-index-building), structural 
 
 - **Index pointer**: a reference in an agent's context that identifies the path to the agent's root `skill.index` file.
 - **Discovery mandate**: the imperative instruction in an agent's context that requires the agent to scan the index before responding to a task.
-- **Startup context**: context injected at fresh session start (e.g., CLAUDE.md, system prompt, --append-system-prompt). Survives compaction only if re-injected by a hook or equivalent mechanism.
-- **Recovery context**: context injected after compaction (e.g., via SessionStart compact hook `additionalContext`). Guaranteed to be present post-compaction.
+- **Agent configuration file**: the platform-specific artifact that is guaranteed to be in the agent's context at all times, including after a context-window reset. Examples: `CLAUDE.md` (Claude Code), `AGENTS.md` (OpenAI Codex), `GEMINI.md` (Gemini CLI), system prompt or instructions file (VS Code Copilot), or any equivalent. Implementations vary; the requirement is platform-agnostic.
+- **Context injection**: the act of making content available to an agent's active context window. May occur via the agent configuration file, a hook mechanism, an API system prompt field, or any platform-supported mechanism. Must guarantee content presence after context-window resets.
+- **Context-window reset**: any event that clears or compacts the agent's in-memory context — including context compaction, session restart, or token-limit truncation. After a reset, only content that is re-injected by the platform's context injection mechanism remains active.
 - **Demand loading**: the pattern in which skill content is NOT loaded at session start; it is loaded only when a keyword match identifies the skill as relevant.
 - **Keyword match**: a case-insensitive substring match between the task description and any keyword in a skill's index entry.
 - **Index scope**: the set of skills enumerated in a particular agent's index — a subset of the full skill tree bounded to that agent's operational domain.
@@ -64,7 +66,7 @@ This spec does not govern index construction (skill-index-building), structural 
 
 R1. An agent's context must contain exactly one index pointer identifying the root `skill.index` path scoped to that agent.
 
-R2. The index pointer must appear in the recovery context at minimum. Presence in startup context alone is insufficient; agents lose startup context after compaction and must recover discovery capability.
+R2. The index pointer must be delivered via context injection that survives context-window resets. If the platform re-reads its agent configuration file at every session start and after every reset, placing the pointer there satisfies this requirement. If the agent configuration file is read only once at initial load and is not re-injected after resets, the pointer must be delivered via a supplemental injection mechanism (hook output, system prompt, API field) that the platform guarantees survives resets.
 
 R3. The index pointer must be a resolvable file path. Relative paths must resolve from the agent's working directory. Absolute paths are also permitted.
 
@@ -80,7 +82,7 @@ R7. The discovery mandate must apply to every task, including clarifying questio
 
 R8. The discovery mandate must explicitly state the consequence of a match: load the skill content before proceeding.
 
-R9. The discovery mandate must be present in the recovery context. A mandate present only in CLAUDE.md or equivalent agent file is insufficient.
+R9. The discovery mandate must be delivered via the same context injection mechanism as the index pointer (R2). A mandate present only in a context artifact that does not survive context-window resets is non-conformant.
 
 ### Keyword-Match Trigger
 
@@ -128,7 +130,7 @@ R25. Keyword quality for entries in agents' indexes is subject to audit by `skil
 
 C1. The index pointer must not reference a directory; it must reference the `skill.index` file directly.
 
-C2. The discovery mandate may not be embedded only in prose documentation (README, design notes). It must appear in an injected context artifact (recovery context, startup context, or system prompt) that the agent actively reads at session start or recovery.
+C2. The discovery mandate may not be embedded only in prose documentation (README, design notes). It must appear in a context injection artifact that the platform guarantees is active at the time the agent processes any task — not merely on initial load.
 
 C3. Skill content must not be pre-loaded into the agent's context window to avoid future keyword scans. Pre-loading bypasses the demand-loading requirement and wastes tokens.
 
@@ -163,7 +165,7 @@ Agent follows the `skill-index-crawling` resolution rules. Descent behavior is g
 
 ## Defaults and Assumptions
 
-D1. Default placement: recovery context is the canonical location for both the index pointer and the discovery mandate. Startup context placement is additive, not substitutive.
+D1. Default placement: the index pointer and discovery mandate must be in a context artifact the platform guarantees survives context-window resets. On platforms that re-read the agent configuration file after every reset, the configuration file is the default location. On platforms that do not, a hook or system-prompt injection is required in addition.
 
 D2. Default scope: each agent type (Curator, Worker, Overseer, Sentinel) maintains its own scoped `skill.index`. There is no global agent index.
 
@@ -179,7 +181,7 @@ E1. Missing index: proceed, log, no halt.
 E2. Unreadable index: proceed, log, no halt.
 E3. Missing skill content after match: proceed without skill, log, no halt.
 E4. Multiple matches with ambiguous resolution: apply `skill-index-crawling` ambiguity rules. If still ambiguous, load all candidates.
-E5. Discovery mandate absent from recovery context: the integration is non-conformant. Agent behavior is undefined. Conformance requires the mandate be present.
+E5. Discovery mandate absent from a context injection that survives context-window resets: the integration is non-conformant. Agent behavior is undefined. Conformance requires the mandate be present in a reset-surviving injection.
 
 ---
 
@@ -208,9 +210,9 @@ P3. This spec governs the integration layer. It does not override `skill-index-c
 
 ## Footguns
 
-**F1: Mandate in CLAUDE.md only** — CLAUDE.md is not re-injected after compaction. Agent loses the mandate after context compaction and stops checking skills.
-Why: Post-compaction sessions do not re-read CLAUDE.md unless a hook re-injects it.
-Mitigation: Place mandate in recovery context (additionalContext from SessionStart compact hook). CLAUDE.md placement is additive only.
+**F1: Mandate only in an artifact that does not survive context-window resets** — Agent loses the mandate after compaction or session restart and stops checking skills.
+Why: Some agent configuration files are read only at initial load and are not re-injected after context resets. On those platforms, a mandate placed exclusively in that file becomes inactive after the first reset.
+Mitigation: Confirm whether the platform re-reads the agent configuration file after every reset. If not, also place the mandate in a supplemental injection mechanism (hook output, system prompt, API field) that the platform guarantees survives resets. Example: Claude Code's SessionStart compact hook `additionalContext`; VS Code Copilot's persistent instructions file; an API system-prompt field injected on every request.
 
 **F2: Index pointer scoped to full skills tree** — Agent's index lists hundreds of skills across all domains, making keyword matching noisy and slow.
 Why: The full skills tree root contains skills for all agent types; most are irrelevant to any specific agent.
@@ -226,7 +228,7 @@ Mitigation: Read `skill.index` only. Load SKILL.md only when a keyword match is 
 
 **F5: Mandate in exploratory or descriptive context** — Discovery mandate embedded in a README or design doc rather than an injected context artifact.
 Why: Agents do not actively read documentation in their skills library at every turn.
-Mitigation: Mandate must be in startup context, recovery context, or system prompt — injected artifacts, not passive files.
+Mitigation: Mandate must be in an injected context artifact (agent configuration file, system prompt, hook output) — not in passive documentation.
 
 ---
 
