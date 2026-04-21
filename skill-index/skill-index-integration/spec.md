@@ -5,7 +5,7 @@ description: >-
   pointer placement, discovery mandate, keyword-match flow, and demand loading.
 type: spec
 status: draft
-version: 1
+version: 1.3
 parent-spec: skill-index
 ---
 
@@ -16,6 +16,7 @@ parent-spec: skill-index
 - v1: Initial draft. Covers integration contract between agent context and the skill-index toolkit.
 - v1.1: Removed platform-specific terms (Claude Code hooks, startup/recovery context). Replaced with platform-agnostic abstractions: agent configuration file, context-reset recovery.
 - v1.2: Fixed audit findings (Haiku pass): defined "operational domain," "index stamp," "stale index"; clarified task description extraction; added R26 (announcement); clarified multi-skill resolution in Behavior; added E6 (mandate-loss recovery); added D3 mandate examples; added D2 single-domain scope note; linked Don'ts to Footguns; noted deliberate omission of platform table.
+- v1.3: Fixed audit findings (Sonnet pass): added definitions for entry key, cascade, sub-node, subtree depth, root skill.index; standardized note/log terminology; resolved E5/E6 scope boundary; aligned R26 and Behavior minimum forms; aligned R2/D1 conditional; added Behavior preamble; simplified C4; added Conformance section; R12 simplified; R25 added escape clause; misc. low/informational fixes.
 
 ---
 
@@ -127,7 +128,7 @@ R20. The index pointer for a specific agent must reference a scoped index file, 
 
 R21. Each entry in an agent's index must contain at least three keywords in addition to the entry key.
 
-R22. Keywords must be natural-language phrases. A keyword must represent how an operator or user would describe the need — not the technical skill name. The entry key itself is the technical name; keywords are its natural-language surface forms.
+R22. Keywords must be natural-language phrases. A keyword must represent how an operator or user would describe the need — not the technical skill name. A keyword fails this requirement if it consists solely of the technical skill name with punctuation removed, or is a camelCase or kebab-case identifier unchanged from the entry key format. The entry key itself is the technical name; keywords are its natural-language surface forms.
 
 R23. Keywords must not duplicate the entry key verbatim. Paraphrases, synonyms, and related phrases are required; exact repetition of the key is prohibited.
 
@@ -156,7 +157,7 @@ C4. The agent must not cache skill content across turns. A skill loaded in a pri
 All statements in this section are normative. Present-tense descriptions ("Agent reads...", "Agent proceeds...") have the force of "must."
 
 **Index present, keyword match found:**
-Agent reads the full skill content before responding. Agent must announce which skill it is loading before taking action (see R26). Minimum form: "Using [skill name] to [brief description of action]."
+Agent reads the full skill content before responding. Agent must announce which skill it is loading before taking action on the matched task (see R26). Minimum form: "Using [skill name] to [brief description of action]."
 
 **Index present, no keyword match:**
 Agent proceeds without loading any skill content. No announcement required.
@@ -265,6 +266,7 @@ A `skill-index-integration` is conformant when all of the following are satisfie
 - The agent's context contains a discovery mandate (R5–R9) delivered via the same injection.
 - The agent performs a keyword scan before each task (R10–R12).
 - Demand loading is enforced: skill content loads only on keyword match (R14–R17).
+- When a keyword match is found, the agent announces the matched skill before acting (R26).
 - The index is scoped to the agent's operational domain (R18–R20).
 - All index entries satisfy keyword quality requirements (R21–R24).
 
