@@ -1,10 +1,10 @@
 # Skill Index Auditing
 
-Dispatch skill. Read-only validator for a skill-index cascade. Returns `ok`, `rebuild-needed`, or `inconclusive`. Never modifies files. Never invokes the builder. Conforms to the root `skill-index` spec.
+Dispatch skill. Validator for a skill-index cascade. Returns `ok`, `rebuild-needed`, or `inconclusive`. On a PASS verdict, writes `skill.index.sha256` alongside each validated raw index as a sign-off artifact. Never invokes the builder. Conforms to the root `skill-index` spec.
 
 ## Purpose
 
-Provide a cheap, fast check: is this cascade valid, or does the builder need to run? The auditor detects the first structural problem and stops. It does not collect all failures — the builder will find all problems during the rebuild.
+Provide a cheap, fast check: is this cascade structurally valid, or does the builder need to run? The auditor detects the first structural problem and stops. It does not collect all failures — the builder will find all problems during the rebuild. On a clean PASS, the auditor writes integrity stamps to confirm the cascade was valid at time of audit.
 
 ## Invocation
 
@@ -16,7 +16,7 @@ Parameters:
 - `result_file` (required): absolute path for the audit report file.
 - `--dot-allow` (optional): comma-separated bare dot-folder names to traverse (must match the list used by the builder for the same tree). Default: empty.
 
-Returns: an audit report written to `result_file`.
+Returns: an audit report written to `result_file`, and on PASS, `skill.index.sha256` written alongside each validated raw index.
 
 ## Verdicts
 
@@ -63,6 +63,14 @@ Within a single node: fail-fast checks run before continue-past checks. When a f
 
 The auditor maintains the ordered set of nodes visited on the current resolution path. Tracking applies to every step of every resolution path — direct-child descent, shortcut path-walk endpoint, and combo sub-node descent. A new node is appended before inspection. If a step would land on a node already in the set, the auditor declares a loop and halts. The visited set is scoped to the current resolution path; entering a sibling subtree resets it.
 
+## Stamp Sign-Off
+
+On a PASS verdict, the auditor writes `skill.index.sha256` alongside each raw index it successfully validated. The stamp content is the SHA-256 hex digest of the exact bytes of the stored `skill.index` for that node — no trailing newline unless the raw index itself ends with one; no other content. This write is the auditor's sign-off artifact, confirming the cascade was structurally valid at time of audit.
+
+On any non-PASS verdict (`rebuild-needed` or `inconclusive`), the auditor must not write or delete any stamp. A stale or absent stamp after a non-PASS verdict is intentional — it signals "unaudited since last build," giving the host agent a clear trigger that a build-then-audit cycle is required.
+
+Writing the stamp is the only file-write the auditor ever performs.
+
 ## Audit Report Fields
 
 - `verdict`: `ok` | `rebuild-needed` | `inconclusive`
@@ -85,7 +93,7 @@ The auditor maintains the ordered set of nodes visited on the current resolution
 ## Footguns
 
 F1: Auditor rebuilds instead of signalling.
-Mitigation: Read-only. Only output is the audit report. Never invoke the builder.
+Mitigation: The only file-write permitted is the stamp on PASS. Any other modification is a violation. Never invoke the builder.
 
 F2: Auditor keeps walking after a fail-fast failure.
 Mitigation: Halt on the first fail-fast failure. The builder will find all problems during the rebuild.
@@ -102,7 +110,7 @@ Mitigation: Track visited nodes on every step of every resolution path, regardle
 ## Don'ts
 
 - Does not rebuild.
-- Does not modify any file.
+- Does not modify any file except writing `skill.index.sha256` on PASS. On non-PASS verdict, no files are modified — not even pre-existing stale stamps.
 - Does not invoke the builder.
 - Does not re-derive its own rules — validates against the root spec.
 - Does not produce metadata overlay content.

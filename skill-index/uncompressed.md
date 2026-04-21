@@ -4,17 +4,17 @@ Root skill for the skill-index toolkit. Governs a family of sub-skills that toge
 
 ## What This Skill Covers
 
-The skill-index toolkit produces and validates a cascading, tree-structured index of skills present in a directory hierarchy. An index node placed in an agent's working directory is the agent's complete discovery surface for that directory and its descendants. The agent reads the node; it does not traverse the filesystem.
+The skill-index toolkit produces, validates, and stamps a cascading, tree-structured index of skills present in a directory hierarchy. An index node placed in an agent's working directory is the agent's complete discovery surface for that directory and its descendants. The agent reads the node; it does not traverse the filesystem.
 
 The toolkit is decomposable into three sub-skills:
 
-- `skill-index-building` — creates and updates the three artifacts at each indexed directory: `skill.index` (raw index), `skill.index.md` (metadata overlay), `skill.index.sha256` (integrity stamp).
+- `skill-index-building` — creates and updates two artifacts at each indexed directory: `skill.index` (raw index) and `skill.index.md` (metadata overlay). Does not write the integrity stamp.
+- `skill-index-auditing` — validates an existing cascade and returns a rebuild-needed signal when the cascade is stale or structurally broken. On PASS, writes `skill.index.sha256` (integrity stamp) as sign-off at each validated node.
 - `skill-index-crawling` — reads an existing cascade to locate a skill matching an agent's stated need without opening skill contents.
-- `skill-index-auditing` — validates an existing cascade and returns a rebuild-needed signal when the cascade is stale or structurally broken.
 
 ## Core Concepts
 
-**Artifact triple.** Every indexed directory holds three files: `skill.index` (plain text, deterministic, the authoritative record), `skill.index.md` (human/agent-facing descriptions, LLM-authored), and `skill.index.sha256` (SHA-256 hex digest of `skill.index`'s stored bytes).
+**Artifacts.** Every indexed directory holds three files: `skill.index` (plain text, deterministic, the authoritative record), `skill.index.md` (human/agent-facing descriptions, LLM-authored), and `skill.index.sha256` (SHA-256 hex digest of `skill.index`'s stored bytes, written by the auditor on PASS). The builder produces the first two; the auditor writes the third.
 
 **Index node.** A `skill.index` file. Each line is one entry: `key: keyword, keyword, keyword`. Entries reference direct children by default; multi-segment shortcut entries (curator-added) reference deeper descendants. Every node is self-contained — it references only descendants within its own subtree.
 
@@ -24,9 +24,11 @@ The toolkit is decomposable into three sub-skills:
 
 **Combo node.** A directory that is simultaneously a leaf skill and a parent of further leaf skills. Emits a self entry (key `.`) in its own `skill.index` and is marked as combo in its parent's `skill.index`.
 
-**Integrity stamp.** SHA-256 hex digest of the raw index's exact stored bytes. The stamp is not updated until its metadata overlay is refreshed for the same raw index content. This prevents consumers from trusting a stale overlay.
+**Integrity stamp.** SHA-256 hex digest of the raw index's exact stored bytes. Written by the auditor after a PASS verdict — never by the builder. Absence of a stamp after a build means "unaudited since last build," not "needs rebuild." A mismatch means the raw index changed since the last audit.
 
 **Drift.** When a metadata overlay no longer corresponds to its raw index, detected by stamp mismatch.
+
+**Two-step sequence.** The correct build-then-audit flow is: builder runs → auditor runs → auditor writes stamp on PASS. The builder does not write the stamp at any point in this flow.
 
 ## Key Rules
 
@@ -37,11 +39,13 @@ The toolkit is decomposable into three sub-skills:
 - Symlinks are not followed by default.
 - Index files must not use a markdown extension (`.md`).
 - The toolkit does not require network access or elevated privileges.
+- The builder does not write the integrity stamp. The auditor writes it on PASS.
+- The builder compares computed raw content hash against stored `skill.index` bytes for change detection. It never consults the stamp for this purpose.
 
 ## Footguns
 
-F1: Stamp updated before overlay refresh.
-Mitigation: Enforce spec R18. Only update the stamp once the overlay has been refreshed for the new raw index. R21 is the only exception (no overlay exists yet).
+F1: Builder writes the stamp, bypassing the auditor.
+Mitigation: Enforce spec R18 and B7. The builder must not write `skill.index.sha256`. Only the auditor writes the stamp, and only on PASS.
 
 F2: Combo node treated as a pure leaf.
 Mitigation: Enforce spec R4, R9–R12. A combo node must emit a self entry and enumerate its manifest-bearing subdirectories. Traversal is not suppressed.
@@ -63,8 +67,8 @@ Mitigation: Enforce spec R36. The builder preserves curator-added shortcut entri
 All three sub-skills are dispatch skills — invoke each via a Dispatch agent (zero context) with `instructions.txt` in the respective sub-skill directory.
 
 - Builder: `skill-index-building/instructions.txt`
-- Crawler: `skill-index-crawling/instructions.txt`
 - Auditor: `skill-index-auditing/instructions.txt`
+- Crawler: `skill-index-crawling/instructions.txt`
 
 ## Don'ts
 
@@ -76,7 +80,7 @@ All three sub-skills are dispatch skills — invoke each via a Dispatch agent (z
 
 ## Related
 
-- `skill-index-building` — produces the three artifacts per indexed directory
+- `skill-index-building` — produces `skill.index` and `skill.index.md` per indexed directory
+- `skill-index-auditing` — validates the cascade and writes the stamp on PASS
 - `skill-index-crawling` — reads the cascade to locate a skill
-- `skill-index-auditing` — validates the cascade and triggers rebuilds
 - `skill-writing` — governs skill naming, structure, and authoring

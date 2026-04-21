@@ -1,16 +1,17 @@
 # Skill Index Building
 
-Dispatch skill. Creates or updates the three index artifacts at every indexed directory in a skill tree: `skill.index` (raw index), `skill.index.md` (metadata overlay), `skill.index.sha256` (integrity stamp). Conforms to the root `skill-index` spec.
+Dispatch skill. Creates or updates two index artifacts at every indexed directory in a skill tree: `skill.index` (raw index) and `skill.index.md` (metadata overlay). The integrity stamp (`skill.index.sha256`) is written by the auditor after a PASS — not by the builder. Conforms to the root `skill-index` spec.
 
 ## Artifacts
 
-Every indexed directory receives exactly these three files:
+Every indexed directory receives exactly two files from the builder:
 
 | File | Description |
 | --- | --- |
 | `skill.index` | Plain-text raw index. One entry per line. No header, no footer, no blank lines. Deterministic for the mechanical portion. |
 | `skill.index.md` | Markdown metadata overlay. H1 + one `## name` section per entry. One-sentence paragraphs. Requires compression pass before write. |
-| `skill.index.sha256` | SHA-256 hex digest of `skill.index`'s stored bytes. Written only after overlay is refreshed. |
+
+The integrity stamp (`skill.index.sha256`) is written by the auditor after a PASS verdict, not by the builder. Absence of a stamp after a build means "unaudited since last build," not "needs rebuild."
 
 ## Invocation
 
@@ -18,11 +19,11 @@ Dispatch via Dispatch agent (zero context): "Read and follow `instructions.txt` 
 
 Parameters:
 
-- `root` (required): absolute path to the invocation root directory
+- `root` (required): absolute path to the invocation root directory.
 - `--dot-allow` (optional): comma-separated list of dot-folder bare names to traverse (no globs, no paths). Default: empty.
-- `--rebuild` (optional): full-rebuild mode — regenerates all nodes regardless of stamp state.
+- `--rebuild` (optional): full-rebuild mode — regenerates all nodes regardless of stored raw index content.
 
-Returns: a change manifest listing which nodes were created, updated, unchanged, blocked (overlay failed compression), broken-shortcut targets, and any orphan or phantom findings.
+Returns: a change manifest listing which nodes were created, updated, unchanged, blocked (overlay failed compression), broken-shortcut targets, and any unreadable directory skips.
 
 ## Raw Index Format (`skill.index`)
 
@@ -32,7 +33,7 @@ Each entry is one line:
 key: keyword, keyword, keyword
 ```
 
-- Single space after the colon. `,` between keywords.
+- Single space after the colon. `, ` between keywords.
 - Entry key is the child's directory name.
 - Sub-node marker: append `/` to the key when that child directory contains its own `skill.index`.
 - Self entry: key is literally `.` when the current directory contains a skill manifest. Self entry appears first, before the sorted block.
@@ -46,78 +47,85 @@ key: keyword, keyword, keyword
 - One `## name` section per entry key in the same order as the raw index. The self entry's section uses the directory's own name, not `.`.
 - Each section: a single paragraph. One sentence preferred.
 - Must not describe trailing slashes, dot entries, navigation mechanics, or any index artifact internals.
-- Must pass a full-compression pass before the builder writes it. If compression fails, the builder aborts the node (records as blocked), leaves all three prior artifacts unchanged, and continues with siblings.
-
-## Integrity Stamp (`skill.index.sha256`)
-
-- SHA-256 hex digest of the exact bytes of the stored `skill.index`.
-- Written only when a refreshed overlay exists for those same bytes (spec R18), EXCEPT when no overlay exists at all for the node — in that case the stamp may be written immediately after the raw index (spec R21).
-- When R18 and R21 both could apply, R18 takes precedence.
+- Must pass a full compression pass before the builder writes it. If compression fails, the builder aborts the node (records as blocked), leaves all prior artifacts unchanged, and continues with siblings.
 
 ## Build Logic
 
-**Incremental mode (default):**
+### Incremental Mode (default)
 
-1. Compute SHA-256 of the raw index that would be written (mechanical portion + any preserved shortcut entries, sorted per sort rule).
-2. Compare against stored `skill.index.sha256`.
-3. If hashes match: no writes for this node.
-4. If hashes differ (or stamp missing): generate overlay in memory → run compression check → on success, write `skill.index`, then `skill.index.md`, then `skill.index.sha256` in strict order. No early termination between the three writes.
+For each node:
 
-**Full-rebuild mode (`--rebuild`):**
+1. Compute the mechanical portion: self entry (if manifest present) + direct-child entries.
+2. Merge with any preserved shortcut entries from the existing `skill.index` (see Shortcut Entries below).
+3. Sort the combined list per the sort rule.
+4. Serialize as one line per entry.
+5. Compute SHA-256 of that serialized content.
+6. Compare against the SHA-256 of the currently stored `skill.index` bytes. The stored `skill.index.sha256` stamp is not consulted — it is the auditor's sign-off artifact, not a builder freshness marker.
+7. If hashes match: no writes for this node. Record as unchanged. Move on.
+8. If hashes differ (or no stored `skill.index` exists): generate overlay in memory → run compression check → on success, write in strict order: `skill.index` first, then `skill.index.md`. Do not terminate normally between the two writes of a single node.
 
-- Regenerates all nodes regardless of stamp state.
-- Same write order and compression gate as incremental.
-- Stamps are not reset to the new raw content until the overlay is refreshed (spec R27).
+### Full-Rebuild Mode (`--rebuild`)
 
-**Write discipline:**
+Regenerates all nodes regardless of stored raw index content. Same write order and compression gate as incremental.
 
-- Raw index only written when computed content differs from stored, or when `--rebuild` is in effect.
-- Stamp written only when R18 or R21 is satisfied.
+### Write Order (strict)
+
+1. `skill.index`
+2. `skill.index.md`
+
+No early termination between these two writes for a single node.
 
 ## Traversal Rules
 
-- Walks downward from the invocation root.
-- Skips dot-prefixed directories by default.
-- `--dot-allow` list: bare names only; no globbing, no paths, no regexes.
-- Does not follow symlinks.
-- Combo nodes (directory is both a leaf skill and a parent of further leaf skills): emits a self entry in own `skill.index` and a sub-node-marked entry in parent's `skill.index`; traverses manifest-bearing subdirectories.
-- Empty directory (no indexable children, no manifest): writes empty `skill.index` (zero bytes), H1-only overlay, and stamp of SHA-256 of zero bytes.
-- Directory with no indexable children but with manifest: writes `skill.index` with only a self entry.
+- Walk downward from the invocation root.
+- Skip dot-prefixed directories by default. Only traverse dot-folders explicitly named in `--dot-allow`.
+- Do not follow symlinks.
+- When a directory has indexable children, write artifacts there and descend.
+- When a directory has no indexable children and no skill manifest: write empty `skill.index` (zero bytes) and an overlay containing only the H1 and no sections.
+- When a directory has no indexable children but has a skill manifest: write `skill.index` containing only a self entry; overlay follows normal write order.
+
+### Combo Nodes
+
+A combo node is a directory that has both a skill manifest of its own and at least one manifest-bearing child. A combo node:
+- Emits a `.` self entry in its own `skill.index`.
+- Emits a sub-node-marked entry (key ending in `/`) in its parent's `skill.index`.
+- Has its manifest-bearing subdirectories traversed normally.
 
 ## Curator-Added Shortcut Entries
 
-Shortcut entries (multi-segment keys, e.g. `tools/compression/`) are curator-added, not mechanically generated.
+Shortcut entries have multi-segment keys (e.g. `tools/compression/`). They are curator-added and are never mechanically generated.
 
-When the builder runs over a node whose existing `skill.index` already contains shortcut entries:
-
+When the existing `skill.index` at a node already contains shortcut entries:
 - Preserve them verbatim: same key, same keyword list, same character sequence.
-- Merge them with the freshly regenerated mechanical portion.
+- Merge with the freshly generated mechanical portion.
 - Sort the combined list per the sort rule. Self entry (if any) remains first.
-- If a preserved shortcut's target does not exist on the current filesystem: record as broken shortcut in the change manifest; emit the entry unchanged. Do not repair or remove — that is a curator decision.
-- The builder does not evaluate shortcut structural legality (subtree containment, acyclicity). That is the auditor's responsibility.
-- Curator keyword lists inside preserved shortcuts are authoritative even if they do not conform to R2's format; the builder treats them as opaque text.
+- If a preserved shortcut's target does not exist on the current filesystem: record as `broken-shortcut` in the change manifest; emit the entry unchanged. Do not repair or remove it — that is a curator decision.
+- Do not evaluate shortcut structural legality (subtree containment or acyclicity). That is the auditor's responsibility.
+- Curator keyword lists inside preserved shortcuts are authoritative even if they do not conform to the standard `key: keyword, keyword, keyword` format; treat them as opaque text for that entry.
 
 ## Error Handling
 
-- Unreadable directory: skip, record in change manifest, continue with siblings.
-- Overlay compression failure: record node as blocked, leave all prior artifacts unchanged, continue.
-- Stamp write failure after overlay success: record node as drifted in change manifest, continue.
-- Partial-write protection: the builder must not terminate normally between the three writes of a single node (spec E4).
-- Change manifest not producible: emit non-zero exit signal; do not silently succeed.
+- Unreadable directory: skip, record in change manifest as skipped, continue with siblings.
+- Overlay compression failure: record node as `blocked`, leave all prior artifacts unchanged, continue.
+- Partial-write protection: do not terminate normally between the two writes of a single node.
+- Change manifest not producible: emit a non-zero exit signal; do not silently succeed.
 
 ## Footguns
 
-F1: Stamp updated before overlay refresh.
-Mitigation: Enforce spec R18. Exception: no overlay exists (spec R21). When both could apply, R18 takes precedence.
+F1: Stamp consulted for change detection.
+Mitigation: The builder never reads `skill.index.sha256` for change detection. Compare the SHA-256 of the recomputed raw content against the SHA-256 of the stored `skill.index` bytes directly. The stamp is the auditor's artifact.
 
-F2: Combo node treated as pure leaf.
+F2: Builder writes the stamp.
+Mitigation: Enforce N6. The builder's write order is `skill.index` → `skill.index.md`. No stamp write. Stamp is written by the auditor on PASS.
+
+F3: Combo node treated as pure leaf.
 Mitigation: Emit self entry AND enumerate manifest-bearing subdirectories. Traversal not suppressed.
 
-F3: Dot-folder allow-list used as path expression.
+F4: Dot-folder allow-list used as path expression.
 Mitigation: Allow-list entries are bare names only — no globs, paths, or regexes.
 
-F4: Builder erases curated shortcuts on rebuild.
-Mitigation: Preserve shortcut entries verbatim across all runs (spec R36).
+F5: Builder erases curated shortcuts on rebuild.
+Mitigation: Preserve shortcut entries verbatim across all runs.
 
 ## Don'ts
 
@@ -126,10 +134,13 @@ Mitigation: Preserve shortcut entries verbatim across all runs (spec R36).
 - Does not decide which dot-folders to traverse — that decision is supplied via `--dot-allow`.
 - Does not emit `skill.index` with a `.md` extension.
 - Does not embed navigation or mechanical explanation in overlay sections.
+- Does not write `skill.index.sha256`. Stamp-writing is the auditor's responsibility, performed only after a PASS verdict.
+- Does not consult the network.
+- Does not modify any file outside the two artifact classes (raw index and overlay).
 
 ## Related
 
 - `skill-index` — root spec and toolkit overview
-- `skill-index-auditing` — validates the cascade; use before deciding to rebuild
+- `skill-index-auditing` — validates the cascade and writes the stamp; run after building
 - `skill-index-crawling` — consumes the artifacts produced here
 - `compression` — compression pass required for overlay before write

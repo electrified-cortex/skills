@@ -2,14 +2,25 @@
 name: skill-index-building
 description: >-
   Specification for the builder half of the skill-index toolkit — creates or
-  updates the raw index, the markdown overlay, and the integrity stamp for a
-  directory of skills.
+  updates the raw index and the markdown overlay for a directory of skills.
+  The auditor writes the integrity stamp after a PASS.
 type: spec
 ---
 
 # Skill Index Building Specification
 
-Normative spec for the builder. The builder creates or updates three artifacts at every indexed directory: `skill.index` (raw), `skill.index.md` (overlay), `skill.index.sha256` (stamp). Conforms to the root `skill-index` spec.
+Normative spec for the builder. The builder creates or updates two artifacts at every indexed directory: `skill.index` (raw), `skill.index.md` (overlay). The integrity stamp (`skill.index.sha256`) is written by the auditor after a PASS, not by the builder. Conforms to the root `skill-index` spec.
+
+## Changelog
+
+- R13 removed (builder stamp-write rule). Stamp responsibility transferred to auditor. See auditor spec R22–R23.
+- B1: change-detection no longer reads the stored stamp. Builder compares recomputed raw bytes against stored `skill.index` bytes directly.
+- B2: write order is now a pair: `skill.index` → `skill.index.md`. No stamp write.
+- B3–B5: stamp references removed.
+- C2: artifact classes updated to two (raw index + overlay).
+- E3: stamp-write error handling removed (no longer builder's responsibility).
+- P2: updated — stamp reflects auditor sign-off, not builder freshness.
+- N6 added: builder does not write the integrity stamp.
 
 ---
 
@@ -71,10 +82,6 @@ R11. The builder must not describe index mechanics (trailing slashes, dot entrie
 
 R12. The builder must subject the overlay to a full-compression pass before committing it. An overlay that does not pass compression must not be written.
 
-### Stamp (`skill.index.sha256`)
-
-R13. The builder must write the stamp as the SHA-256 hex digest of the exact bytes of `skill.index` as stored, and nothing else. The stamp may be written only when a refreshed overlay (see Definitions) exists for those same bytes, except per root spec R21 (when no overlay exists for the node, the stamp may be written without the refreshed-overlay precondition).
-
 ### Traversal
 
 R14. The builder must skip dot-folders by default. An explicit allow-list of dot-folder names overrides the skip for those names only. The allow-list is a plain list of bare names with no globbing.
@@ -101,7 +108,7 @@ R21. If a preserved shortcut entry's target path does not exist on the current f
 
 C1. The builder must not require network access.
 
-C2. The builder must not modify any file outside the three artifact classes.
+C2. The builder must not modify any file outside the two artifact classes (raw index and overlay).
 
 C3. The builder must not modify skill contents.
 
@@ -111,15 +118,15 @@ C4. The builder must not emit the raw index with a markdown extension.
 
 ## Behavior
 
-B1. When the SHA-256 of the computed raw index for a node (mechanical portion plus any preserved shortcut entries, sorted and serialized per R2/R5/R19) is equal to the value stored in `skill.index.sha256`, the builder performs no writes for that node. The stamp remains as stored. The comparison is hash-based, not timestamp-based; timestamp heuristics are prohibited.
+B1. When the SHA-256 of the computed raw index for a node (mechanical portion plus any preserved shortcut entries, sorted and serialized per R2/R5/R19) is equal to the SHA-256 of the currently stored `skill.index` bytes, the builder performs no writes for that node. The comparison is hash-based, not timestamp-based; timestamp heuristics are prohibited. The stored `skill.index.sha256` is not consulted for change detection — that stamp is the auditor's sign-off artifact, not a builder freshness marker.
 
-B2. When the hash under B1 differs from the stored stamp (including when the stamp is missing), the builder performs the following in strict order: (a) generate the overlay in memory; (b) run compression check on the generated overlay; (c) on success, write `skill.index` first, then `skill.index.md`, then `skill.index.sha256`. The builder must not terminate normally between steps (c)'s three writes; partial-write recovery follows root spec E4.
+B2. When the hash under B1 differs from the stored raw index (including when no raw index exists), the builder performs the following in strict order: (a) generate the overlay in memory; (b) run compression check on the generated overlay; (c) on success, write `skill.index` first, then `skill.index.md`. The builder must not terminate normally between steps (c)'s two writes; partial-write recovery follows root spec E4. The builder does not write `skill.index.sha256`.
 
-B3. When the overlay fails its compression check, the builder aborts the node, reports it as blocked in the change manifest, and performs no writes for that node in this run. The prior stored `skill.index`, `skill.index.md`, and `skill.index.sha256` remain at their prior values. Preserved shortcut entries remain available in the prior stored raw index; a failed overlay does not lose them, because the computed merge is held in memory and discarded rather than persisted.
+B3. When the overlay fails its compression check, the builder aborts the node, reports it as blocked in the change manifest, and performs no writes for that node in this run. The prior stored `skill.index` and `skill.index.md` remain at their prior values. Preserved shortcut entries remain available in the prior stored raw index; a failed overlay does not lose them, because the computed merge is held in memory and discarded rather than persisted.
 
-B4. When a directory has zero indexable children and no skill manifest of its own, the builder produces: an empty `skill.index` (zero bytes), an overlay containing only the H1 and no sections, and a stamp that is the SHA-256 of zero bytes. The three artifacts are subject to B2's write order and compression gate exactly as for any non-empty node: the H1-only overlay must pass the compression check per R12 (an H1-only overlay trivially satisfies compression, since there is no content to compress; this is stated here to make the chain explicit), then the raw index, overlay, and stamp are written in that order. If compression fails on the H1-only overlay for any implementation reason, B3 governs and no writes occur.
+B4. When a directory has zero indexable children and no skill manifest of its own, the builder produces: an empty `skill.index` (zero bytes) and an overlay containing only the H1 and no sections. The two artifacts are subject to B2's write order and compression gate exactly as for any non-empty node: the H1-only overlay must pass the compression check per R12 (an H1-only overlay trivially satisfies compression, since there is no content to compress; this is stated here to make the chain explicit), then the raw index and overlay are written in that order. If compression fails on the H1-only overlay for any implementation reason, B3 governs and no writes occur.
 
-B5. When a directory has zero indexable children but does have a skill manifest of its own, the builder writes a `skill.index` containing only a self entry. The overlay and stamp follow B2's write order and compression gate without modification.
+B5. When a directory has zero indexable children but does have a skill manifest of its own, the builder writes a `skill.index` containing only a self entry. The overlay follows B2's write order and compression gate without modification.
 
 ---
 
@@ -139,9 +146,7 @@ E1. If a directory is unreadable, the builder skips it, records the skip in the 
 
 E2. If the overlay fails the compression check, see B3.
 
-E3. If the stamp write fails after the overlay succeeded, the builder records the node as drifted in the change manifest (using "drifted" per the root spec definition) and continues.
-
-E4. If the change manifest itself cannot be produced, the builder must emit a non-zero exit signal and must not silently succeed.
+E3. If the change manifest itself cannot be produced, the builder must emit a non-zero exit signal and must not silently succeed.
 
 ---
 
@@ -149,7 +154,7 @@ E4. If the change manifest itself cannot be produced, the builder must emit a no
 
 P1. Raw index content is authoritative over overlay content.
 
-P2. The stamp reflects the raw index's current stored bytes, never the overlay's.
+P2. The stamp is an auditor sign-off artifact. The builder does not write it. Absence of a stamp after a build means "unaudited since last build," not "needs rebuild."
 
 P3. Filesystem structure overrides any cached prior state.
 
@@ -166,3 +171,5 @@ N3. The builder does not decide which dot-folders to traverse — that decision 
 N4. The builder does not emit a raw index in markdown format.
 
 N5. The builder does not embed navigation or mechanical explanation in overlay sections.
+
+N6. The builder does not write `skill.index.sha256`. Stamp-writing is the auditor's responsibility, performed only after a PASS verdict.

@@ -39,7 +39,7 @@ Applies to any directory tree that contains one or more leaf skills. A leaf skil
 - **Index node** — a plain-text index file at a directory level enumerating referenced descendants: sub-nodes (directories that themselves contain at least one leaf skill) and leaf skills. The common case references direct children; a node may also reference deeper descendants via shortcut entries per R33.
 - **Raw index** — the mechanically-generated, deterministic form of an index node. Its content depends only on the presence and names of children.
 - **Metadata overlay** — a derived artifact accompanying a raw index, providing human- or agent-facing descriptive content (short descriptions, tags, classifications) not present in the raw index itself.
-- **Integrity stamp** — a content hash over a raw index. Signals whether a metadata overlay is still in sync with the raw index it describes.
+- **Integrity stamp** — a content hash over a raw index, written by the auditor after a PASS. Signals both that the raw index is structurally valid and that the metadata overlay (if present) was in sync at time of audit. Absence of a stamp means "unaudited since last build," not "needs rebuild."
 - **Change manifest** — the output returned by a run of the index toolkit summarizing which index nodes were created, updated, or unchanged.
 - **Root node** — the index node at the directory where the toolkit was invoked. Serves as the entry point for downstream consumers.
 - **Cascade** — the property that each index node is self-contained: it references only descendants within its own subtree, never ancestors or siblings, and the resulting graph is acyclic (forward reference to R34, which mandates acyclicity).
@@ -93,17 +93,17 @@ R15. A metadata overlay must not be required for an agent to consume the raw ind
 
 ### Integrity and Drift Detection
 
-R16. Each raw index must have an associated integrity stamp committed alongside it.
+R16. Each raw index should have an associated integrity stamp written by the auditor after a PASS. A missing stamp is not an error condition in itself — it means the index has not yet been audited since the last build. The auditor's fail-fast check (R3 of `skill-index-auditing`) will report the absence and trigger a rebuild-needed verdict, prompting the host to run builder → auditor in sequence.
 
 R17. The stamp must be generated over the raw index's content, not over its filename or metadata.
 
-R18. When the raw index is regenerated and its content differs from the prior version, the integrity stamp must not be updated until its accompanying metadata overlay is a refreshed overlay for the new raw index.
+R18. The integrity stamp must not be written until the auditor runs and returns PASS over the raw index and its accompanying overlay. The builder's write of a refreshed overlay is the precondition for a valid audit; the auditor's PASS is the precondition for the stamp. This two-step sequence (builder then auditor) replaces the prior single-step builder-writes-all model.
 
-R19. When the raw index is regenerated and its content matches the prior version (stamp-equivalent), no downstream artifact update is required.
+R19. When the raw index is regenerated and its content matches the prior version (byte-for-byte identical), the builder performs no writes for that node. If a stamp was already present from a prior audit, it remains valid and need not be re-written.
 
-R20. Drift must be detectable by comparing the current raw index's content hash against its stored integrity stamp.
+R20. Drift must be detectable by comparing the current raw index's content hash against its stored integrity stamp. A mismatch means the raw index changed since the last audit pass.
 
-R21. When no metadata overlay exists for a node, the stamp may be written immediately upon the raw index being produced; R18's overlay-sync precondition does not apply.
+R21. Reserved. The prior no-overlay exception (stamp may be written immediately when no overlay exists for a node) is superseded by R18's two-step builder→auditor model. The auditor validates whatever state is present; if no overlay exists for a node, the audit still runs over the raw index and writes the stamp on PASS.
 
 ### Tool Behavior
 
@@ -117,7 +117,7 @@ R25. The toolkit must not modify skill manifests or any content belonging to lea
 
 R26. The toolkit must support a full-rebuild mode that regenerates all artifacts regardless of prior state.
 
-R27. In full-rebuild mode, integrity stamps must not be reset to match the regenerated content until the accompanying metadata overlays are refreshed per R18.
+R27. In full-rebuild mode, the builder regenerates all raw indexes and overlays regardless of prior state. Stamps are not written by the builder even in full-rebuild mode — the host agent must invoke the auditor after the builder completes, and only the auditor's PASS triggers stamp writes.
 
 ### Composition
 
@@ -149,7 +149,7 @@ R36. The builder's mechanical output populates only direct-child entries. Shortc
 
 C1. The toolkit must not invent, infer, or generate leaf-skill content. It only indexes what already exists.
 
-C2. The toolkit must not use file timestamps, file sizes, or path strings as staleness indicators. Only content-hash integrity stamps are authoritative.
+C2. The toolkit must not use file timestamps, file sizes, or path strings as staleness indicators. Only content-hash comparison is authoritative: the builder compares computed hash of the new raw index against the hash of stored bytes; the auditor validates against the stored stamp.
 
 C3. Metadata overlays must not contradict or override the raw index they describe.
 
@@ -169,7 +169,7 @@ C7. Derived documents that supply the R31 allow-list must not extend its form be
 
 B1. When invoked at a directory, the toolkit must treat that directory as the invocation root and restrict all operations to the subtree rooted there.
 
-B2. When invoked at a directory containing no leaf skills and no descendant leaf skills, the toolkit must still produce a root node (enumerating zero children) and its integrity stamp.
+B2. When invoked at a directory containing no leaf skills and no descendant leaf skills, the toolkit must still produce a root node (enumerating zero children). The builder produces the raw index and overlay; the auditor writes the stamp after a PASS.
 
 ### Mismatch
 
@@ -183,7 +183,7 @@ B5. When the toolkit detects a metadata overlay with no corresponding raw index,
 
 B6. The toolkit must write a raw index only if its computed content differs from what is currently stored, or when full-rebuild mode is in effect.
 
-B7. The toolkit must write an integrity stamp only when R18 is satisfied (overlay exists and is refreshed for the current raw index) or when R21 applies (no overlay exists for the node). When both could be read to apply, R18 takes precedence.
+B7. The integrity stamp must be written by the auditor sub-skill, not by the builder. The auditor writes the stamp only on a PASS verdict, after validating the raw index and overlay. On any non-PASS verdict, the stamp is not written (and not deleted). The overlay-sync precondition (R18) is enforced at build time; the stamp confirms the auditor's post-build sign-off, not the overlay's freshness in isolation.
 
 ---
 
@@ -215,7 +215,7 @@ E5. If the change manifest itself cannot be produced, the toolkit must emit a no
 
 P1. Raw index content takes precedence over metadata overlay content. An overlay that contradicts its raw index is invalid.
 
-P2. Integrity stamp state takes precedence over metadata overlay state. A fresh stamp over stale overlay content is prohibited.
+P2. The integrity stamp is an auditor sign-off, not a builder freshness marker. Its absence after a build means "unaudited since last build," not "needs rebuild." A stamp present but mismatching the current raw index bytes means the index changed since the last audit — a rebuild-needed condition detectable by the auditor.
 
 P3. Filesystem-observed structure takes precedence over any cached prior state.
 
@@ -223,10 +223,10 @@ P3. Filesystem-observed structure takes precedence over any cached prior state.
 
 ## Footguns
 
-F1: Stamp updated before overlay refresh.
-Description: The implementation writes the integrity stamp as soon as the raw index is regenerated, without waiting for the overlay to be refreshed.
-Why: A stamp reflecting a new raw index but paired with an overlay written for the old index defeats drift detection — consumers trust the stamp, get stale descriptions, and have no way to notice.
-Mitigation: Enforce R18. R21 is the only exception and applies only when no overlay exists at all.
+F1: Builder writes the stamp, bypassing the auditor.
+Description: The builder implementation writes `skill.index.sha256` as part of its own artifact output, before any audit runs.
+Why: A stamp written by the builder — before the cascade is structurally validated — is not a sign-off artifact; it is a freshness marker. Every build run then re-stamps unnecessarily, and the stamp loses its meaning as a post-audit confirmation.
+Mitigation: The builder must not write the stamp. Only the auditor writes the stamp, and only on PASS per R22 of `skill-index-auditing`.
 
 F2: Combo node treated as a pure leaf.
 Description: A directory that is both a skill and a parent of other skills is marked only as a leaf, and its manifest-bearing subdirectories are skipped.

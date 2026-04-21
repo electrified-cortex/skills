@@ -1,6 +1,6 @@
 # Skill Index Auditing — Agent Instructions
 
-Dispatch skill. You are a haiku-class agent operating in zero context. Your job is to validate an existing skill-index cascade and return one of three verdicts: `ok`, `rebuild-needed`, or `inconclusive`. You do not rebuild. You do not modify any file. You do not invoke the builder.
+Dispatch skill. You are a haiku-class agent operating in zero context. Your job is to validate an existing skill-index cascade and return one of three verdicts: `ok`, `rebuild-needed`, or `inconclusive`. On a PASS verdict (`ok`), you also write `skill.index.sha256` alongside each validated raw index as a sign-off artifact. You do not rebuild. You do not invoke the builder. Writing the stamp on PASS is the only file modification you ever perform.
 
 ---
 
@@ -14,7 +14,11 @@ Dispatch skill. You are a haiku-class agent operating in zero context. Your job 
 
 ## Outputs
 
-Write the audit report to `result_file`. See Report Format below. That is your only file output. You never modify any index artifact.
+Write the audit report to `result_file`. See Report Format below.
+
+On a PASS verdict, also write `skill.index.sha256` alongside each validated raw index. The stamp content is the SHA-256 hex digest of the exact bytes of the stored `skill.index` for that node — no trailing newline unless the raw index itself ends with one; no other content. Write the stamp only after the entire walk completes with a PASS verdict. Do not write partial stamps if the walk is still in progress.
+
+On any non-PASS verdict (`rebuild-needed` or `inconclusive`): do not write or delete any stamp. Leave pre-existing stale stamps untouched.
 
 If the audit report cannot be written: emit a non-zero exit signal. Do not silently succeed.
 
@@ -150,7 +154,7 @@ failing_node: <absolute path to first failing node, or blank if none>
 ## Don'ts
 
 - Do not rebuild. Do not invoke the builder.
-- Do not modify any file.
+- Do not modify any file except writing `skill.index.sha256` on PASS. On non-PASS verdict, no files modified — not even pre-existing stale stamps.
 - Do not open skill contents (any file other than `skill.index`, `skill.index.md`, `skill.index.sha256`).
 - Do not keep walking after a fail-fast check fails.
 - Do not treat orphans or phantom indexes as `rebuild-needed` triggers by themselves.

@@ -1,6 +1,6 @@
 Params: `root` (required); `result_file` (required); `--dot-allow <name,...>` (optional, default empty)
 
-Read-only. Write audit report to `result_file`. Never modify any index artifact. Never invoke the builder.
+Write audit report to `result_file`. On PASS, also write `skill.index.sha256` alongside each validated raw index (SHA-256 hex digest of exact stored bytes; no trailing newline unless raw index ends with one). On non-PASS, no files modified — not even stale stamps. Writing the stamp is the only file-write permitted. Never invoke the builder.
 
 Verdicts: `ok` | `rebuild-needed` | `inconclusive`
 - `rebuild-needed` > `inconclusive` > `ok`
@@ -62,6 +62,6 @@ failing_node: <path or blank>
 (omit if no reference loop)
 ```
 
-Don'ts: no rebuilding; no file modification; no skill content reads; no walking past fail-fast failures; no orphan/phantom escalation to rebuild-needed; no curator-intent judgments; no network access.
+Don'ts: no rebuilding; no file modification except stamp write on PASS; no skill content reads; no walking past fail-fast failures; no orphan/phantom escalation to rebuild-needed; no curator-intent judgments; no network access.
 
 Related: `skill-index`, `skill-index-building`, `skill-index-crawling`

@@ -1,6 +1,6 @@
 Params: `root` (required); `--dot-allow <name,...>` (optional, default empty); `--rebuild` (optional flag)
 
-Artifact triple per directory: `skill.index` | `skill.index.md` | `skill.index.sha256` — no other filenames.
+Artifact pair per directory: `skill.index` | `skill.index.md` — no other filenames. Do not write `skill.index.sha256`; that is the auditor's sign-off artifact.
 
 Raw index format (`skill.index`):
 - One entry per line: `key: keyword, keyword, keyword` — single space after colon, `, ` between keywords.
@@ -19,26 +19,25 @@ Overlay format (`skill.index.md`):
 - Must not mention trailing slashes, dot entries, navigation, or artifact internals.
 - Must pass full compression check before write. Failure → abort node, record blocked, no writes, continue.
 
-Stamp (`skill.index.sha256`):
-- SHA-256 hex of stored `skill.index` bytes. Nothing else in file.
-- Written only after overlay is refreshed in the same build step (exception: no overlay exists yet for this node).
+Stamp (`skill.index.sha256`): NOT written by the builder. The auditor writes the stamp after a PASS verdict. Absence of a stamp after a build means "unaudited since last build," not "needs rebuild."
 
 Build procedure (per node):
 1. Compute mechanical portion: self entry (if manifest present) + direct-child entries.
 2. Merge with any preserved shortcut entries verbatim from existing `skill.index`.
 3. Sort combined list (self entry first, rest byte-lex). Serialize one line per entry.
-4. Compute SHA-256 of serialized content.
-5. Incremental mode: if hash matches stored stamp → no writes, record unchanged, done.
+4. Compute SHA-256 of serialized content. Compare against SHA-256 of stored `skill.index` bytes.
+   Never read `skill.index.sha256` for change detection — it is the auditor's artifact.
+5. Incremental mode: if hashes match → no writes, record unchanged, done.
    Rebuild mode (`--rebuild`): skip hash check; always regenerate.
 6. Generate overlay in memory → run compression check.
-7. On success, write in strict order: `skill.index` → `skill.index.md` → `skill.index.sha256`.
-   No early termination between the three writes of a single node.
+7. On success, write in strict order: `skill.index` → `skill.index.md`.
+   No early termination between the two writes of a single node.
 
 Traversal:
 - Walk downward from `root`. Skip dot-prefixed directories unless in `--dot-allow` (bare names only, no globs).
 - Do not follow symlinks.
 - Combo node (has manifest + manifest-bearing children): emit self entry in own index, sub-node-marked entry in parent's index, traverse subdirectories.
-- No indexable children + no manifest: empty `skill.index` (zero bytes), H1-only overlay, stamp of SHA-256 of zero bytes.
+- No indexable children + no manifest: empty `skill.index` (zero bytes), H1-only overlay.
 - No indexable children + manifest: `skill.index` with self entry only; overlay and stamp per normal write order.
 
 Shortcut entries (curator-added, multi-segment keys):
@@ -55,7 +54,6 @@ Fail-fast rules:
 
 Error handling:
 - Unreadable directory: skip, record skipped, continue.
-- Stamp write failure after overlay success: record drifted, continue.
 
 Change manifest report format:
 ```
@@ -75,6 +73,6 @@ Nodes processed: N | Created: N | Updated: N | Unchanged: N | Blocked: N | Drift
 Broken shortcuts: N | Orphans: N
 ```
 
-Don'ts: no skill content authoring; no audit or validation; no `.md` extension on raw index; no navigation prose in overlay sections; no network access; no files modified outside the three artifact classes.
+Don'ts: no skill content authoring; no audit or validation; no `.md` extension on raw index; no navigation prose in overlay sections; no stamp write (auditor's job); no network access; no files modified outside the two artifact classes.
 
 Related: `skill-index`, `skill-index-auditing`, `skill-index-crawling`, `compression`

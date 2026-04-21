@@ -1,6 +1,6 @@
 # Skill Index Building — Agent Instructions
 
-Dispatch skill. You are a haiku-class agent operating in zero context. Your job is to create or update three index artifacts at every directory in a skill tree. Read all inputs, execute the procedure exactly, and return a change manifest.
+Dispatch skill. You are a haiku-class agent operating in zero context. Your job is to create or update two index artifacts at every directory in a skill tree: `skill.index` (raw index) and `skill.index.md` (metadata overlay). The integrity stamp (`skill.index.sha256`) is written by the auditor after a PASS — not by you. Read all inputs, execute the procedure exactly, and return a change manifest.
 
 ---
 
@@ -12,15 +12,16 @@ Dispatch skill. You are a haiku-class agent operating in zero context. Your job 
 
 ---
 
-## Artifact Triple
+## Artifact Pair
 
-Every indexed directory receives exactly three files. No other filenames are permitted.
+Every indexed directory receives exactly two files from you. No other filenames are permitted.
 
 | File | Description |
 | --- | --- |
 | `skill.index` | Plain-text raw index. One entry per line. No header, no footer, no blank lines. |
 | `skill.index.md` | Markdown metadata overlay. H1 + one `## name` section per entry. Requires compression pass before write. |
-| `skill.index.sha256` | SHA-256 hex digest of `skill.index`'s exact stored bytes. Nothing else in this file. |
+
+You do not write `skill.index.sha256`. That stamp is written by the auditor after a PASS verdict. Absence of a stamp after your build means "unaudited since last build," not "needs rebuild."
 
 ---
 
@@ -54,15 +55,6 @@ Rules:
 
 ---
 
-## Integrity Stamp (`skill.index.sha256`)
-
-- SHA-256 hex digest of the exact bytes of the stored `skill.index`. File contains only this hex string.
-- Written only when a refreshed overlay exists for those same bytes (the overlay was generated and passed compression in the same build step as the raw index).
-- Exception: when no overlay exists at all for the node, the stamp may be written immediately after the raw index without the refreshed-overlay precondition.
-- When both conditions could apply, the refreshed-overlay precondition takes precedence.
-
----
-
 ## Build Logic
 
 ### Incremental Mode (default)
@@ -74,21 +66,20 @@ For each node:
 3. Sort the combined list per the sort rule.
 4. Serialize as one line per entry.
 5. Compute SHA-256 of that serialized content.
-6. Compare against stored `skill.index.sha256`.
+6. Compare against the SHA-256 of the currently stored `skill.index` bytes. Never consult `skill.index.sha256` for change detection — it is the auditor's sign-off artifact, not a builder freshness marker.
 7. If hashes match: no writes for this node. Record as unchanged. Move on.
-8. If hashes differ (or stamp missing): generate overlay in memory → run compression check → on success, write in strict order: `skill.index` first, then `skill.index.md`, then `skill.index.sha256`. Do not terminate normally between the three writes.
+8. If hashes differ (or no stored `skill.index` exists): generate overlay in memory → run compression check → on success, write in strict order: `skill.index` first, then `skill.index.md`. Do not terminate normally between the two writes.
 
 ### Full-Rebuild Mode (`--rebuild`)
 
-Regenerates all nodes regardless of stamp state. Same write order and compression gate as incremental. Stamps are not written until the overlay is refreshed.
+Regenerates all nodes regardless of stored raw index content. Same write order and compression gate as incremental.
 
 ### Write Order (strict)
 
 1. `skill.index`
 2. `skill.index.md`
-3. `skill.index.sha256`
 
-No early termination between these three writes for a single node.
+No early termination between these two writes for a single node.
 
 ---
 
@@ -98,7 +89,7 @@ No early termination between these three writes for a single node.
 - Skip dot-prefixed directories by default. Only traverse dot-folders explicitly named in `--dot-allow`.
 - Do not follow symlinks.
 - When a directory has indexable children, write artifacts there and descend.
-- When a directory has no indexable children and no skill manifest: write empty `skill.index` (zero bytes), an overlay containing only the H1 and no sections, and a stamp of the SHA-256 of zero bytes.
+- When a directory has no indexable children and no skill manifest: write empty `skill.index` (zero bytes) and an overlay containing only the H1 and no sections.
 - When a directory has no indexable children but has a skill manifest: write `skill.index` containing only a self entry; overlay and stamp follow normal write order.
 
 ### Combo Nodes
@@ -128,8 +119,7 @@ When the existing `skill.index` at a node already contains shortcut entries:
 
 - Unreadable directory: skip, record in change manifest as skipped, continue with siblings.
 - Overlay compression failure: record node as `blocked`, leave all prior artifacts unchanged, continue.
-- Stamp write failure after overlay success: record node as `drifted` in change manifest, continue.
-- Partial-write protection: do not terminate normally between the three writes of a single node.
+- Partial-write protection: do not terminate normally between the two writes of a single node.
 - Change manifest not producible: emit a non-zero exit signal; do not silently succeed.
 
 ---
@@ -140,7 +130,7 @@ When the existing `skill.index` at a node already contains shortcut entries:
 - If a node's overlay fails compression: do not write any artifact for that node; record as blocked and continue.
 - Never write `skill.index` with a `.md` extension.
 - Never embed navigation or mechanical explanation in overlay sections.
-- Never emit overlay or stamp before the raw index.
+- Never emit overlay before the raw index.
 
 ---
 
@@ -187,6 +177,7 @@ Broken shortcuts: N  Orphans: N
 - Do not decide which dot-folders to traverse — that decision is supplied via `--dot-allow`.
 - Do not emit `skill.index` with a `.md` extension.
 - Do not embed navigation or mechanical explanation in overlay sections.
-- Do not write the stamp before the overlay is refreshed (except when no overlay exists at all).
+- Do not write `skill.index.sha256`. Stamp-writing is the auditor's responsibility, performed only after a PASS verdict.
+- Do not consult `skill.index.sha256` for change detection — compare recomputed hash against stored `skill.index` bytes directly.
 - Do not consult the network.
-- Do not modify any file outside the three artifact classes.
+- Do not modify any file outside the two artifact classes (raw index and overlay).
