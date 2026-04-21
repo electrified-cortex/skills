@@ -153,7 +153,7 @@ Include an `ok` summary line at the end if the run completed without a non-zero 
 
 ## Report Format
 
-```
+```txt
 ## Skill Index Build Report
 
 root: <absolute path>
