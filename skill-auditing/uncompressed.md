@@ -12,6 +12,11 @@ Dispatch via Dispatch agent (zero context): "Read and follow
 - `result_file` (required): Absolute path for audit report
 - `spec_path` (optional): Companion spec if not co-located
 
-Returns: verdict (PASS / NEEDS_REVISION / FAIL), 9-point checklist, issues.
+Returns: verdict (PASS / NEEDS_REVISION / FAIL) and issues. Checklist
+covers 3 phases: Spec Gate (5 checks), Skill Smoke (5 checks), Spec
+Compliance (10 checks).
+
+Tiered model strategy: dispatch an inexpensive/fast model for iterate
+passes, default model for final sign-off.
 
 Related: `skill-writing`, `spec-auditing`, `compression`

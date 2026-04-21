@@ -13,7 +13,7 @@ Audit tool scripts for completeness and convention compliance.
 
 Verify that tool scripts have companion specs, follow naming conventions,
 handle errors, and produce predictable output. Lightweight audit that
-Haiku-class models can run.
+haiku-class models can run.
 
 ## Scope
 

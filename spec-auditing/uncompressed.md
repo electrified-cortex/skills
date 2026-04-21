@@ -10,9 +10,9 @@ description: >-
 Dispatch an isolated agent (Dispatch agent, zero context): "Read and follow
 `instructions.txt` (in this directory). Input: `<target-path> [--spec <spec-path>] [--fix]`"
 
-**Do NOT attempt spec auditing inline.** The agent runs in isolated context with
-strict disposition (skeptical, evidence-based, non-creative). Inline attempts
-produce shallow, inconsistent audits.
+**Do NOT attempt spec auditing inline.** Inline attempts produce shallow,
+inconsistent audits. The dispatched agent runs in isolated context with its
+own strict disposition (defined in `instructions.txt`).
 
 ## Parameters
 
