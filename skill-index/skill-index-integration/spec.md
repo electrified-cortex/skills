@@ -5,7 +5,7 @@ description: >-
   pointer placement, discovery mandate, keyword-match flow, and demand loading.
 type: spec
 status: draft
-version: 1.3
+version: 1.3.1
 parent-spec: skill-index
 ---
 
@@ -17,6 +17,7 @@ parent-spec: skill-index
 - v1.1: Removed platform-specific terms (Claude Code hooks, startup/recovery context). Replaced with platform-agnostic abstractions: agent configuration file, context-reset recovery.
 - v1.2: Fixed audit findings (Haiku pass): defined "operational domain," "index stamp," "stale index"; clarified task description extraction; added R26 (announcement); clarified multi-skill resolution in Behavior; added E6 (mandate-loss recovery); added D3 mandate examples; added D2 single-domain scope note; linked Don'ts to Footguns; noted deliberate omission of platform table.
 - v1.3: Fixed audit findings (Sonnet pass): added definitions for entry key, cascade, sub-node, subtree depth, root skill.index; standardized note/log terminology; resolved E5/E6 scope boundary; aligned R26 and Behavior minimum forms; aligned R2/D1 conditional; added Behavior preamble; simplified C4; added Conformance section; R12 simplified; R25 added escape clause; misc. low/informational fixes.
+- v1.3.1: Fixed remaining findings (final pass): resolved C4 "if needed" contradiction; added E6 reload mechanism criteria; added Integration definition; clarified Behavior/E4 multi-match ordering.
 
 ---
 
@@ -51,6 +52,7 @@ This spec does not govern index construction (skill-index-building), structural 
 
 ## Definitions
 
+- **Integration**: the configuration of a skill-index cascade into an agent's context, consisting of the index pointer placement, discovery mandate, and runtime agent behavior defined by this spec. An integration is conformant when all requirements in this spec are satisfied.
 - **Index pointer**: a reference in an agent's context that identifies the path to the agent's root `skill.index` file.
 - **Discovery mandate**: the imperative instruction in an agent's context that requires the agent to scan the index before responding to a task.
 - **Agent configuration file**: the platform-specific artifact that is guaranteed to be in the agent's context at all times, including after a context-window reset. Examples: `CLAUDE.md` (Claude Code), `AGENTS.md` (OpenAI Codex), `GEMINI.md` (Gemini CLI), system prompt or instructions file (VS Code Copilot), or any equivalent. Implementations vary; the requirement is platform-agnostic.
@@ -148,7 +150,7 @@ C2. The discovery mandate may not be embedded only in prose documentation (READM
 
 C3. Skill content must not be pre-loaded into the agent's context window to avoid future keyword scans. Pre-loading bypasses the demand-loading requirement and wastes tokens.
 
-C4. The agent must not cache skill content across turns. A skill loaded in a prior turn must be reloaded if needed in a subsequent turn, particularly after a context-window reset.
+C4. The agent must not cache skill content across turns. A skill loaded in a prior turn must be reloaded whenever a keyword match identifies the same skill as relevant to the current turn.
 
 ---
 
@@ -172,7 +174,7 @@ Agent proceeds without the skill. Agent notes the unreadable skill in output. Ag
 A stale index is one whose integrity stamp is absent, invalid, or inconsistent with current index content (see Definitions: "Index stamp," "Stale index"). Agent may use a stale index for keyword matching. Agent must note the stale state in output when detected: "Skill index may be outdated (stamp absent or invalid)."
 
 **Multiple keyword matches at the same subtree depth:**
-Agent loads the full content of each matched skill. Agent applies them sequentially in the order they appear in the index. Each skill operates independently; the output of one skill is not passed as input to the next. The agent presents each skill's contribution in sequence.
+Agent first applies `skill-index-crawling` resolution rules (see E4). If those rules resolve to a single skill, load that skill only. If they return multiple matches at the same subtree depth with no further priority basis, load the full content of each matched skill and apply them sequentially in the order they appear in the index. Each skill operates independently; the output of one skill is not passed as input to the next. The agent presents each skill's contribution in sequence.
 
 **Match found in descendant sub-node (crawl descent):**
 Agent follows the `skill-index-crawling` resolution rules. Descent behavior is governed by that skill's spec; this spec does not override it.
@@ -205,7 +207,7 @@ E3. Missing skill content after match: proceed without skill, note in output, no
 E4. Multiple matches with ambiguous resolution: apply `skill-index-crawling` ambiguity rules. If still ambiguous, load all candidates.
 E5. Discovery mandate absent from a context injection that survives context-window resets: the integration is non-conformant. Agent behavior is undefined. Conformance requires the mandate be present in a reset-surviving injection.
 
-E6. Discovery mandate not found after a context-window reset: the agent must attempt to reload the mandate from its configured context injection artifact. If the mandate is still absent after the reload attempt, the agent must proceed without the discovery mandate, must note the absence in output ("Discovery mandate not found; skill scanning disabled for this session"), and must not halt. Conformance is compromised but agent operation continues. This error handling applies only to integrations that were conformant at startup (mandate correctly placed per R2 and R9). An integration where the mandate was never placed in a reset-surviving injection is a design-time non-conformance governed by E5; E6 does not constitute a conformance path for E5 violations.
+E6. Discovery mandate not found after a context-window reset: the agent must attempt to reload the mandate from its configured context injection artifact. Attempt means: re-read the agent's configured context injection artifact (e.g., re-read `CLAUDE.md`, re-query the system prompt, or invoke the platform's context refresh mechanism as applicable). The attempt is considered failed if the mandate text is not present after the read. If the mandate is still absent after the reload attempt, the agent must proceed without the discovery mandate, must note the absence in output ("Discovery mandate not found; skill scanning disabled for this session"), and must not halt. Conformance is compromised but agent operation continues. This error handling applies only to integrations that were conformant at startup (mandate correctly placed per R2 and R9). An integration where the mandate was never placed in a reset-surviving injection is a design-time non-conformance governed by E5; E6 does not constitute a conformance path for E5 violations.
 
 ---
 
