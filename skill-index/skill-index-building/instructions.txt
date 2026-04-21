@@ -1,0 +1,80 @@
+Params: `root` (required); `--dot-allow <name,...>` (optional, default empty); `--rebuild` (optional flag)
+
+Artifact triple per directory: `skill.index` | `skill.index.md` | `skill.index.sha256` — no other filenames.
+
+Raw index format (`skill.index`):
+- One entry per line: `key: keyword, keyword, keyword` — single space after colon, `, ` between keywords.
+- Self entry (key `.`) first when current directory has a skill manifest.
+- Append `/` to key when child directory has its own `skill.index` (sub-node marker).
+- Sort remaining entries byte-lexicographically on full UTF-8 key. Self entry always precedes sorted block.
+  Shortcut keys sort in the same space. `/` (0x2F) compares by byte value. Shorter prefix sorts first.
+- Keywords: natural-language synonyms and related phrases. Must not duplicate the key verbatim.
+- No blank lines, no header, no footer.
+
+Overlay format (`skill.index.md`):
+- H1: directory's identifying title.
+- Optional preamble: ≤2 sentences between H1 and first section; helps locate a skill only.
+- One `## name` section per entry key, same order as raw index. Self entry section uses directory name, not `.`.
+- Each section: single paragraph, one sentence preferred.
+- Must not mention trailing slashes, dot entries, navigation, or artifact internals.
+- Must pass full compression check before write. Failure → abort node, record blocked, no writes, continue.
+
+Stamp (`skill.index.sha256`):
+- SHA-256 hex of stored `skill.index` bytes. Nothing else in file.
+- Written only after overlay is refreshed in the same build step (exception: no overlay exists yet for this node).
+
+Build procedure (per node):
+1. Compute mechanical portion: self entry (if manifest present) + direct-child entries.
+2. Merge with any preserved shortcut entries verbatim from existing `skill.index`.
+3. Sort combined list (self entry first, rest byte-lex). Serialize one line per entry.
+4. Compute SHA-256 of serialized content.
+5. Incremental mode: if hash matches stored stamp → no writes, record unchanged, done.
+   Rebuild mode (`--rebuild`): skip hash check; always regenerate.
+6. Generate overlay in memory → run compression check.
+7. On success, write in strict order: `skill.index` → `skill.index.md` → `skill.index.sha256`.
+   No early termination between the three writes of a single node.
+
+Traversal:
+- Walk downward from `root`. Skip dot-prefixed directories unless in `--dot-allow` (bare names only, no globs).
+- Do not follow symlinks.
+- Combo node (has manifest + manifest-bearing children): emit self entry in own index, sub-node-marked entry in parent's index, traverse subdirectories.
+- No indexable children + no manifest: empty `skill.index` (zero bytes), H1-only overlay, stamp of SHA-256 of zero bytes.
+- No indexable children + manifest: `skill.index` with self entry only; overlay and stamp per normal write order.
+
+Shortcut entries (curator-added, multi-segment keys):
+- Preserve verbatim across all runs — same key, same keywords, same character sequence.
+- Merge with mechanical portion, sort in.
+- If target does not exist: record broken-shortcut in manifest, emit entry unchanged.
+- Do not evaluate subtree containment or acyclicity — that is the auditor's responsibility.
+- Curator keyword lists inside shortcuts are authoritative even if non-conformant; treat as opaque text.
+
+Fail-fast rules:
+- `root` missing or unreadable → stop, non-zero exit.
+- Overlay compression failure → no writes for that node; record blocked; continue.
+- Change manifest not producible → non-zero exit; do not silently succeed.
+
+Error handling:
+- Unreadable directory: skip, record skipped, continue.
+- Stamp write failure after overlay success: record drifted, continue.
+
+Change manifest report format:
+```
+## Skill Index Build Report
+
+root: <path>
+mode: incremental | rebuild
+
+### Nodes
+
+| Path | Status | Notes |
+| --- | --- | --- |
+| <path> | created/updated/unchanged/blocked/drifted/skipped | |
+
+### Summary
+Nodes processed: N | Created: N | Updated: N | Unchanged: N | Blocked: N | Drifted: N | Skipped: N
+Broken shortcuts: N | Orphans: N
+```
+
+Don'ts: no skill content authoring; no audit or validation; no `.md` extension on raw index; no navigation prose in overlay sections; no network access; no files modified outside the three artifact classes.
+
+Related: `skill-index`, `skill-index-auditing`, `skill-index-crawling`, `compression`

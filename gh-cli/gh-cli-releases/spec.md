@@ -34,6 +34,18 @@ The skill must enable an agent to:
 - The skill must clarify the relationship between a release and its Git tag — creating a release does not automatically create a tag unless one is specified.
 - The skill must show how to identify the latest published release reliably (not just most recent by date).
 
+## Behavior
+
+The skill covers the full release lifecycle: creating a release from a tag (draft or direct publish), writing notes inline or from a file, uploading multiple assets in a single command, editing a published release, listing releases to distinguish draft/pre-release/published states, deleting a release and optionally its tag, and downloading assets programmatically. The draft-then-publish flow and the direct publish flow are treated as distinct patterns. The `latest` release is identified by published state, not most-recent date.
+
+## Error Handling
+
+If a release is created from a tag that does not yet exist, the agent must confirm whether `gh release create` should also create the tag or whether the tag must be created via git first. If an asset upload partially fails mid-batch, the agent must check which assets were uploaded before retrying to avoid duplicates. If a delete is attempted on a release with associated tags, the agent must confirm with the caller whether the tag should also be deleted.
+
+## Precedence Rules
+
+Draft status takes precedence — a draft release is never exposed as the `latest` release regardless of creation date. The relationship between a release and its tag must be clarified before creation: the tag must exist or be explicitly created as part of the release command.
+
 ## Don'ts
 
 - Does not manage Git tags directly — only interacts with tags through `gh release`.

@@ -43,7 +43,19 @@ The skill must enable an agent to:
 - One domain is handled per invocation. Multi-domain tasks are split: primary domain runs, remaining domains are reported to the caller.
 - Domain ambiguity must be resolved by asking the caller — never assume.
 
-## Non-Goals
+## Behavior
+
+The router accepts a GitHub CLI task in natural language. It identifies the target domain by matching the task to the Domain Routing Table, loads the corresponding sub-skill, and forwards the full task to it. If the task spans multiple domains, the router executes the primary domain and reports the remaining domains to the caller without dispatching them. If the domain cannot be determined, the router asks the caller for clarification before proceeding.
+
+## Error Handling
+
+If no domain matches the task, the router must ask the caller for clarification — it must not guess or default to any domain. If the `gh auth status` check fails and the setup skill has not been confirmed loaded, the router must halt and surface the authentication failure to the caller before any domain dispatch.
+
+## Precedence Rules
+
+Authentication verification takes precedence over domain dispatch. Clarification takes precedence over guessing when domain is ambiguous. Primary domain execution takes precedence over multi-domain splitting when the task is clear.
+
+## Don'ts
 
 - Does not execute any `gh` subcommand itself.
 - Does not manage routing state across multiple invocations.

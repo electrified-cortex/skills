@@ -33,6 +33,18 @@ The skill must enable an agent to:
 - The skill must demonstrate adding both issues and PRs as items using the correct owner/repo/number form.
 - The skill must distinguish between archiving an item (keeps it in the project, hidden) and deleting it (removes it permanently).
 
+## Behavior
+
+The skill covers Projects v2 operations via `gh project`: creating projects, listing them to resolve names to IDs, adding issues and PRs as items, creating and editing custom fields (text, number, date, single select, iteration), editing item field values, archiving and deleting items, and copying projects. Single-select field edits require the option's ID, not its label text — the skill must show how to resolve the option ID before editing. Archiving keeps an item in the project but hides it; deletion removes it permanently.
+
+## Error Handling
+
+If a project name cannot be resolved to an ID, the agent must list projects for the user or organization and ask the caller to confirm the correct ID before proceeding. If a field edit fails because an option ID is wrong for a single-select field, the agent must list field options and retry with the correct ID. If a delete operation is irreversible (project deletion), the agent must confirm with the caller before executing.
+
+## Precedence Rules
+
+Project ID takes precedence over project name — all operations must resolve the ID first. Option ID takes precedence over option label for single-select field edits.
+
 ## Don'ts
 
 - Does not cover GitHub Projects v1 (classic boards with columns).

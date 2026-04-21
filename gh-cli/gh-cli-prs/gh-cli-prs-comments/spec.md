@@ -21,9 +21,17 @@ The skill must enable an agent to:
 - Edit an existing comment by ID
 - Delete a comment by ID
 
-## Notes
+## Behavior
 
-- Resolving review threads has no `gh pr` command. Use `resolveReviewThread` GraphQL mutation via `gh-cli-api`.
+The skill covers general PR comments via `gh pr comment`: adding a new comment, editing an existing comment by its ID, and deleting a comment by its ID. Review-level comments (tied to approve/request-changes verdicts) are not handled here. Resolving review threads has no `gh pr` command — the agent must redirect to `gh-cli-api` for the `resolveReviewThread` GraphQL mutation.
+
+## Error Handling
+
+If an edit or delete operation is attempted without a comment ID, it will fail — the agent must obtain the comment ID (via `gh pr view --comments` or the API) before proceeding. If a comment ID does not exist on the target PR, `gh` returns an error — the agent must surface this to the caller.
+
+## Precedence Rules
+
+N/A — add, edit, and delete are discrete non-overlapping operations; no resolution path conflicts exist within this skill.
 
 ## Don'ts
 

@@ -23,6 +23,18 @@ The skill must enable an agent to:
 - Use a body file for structured or templated descriptions
 - List existing PRs to confirm the branch isn't already open before creating
 
+## Behavior
+
+The skill covers opening a PR via `gh pr create` with title, body, base branch, reviewers, assignees, and labels. A PR may be created as a draft and later promoted to ready via `gh pr ready`. The body may be provided inline or from a file. A closing issue link is embedded in the body via the `Closes #NNN` syntax. Before creating, the agent must check for an existing open PR on the same branch to avoid duplicates.
+
+## Error Handling
+
+If the branch does not exist on the remote, `gh pr create` will fail — the agent must surface this and halt; branch creation and push are out of scope. If an open PR already exists for the branch, the agent must report it to the caller rather than creating a duplicate.
+
+## Precedence Rules
+
+N/A — this skill issues a single `gh pr create` or `gh pr ready` command per invocation; there are no competing resolution paths.
+
 ## Don'ts
 
 - Does not cover `gh pr edit` after creation — that is post-creation metadata management.

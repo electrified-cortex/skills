@@ -33,6 +33,18 @@ The skill must enable an agent to:
 - The skill must show how to safely pass secrets or tokens to API calls without leaking them into command history.
 - Pagination behavior must be explained: `--paginate` makes multiple requests automatically; the agent must understand this can be slow for large datasets.
 
+## Behavior
+
+The skill covers direct API access via `gh api` for REST endpoints and `gh api graphql` for GraphQL. Requests are authenticated automatically using the active `gh` session. `--paginate` issues multiple sequential requests to retrieve full result sets — the agent must warn callers that this can be slow for large datasets. `--jq` filters are applied to the final response. `--hostname` redirects requests to a GitHub Enterprise instance. Secrets and tokens passed to API calls must use environment variables or stdin, never inline command arguments.
+
+## Error Handling
+
+If the API returns a non-2xx status, `gh api` exits with a non-zero code and prints the error body. The agent must surface the HTTP status and error message to the caller. If `--paginate` stalls on a large dataset, the agent must offer to narrow the query rather than waiting indefinitely. If a GraphQL mutation returns errors in the response body (HTTP 200 with `errors` field), the agent must treat this as a failure and surface the error detail.
+
+## Precedence Rules
+
+Higher-level domain skills (`gh issue`, `gh pr`, etc.) take precedence over `gh api` for operations they cover — `gh api` is the escape hatch, not the default. `--jq` filtering takes precedence over shell-level post-processing when the data can be shaped at the API layer.
+
 ## Don'ts
 
 - Does not cover creating or managing GitHub Apps, OAuth Apps, or personal access tokens.

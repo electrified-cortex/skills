@@ -1,0 +1,67 @@
+Params: `root` (required); `result_file` (required); `--dot-allow <name,...>` (optional, default empty)
+
+Read-only. Write audit report to `result_file`. Never modify any index artifact. Never invoke the builder.
+
+Verdicts: `ok` | `rebuild-needed` | `inconclusive`
+- `rebuild-needed` > `inconclusive` > `ok`
+- Any fail-fast failure or malformed-line escalation → `rebuild-needed`.
+- Root unreadable or subtree unreachable → `inconclusive` (unless `rebuild-needed` already set).
+
+Walk: depth-first from `root`, parents before children. Skip dot-prefixed dirs unless in `--dot-allow` (bare names only). Do not follow symlinks.
+
+Per-node procedure — fail-fast checks first (A), continue-past second (B). On any fail-fast failure: halt, return `rebuild-needed` + reason + failing-node path. Do not run continue-past checks at the failing node.
+
+A. Fail-Fast Checks (halt on first failure):
+1. Stamp present: `skill.index.sha256` must exist alongside `skill.index`.
+2. Stamp matches: SHA-256 of raw `skill.index` bytes must equal stored stamp.
+3. Entry targets resolve: every entry maps to an on-disk target within the current node's subtree.
+   Plain leaf → existing directory. Descent-marked → directory with `skill.index`.
+   Combo → satisfies both. Shortcut (multi-segment key) → walk path; check at every step:
+   no `..`, no absolute path, no escape above invocation root. Missing or out-of-subtree → fail.
+4. No missing direct children: every manifest-bearing direct child must appear as an entry in this
+   node's raw index, unless already reachable via a shortcut elsewhere in the cascade.
+5. Combo self entry: combo node must have a self entry (key `.`) in its own raw index.
+6. Combo enumerates subdirectories: combo node's raw index must list all manifest-bearing
+   subdirectories (direct-child or shortcut entries).
+7. Combo classified in parent: combo node must be sub-node-marked (trailing `/`) in parent's raw index.
+8. No reference loops: on every resolution path (direct-child, shortcut, combo sub-node), maintain
+   ordered visited set. Append node before inspection. If target already in set → loop → fail.
+   Visited set scoped to current resolution path; sibling subtree crossing resets it.
+
+B. Continue-Past Checks (record, do not halt):
+1. Orphans: `skill.index.sha256` or `skill.index.md` with no corresponding `skill.index`. Janitorial.
+2. Malformed lines: raw index line missing key, colon, or containing forbidden characters. Record.
+   If node completes all fail-fast checks and any malformed-line finding exists: escalate final verdict
+   to `rebuild-needed` when walk ends.
+3. Phantom indexes: `skill.index` within subtree not reachable from root cascade. Janitorial.
+
+Error handling:
+- Root unreadable: verdict `inconclusive` + reason, halt.
+- Per-subtree unreadable: record `inconclusive` for that subtree, continue with siblings.
+- Report not producible: non-zero exit signal; do not silently succeed.
+
+Audit report format (write to `result_file`):
+```
+## Skill Index Audit Report
+
+root: <path>
+verdict: ok | rebuild-needed | inconclusive
+
+### Result
+reason: <reason or "all checks passed">
+failing_node: <path or blank>
+
+### Continue-Past Findings
+| Type | Node | Detail |
+| --- | --- | --- |
+| orphan/malformed-line/phantom-index | <path> | <detail> |
+(omit table if no findings)
+
+### Visited Nodes (on failing path, if applicable)
+1. <path>
+(omit if no reference loop)
+```
+
+Don'ts: no rebuilding; no file modification; no skill content reads; no walking past fail-fast failures; no orphan/phantom escalation to rebuild-needed; no curator-intent judgments; no network access.
+
+Related: `skill-index`, `skill-index-building`, `skill-index-crawling`

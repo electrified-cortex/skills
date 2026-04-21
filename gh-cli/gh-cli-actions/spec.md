@@ -37,6 +37,18 @@ The skill must enable an agent to:
 - The skill must distinguish between repository-level and environment-level secrets and variables.
 - The skill must show how to interpret `--json statusCheckRollup` output to determine overall run health.
 
+## Behavior
+
+The skill guides the agent through the full Actions operation lifecycle: listing and enabling workflows, triggering a run and capturing its run ID, monitoring run status in real time via `--watch`, viewing logs (full run or specific job), rerunning failed jobs, canceling live runs, downloading artifacts, and managing secrets and variables at repository or environment scope. Secret values must always be piped from stdin or an environment variable — never passed as command arguments.
+
+## Error Handling
+
+If a run fails, the agent must view logs for the specific failed job rather than the full run to isolate the cause. If a secret or variable operation targets an environment that does not exist, the `gh` CLI will return an error — the agent must surface this to the caller and confirm the environment name before retrying. If `--json statusCheckRollup` returns an unexpected shape, the agent must not assume success.
+
+## Precedence Rules
+
+Repository-level secrets and variables take precedence in scope resolution unless the environment name is explicitly specified. Monitoring a run ID captured at trigger time takes precedence over relisting runs to find the target run.
+
 ## Don'ts
 
 - Does not cover writing or editing workflow YAML files.

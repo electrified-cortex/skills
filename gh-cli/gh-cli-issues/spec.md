@@ -33,6 +33,18 @@ The skill must enable an agent to:
 - The skill must cover `@me` as an assignee filter for self-assignment patterns.
 - Listing must cover all states: open, closed, and all.
 
+## Behavior
+
+The skill covers the full issue lifecycle: creating with metadata, listing with filters (state, assignee, label, milestone, search query), viewing details and comments, editing metadata without losing existing values, closing or reopening with an optional comment, commenting, transferring, and bulk operations. Structured output is obtained with `--json` and `--jq`. Bulk operations must pipeline `gh issue list --json` through shell tools — not repeat individual commands. The `@me` shorthand is used for self-assignment filters.
+
+## Error Handling
+
+If an edit command would clear an existing field unintentionally, the agent must read the current issue state before editing to preserve values not explicitly being changed. If a transfer target repository does not exist or the caller lacks write access, `gh` returns an error — the agent must surface this before retrying. If a bulk operation pipeline produces no results, the agent must confirm the filter criteria with the caller rather than treating zero results as success.
+
+## Precedence Rules
+
+Explicit filter flags (`--state`, `--assignee`, `--label`) take precedence over free-text search query when both are provided. Bulk pipeline operations take precedence over repeated individual commands for multi-issue edits.
+
 ## Don'ts
 
 - Does not cover GitHub issue forms or issue templates configuration.

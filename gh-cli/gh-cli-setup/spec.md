@@ -31,6 +31,18 @@ The skill must enable an agent to:
 - Authentication guidance must include both browser-based OAuth and token-based flows.
 - The skill must communicate what a successful setup looks like so the agent can verify before proceeding.
 
+## Behavior
+
+The skill covers the setup lifecycle for `gh`: detecting whether it is installed and at what version, providing platform-correct installation instructions (Windows, macOS, Linux), guiding through browser-based OAuth or token-based authentication, verifying authentication succeeded via `gh auth status`, applying configuration for automation use (disable prompts, set git protocol), and setting a default repository with `gh repo set-default`. The skill adapts to the current shell environment — it does not assume any particular shell.
+
+## Error Handling
+
+If `gh auth status` reports not authenticated, the agent must guide through the appropriate authentication flow before any other operation proceeds. If installation fails due to a missing package manager or permissions issue, the agent must surface the underlying error and propose an alternative installation method for the platform. If `gh auth login --with-token` receives a token with insufficient scopes, `gh` will fail on subsequent operations — the agent must check required scopes against the token before accepting it as valid.
+
+## Precedence Rules
+
+Authentication verification takes precedence over all other setup steps — no configuration or default-setting should proceed until `gh auth status` confirms a valid session. Interactive setup paths and automated (scriptable) paths must be presented as distinct options; the automated path takes precedence in non-interactive environments.
+
 ## Don'ts
 
 - Does not cover any `gh` subcommand usage beyond `auth`, `config`, and `repo set-default`.

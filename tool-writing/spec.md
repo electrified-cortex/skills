@@ -112,7 +112,23 @@ utilities.
 - Default spec location: same directory as the script
 - Default output: stdout (markdown format for reports)
 
-## Precedence
+## Behavior
+
+- An agent producing a tool script must create the companion `.spec.md` in the same directory before or alongside the script.
+- Bash is selected by default unless PowerShell is clearly more appropriate for the task; the choice must be documented in the companion spec.
+- A tool script must emit predictable output: markdown for reports, JSON for structured data, plain text for status. The format must be stated in the companion spec.
+- Scripts must not prompt for interactive input; agents cannot respond to prompts.
+- All inputs must be validated at script entry; a missing required parameter must print a clear error and exit non-zero.
+
+## Error Handling
+
+- Scripts must report failures with a non-zero exit code.
+- Bash scripts must use `set -e` so unexpected errors halt execution rather than continuing silently.
+- PowerShell scripts must use `$ErrorActionPreference = 'Continue'` for non-fatal error collection; callers check exit code.
+- Error messages must name the missing or invalid input and state what was expected.
+- A tool that exits non-zero must not produce partial output that callers might treat as valid.
+
+## Precedence Rules
 
 - Companion spec governs the script — any conflict, spec wins.
 - This spec governs tool-writing.

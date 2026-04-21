@@ -33,6 +33,18 @@ The skill must enable an agent to:
 - Sync operations must distinguish between syncing via `gh repo sync` and manual git fetch/merge flows.
 - The skill must not assume a default visibility — agents must explicitly choose public or private.
 
+## Behavior
+
+The skill covers repository lifecycle operations via `gh repo`: creating repos (personal or organization-owned, from scratch or template), cloning to a local directory, forking with upstream remote configuration, syncing forks via `gh repo sync`, editing metadata (description, homepage, visibility, feature flags), renaming, archiving, deleting, listing with filters, and setting a default repo context. Visibility must always be specified explicitly — the skill must not assume a default.
+
+## Error Handling
+
+If a fork operation completes but the upstream remote is not configured, the agent must add the upstream remote manually before reporting success. If `gh repo sync` fails due to a diverged history, the agent must surface the conflict to the caller — it must not force-sync without explicit instruction. If a delete operation is requested, the agent must confirm the repository name with the caller before executing, as deletion is irreversible.
+
+## Precedence Rules
+
+`gh repo sync` takes precedence over manual git fetch/merge for fork synchronization unless the caller explicitly requests the manual flow. Organization ownership takes precedence — when creating under an org, the `--org` flag must be present; personal repos must not be assumed.
+
 ## Don'ts
 
 - Does not manage repository content (files, branches, commits) — that is git, not `gh repo`.
