@@ -23,6 +23,19 @@ The audit runs in three phases:
 3. **Spec compliance** — cross-references the skill against its `.spec.md`
    companion; flags missing requirements or mismatches
 
+Two modes:
+
+- **Audit** (default) — read-only; reports issues without making changes.
+- **Fix** (`--fix`) — single-pass repair of the skill's authoritative source
+  files (`uncompressed.md` and `instructions.uncompressed.md`, siblings of the
+  audited `SKILL.md`). Runs only on a NEEDS_REVISION verdict. Refuses to write
+  to any candidate with pending git changes (untracked, unstaged, staged, or
+  merge-conflicted) or any path that escapes the skill directory. The companion
+  `spec.md`, the `README.md`, and the compiled runtime files (`SKILL.md`,
+  `instructions.txt`) are never modified — the caller recompresses via the
+  `compression` skill and re-runs the auditor for verification. This preserves
+  the repo's source-of-truth chain (`spec.md` → `uncompressed.md` → `SKILL.md`).
+
 Returns one of three verdicts:
 
 | Result | Meaning |
@@ -38,6 +51,9 @@ Call the auditor with the skill path:
 ```
 Read and follow skill-auditing/SKILL.md for: path/to/skill/SKILL.md
 ```
+
+Add `--fix` to apply repairs automatically (subject to the git-clean
+precondition above).
 
 ## Related Skills
 

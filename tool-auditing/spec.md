@@ -50,9 +50,9 @@ For each tool script found:
 
 ### Report Format
 
-#### Normative
+#### Report Normative
 
-```
+```txt
 # Tool Audit: <script-name>
 
 - Status: PASS | FAIL | WARN

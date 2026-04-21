@@ -1,9 +1,10 @@
-Params: `skill_path` (required); `result_file` (required); `spec_path` (optional)
+Params: `skill_path` (required); `result_file` (required); `spec_path` (optional); `--fix` (optional flag — enables single-pass fix mode against authoritative sources)
 
 Procedure:
 1. Read skill at `skill_path`; determine type: inline or dispatch
 2. Locate companion spec — check: `spec_path` if provided → `spec.md` in same dir as `skill_path`. Not found: simple inline (<30 lines) may skip Phase 1; dispatch/complex inline → FAIL immediately.
 3. Run Phase 1 → Phase 2 → Phase 3 (stop on first failure) → assign verdict → write report to `result_file`
+4. If `--fix` active AND verdict == NEEDS_REVISION: run Fix Mode (see below). PASS → nothing to do; FAIL → fix is skipped, defects reported for author action.
 
 Phase 1 — Spec Gate: verify companion spec structurally sound before any skill-level checks.
 1. Spec exists — `spec.md` must exist (or `spec_path` resolves). Exception: simple inline (<30 lines) → skip phase entirely.
@@ -39,6 +40,17 @@ Verdict Rules:
 PASS: all 3 phases pass.
 NEEDS_REVISION: Phase 1 and 2 pass; Phase 3 has 1-2 non-critical issues. List fixes.
 FAIL: any phase fails, or Phase 3 has critical issues.
+
+Fix Mode (`--fix`, single-pass, source-first):
+1. Eligibility: only enter on verdict == NEEDS_REVISION. PASS → exit; FAIL → skip fix, report defects.
+2. Preflight `result_file` writability. Unwritable → STOP fix; exit without modifying anything.
+3. Identify writable candidates: `uncompressed.md` and `instructions.uncompressed.md` as siblings of `skill_path`. Reject any path resolving outside the skill directory → STOP "refusing to fix: <path> escapes skill directory". If neither exists → STOP "no writable source files; fix mode unavailable". Compiled runtime (`SKILL.md`, `instructions.txt`) and `spec.md`/`README.md` are NEVER candidates.
+4. Git-clean check on every candidate. Untracked/unstaged/staged/merge-conflicted on ANY → STOP "refusing to fix: <path> has pending git changes". No git repo → STOP "refusing to fix: skill is not under git control". The read-only audit report is still written.
+5. Write the read-only audit report to `result_file`.
+6. Apply fixes to writable sources only, in severity order: critical Phase 3 (coverage, contradictions, unauthorized additions) → non-critical Phase 3 (conciseness, breadcrumbs, cost analysis, dispatch refs, spec breadcrumbs) → hygiene fixes scoped to writable sources only.
+7. Phase 1 defects, spec critiques, hygiene defects in unwritable files, and any defect requiring author judgment are NEVER auto-fixed — surface as findings.
+8. Append a "Fix Mode Addendum" to `result_file`: files modified, fixes applied, defects not auto-fixed, instruction to caller to recompress via `compression` skill (`uncompressed.md` → `SKILL.md`, `instructions.uncompressed.md` → `instructions.txt`) and re-run the auditor.
+9. Single-pass only — no in-process re-audit, no recompression. Caller drives the next cycle.
 
 Report Format:
 ```markdown
@@ -91,4 +103,4 @@ Report Format:
 <one line>
 ```
 
-Rules: read-only; never modify skill; one skill per dispatch; evidence-based verdicts; when in doubt, NEEDS_REVISION over PASS.
+Rules: read-only by default. With `--fix`: single-pass; modify only `uncompressed.md` and `instructions.uncompressed.md` (sibling sources); never `spec.md`, `README.md`, `SKILL.md`, or `instructions.txt`; never any file with pending git changes; never paths outside the skill directory. One skill per dispatch; evidence-based verdicts; when in doubt, NEEDS_REVISION over PASS.

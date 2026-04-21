@@ -5,6 +5,13 @@
 - `skill_path` (required): Absolute path to SKILL.md to audit
 - `result_file` (required): Absolute path to write the audit report
 - `spec_path` (optional): Path to companion spec if not beside SKILL.md
+- `--fix` (optional flag): Enable single-pass fix mode against the skill's
+  authoritative source files (`uncompressed.md` and `instructions.uncompressed.md`,
+  siblings of `skill_path`). Runs only on a NEEDS_REVISION verdict. Refused on
+  any candidate with pending git changes (untracked, unstaged, staged, or
+  merge-conflicted) and on any path that escapes the skill directory. The
+  companion `spec.md`, the `README.md`, and the compiled runtime files
+  (`SKILL.md`, `instructions.txt`) are never modified.
 
 ## Procedure
 
@@ -18,6 +25,10 @@
 4. Run Phase 1 → Phase 2 → Phase 3 (stop on first failure)
 5. Assign verdict
 6. Write report to `result_file`
+7. If `--fix` is active **and** the verdict is exactly NEEDS_REVISION, enter the
+   Fix Mode procedure below. PASS → nothing to fix; FAIL → fix mode is skipped
+   and defects are reported for author action. Fix mode is single-pass; the
+   auditor does not re-audit or recompress.
 
 ## Phase 1 — Spec Gate
 
@@ -161,6 +172,56 @@ needed at runtime, inline it.
   issues. List fixes.
 - **FAIL**: Any phase fails, or Phase 3 has critical issues.
 
+## Fix Mode (`--fix`, single-pass, source-first)
+
+Fix mode targets the skill's authoritative source files — not the compiled
+runtime. The compiled runtime (`SKILL.md`, `instructions.txt`) is regenerated
+by the caller via the `compression` skill after the auditor exits. This
+preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
+`SKILL.md`).
+
+1. **Eligibility gate.** Enter fix mode only when verdict == NEEDS_REVISION.
+   PASS → nothing to fix. FAIL (any phase) → fix mode is skipped; defects are
+   reported for author action.
+2. **Preflight `result_file` writability.** If unwritable, STOP fix mode and
+   exit without modifying anything.
+3. **Identify writable candidates.** Only `uncompressed.md` and
+   `instructions.uncompressed.md` co-located with `skill_path` are eligible.
+   - Reject any candidate path that resolves outside the skill directory
+     → STOP `refusing to fix: <path> escapes skill directory`.
+   - If neither candidate exists, STOP `no writable source files; fix mode
+     unavailable`.
+   - Never modify `spec.md`, `README.md`, `SKILL.md`, or `instructions.txt`.
+4. **Git-clean check.** For each candidate, verify git status:
+   - Untracked, unstaged, staged-but-uncommitted, or merge-conflicted on
+     any candidate → STOP `refusing to fix: <path> has pending git changes`.
+   - Skill not under git control → STOP `refusing to fix: skill is not under
+     git control`.
+   - The read-only audit report is still written in either case.
+5. **Write the read-only audit report** to `result_file` first; this is the
+   commit point. Any fix-pass failure after this leaves the report intact.
+6. **Apply fixes** to writable source files only, in severity order:
+   1. Critical Phase 3 issues: coverage, contradictions, unauthorized
+      additions.
+   2. Non-critical Phase 3 issues: conciseness, breadcrumbs, cost analysis,
+      dispatch refs, spec breadcrumbs.
+   3. Hygiene fixes scoped to the writable candidates only. Hygiene defects
+      in `spec.md`, `README.md`, or compiled artifacts are surfaced as
+      findings, not auto-fixed.
+7. **Never auto-fix:** Phase 1 (spec) defects, defects whose root cause is in
+   `spec.md` or `README.md` or a compiled artifact, defects requiring author
+   judgment. Surface them as findings.
+8. **Append a Fix Mode Addendum** to `result_file`:
+   - `Files Modified` — absolute paths of every file the auditor wrote.
+   - `Fixes Applied` — per file, what changed and which finding it resolves.
+   - `Not Auto-Fixed` — defects deferred to the author.
+   - `Next Steps` — instruct the caller to recompress via the `compression`
+     skill (`uncompressed.md` → `SKILL.md`, `instructions.uncompressed.md` →
+     `instructions.txt`) and re-run the auditor for verification.
+9. **Single-pass only.** The auditor does not re-audit and does not invoke
+   compression. Multi-pass convergence is the caller's responsibility
+   (fix → recompress → re-audit).
+
 ## Report Format
 
 ```markdown
@@ -217,7 +278,14 @@ needed at runtime, inline it.
 
 ## Rules
 
-- Read-only. Never modify the skill.
+- Read-only by default. Never modify any file unless `--fix` is active and the
+  verdict is exactly NEEDS_REVISION.
+- With `--fix`: modify only `uncompressed.md` and `instructions.uncompressed.md`
+  co-located with `skill_path`. Never `spec.md`, `README.md`, `SKILL.md`, or
+  `instructions.txt`. Never any file with pending git changes. Never paths
+  outside the skill directory.
+- Single-pass only — no in-process re-audit, no recompression. Caller drives
+  the next cycle.
 - One skill per dispatch.
 - Evidence-based verdicts.
 - When in doubt, NEEDS_REVISION over PASS.

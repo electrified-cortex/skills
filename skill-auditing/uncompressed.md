@@ -6,11 +6,19 @@ description: Audit a skill for quality, classification, cost, and compliance wit
 # Skill Auditing
 
 Dispatch via Dispatch agent (zero context): "Read and follow
-`instructions.txt` (in this directory). Input: `skill_path=<path> result_file=<path>`"
+`instructions.txt` (in this directory). Input: `skill_path=<path> result_file=<path> [--fix]`"
 
 - `skill_path` (required): Absolute path to SKILL.md
 - `result_file` (required): Absolute path for audit report
 - `spec_path` (optional): Companion spec if not co-located
+- `--fix` (optional): Enable single-pass fix mode. The auditor modifies the
+  authoritative source files `uncompressed.md` and `instructions.uncompressed.md`
+  (siblings of `skill_path`) to align with the spec. Runs only on a NEEDS_REVISION
+  verdict; refused on any candidate with pending git changes (untracked, unstaged,
+  staged, or merge-conflicted) or any path that escapes the skill directory. The
+  companion `spec.md`, the `README.md`, and the compiled runtime files
+  (`SKILL.md`, `instructions.txt`) are never modified — the caller recompresses
+  via the `compression` skill and re-runs the auditor for verification.
 
 Returns: verdict (PASS / NEEDS_REVISION / FAIL) and issues. Checklist
 covers 3 phases: Spec Gate (5 checks), Skill Smoke (5 checks), Spec
