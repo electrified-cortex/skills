@@ -29,6 +29,7 @@ This spec does not govern index construction (skill-index-building), structural 
 ## Scope
 
 **In scope:**
+
 - Index pointer placement in agent context (agent configuration file, context injection)
 - Discovery mandate: the instruction that compels the agent to check the index
 - Keyword-match trigger: when and how the agent scans for matches
@@ -37,6 +38,7 @@ This spec does not govern index construction (skill-index-building), structural 
 - Keyword quality requirements: what constitutes a valid keyword set per entry
 
 **Out of scope:**
+
 - How indexes are built — see `skill-index-building`
 - How indexes are structurally validated — see `skill-index-auditing`
 - The crawl algorithm and match resolution logic — see `skill-index-crawling`
