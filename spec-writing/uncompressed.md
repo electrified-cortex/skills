@@ -50,10 +50,13 @@ Include required sections:
 - Requirements: atomic, testable rules
 - Constraints: limits and prohibitions
 - Behavior: system behavior including edge cases
+- Content Modes: lists the operational modes the document defines (inline, dispatch, etc.) and their distinguishing trigger/behavior
 - Defaults and Assumptions: explicit defaults only
 - Error Handling: defined failure behavior
 - Precedence Rules: conflict resolution
 - Don'ts: explicit exclusions
+
+After listing sections, include a **Section Classification** table with columns: `Section`, `Type` (normative/informative/structural), `Required` (yes/no). This makes the section structure auditable at a glance.
 
 Each requirement must be atomic (one testable condition only), testable (verifiable from document text alone), and unambiguous.
 
@@ -125,7 +128,7 @@ tool), the spec must pass a full audit.
 
 1. Write the spec.
 2. Dispatch `markdown-hygiene` on the spec to ensure zero lint errors.
-3. Dispatch spec-auditor: Haiku iterations first, Sonnet for the final pass.
+3. Dispatch spec-auditor: fast-cheap iterations first, standard for the final pass.
 4. Fix all findings.
 5. Re-audit until the result is PASS.
 6. Write the derived artifact (skill, agent, or tool) only after PASS.

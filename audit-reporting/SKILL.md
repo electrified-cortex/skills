@@ -50,7 +50,7 @@ verdict: <PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL>
 `target` — relative to repo-root, not absolute, not relative to audit-dir.
 `auditor` — canonical `name` frontmatter of audit skill.
 `model` — runtime model string. Never omit; use `"unknown"` if unavailable.
-`verdict` — exactly one of the four values above.
+`verdict` — exactly one of four values above.
 
 Batch Run (2+ targets):
 

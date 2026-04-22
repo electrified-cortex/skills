@@ -10,7 +10,7 @@ the full story.
 
 | Skill | Description |
 | --- | --- |
-| [code-reviewer](code-reviewer/) | Two-tier code review — Haiku smoke pass, Sonnet substantive sign-off; reviews only, never modifies |
+| [code-reviewer](code-reviewer/) | Two-tier code review — fast-cheap smoke pass, standard substantive sign-off; reviews only, never modifies |
 | [compression](compression/) | Token-saving compression for `.md` files — three tiers (Lite, Full, Ultra) for different audiences |
 | [dispatch-strategy](dispatch-strategy/) | Decision tree for whether, how, and at what model tier to dispatch sub-agents |
 | [gh-cli](gh-cli/) | GitHub CLI operations — routes to domain-specific sub-skills via agent dispatch |
@@ -20,12 +20,13 @@ the full story.
 | [skill-writing](skill-writing/) | How to write skills — inline vs dispatch decision, folder conventions, quality criteria, audit gate |
 | [spec-auditing](spec-auditing/) | Audit spec/companion pairs for drift and consistency |
 | [spec-writing](spec-writing/) | Write behavioral specs (`.spec.md` files) for any file, feature, or system — plus specialized sub-skills for compiling specs into agent and skill files |
-| [tool-auditing](tool-auditing/) | Audit tool scripts for companion spec, conventions, and error handling — lightweight, Haiku-class |
+| [tool-auditing](tool-auditing/) | Audit tool scripts for companion spec, conventions, and error handling — lightweight, fast-cheap |
 | [tool-writing](tool-writing/) | Write tool scripts with companion specs — Bash default, PowerShell supported, spec-first discipline |
 
 | **Agent** | **Description** |
 | --- | --- |
-| [dispatch](agents/dispatch.agent.md) | Minimal pass-through agent — reads a target file, follows its instructions, returns the result |
+| [claude-dispatch](dispatch-strategy/agents/claude-dispatch.agent.md) | Minimal pass-through agent for Claude Code CLI — reads a target file, follows its instructions, returns the result |
+| [vscode-dispatch](dispatch-strategy/agents/vscode-dispatch.agent.md) | Minimal pass-through agent for Claude Code in VS Code — same behavior, VS Code tool names |
 
 ## Quick Start
 
@@ -79,7 +80,7 @@ the compilation step from verbose spec to lean operational file.
 
 ### Skill Writing
 
-Skills are the compiled output of specs — so a skill for writing skills was essential. The skill-writing skill codifies the full authoring pipeline: write spec first, derive an uncompressed baseline, compress to a lean runtime file, then audit. It encodes the inline-vs-dispatch decision test, folder conventions, and the requirement that `SKILL.md` is never modified directly. Refinement through the spec-auditing and skill-auditing loops burned off ambiguities until Haiku-class agents could follow the procedure without interpretation.
+Skills are the compiled output of specs — so a skill for writing skills was essential. The skill-writing skill codifies the full authoring pipeline: write spec first, derive an uncompressed baseline, compress to a lean runtime file, then audit. It encodes the inline-vs-dispatch decision test, folder conventions, and the requirement that `SKILL.md` is never modified directly. Refinement through the spec-auditing and skill-auditing loops burned off ambiguities until fast-cheap agents could follow the procedure without interpretation.
 
 [Read more](skill-writing/README.md)
 
@@ -109,7 +110,7 @@ GitHub CLI operations sprawl across enough domains — PRs, issues, releases, re
 
 ### Code Reviewer
 
-Code review has two distinct jobs: fast surface-level triage and authoritative deep analysis. This skill encodes that separation formally — exactly one Haiku-class smoke pass, then one or more Sonnet-class substantive passes, with the smoke pass never treated as authoritative. Review agents never edit; the calling agent decides which findings to act on between passes. The pattern emerged from experience with shallow reviews being over-trusted, and codifies the escalation path explicitly.
+Code review has two distinct jobs: fast surface-level triage and authoritative deep analysis. This skill encodes that separation formally — exactly one fast-cheap smoke pass, then one or more standard substantive passes, with the smoke pass never treated as authoritative. Review agents never edit; the calling agent decides which findings to act on between passes. The pattern emerged from experience with shallow reviews being over-trusted, and codifies the escalation path explicitly.
 
 [Read more](code-reviewer/)
 
@@ -127,7 +128,7 @@ Scripts are a distinct artifact class from skills — they run as processes, not
 
 ### Tool Auditing
 
-The complement to tool writing. Tool auditing runs a seven-check checklist — companion spec presence, parameter block, no hardcoded paths, error handling, self-documentation density, no interactive input, and consistent output format — against any tool script. It is explicitly lightweight enough for a Haiku-class model, keeping audit costs low for routine hygiene checks. Results are read-only; remediation stays with the caller.
+The complement to tool writing. Tool auditing runs a seven-check checklist — companion spec presence, parameter block, no hardcoded paths, error handling, self-documentation density, no interactive input, and consistent output format — against any tool script. It is explicitly lightweight enough for a fast-cheap model, keeping audit costs low for routine hygiene checks. Results are read-only; remediation stays with the caller.
 
 [Read more](tool-auditing/)
 

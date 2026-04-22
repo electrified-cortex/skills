@@ -307,26 +307,23 @@ Audits MAY use a tiered model approach to optimize cost. The auditor
 skill is model-agnostic — the orchestrating agent chooses the tier per
 dispatch.
 
-1. **Iterate tier** — a cheap, fast model class (a "haiku-class"
-   model, or any equivalent inexpensive tier the host has available).
+1. **Iterate tier** — a fast-cheap model class (Haiku-class, or any
+   equivalent inexpensive tier the host has available).
    Use for iterative audit-fix cycles: when the auditor returns
    NEEDS_REVISION, fix and re-run at this tier. Repeat until PASS.
-2. **Sign-off tier** — a higher-capability default model class (a
-   "sonnet-class" model, or any equivalent default tier the host has
-   available). Run one final audit at this tier after the iterate tier
-   returns PASS. Only a sign-off-tier PASS is production-ready.
+2. **Sign-off tier** — a standard model class (or any equivalent
+   default tier the host has available). Run one final audit at this
+   tier after the iterate tier returns PASS. Only a sign-off-tier PASS
+   is production-ready.
 
 Rationale: the iterate tier catches structural and obvious issues
 cheaply; the sign-off tier catches subtle compliance gaps. Running
 the sign-off tier on every iteration wastes tokens on issues the
 iterate tier already found.
 
-Class names (haiku/sonnet/opus) are Anthropic-specific labels used
-as a convenient shorthand. Hosts running other model families should
-map these to their own inexpensive/default/premium tiers.
-
-Warn: some models struggle with inline editing and may not be suitable
-for large files in fix mode.
+The terms fast-cheap and standard are model-agnostic. Hosts running
+Anthropic models map these to Haiku-class and Sonnet-class respectively;
+other model families should map to their own inexpensive/default tiers.
 
 ## Fix Mode Behavior
 

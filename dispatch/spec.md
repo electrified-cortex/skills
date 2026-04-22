@@ -39,7 +39,13 @@ This skill IS consumed by: `skill-writing` (the canonical "spec-inline, body-dis
 
 **Hand-fed context**: context the host explicitly composes into the dispatch prompt because it would not otherwise reach the dispatched agent.
 
-**Model override**: the `model` parameter on the dispatch, allowing the host to specify a model class (for example `sonnet`, `opus`, `haiku`) that may differ from the host's own model. Used to trade depth for cost or speed.
+**fast-cheap**: the cost-optimized model tier for shallow, mechanical work (Haiku-class on Anthropic; map to your platform's inexpensive tier). Use for smoke passes, iterate-phase audits, and zero-context dispatch tasks.
+
+**standard**: the capable default tier for work requiring moderate reasoning (Sonnet-class on Anthropic; map to your platform's standard tier). The most common explicit override when dispatching from a `deep`-tier host.
+
+**deep**: the highest-reasoning tier for critical-path or complex work (Opus-class on Anthropic; map to your platform's most capable tier). Upgrade to this tier is unusual; consider inline instead.
+
+**Model override**: the `model` parameter on the dispatch, allowing the host to specify a model class (for example `fast-cheap`, `standard`, `deep`) that may differ from the host's own model. Used to trade depth for cost or speed.
 
 **Tool scope**: the set of tools the dispatched subagent type is allowed to call. Distinct subagent types have different tool scopes; some types are deliberately restricted.
 
@@ -64,11 +70,11 @@ R4. The skill must enumerate the dimensions on which subagent types differ. At m
 - System prompt size (how much default instruction the dispatched agent carries).
 - Default model (if any subagent type pins a default model).
 
-R5. The skill must explain when to specify a model override and which trade-offs the override makes. At minimum the skill must address:
+R5. The skill must explain when to specify a model override and which trade-offs the override makes. At minimum the skill must cover the three named tiers defined in Definitions:
 
-- Cheaper model (for example `sonnet` from an `opus` host) — trades depth for cost and speed.
-- Cheapest model (for example `haiku` from a `sonnet` or `opus` host) — for shallow mechanical work.
-- Same or larger model — when the dispatched task requires reasoning depth equal to or beyond the host's own.
+- **fast-cheap** — for shallow mechanical work (pattern matching, formatting, simple extraction). Lowest cost; risks shallow output on tasks requiring reasoning depth.
+- **standard** — for work requiring moderate reasoning. Most common explicit override when dispatching from a `deep`-tier host.
+- **deep** — when the dispatched task requires maximum reasoning depth, or when errors are expensive to retry. Unusual as an explicit override; consider inline.
 
 R6. The skill must enumerate at least the following footguns. For each, the skill must state (a) the footgun, (b) why it is a footgun, and (c) the specific dispatch parameter or prompt construction that prevents it (the mitigation, per B4):
 

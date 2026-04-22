@@ -89,19 +89,19 @@ The `model` parameter on the dispatch lets you specify a model class that differ
 
 ### When to override
 
-**Downgrade to a cheaper model** (for example, dispatching `haiku` from a `sonnet` or `opus` host): correct when the work is shallow and mechanical — pattern matching, formatting, simple extraction. Trades reasoning depth for cost and speed. If the task turns out to require more depth than `haiku` provides, you will receive a weak result and need to re-dispatch at a higher tier; calibrate before dispatching.
+**fast-cheap**: correct when the work is shallow and mechanical — pattern matching, formatting, simple extraction. Lowest cost and fastest; if the task turns out to require more depth, you will receive a weak result and need to re-dispatch at a higher tier.
 
-**Downgrade one tier** (for example, dispatching `sonnet` from an `opus` host): correct when the task requires moderate reasoning but not the host's full depth. The most common override; captures most of the cost savings with less risk of shallow output.
+**standard**: correct when the task requires moderate reasoning but not the host's full depth. The most common explicit override (typical when dispatching from a `deep`-tier host). Captures most cost savings with less risk of shallow output.
 
-**Same model or upgrade** (for example, dispatching `opus` from a `sonnet` host, or dispatching the same model): correct when the dispatched task requires reasoning depth equal to or exceeding the host's own, or when the task is the critical-path work and errors are expensive to retry. Upgrade is unusual; consider whether inline is better.
+**deep**: correct when the dispatched task requires maximum reasoning depth, or when the task is the critical-path work and errors are expensive to retry. Upgrade to this tier from a lower-tier host is unusual; consider whether inline is better.
 
 ### Trade-off summary
 
-| Override direction | Trade-off |
+| Tier | Trade-off |
 | --- | --- |
-| Downgrade to cheapest (`haiku`) | Low cost, fast, risks shallow output |
-| Downgrade one tier (`sonnet`) | Moderate cost, moderate risk |
-| Same or upgrade | High cost, deepest output, rarely needed |
+| fast-cheap | Lowest cost, fastest, risks shallow output |
+| standard | Moderate cost, capable for most tasks |
+| deep | Highest cost, maximum reasoning, rarely needed as explicit override |
 
 ---
 
@@ -229,7 +229,7 @@ The correct decision: either (a) perform inline where the host has the conversat
 
 ## Precedence Notes
 
-When a consuming skill (`skill-writing`, `task-management`) describes a specific dispatch pattern for its domain, that procedure governs over this skill's general guidance for that domain. This skill provides primitives; consumers shape them for their context.
+When a consuming skill (`skill-writing`) describes a specific dispatch pattern for its domain, that procedure governs over this skill's general guidance for that domain. This skill provides primitives; consumers shape them for their context.
 
 Where this skill's empirical claims conflict with an agent's expectation about what dispatched agents inherit, the empirical claim governs.
 
@@ -240,5 +240,4 @@ Correctness over throughput: when the decision tree's correct outcome is "inline
 ## Related Skills
 
 - `skill-writing` — the spec-inline / body-dispatched workflow depends on dispatch decisions; consult it for how dispatch is used in skill creation.
-- `task-management` — task pipeline work (claim, audit, complete) uses dispatch; consult it for the domain-specific dispatch patterns for task work.
 - `spec-writing` — for terminology consistency when this skill's output feeds a spec workflow.

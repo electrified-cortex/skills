@@ -47,15 +47,6 @@ Read the change set, produce a findings report. Read-only — never edit, commit
       "recommended_action": "<what should be done>"
     }
   ],
-  "prior_findings_disposition": [   // substantive only; omit for smoke
-    {
-      "prior_severity": "...",
-      "prior_location": "...",
-      "decision": "agree" | "contradict",
-      "new_severity": "..." or null,
-      "commentary": "<why agree, or why contradicted>"
-    }
-  ],
   "failure_reason": "<string>"      // present only when verdict = "error"
 }
 ```

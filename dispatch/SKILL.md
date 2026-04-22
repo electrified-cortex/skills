@@ -63,15 +63,15 @@ Model Override:
 
 `model` param on dispatch specifies model class. D2: default is host's own model.
 
-Downgrade to cheaper (e.g. `haiku` from `sonnet`/`opus`): shallow/mechanical — pattern matching, formatting, extraction. Trades depth for cost/speed. Shallow result → re-dispatch at higher tier.
-Downgrade one tier (e.g. `sonnet` from `opus`): moderate reasoning needed. Most common override.
-Same or upgrade (e.g. `opus` from `sonnet`): critical-path or depth ≥ host's. Upgrade unusual — consider inline instead.
+fast-cheap: shallow/mechanical — pattern matching, formatting, extraction. Lowest cost; shallow result → re-dispatch at higher tier.
+standard: moderate reasoning needed. Most common explicit override (typical from deep-tier host).
+deep: critical-path or max reasoning needed. Unusual as explicit override — consider inline instead.
 
-| Override direction | Trade-off |
+| Tier | Trade-off |
 | --- | --- |
-| Downgrade to cheapest (`haiku`) | Low cost, fast, risks shallow output |
-| Downgrade one tier (`sonnet`) | Moderate cost, moderate risk |
-| Same or upgrade | High cost, deepest output, rarely needed |
+| fast-cheap | Lowest cost, fastest, risks shallow output |
+| standard | Moderate cost, capable for most tasks |
+| deep | Highest cost, maximum reasoning, rarely needed |
 
 When NOT to Dispatch:
 
@@ -132,7 +132,7 @@ Host writes sparse prompt expecting dispatched agent to reconstruct from convers
 Why: dispatched agent has zero visibility into prior turns. "Continue the analysis we discussed" → agent has no "we", no "analysis", no prior turns.
 Mitigation: every prompt must satisfy well-formed requirements. Hand-feed all context agent can't inherit. Write prompt as if agent is stranger reading cold — it is.
 
-Anti-pattern:
+ANTI-PATTERN:
 Host midway through research, operator narrowed code audit scope, partial findings in prior turns. Host dispatches: "Continue the code audit and produce the final findings report."
 What goes wrong: dispatched agent has no context — no operator instructions, no narrowed scope, no partial findings. Result: refuses (no goal), produces unscoped audit, or invents findings.
 Correct: (a) inline where host has context, or (b) dispatch with fully hand-fed prompt including operator scope instructions, partial findings, remaining work. (a) usually cheaper.
@@ -146,11 +146,10 @@ Inline unaffordable → (a) dispatch with fully hand-fed context, or (b) defer. 
 
 Precedence:
 
-Consuming skill (`skill-writing`, `task-management`) defines domain-specific dispatch pattern → governs over this skill's general guidance. This skill: primitives; consumers shape for context.
+Consuming skill (`skill-writing`) defines domain-specific dispatch pattern → governs over this skill's general guidance. This skill: primitives; consumers shape for context.
 Empirical claims in this skill conflict with agent expectation about inherited context → empirical governs.
 Correctness > throughput. Decision tree says inline but host overloaded → not permission to dispatch incorrectly. Defer or reduce scope.
 
 Related Skills:
 `skill-writing` — spec-inline / body-dispatched workflow depends on dispatch decisions.
-`task-management` — task pipeline work (claim, audit, complete) uses dispatch; consult for domain-specific patterns.
 `spec-writing` — terminology consistency when this skill's output feeds spec workflow.

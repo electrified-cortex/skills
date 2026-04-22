@@ -425,7 +425,7 @@ Required sequence:
 
 1. Write the spec.
 2. Dispatch `markdown-hygiene` on the spec to ensure zero lint errors.
-3. Dispatch the spec-auditor: Haiku iterations first, Sonnet for the final pass.
+3. Dispatch the spec-auditor: fast-cheap iterations first, standard for the final pass.
 4. Fix all findings.
 5. Re-audit until the result is PASS.
 6. Only after PASS: write the derived artifact.
