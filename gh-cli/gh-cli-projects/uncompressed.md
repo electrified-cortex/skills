@@ -1,3 +1,8 @@
+---
+name: gh-cli-projects
+description: Create, manage GitHub Projects v2 boards, items, fields via CLI.
+---
+
 # GH CLI Projects
 
 Manage GitHub Projects v2 using the `gh project` subcommand. Covers creating projects, managing items (issues and PRs), editing fields, and deleting or archiving content.

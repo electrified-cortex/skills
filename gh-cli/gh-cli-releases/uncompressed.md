@@ -1,3 +1,8 @@
+---
+name: gh-cli-releases
+description: Manage GitHub releases via gh release. Full lifecycle: create, publish, upload assets, edit, delete.
+---
+
 # GH CLI Releases
 
 Manage GitHub releases using the `gh release` subcommand. Covers the full release lifecycle: creating, publishing, uploading assets, editing, and deleting releases.

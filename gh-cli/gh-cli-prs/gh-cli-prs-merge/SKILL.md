@@ -3,27 +3,37 @@ name: gh-cli-prs-merge
 description: Merge, update, revert, close pull request via GitHub CLI.
 ---
 
-Merge (choose strategy):
-```
-gh pr merge 123 --merge --delete-branch
-gh pr merge 123 --squash --delete-branch
-gh pr merge 123 --rebase
-```
+Finalize PRs via `gh pr merge`, `gh pr update-branch`, `gh pr revert`. Covers merging, branch sync, revert, close.
 
-Update branch (PR behind base):
+Merging:
+Choose strategy matching repo policy:
+```bash
+gh pr merge 123 --merge --delete-branch    # merge commit — full history
+gh pr merge 123 --squash --delete-branch   # squash — single commit
+gh pr merge 123 --rebase                   # rebase — replay on base
 ```
+`--delete-branch` removes source branch after merge.
+
+Branch Update:
+PR branch behind base:
+```bash
 gh pr update-branch 123
-gh pr update-branch 123 --force     # force if conflicts
+gh pr update-branch 123 --force    # force if conflicts — may overwrite local changes
 ```
 
-Revert merged PR (opens new revert PR):
-```
+Revert:
+Opens new revert PR undoing changes from merged PR:
+```bash
 gh pr revert 123 --branch revert-pr-123
 ```
 
-Close without merging:
-```
+Close Without Merge:
+```bash
 gh pr close 123 --comment "Superseded by #456"
 ```
 
-Check readiness: `gh pr checks 123` — out of scope, covered by `gh-cli-prs/SKILL.md` inspection commands.
+Pre-Merge Readiness:
+CI check: `gh pr checks 123` — covered by `gh-cli-prs` inspection skill, not this one.
+
+Scope:
+Covers `gh pr merge`, `gh pr update-branch`, `gh pr revert`, `gh pr close`. Doesn't cover PR review before merge (see `gh-cli-prs-review`) or git ops post-merge.

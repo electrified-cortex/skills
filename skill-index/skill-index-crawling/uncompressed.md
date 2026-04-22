@@ -1,3 +1,8 @@
+---
+name: skill-index-crawling
+description: Reads an existing skill-index cascade to locate the skill matching an agent's stated need — read-only, no filesystem walking.
+---
+
 # Skill Index Crawling
 
 Dispatch skill. Reads an existing skill-index cascade to locate the skill that matches an agent's stated need. Read-only — the crawler produces no files and modifies nothing.

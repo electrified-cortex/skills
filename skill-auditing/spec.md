@@ -166,9 +166,9 @@ Quick structural verification of the SKILL.md.
    procedure. Mismatch between file-system evidence and SKILL.md structure
    → FAIL.
 3. **Structure** — for inline: has frontmatter (`name`, `description`),
-   direct instructions, self-contained. For dispatch: SKILL.md ≤15 lines
-   of routing content, an allowed dispatch instruction file exists and is
-   reachable, parameters typed with required/optional/defaults, output
+   direct instructions, self-contained. For dispatch: SKILL.md should be
+   minimal lines of routing content, an allowed dispatch instruction file exists
+   and is reachable, parameters typed with required/optional/defaults, output
    format specified, uses Dispatch agent (isolated).
 4. **Frontmatter** — `name` and `description` present and accurate.
 5. **No duplication** — skill does not duplicate an existing capability.

@@ -3,23 +3,42 @@ name: gh-cli-prs-comments
 description: Add, edit, delete pull request comments via GitHub CLI.
 ---
 
-Add:
-```
+Add, edit, delete PR comments via `gh pr comment`.
+
+Adding:
+Add comment to PR:
+```bash
 gh pr comment 123 --body "text"
 ```
 
-Edit (requires comment ID):
-```
-gh pr comment 123 --edit 456789 --body "updated text"
+Editing:
+`gh pr comment` has no `--edit` flag. Use REST API — find comment ID, PATCH:
+```bash
+# List comments to find the comment ID
+gh api /repos/{owner}/{repo}/issues/{issue_number}/comments
+
+# Edit the comment
+gh api --method PATCH /repos/{owner}/{repo}/issues/comments/{comment_id} \
+  --field body="updated text"
 ```
 
-Delete:
+Deleting:
+`gh pr comment` has no `--delete` flag. Use REST API:
+```bash
+gh api --method DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}
 ```
-gh pr comment 123 --delete 456789
+
+Viewing:
+```bash
+gh pr view 123 --comments
 ```
 
-View comments: `gh pr view 123 --comments`
+Resolving Review Threads:
+No `gh pr` command for resolving threads. Use `resolveReviewThread` GraphQL mutation via `gh-cli-api`:
+```bash
+gh api graphql -f query='
+  mutation { resolveReviewThread(input: {threadId: "THREAD_ID"}) { thread { isResolved } } }'
+```
 
-Resolving review threads: no `gh pr` command exists. Use `resolveReviewThread` GraphQL mutation → `gh-cli-api/SKILL.md`.
-
-Review-level comments (approve/request-changes) → `gh-cli-prs-review/SKILL.md`.
+Scope:
+Covers `gh pr comment` only. Review-level comments (approve/request-changes verdict) → `gh-cli-prs-review`. Viewing also in `gh-cli-prs` inspection.

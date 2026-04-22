@@ -19,7 +19,7 @@ Phase 2 — Skill Smoke Check: quick structural verification.
 2. Inline/dispatch file consistency — file presence is definitive: any allowed dispatch instruction file (`instructions.txt`, `<name>.md` in skill dir, or file referenced by SKILL.md) → dispatch; none → inline. If Check #1 and this disagree, flag conflict as finding, don't double-fail. Dispatch: verify SKILL.md is short routing card (see Check #3). Inline: verify SKILL.md has full procedure. Mismatch between file-system evidence and SKILL.md structure → FAIL.
 3. Structure:
    Inline: frontmatter (`name`, `description`), direct instructions, self-contained.
-   Dispatch: SKILL.md ≤15 lines routing content; instruction file exists and reachable; params typed (required/optional/defaults); output format specified; uses Dispatch agent (isolated), not background agent.
+   Dispatch: SKILL.md should be minimal lines routing content; instruction file exists and reachable; params typed (required/optional/defaults); output format specified; uses Dispatch agent (isolated), not background agent.
 4. Frontmatter — `name` and `description` present and accurate.
 5. No duplication — not duplicating existing capability; if similar exists, recommend merge or distinguish.
 Phase 2 fail → verdict FAIL, don't proceed to Phase 3.

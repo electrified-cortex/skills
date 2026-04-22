@@ -1,3 +1,8 @@
+---
+name: skill-index-auditing
+description: Validator for a skill-index cascade. Returns ok, rebuild-needed, or inconclusive. On PASS, writes skill.index.sha256 as sign-off. Never invokes the builder.
+---
+
 # Skill Index Auditing
 
 Dispatch skill. Validator for a skill-index cascade. Returns `ok`, `rebuild-needed`, or `inconclusive`. On a PASS verdict, writes `skill.index.sha256` alongside each validated raw index as a sign-off artifact. Never invokes the builder.

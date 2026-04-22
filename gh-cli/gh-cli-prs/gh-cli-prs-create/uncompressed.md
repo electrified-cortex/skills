@@ -1,3 +1,8 @@
+---
+name: gh-cli-prs-create
+description: Open pull request via GitHub CLI.
+---
+
 # GH CLI PR Create
 
 Open pull requests using `gh pr create`. Covers creating standard PRs, draft PRs, and promoting drafts to ready.

@@ -1,3 +1,8 @@
+---
+name: gh-cli-prs-merge
+description: Merge, update, revert, close pull request via GitHub CLI.
+---
+
 # GH CLI PR Merge
 
 Finalize pull requests using `gh pr merge`, `gh pr update-branch`, and `gh pr revert`. Covers merging, keeping a branch current, reverting a merged PR, and closing without merging.

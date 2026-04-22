@@ -1,3 +1,8 @@
+---
+name: skill-index
+description: Root skill for the skill-index toolkit. Governs sub-skills that let agents discover available skills by reading compact index nodes rather than walking the filesystem.
+---
+
 # Skill Index
 
 Root skill for the skill-index toolkit. Governs a family of sub-skills that together let agents discover available skills by reading compact index nodes rather than walking the filesystem.

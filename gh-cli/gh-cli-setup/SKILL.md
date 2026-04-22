@@ -1,11 +1,15 @@
 ---
 name: gh-cli-setup
-description: Install, authenticate, configure GitHub CLI.
+description: Install, authenticate, and configure the GitHub CLI. Prerequisite for all other gh-cli skills.
 ---
 
-Check installed: `gh --version`. If missing, install:
+# GH CLI Setup
 
-```
+Install, auth, configure `gh`. Prereq — all other gh-cli skills depend on this.
+
+Check install: `gh --version`. Not found → install:
+
+```bash
 # Windows
 winget install --id GitHub.cli
 
@@ -18,27 +22,36 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githu
 sudo apt update && sudo apt install gh
 ```
 
-Auth — interactive (browser):
-```
+Auth — interactive (local dev, browser available):
+```bash
 gh auth login
 ```
+Follow prompts → GitHub.com or GitHub Enterprise.
 
-Auth — token (automation/CI):
-```
+Auth — token (CI/automation, no browser):
+```bash
 echo "$GH_TOKEN" | gh auth login --with-token
 ```
+Never hard-code token. Set `GH_TOKEN` as env var or CI secret before invoking.
 
-Verify: `gh auth status`. Must show hostname + active account.
-
-Key config for automation:
+Verify auth:
+```bash
+gh auth status
 ```
+Success shows hostname, authenticated username, token scopes.
+
+Config for automation:
+```bash
 gh config set git_protocol ssh
 gh config set prompt disabled
 ```
 
-Set default repo (suppress `--repo` per command):
-```
+Default repo:
+```bash
 gh repo set-default owner/repo
 ```
+Suppresses `--repo` per-command in specific repo context.
 
-GitHub Enterprise: add `--hostname enterprise.internal` to any `gh auth login` or `gh api` call.
+GitHub Enterprise: add `--hostname enterprise.internal` to `gh auth login`.
+
+Scope: covers `gh auth`, `gh config`, `gh repo set-default` only. Doesn't cover domain-specific subcommands, token mgmt beyond `gh auth`, or CI/CD pipeline config.

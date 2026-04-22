@@ -10,24 +10,27 @@ description: >-
 Create skills agents can discover, invoke, rely on.
 Never reference `spec.md` at runtime. Minimize tokens.
 
-Workflow: Never skip steps.
+Workflow:
 
-1. Spec first — write `spec.md` using `spec-writing` skill. Defines what skill does, requirements, constraints, acceptance criteria.
-2. Write uncompressed — write `uncompressed.md` derived from spec. Human-readable baseline.
-3. Compress — use `compression` skill (source→target: `--source uncompressed.md --target SKILL.md`). SKILL.md is compressed runtime agents load.
-4. Audit — use `skill-auditing` to verify. Audit flags any markdown issues. Fix findings, recompress, re-audit until PASS.
+New skill — follow order. Never skip steps.
 
-Dispatch skills: also write companion agent file.
-Revising: always update spec first (exception: non-normative changes — README, examples, typo fixes — skip to step 2) → update `uncompressed.md` → recompress → re-audit. Never modify `SKILL.md` directly — it's a compiled artifact.
+1. Spec first — write `spec.md` via `spec-writing`. Defines requirements, constraints, acceptance criteria.
+2. Write `uncompressed.md` from spec. Human-readable baseline.
+3. Compress via `compression` skill (`--source uncompressed.md --target SKILL.md`). SKILL.md = compressed runtime.
+4. Audit via `skill-auditing`. Flags markdown issues. Fix → recompress → re-audit until PASS.
+
+Dispatch skills: also write companion instruction source file (see Dispatch Skill).
+
+Revising: update spec first. Exception: non-normative changes (README, examples, typo fixes) → skip to step 2. Update `uncompressed.md` → recompress → re-audit. Never modify SKILL.md directly — compiled artifact.
 
 Decision: Inline or Dispatch?
 
-"Could someone with no context do this from just the inputs?" Yes → dispatch. No → inline.
+"Could someone with no context do this from just inputs?" Yes → dispatch. No → inline.
 
 Inline = needs caller's context, judgment, creative intent.
 Dispatch = mechanical processing against rules. Use Dispatch agent (zero context).
 
-Folder Convention:
+Skill Folder Convention:
 
 ```text
 skill-name/
@@ -37,33 +40,52 @@ skill-name/
 └── spec.md             ← normative spec (never at runtime)
 ```
 
-`instructions.txt` or `<name>.md` present = dispatch skill. Absent = inline.
-Never use "SKILL" in any filename except `SKILL.md`.
-Naming: folder name must equal `name` frontmatter field (mismatch = unreachable). Nested sub-skills must use fully-qualified names with parent prefix (e.g., `skill-index-auditing/` not `auditing/`). Canonical ref: `gh-cli/` (`gh-cli-actions`, `gh-cli-api`).
+`instructions.txt` present = dispatch skill. Absent = inline.
 
-Inline: SKILL.md IS full instruction set. Agent reads and applies directly.
+Inline Skill:
 
-Dispatch (routing card): SKILL.md = ~10-15 lines. `instructions.txt` holds procedure.
+SKILL.md IS the full instruction set. Agent reads and applies directly.
+
+Dispatch Skill (Routing Card):
+
+SKILL.md = ~10-15 line routing card. `instructions.txt` holds procedure.
 Dispatch via Dispatch agent: "Read and follow `instructions.txt`. Input: `<params>`"
 Parameters: types, required/optional, defaults. Output format specified.
-Dispatch instruction file must be in the same directory or a known path.
-Compressed `instructions.txt` = only instructions; no title/description/preamble. `instructions.uncompressed.md` MAY carry an H1 so markdown-hygiene passes (MD041); strip the title after compression.
+
+Dispatch-time constraints caller must know before invocation go in routing card (`uncompressed.md` / `SKILL.md`), not only `instructions.txt`. Examples: required model tier for `--fix`, required tool class, refusal conditions. `instructions.txt` may enforce defensively — secondary.
+
+Folder-level `spec.md` pair-auditing: declare `companion:` frontmatter explicitly. Don't rely on repo-local fallback filenames — those belong in skill-specific auditors, not universal spec-auditing rules.
+
+Dispatch instruction file must be in same dir or known path.
+Compressed `instructions.txt`: only instructions — no title headers, no descriptions, no preamble. `instructions.uncompressed.md` MAY include H1 title for markdown-hygiene (MD041); strip after compression.
 
 Requirements:
-- Frontmatter: `name` + `description`
-- Self-contained: no spec dependency at runtime
-- Concise: agent-facing, every line earns its place
-- Token-efficient: no prose, no rationale, no redundancy
-- Breadcrumbs: end with related skills (verified, not stale)
-- No secrets
 
-Verify completed skills with `skill-auditing` (step 4).
+Naming:
 
-Footgun Mirroring: If companion spec has `Footguns` section, mirror it in `uncompressed.md`/`SKILL.md`.
-- Preserve all F#: entries, Mitigation: lines, and any ANTI-PATTERN: examples
-- Canonical ref: `dispatch-strategy` skill
+Dir name = kebab-case, equal to `name` frontmatter. Mismatch → skill unreachable.
+Nested sub-skills must use fully-qualified names including parent prefix. Example: under `electrified-cortex/skill-index/`, children are `skill-index-auditing/`, `skill-index-building/` — not bare `auditing/`, `building/`. Ref: `electrified-cortex/gh-cli/` (`gh-cli-actions`, `gh-cli-api`). Bare unqualified names don't resolve.
+Never use "SKILL" in any filename except `SKILL.md`.
+
+Content:
+
+Frontmatter: `name` + `description`
+Self-contained: no spec dependency at runtime
+Concise: agent-facing, every line earns place
+Token-efficient: no prose, no rationale, no redundancy
+Breadcrumbs: end with related skills (verified, not stale)
+No secrets
+
+Verify with `skill-auditing`. Flags markdown issues.
+
+Footgun Mirroring:
+
+If companion spec has `Footguns` section, mirror it in `uncompressed.md`/`SKILL.md`:
+Preserve all F#: entries, Mitigation: lines, ANTI-PATTERN: examples.
+Canonical ref: `dispatch-strategy` skill.
 
 Related:
-- `spec-writing` — write spec first (step 1)
-- `compression` — compress `uncompressed.md` to `SKILL.md` (step 3)
-- `skill-auditing` — verify skill quality (step 4, dispatch)
+
+`spec-writing` — write spec first (step 1)
+`compression` — compress `uncompressed.md` → SKILL.md (step 3)
+`skill-auditing` — verify quality (step 4, dispatch)

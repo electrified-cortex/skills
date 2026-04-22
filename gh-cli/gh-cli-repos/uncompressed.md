@@ -1,3 +1,8 @@
+---
+name: gh-cli-repos
+description: Create, clone, fork, sync, edit, delete GitHub repositories via CLI.
+---
+
 # GH CLI Repos
 
 Manage GitHub repositories using the `gh repo` subcommand. Covers creating, cloning, forking, syncing, editing metadata, and deleting repositories.
