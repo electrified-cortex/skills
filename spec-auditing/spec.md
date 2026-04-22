@@ -249,6 +249,7 @@ Checks include:
 - no duplicated rules across multiple sections unless intentionally cross-referenced
 - no hidden requirements buried in examples or notes
 - consistent use of normative language
+- spec file must not contain YAML frontmatter — specs are human-authored governance documents; frontmatter (`name:`, `description:`, `type:`) belongs only in runtime artifacts (`SKILL.md`, agent files, tool scripts). A spec with frontmatter signals confused authoring intent and may cause tooling to treat it as a runtime artifact.
 
 ### 7. Terminology and Definitions
 
@@ -749,6 +750,14 @@ surface as findings for the caller to act on.
 
 Use the standard output structure. Set Coverage Summary to:
 "N/A — spec-only mode, no companion present."
+
+---
+
+## Footguns
+
+**F1: Spec file contains YAML frontmatter** — specs are governance documents for humans and auditors, not runtime artifacts. Frontmatter (`name:`, `description:`, `type:`) belongs only in `SKILL.md`, agent files, and tool scripts. A spec with frontmatter signals confused authoring intent.
+Why: tooling may classify the file as a runtime artifact; the frontmatter carries no meaning at audit time and creates noise.
+Mitigation: strip frontmatter from `spec.md` files at authoring time. Flag any `---` YAML block at the top of a spec file as a Structural Integrity finding.
 
 ---
 

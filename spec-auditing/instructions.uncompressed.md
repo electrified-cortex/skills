@@ -60,7 +60,7 @@ Audit (pair-audit mode):
 5. Contradiction Detection: direct conflicts, wording conflicts, contradictory defaults, precedence clashes, definition clashes.
 6. Completeness: missing sections, dangling refs, undefined terms, incomplete procedures, missing exceptions/decision criteria.
 7. Enforceability: vague/subjective/aspirational/non-testable requirements; binding behavior without auditable criteria.
-8. Structural Integrity: logical order, stable headings, duplicate rules, hidden requirements, normative-language consistency.
+8. Structural Integrity: logical order, stable headings, duplicate rules, hidden requirements, normative-language consistency; spec files must not contain YAML frontmatter (flag any leading `---` block as a structural defect — frontmatter belongs in runtime artifacts only).
 9. Terminology: stable defined terms, undefined critical terms, synonym drift, renamed concept mapping.
 10. Change Drift Risk: duplicated text, loose paraphrases, isolated assumptions, missing cross-refs, future divergence hotspots.
 11. Unauthorized Additions: classify target-only additions as `Valid Extension`, `Derived but Unstated`, or `Unauthorized Addition`.
@@ -70,14 +70,8 @@ Audit (pair-audit mode):
 Audit (spec-only mode — apply instead of pair-audit when no companion):
 
 Six checks only. Steps numbered to match pair-audit for cross-reference; skip steps 2–5, 10–11, and 13 (require companion).
-
-1. Extract from spec: requirements, prohibitions, definitions, procedures, exceptions.
-6. Completeness: missing required sections, dangling refs, undefined terms, incomplete procedures, missing decision criteria.
-7. Enforceability: vague/subjective/aspirational/non-testable requirements; binding behavior without auditable criteria.
-8. Structural Integrity: logical order, stable headings, duplicate rules, hidden requirements in examples, normative-language consistency.
-12. Economy: duplicated rules, unnecessary scaffolding, or prose removable without changing the spec's effect.
-9. Terminology: stable defined terms, undefined critical terms, synonym drift.
-   Internal Consistency: no contradictions within the spec itself.
+Apply steps 1, 6, 7, 8, 9, 12 as defined in pair-audit above.
+Additionally: Internal Consistency — no contradictions within the spec itself.
 (No Semantic Alignment, Requirement Coverage, Contradiction Detection, Change Drift Risk, Unauthorized Additions, or Compression Fidelity — all require a companion.)
 
 Assumptions (unless overridden):

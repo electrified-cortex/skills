@@ -49,7 +49,7 @@ Audit (pair-audit mode):
 5. Contradiction Detection: direct conflicts, wording conflicts, contradictory defaults, precedence/definition clashes.
 6. Completeness: missing sections, dangling refs, undefined terms, incomplete procedures, missing exceptions/decision criteria.
 7. Enforceability: vague/subjective/aspirational/non-testable reqs; binding behavior without auditable criteria.
-8. Structural Integrity: logical order, stable headings, duplicate rules, hidden reqs, normative-language consistency.
+8. Structural Integrity: logical order, stable headings, duplicate rules, hidden reqs, normative-language consistency; spec files must not contain YAML frontmatter (flag any leading `---` block as structural defect — frontmatter belongs in runtime artifacts only).
 9. Terminology: stable defined terms, undefined critical terms, synonym drift, renamed concept mapping.
 10. Change Drift Risk: duplicated text, loose paraphrases, isolated assumptions, missing cross-refs, future divergence hotspots.
 11. Unauthorized Additions: classify target-only additions as Valid Extension, Derived but Unstated, or Unauthorized Addition.
@@ -58,13 +58,8 @@ Audit (pair-audit mode):
 
 Audit (spec-only mode — apply instead of pair-audit when no companion):
 Six checks only. Numbered to match pair-audit; skip steps 2–5, 10–11, 13 (require companion).
-1. Extract from spec: reqs, prohibitions, definitions, procedures, exceptions.
-6. Completeness: missing required sections, dangling refs, undefined terms, incomplete procedures, missing decision criteria.
-7. Enforceability: vague/subjective/aspirational/non-testable reqs; binding behavior without auditable criteria.
-8. Structural Integrity: logical order, stable headings, duplicate rules, hidden reqs in examples, normative-language consistency.
-12. Economy: duplicated rules, unnecessary scaffolding, prose removable without changing spec's effect.
-9. Terminology: stable defined terms, undefined critical terms, synonym drift.
-   Internal Consistency: no contradictions within spec.
+Apply steps 1, 6, 7, 8, 9, 12 as defined in pair-audit above.
+Additionally: Internal Consistency — no contradictions within spec.
 (No Semantic Alignment, Requirement Coverage, Contradiction Detection, Change Drift Risk, Unauthorized Additions, Compression Fidelity — all require companion.)
 
 Assumptions (unless overridden):
