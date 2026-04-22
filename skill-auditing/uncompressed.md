@@ -24,8 +24,4 @@ Returns: verdict (PASS / NEEDS_REVISION / FAIL) and issues. Checklist
 covers 3 phases: Spec Gate (5 checks), Skill Smoke (5 checks), Spec
 Compliance (10 checks).
 
-Tiered model strategy: dispatch an inexpensive/fast model for iterate
-passes, default model for final sign-off. Warn: some models struggle with
-inline editing and may not be suitable for large files in fix mode.
-
 Related: `skill-writing`, `spec-auditing`, `compression`

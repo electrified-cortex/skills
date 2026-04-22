@@ -54,6 +54,7 @@ All three sub-skills are dispatch skills — invoke via Dispatch agent (zero con
 Builder: `skill-index-building/instructions.txt`
 Auditor: `skill-index-auditing/instructions.txt`
 Crawler: `skill-index-crawling/instructions.txt`
+Integration: `skill-index-integration/` — governs agent context wiring; read SKILL.md for integration contract.
 
 Don'ts:
 Doesn't load, execute, validate, or audit skill contents.
@@ -66,4 +67,5 @@ Related:
 `skill-index-building` — produces `skill.index` + `skill.index.md` per indexed dir
 `skill-index-auditing` — validates cascade, writes stamp on PASS
 `skill-index-crawling` — reads cascade to locate skill
+`skill-index-integration` — governs agent context wiring to consume cascade
 `skill-writing` — governs skill naming, structure, authoring

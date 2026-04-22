@@ -34,4 +34,6 @@ Auditing spec in isolation (spec-first workflow, before companion exists)
 
 Multi-pass audit: fix findings, re-audit, max 3 passes.
 
+Stops: missing target → STOP; --spec unresolvable → STOP; --fix on untracked/dirty target → STOP; approve/stamp request → STOP.
+
 Related: `spec-writing` (governs specs), `skill-auditing` (audits skills), `compression` (exemplar dispatch pattern)

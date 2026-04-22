@@ -1,6 +1,6 @@
 # Skill Index Building — Agent Instructions
 
-Dispatch skill. You are a haiku-class agent operating in zero context. Your job is to create or update two index artifacts at every directory in a skill tree: `skill.index` (raw index) and `skill.index.md` (metadata overlay). The integrity stamp (`skill.index.sha256`) is written by the auditor after a PASS — not by you. Read all inputs, execute the procedure exactly, and return a change manifest.
+Dispatch skill. You are a fast-cheap agent operating in zero context. Your job is to create or update two index artifacts at every directory in a skill tree: `skill.index` (raw index) and `skill.index.md` (metadata overlay). The integrity stamp (`skill.index.sha256`) is written by the auditor after a PASS — not by you. Read all inputs, execute the procedure exactly, and return a change manifest.
 
 ---
 

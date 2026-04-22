@@ -22,9 +22,9 @@ Parameters:
 `focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `blocker` and `major` outside focus must still surface.
 `context_pointer` (optional): path to CLAUDE.md, README, or style guide for local conventions.
 
-Returns (per pass): `{tier, pass_index, verdict, findings[], prior_findings_disposition[]}`. Verdict: `clean`, `findings`, or `error`. Severity: `blocker`, `major`, `minor`, `nit`.
+Returns (per pass): `{tier, pass_index, verdict, findings[]}`. Verdict: `clean`, `findings`, `error`. Severity: `blocker`, `major`, `minor`, `nit`.
 
-One skill per invocation. Each pass is separate dispatch. Smoke always runs before substantive.
+One skill per invocation. Each pass is separate dispatch. Smoke always runs before substantive. Two-pass policy applies regardless of change-set size — no size threshold permits single-pass review.
 
 Procedure (calling agent orchestrates):
 1. Smoke pass — dispatch fast-cheap agent with `tier=smoke`.
@@ -54,4 +54,4 @@ When to Use:
 Reviewing change set of executable or compilable code: source files, build scripts, CI config, IaC manifests.
 For non-code artifacts (specs, skills, docs), use `spec-auditing` or `skill-auditing` — different tier policy.
 
-Related: `spec-auditing`, `skill-auditing`, `dispatch-strategy`, `compression`
+Related: `spec-auditing`, `skill-auditing`, `dispatch`, `compression`

@@ -19,12 +19,13 @@ When creating a new skill, follow this order. Never skip steps.
    acceptance criteria.
 2. **Write uncompressed** — write `uncompressed.md` derived from the
    spec. This is the human-readable baseline.
-3. **Compress** — use the `compression` skill (source→target mode:
+3. **Markdown hygiene** — run the `markdown-hygiene` skill on
+   `uncompressed.md`. Zero errors required before proceeding.
+4. **Compress** — use the `compression` skill (source→target mode:
    `--source uncompressed.md --target SKILL.md`). The SKILL.md is the
    compressed runtime agents load.
-4. **Audit** — use the `skill-auditing` skill to verify. The audit
-   flags any markdown issues. Fix findings, recompress, re-audit
-   until PASS.
+5. **Audit** — use the `skill-auditing` skill to verify. Fix findings,
+   recompress, re-audit until PASS.
 
 For dispatch skills, also write the companion instruction source file (see
 Dispatch Skill section).
@@ -32,7 +33,7 @@ Dispatch Skill section).
 When revising an existing skill: always update the spec first. The only
 exception is changes limited to non-normative content (README, examples,
 typo fixes in informational sections) — in that case skip to step 2.
-Then update uncompressed.md → recompress → re-audit. Never modify
+Then update `uncompressed.md` → hygiene → recompress → re-audit. Never modify
 SKILL.md directly — it is a compiled artifact.
 
 ## Decision: Inline or Dispatch?
@@ -40,9 +41,10 @@ SKILL.md directly — it is a compiled artifact.
 > "Could someone with no context do this from just the inputs?"
 > **Yes** → dispatch. **No** → inline.
 
-**Inline** = needs caller's context, judgment, creative intent.
-**Dispatch** = mechanical processing against rules. Use Dispatch agent
-(zero context).
+**Inline** = needs caller's context, judgment, creative intent. Inline skills don't need to understand dispatch mechanics.
+**Dispatch** = mechanical processing against rules. Use Dispatch agent (zero context).
+
+This skill decides *whether* a skill dispatches and *how to structure it*. For dispatch mechanics (decision tree, model tiers, prompt construction, footguns) read the `dispatch` skill.
 
 ## Skill Folder Convention
 
@@ -75,8 +77,6 @@ the routing card (`uncompressed.md` / `SKILL.md`), not only in
 class, or any refusal condition the caller can determine before dispatch.
 `instructions.txt` may enforce the rule defensively, but that is secondary.
 
-If a folder-level `spec.md` should pair-audit against a specific companion,
-declare that relationship explicitly with `companion:` frontmatter in the spec.
 Do not rely on repo-local fallback filenames — those belong in skill-specific
 auditors, not in universal spec-auditing rules.
 
@@ -108,6 +108,8 @@ passes (MD041); strip the title after compression.
 - Self-contained: no spec dependency at runtime
 - Concise: agent-facing, every line earns its place
 - Token-efficient: no prose, no rationale, no redundancy
+- No "why": rationale belongs in `spec.md`; skills state *what*, not *why*
+- Decision trees not prose: conditional logic uses tables or decision trees, not paragraphs
 - Breadcrumbs: end with related skills (verified, not stale)
 - No secrets
 
@@ -119,10 +121,11 @@ markdown issues.
 If the companion spec has a `Footguns` section, mirror it in uncompressed.md/SKILL.md:
 
 - Preserve all F#: entries, Mitigation: lines, and any ANTI-PATTERN: examples
-- Canonical reference: `dispatch-strategy` skill
+- Canonical reference: `dispatch` skill
 
 ## Related
 
 - `spec-writing` — write the spec first (step 1 of workflow)
 - `compression` — compress uncompressed.md to SKILL.md (step 3)
 - `skill-auditing` — verify skill quality (step 4, dispatch)
+- `dispatch` — dispatch mechanics (decision tree, model tiers, prompt construction); read before writing any dispatch skill

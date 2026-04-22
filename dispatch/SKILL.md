@@ -1,11 +1,11 @@
 ---
-name: dispatch-strategy
-description: Decision tree for whether to dispatch a sub-agent, foreground vs background, subagent type and model selection, prompt construction, and documented footguns with mitigations.
+name: dispatch
+description: Decision tree for whether, how, and at what model tier to dispatch sub-agents.
 ---
 
-# Dispatch Strategy
+# Dispatch
 
-Host facing work: delegation instinct often right, but dispatch has sharp edges. Dispatched agents bootstrap cold — no conversation history, no host context beyond platform injection + host-written prompt. Wrong dispatch = token waste at best, trust-boundary violations at worst. This skill: decision tree, footgun catalogue, well-formed-prompt template.
+Read once — terms (`fast-cheap`, `standard`, `deep`, foreground/background, footguns F1–F5) are assumed known by any skill or agent that references `dispatch`. Inline skills don't need this skill. Skills that dispatch sub-agents must reference it.
 
 Decision Tree:
 
@@ -151,5 +151,5 @@ Empirical claims in this skill conflict with agent expectation about inherited c
 Correctness > throughput. Decision tree says inline but host overloaded → not permission to dispatch incorrectly. Defer or reduce scope.
 
 Related Skills:
-`skill-writing` — spec-inline / body-dispatched workflow depends on dispatch decisions.
-`spec-writing` — terminology consistency when this skill's output feeds spec workflow.
+`skill-writing` — how to structure a skill that dispatches (routing card, inline vs dispatch decision).
+Agent files: `dispatch/agents/` — ready-to-install Dispatch agent definitions for Claude Code CLI and VS Code.

@@ -149,7 +149,7 @@ Why: Why it's a footgun.
 Mitigation: Specific fix (parameter, phrasing, constraint).
 
 Wrong-usage examples anywhere in the spec use `ANTI-PATTERN:` prefix.
-Canonical reference: `dispatch-strategy` skill (F1–F5 with Mitigation:
+Canonical reference: `dispatch` skill (F1–F5 with Mitigation:
 lines and one ANTI-PATTERN: worked example).
 
 Related: `spec-auditing` (verify spec quality), `skill-writing` (write skills from specs), `skill-auditing` (verify skill quality), `markdown-hygiene` (zero-error lint gate)

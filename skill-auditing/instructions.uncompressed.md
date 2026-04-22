@@ -127,6 +127,21 @@ spec.
 Every line affects runtime behavior. No rationale in SKILL.md (belongs in
 spec). No redundant explanations. Agent-facing density.
 
+Named finding patterns to flag:
+
+- **"Too much why"**: prose explaining *why* a rule exists instead of stating
+  what to do. "Why" belongs in `spec.md`. Finding text: `too much why —
+  move rationale to spec.md`.
+- **"Essay not reference card"**: skill reads as continuous prose rather than
+  decision trees, tables, or bullet instructions. Finding text: `exposition
+  where a decision tree would serve`.
+- **"Prose conditionals"**: if/else logic written as prose paragraphs instead
+  of a decision tree or table. Finding text: `replace prose conditionals with
+  decision tree or table`.
+
+A skill passes conciseness only if an agent can skim it in one pass and know
+exactly what to do — no hunting through paragraphs for the operative rule.
+
 ### 5. Skill completeness
 
 All runtime instructions present. No implicit assumptions. Edge cases

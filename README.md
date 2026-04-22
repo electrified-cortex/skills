@@ -12,7 +12,7 @@ the full story.
 | --- | --- |
 | [code-reviewer](code-reviewer/) | Two-tier code review — fast-cheap smoke pass, standard substantive sign-off; reviews only, never modifies |
 | [compression](compression/) | Token-saving compression for `.md` files — three tiers (Lite, Full, Ultra) for different audiences |
-| [dispatch-strategy](dispatch-strategy/) | Decision tree for whether, how, and at what model tier to dispatch sub-agents |
+| [dispatch](dispatch/) | Decision tree for whether, how, and at what model tier to dispatch sub-agents |
 | [gh-cli](gh-cli/) | GitHub CLI operations — routes to domain-specific sub-skills via agent dispatch |
 | [markdown-hygiene](markdown-hygiene/) | Fix all markdownlint violations in a `.md` file — zero-error gate before stamping or committing |
 | [skill-auditing](skill-auditing/) | Audit a skill for quality, classification, cost, and compliance with the skill-writing spec |
@@ -25,8 +25,8 @@ the full story.
 
 | **Agent** | **Description** |
 | --- | --- |
-| [claude-dispatch](dispatch-strategy/agents/claude-dispatch.agent.md) | Minimal pass-through agent for Claude Code CLI — reads a target file, follows its instructions, returns the result |
-| [vscode-dispatch](dispatch-strategy/agents/vscode-dispatch.agent.md) | Minimal pass-through agent for Claude Code in VS Code — same behavior, VS Code tool names |
+| [claude-dispatch](dispatch/agents/claude-dispatch.agent.md) | Minimal pass-through agent for Claude Code CLI — reads a target file, follows its instructions, returns the result |
+| [vscode-dispatch](dispatch/agents/vscode-dispatch.agent.md) | Minimal pass-through agent for Claude Code in VS Code — same behavior, VS Code tool names |
 
 ## Quick Start
 
@@ -114,11 +114,11 @@ Code review has two distinct jobs: fast surface-level triage and authoritative d
 
 [Read more](code-reviewer/)
 
-### Dispatch Strategy
+### Dispatch
 
 Dispatching sub-agents incorrectly costs more than not dispatching at all. This skill captures the decision tree, footgun catalogue, and empirical findings (including context-inheritance tests run in April 2026) that answer when to dispatch, when to stay inline, how to pick model tier, and how to write a well-formed prompt that a cold stranger agent can execute. It is the foundation on which skill-writing's dispatch guidance and the broader agent fleet governance rest.
 
-[Read more](dispatch-strategy/)
+[Read more](dispatch/)
 
 ### Tool Writing
 

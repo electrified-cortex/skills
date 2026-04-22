@@ -303,7 +303,7 @@ Mitigation: The specific parameter, phrase, or constraint that prevents it.
 
 Multiple footguns are numbered sequentially (F1, F2, ...).
 
-**Canonical example:** See `dispatch-strategy` skill for the established footgun catalogue pattern (F1–F5 with Mitigation: lines and one ANTI-PATTERN: worked example).
+**Canonical example:** See `dispatch` skill for the established footgun catalogue pattern (F1–F5 with Mitigation: lines and one ANTI-PATTERN: worked example).
 
 ---
 

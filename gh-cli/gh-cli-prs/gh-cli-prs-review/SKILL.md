@@ -49,3 +49,11 @@ gh api graphql -f query='
 
 Scope:
 Covers `gh pr review` only. Excludes: inline comments, requesting reviewers (`gh-cli-prs-create`), resolving threads (`gh-cli-api`).
+
+Error Paths:
+`--request-changes` without `--body` → prompt caller for change rationale before running.
+`--dismiss` with non-existent review ID → surface `gh` error; run `gh pr view --json reviews` to list valid IDs, ask caller to reconfirm.
+
+Related:
+`gh-cli-prs-create` — adding reviewers, creating PRs
+`gh-cli-api` — resolving review threads via GraphQL

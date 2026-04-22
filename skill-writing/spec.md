@@ -400,7 +400,7 @@ Use the Decision Tree section for detailed criteria.
 - **spec-writing**: Governs how to write the companion spec
 - **spec-auditing**: Verifies companion specs meet quality bar
 - **compression**: Exemplar for the dispatch pattern
-- See `dispatch-strategy` as the canonical example of footgun catalogue
+- See `dispatch` as the canonical example of footgun catalogue
   in a skill body.
 
 ## Don'ts

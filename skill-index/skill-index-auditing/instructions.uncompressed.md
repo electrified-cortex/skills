@@ -1,6 +1,6 @@
 # Skill Index Auditing — Agent Instructions
 
-Dispatch skill. You are a haiku-class agent operating in zero context. Your job is to validate an existing skill-index cascade and return one of three verdicts: `ok`, `rebuild-needed`, or `inconclusive`. On a PASS verdict (`ok`), you also write `skill.index.sha256` alongside each validated raw index as a sign-off artifact. You do not rebuild. You do not invoke the builder. Writing the stamp on PASS is the only file modification you ever perform.
+Dispatch skill. You are a fast-cheap agent operating in zero context. Your job is to validate an existing skill-index cascade and return one of three verdicts: `ok`, `rebuild-needed`, or `inconclusive`. On a PASS verdict (`ok`), you also write `skill.index.sha256` alongside each validated raw index as a sign-off artifact. You do not rebuild. You do not invoke the builder. Writing the stamp on PASS is the only file modification you ever perform.
 
 ---
 
@@ -28,7 +28,7 @@ If the audit report cannot be written: emit a non-zero exit signal. Do not silen
 
 | Verdict | Condition |
 | --- | --- |
-| `ok` | Walk completed; no fail-fast failures; no malformed-line findings at any node. |
+| `ok` | Walk completed; no fail-fast failures; no malformed-line, overlay trigger-shape, or keyword-quality findings at any node. |
 | `rebuild-needed` | Any fail-fast check failed, OR the walk completed with at least one malformed-line finding (after a clean fail-fast pass at the node where the malformed line occurred). |
 | `inconclusive` | Invocation root is unreadable, or one or more subtrees could not be evaluated. `inconclusive` takes precedence over `ok` but not over `rebuild-needed`. |
 
@@ -84,6 +84,10 @@ These findings are recorded in the audit report but do not halt the walk and do 
 2. **Malformed lines**: any raw index line with a missing key, missing colon, or forbidden characters. Record the line and the node. If the node completes all fail-fast checks without halting, and any malformed-line finding exists at that node, raise the final verdict for that node to `rebuild-needed` when the walk ends (per R12 escalation).
 
 3. **Phantom indexes**: a `skill.index` within the invocation root's subtree that is not reachable, directly or transitively, from the root node's cascade. Record as janitorial signal.
+
+4. **Overlay trigger-shape** (R24): for any `skill.index.md` present at a node, inspect the overlay sections. A section is non-conformant if it reads as a description or summary of what the skill does without stating when/why to load it. Conformant sections express a triggering condition: an operator phrase ("When asked to…") or an agent-self-triggered imperative ("When the task requires…"). Record each non-conformant section as a `trigger-shape` finding. Findings here escalate the final verdict to `rebuild-needed` per R19.
+
+5. **Keyword quality** (R25): for every raw-index entry at the node, inspect its keyword list. Flag the entry if any of the following is true: fewer than three keywords; a keyword that exactly duplicates the entry key verbatim; all keywords are single words (no multi-word phrases); or all keywords are only the skill's technical identifier with punctuation stripped. Record each failing entry as a `keyword-quality` finding. Findings here escalate the final verdict to `rebuild-needed` per R19.
 
 ---
 
@@ -143,6 +147,8 @@ failing_node: <absolute path to first failing node, or blank if none>
 | orphan | <path> | <stamp or overlay, no corresponding raw index> |
 | malformed-line | <path> | <line content> |
 | phantom-index | <path> | <not reachable from cascade root> |
+| trigger-shape | <path> | <overlay section heading: reason non-conformant> |
+| keyword-quality | <path> | <entry key: specific violation> |
 (omit table if no findings)
 
 ### Visited Nodes (on failing path, if applicable)

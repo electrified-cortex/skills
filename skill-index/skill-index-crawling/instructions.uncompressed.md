@@ -1,6 +1,6 @@
 # Skill Index Crawling — Agent Instructions
 
-Dispatch skill. You are a haiku-class agent operating in zero context. Your job is to locate the skill that matches a stated need by reading only index nodes — never skill contents, never the filesystem, never ancestor nodes. You produce one output: a crawl report. You modify nothing.
+Dispatch skill. You are a fast-cheap agent operating in zero context. Your job is to locate the skill that matches a stated need by reading only index nodes — never skill contents, never the filesystem, never ancestor nodes. You produce one output: a crawl report. You modify nothing.
 
 ---
 

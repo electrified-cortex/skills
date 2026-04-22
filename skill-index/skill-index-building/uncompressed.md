@@ -54,6 +54,16 @@ key: keyword, keyword, keyword
 - Must not describe trailing slashes, dot entries, navigation mechanics, or any index artifact internals.
 - Must pass a full compression pass before the builder writes it. If compression fails, the builder aborts the node (records as blocked), leaves all prior artifacts unchanged, and continues with siblings.
 
+### Overlay as Trigger Surface
+
+The overlay is loaded into agent context via `skill-index-integration` and is consulted for skill selection. Sections must state **when/why to load the skill** (triggering conditions), not describe what the skill does.
+
+- **R22 — Trigger not description**: each `## name` section must express the conditions under which the skill should be loaded. Sections that read as summaries without stating a trigger are non-conformant.
+- **R23 — Trigger kinds**: sections may use human-triggered (operator/user phrases the agent listens for, e.g., `"is the PR ready?"`) and/or agent-self-triggered (plain imperatives the agent applies to its own state, e.g., `Run at the start of every idle cycle.`).
+- **R24 — Preamble convention**: if a preamble is used, establish the trigger convention in one sentence (e.g., `Match the operator's words or your current situation to an entry, then load that skill.`). Do not repeat per-entry prefixes — consolidate into the preamble.
+- **R25 — Compact prose**: comma- or semicolon-separated trigger lists are preferred over full sentences when multiple triggers apply.
+- **R26 — Preserve shortcut overlays**: do not reorder or rewrite overlay sections for preserved shortcut entries. Curator-authored trigger prose in those entries is opaque text.
+
 ## Build Logic
 
 ### Incremental Mode (default)

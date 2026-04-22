@@ -1,10 +1,3 @@
----
-name: spec-auditing
-description: >-
-  Audit a spec/companion pair or a spec alone. Dispatch instructions.txt —
-  don't audit inline.
----
-
 # Spec Auditing
 
 Without reading `instructions.txt` yourself, use a Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory).
@@ -44,6 +37,14 @@ One skill per invocation. Chain multiple subjects as separate runs.
 - Auditing a spec in isolation (spec-first authoring workflow, before companion exists)
 
 Multi-pass audit: fix findings, re-audit, max 3 passes.
+
+## Errors / Stop Gates
+
+- **Missing target** — STOP: target file missing or unreadable
+- **Spec file missing** — STOP when `--spec` provided and unresolvable, or when auto-detected companion absent
+- **Incomplete input** — STOP: all resolved files must be fully read before judging
+- **`--fix` on untracked/dirty target** — STOP: target must be git-tracked and clean before fix mode runs
+- **Approve/stamp request** — STOP: approve mode not supported by this skill
 
 Related: `spec-writing` (governs specs), `skill-auditing` (audits skills),
 `compression` (exemplar dispatch pattern)

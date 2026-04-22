@@ -14,6 +14,4 @@ Don't read `instructions.txt` yourself. Dispatch (zero context): "Read and follo
 
 Returns: verdict (PASS / NEEDS_REVISION / FAIL) + issues. Checklist: Spec Gate (5), Skill Smoke (5), Spec Compliance (10).
 
-Model strategy: cheap/fast model for iterate passes, default for final sign-off. Warn: some models struggle with inline editing; may not suit large files in fix mode.
-
 Related: `skill-writing`, `spec-auditing`, `compression`

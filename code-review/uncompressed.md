@@ -25,9 +25,9 @@ Tier substitution is prohibited.
 - `focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; does not reduce depth — `blocker` and `major` outside focus must still surface.
 - `context_pointer` (optional): path to a CLAUDE.md, README, or style guide for local conventions.
 
-**Returns (per pass):** `{tier, pass_index, verdict, findings[], prior_findings_disposition[]}`. Verdict: `clean`, `findings`, or `error`. Severity vocabulary: `blocker`, `major`, `minor`, `nit`.
+**Returns (per pass):** `{tier, pass_index, verdict, findings[]}`. Verdict: `clean`, `findings`, or `error`. Severity vocabulary: `blocker`, `major`, `minor`, `nit`.
 
-One skill per invocation. Each pass is a separate dispatch. Smoke always runs before substantive.
+One skill per invocation. Each pass is a separate dispatch. Smoke always runs before substantive. The two-pass policy (smoke + substantive) applies regardless of change-set size — there is no size threshold that permits a single-pass review.
 
 ## Procedure (calling agent orchestrates)
 
@@ -63,4 +63,4 @@ Reviewing a change set of executable or compilable code: source files, build scr
 
 For non-code artifacts (specs, skills, docs), use `spec-auditing` or `skill-auditing` instead — they use a different tier policy.
 
-Related: `spec-auditing`, `skill-auditing`, `dispatch-strategy`, `compression`
+Related: `spec-auditing`, `skill-auditing`, `dispatch`, `compression`

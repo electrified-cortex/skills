@@ -1,4 +1,4 @@
-# dispatch-strategy spec
+# dispatch spec
 
 ## Purpose
 
@@ -76,13 +76,13 @@ R5. The skill must explain when to specify a model override and which trade-offs
 - **standard** — for work requiring moderate reasoning. Most common explicit override when dispatching from a `deep`-tier host.
 - **deep** — when the dispatched task requires maximum reasoning depth, or when errors are expensive to retry. Unusual as an explicit override; consider inline.
 
-R6. The skill must enumerate at least the following footguns. For each, the skill must state (a) the footgun, (b) why it is a footgun, and (c) the specific dispatch parameter or prompt construction that prevents it (the mitigation, per B4):
+R6. The skill must enumerate at least the following footguns. For each, the skill must state (a) the footgun name and (b) the mitigation (per B4). The rationale for why each is a footgun belongs in this spec, not in the runtime skill.
 
-- F1. **Host-impersonation on a shared exclusive resource.** The dispatched agent attempts to act as the host with respect to a resource the host already holds open (for example, attempting to authenticate to a session, channel, or external service). Result: the host's session may be invalidated, or the dispatched agent receives an error and consumes tokens reporting it. **Mitigation**: state in the dispatch prompt that the dispatched agent must NOT initiate sessions, authenticate, or interact with the named shared resource; if the work needs that resource, perform inline.
-- F2. **Dispatch-for-trivial-work.** The dispatched agent is given work small enough to complete inline in a few host turns. Result: dispatch overhead (system prompt, project context loading, output round-trip) exceeds the work value. **Mitigation**: apply the size threshold from R7's "When NOT to dispatch" — if the host can complete the work in fewer than approximately three of its own turns, do not dispatch.
-- F3. **Tight-loop micro-dispatches.** The host fires many small dispatches sequentially where one batched dispatch would suffice. Result: aggregate token churn dominates. **Mitigation**: aggregate the work into a single dispatch prompt that returns a single structured result; if aggregation is impossible, reconsider whether dispatch is the right pattern at all.
-- F4. **Hook-denial escape via dispatch.** The host dispatches in order to bypass a hook or permission denial that applies to the host. Result: trust boundary violation; the dispatched agent may inadvertently bypass restrictions the host was correctly subject to. **Mitigation**: never dispatch as a workaround for a denial. Treat the denial as authoritative; address the denial directly (request permission, change approach, escalate to operator).
-- F5. **Thin-prompt context assumption.** The host writes a sparse dispatch prompt expecting the dispatched agent to reconstruct intent from inherited conversation context that does not actually inherit (per R2). Result: dispatched agent produces incoherent output. **Mitigation**: every dispatch prompt must satisfy the "well-formed dispatch prompt" requirements in R8; the host must hand-feed every piece of context the dispatched agent needs but cannot inherit.
+- F1. **Host-impersonation on a shared exclusive resource.** Dispatched agent acts as host on a resource the host already holds open. Rationale (spec only): host session may be invalidated; two competing owners burn tokens. **Mitigation**: state in dispatch prompt that the dispatched agent must NOT initiate sessions, authenticate, or interact with the named shared resource; if the work needs that resource, perform inline.
+- F2. **Dispatch-for-trivial-work.** Dispatched agent given work completable inline in a few host turns. Rationale (spec only): dispatch overhead exceeds work value. **Mitigation**: apply Q4 — fewer than ~3 host turns → inline.
+- F3. **Tight-loop micro-dispatches.** Host fires many small dispatches sequentially where one batched dispatch suffices. Rationale (spec only): aggregate token churn dominates. **Mitigation**: aggregate into a single dispatch returning a single structured result; if impossible, reconsider dispatch entirely.
+- F4. **Hook-denial escape via dispatch.** Host dispatches to bypass a hook or permission denial. Rationale (spec only): trust boundary violation. **Mitigation**: never dispatch as denial workaround; treat denial as authoritative; request permission, change approach, or escalate.
+- F5. **Thin-prompt context assumption.** Host writes sparse prompt expecting dispatched agent to reconstruct from conversation context that does not inherit (per R2). Rationale (spec only): dispatched agent has zero visibility into prior turns. **Mitigation**: every dispatch prompt must satisfy well-formed requirements in R8; hand-feed all context the agent cannot inherit.
 
 R7. The skill must include a section titled "When NOT to dispatch" that lists the classes of work where inline execution is correct, even if the work is large or slow. At minimum:
 
@@ -99,9 +99,9 @@ R8. The skill must define the minimum content of a well-formed dispatch prompt. 
 
 R9. The skill must define the boundary between this skill and adjacent skills. The skill must reference, but not reproduce:
 
-- `skill-writing` for how the spec-inline / body-dispatched workflow uses dispatch decisions.
-- `task-management` (and its sub-skills) for how task pipeline work uses dispatch.
-- Any project-internal agent files (for example `dispatch.agent.md` in a host project) only as examples, not as authoritative content for this skill.
+- `skill-writing` for how to structure a skill that dispatches (routing card, inline vs dispatch decision). `skill-writing` decides *whether* a skill dispatches and *how to shape it*; `dispatch` covers the mechanics a calling agent applies at runtime.
+- Agent files (`dispatch/agents/`) as ready-to-install Dispatch agent definitions; these are companion artifacts, not normative skill content.
+- Any project-internal agent files only as examples, never as authoritative content for this skill.
 
 R10. The skill must use role-agnostic language. The terms "Curator," "Worker," "Overseer," or any other project-internal role name must not appear in the normative text of the skill. The terms "host," "dispatched agent," and "calling agent" are the canonical labels.
 
@@ -135,7 +135,7 @@ B2. **Layered detail.** The skill must use a layered structure: decision tree fi
 
 B3. **Empirical claims explicitly anchored.** Each empirical claim about subagent behavior must be presented in the form: "Empirical (DATE, METHOD): CLAIM." This makes drift detectable.
 
-B4. **Footguns paired with mitigations.** Each documented footgun must be followed by the specific dispatch parameter or prompt construction that prevents it. A footgun without a mitigation is incomplete.
+B4. **Footguns paired with mitigations.** Each documented footgun must be followed by the specific dispatch parameter or prompt construction that prevents it. A footgun without a mitigation is incomplete. The runtime skill states the footgun name and mitigation only — no "why" prose (rationale lives in this spec).
 
 B5. **Anti-pattern callouts use a distinct visual marker.** The skill must prefix every anti-pattern paragraph or block with the literal token `ANTI-PATTERN:` (uppercase, followed by a colon and space) so that a skimming agent can identify "do not do this" content at a glance. Mitigations (per B4) use the literal token `Mitigation:` (title case, followed by a colon and space) inline with the footgun text. Both markers are part of the skill's normative content; the implementer must not substitute alternative phrasings.
 

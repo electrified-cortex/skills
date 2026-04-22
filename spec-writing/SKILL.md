@@ -95,7 +95,7 @@ Derivation Workflow:
 Before writing any artifact derived from spec (skill, agent, or tool), spec must pass full audit.
 1. Write spec.
 2. Dispatch `markdown-hygiene` on spec; ensure zero lint errors.
-3. Dispatch spec-auditor: Haiku iterations first, Sonnet for final pass.
+3. Dispatch spec-auditor: fast-cheap iterations first, standard for final pass.
 4. Fix all findings.
 5. Re-audit until PASS.
 6. Write derived artifact (skill, agent, or tool) only after PASS.
@@ -111,6 +111,6 @@ Specs may include optional `Footguns` section. Format:
 Why: why it's a footgun.
 Mitigation: specific fix (parameter, phrasing, constraint).
 Wrong-usage examples anywhere in spec use `ANTI-PATTERN:` prefix.
-Canonical reference: `dispatch-strategy` skill (F1–F5 with Mitigation: lines and one ANTI-PATTERN: worked example).
+Canonical reference: `dispatch` skill (F1–F5 with Mitigation: lines and one ANTI-PATTERN: worked example).
 
 Related: `spec-auditing` (verify spec quality), `skill-writing` (write skills from specs), `skill-auditing` (verify skill quality), `markdown-hygiene` (zero-error lint gate)

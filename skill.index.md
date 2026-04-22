@@ -8,7 +8,7 @@ Comprehensive review of a diff — your change, another agent's, or an outside P
 
 Shrinks a markdown or text file without losing meaning. Common use: a skill that is too long to load cheaply.
 
-## dispatch-strategy
+## dispatch
 
 How to dispatch another agent well — when to, which model, prompt shape, known failure modes.
 

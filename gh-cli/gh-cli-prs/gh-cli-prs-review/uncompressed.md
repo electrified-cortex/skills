@@ -67,3 +67,13 @@ gh api graphql -f query='
 ## Scope Boundaries
 
 This skill covers `gh pr review` only. It does not cover inline review comments (adding comments to specific lines of code), requesting reviewers (see `gh-cli-prs-create`), or resolving review threads (see `gh-cli-api`).
+
+## Error Paths
+
+- **`--request-changes` without `--body`**: the `gh` CLI requires a body for request-changes reviews. If no body is provided by the caller, prompt for the change rationale before running the command.
+- **`--dismiss` with non-existent review ID**: `gh` surfaces a 422 or "not found" error. Surface the error message to the caller; use `gh pr view --json reviews` to list current review IDs and ask the caller to reconfirm.
+
+## Related
+
+- `gh-cli-prs-create` — adding reviewers, creating PRs
+- `gh-cli-api` — resolving review threads via GraphQL

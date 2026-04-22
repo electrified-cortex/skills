@@ -1,6 +1,6 @@
 code-reviewer: code review, review code, review diff, review PR, find findings, check code, another agent's code
 compression: compress, compress markdown, compress text, shrink, condense, reduce tokens, smaller budget
-dispatch-strategy: dispatch, dispatch agent, subagent, background agent, foreground agent, model choice, how to dispatch
+dispatch: dispatch, dispatch agent, subagent, background agent, foreground agent, model choice, how to dispatch
 gh-cli/: github, gh, pr, pull request, issue, release, repo, workflow, actions, api, github cli
 markdown-hygiene: markdown, fix markdown, clean markdown, well formatted markdown, markdown formatting
 skill-auditing: audit skill, review skill, evaluate skill, skill quality, skill drift, check skill
