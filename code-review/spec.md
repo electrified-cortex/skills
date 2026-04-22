@@ -1,50 +1,31 @@
----
-name: code-reviewer
-description: >-
-  Performs tiered code review on a change set: a Haiku smoke pass surfaces
-  easy or lint-grade findings, then a Sonnet substantive pass produces the
-  authoritative sign-off. Returns a structured findings report with audit
-  trail. Reviews only — never modifies code.
-type: spec
----
-
-# Code Reviewer Specification
+# Code Review Specification
 
 ## Purpose
 
-Define how a calling agent obtains a code review of a target change set. A
-code review is the act of bubbling up issues, risks, and improvement
-opportunities in proposed or existing code so that the calling agent (or its
-operator) can decide what to act on. This spec governs the procedure, the
-tier policy (which model class runs which pass), the inputs, the outputs,
-and the explicit boundary between reviewing and fixing.
-
-The spec exists because tiered LLM review has measurable cost and quality
-characteristics that must be applied consistently across the workspace.
-Inconsistent application produces either over-spend (running Sonnet for
-trivial lint-grade catches) or under-quality (single-Haiku review treated as
-authoritative). Both failure modes are observable in current practice and
-this spec exists to eliminate them.
+Define the procedure and output contract for tiered code review on a change
+set. Code review surfaces issues, risks, and improvement opportunities in
+executable/compilable code so the calling agent can act on them. This spec
+governs procedure, tier policy, inputs, outputs, and the boundary between
+reviewing and fixing.
 
 ## Scope
 
-This spec applies whenever a calling agent dispatches a code review on
-changes within a repository. The change set may be presented as:
+Applies when a calling agent dispatches a code review on executable or
+compilable code: source files, build scripts, CI configuration,
+infrastructure-as-code manifests.
 
-- a unified diff (raw text, file path, or git ref range)
-- a pull request (URL or repository + number)
-- a list of staged or modified files in a working tree
-- a single file or directory tree being reviewed for the first time
-- a worktree or branch being prepared for merge
+This is a **dispatch skill** — each review pass runs in an isolated, zero-context
+agent. Inline execution is prohibited; it produces shallow, inconsistent results
+and allows caller context to bleed into the review judgment.
 
-This spec does not cover audits of non-code artifacts (specs, skills,
-documents). Those have their own auditing skills with their own tier
-policies; the procedure described here for code review is deliberately
-different from those audit procedures and the difference is normative
-(see Constraints).
+Does not cover non-code artifacts (specs, skills, documents). Those are
+governed by `spec-auditing` and `skill-auditing`, which use a different
+tier policy. The difference is normative.
 
 ## Definitions
 
+- **fast-cheap**: a cost-optimized model tier suitable for fast, surface-level passes (e.g. Haiku-class).
+- **standard**: a capable model tier used for thorough, authoritative passes (e.g. Sonnet-class).
 - **Calling agent**: the agent that invokes the code-reviewer skill. Owns
   the change set, owns the decision about which findings to act on, owns
   any subsequent edits.
@@ -52,9 +33,9 @@ different from those audit procedures and the difference is normative
   identifiable by file paths, refs, or other stable references.
 - **Smoke pass**: a fast, low-cost review pass intended to surface easy or
   surface-level findings (style, naming, obvious bugs, missing error
-  handling, lint-grade defects). Run by a haiku-class model.
+  handling, lint-grade defects). Run by a fast-cheap model.
 - **Substantive pass**: a deeper review pass intended to surface design,
-  correctness, security, and architectural findings. Run by a sonnet-class
+  correctness, security, and architectural findings. Run by a standard
   model. Authoritative for sign-off.
 - **Finding**: a single reported issue with severity, location (file +
   line range when applicable), description, and recommended action.
@@ -63,7 +44,7 @@ different from those audit procedures and the difference is normative
 - **Audit**: structured review of non-code artifacts (specifications,
   skill definitions, documentation, configuration policy). Audits are
   governed by the spec-auditing and skill-auditing skills and use a
-  different tier policy (up to two Haiku iterations before Sonnet
+  different tier policy (up to two fast-cheap iterations before standard
   sign-off). NOT covered by this spec; named here only to fix the
   boundary.
 - **Code review**: the activity of producing a structured report of
@@ -71,28 +52,28 @@ different from those audit procedures and the difference is normative
   without modifying the code. Scoped to executable or compilable code
   (source files, build scripts, CI configuration, infrastructure-as-code
   manifests). Code reviews are governed by THIS spec and use the fixed
-  Haiku-then-Sonnet two-tier procedure with no Haiku iteration.
+  fast-cheap → standard two-tier procedure with no fast-cheap iteration.
 - **Audit trail**: the historical record of every finding produced by
   every pass dispatched in a code review, preserved in the aggregated
   result even when later passes contradict earlier findings.
-- **Sign-off**: the most recent Sonnet pass in a code review. Its
+- **Sign-off**: the most recent standard pass in a code review. Its
   aggregated findings report is the authoritative result. When only one
-  Sonnet pass has been dispatched, that pass is the sign-off; when more
+  standard pass has been dispatched, that pass is the sign-off; when more
   than one has been dispatched, the latest one is the sign-off and
-  earlier Sonnet passes become historical context.
-- **Tier**: the model class (haiku-class or sonnet-class) assigned to a
+  earlier standard passes become historical context.
+- **Tier**: the model class (fast-cheap or standard) assigned to a
   given pass at dispatch.
 
 ## Requirements
 
 ### Procedure
 
-A code review on a non-empty change set requires exactly one haiku-class
-smoke pass followed by at least one sonnet-class substantive pass. A
+A code review on a non-empty change set requires exactly one fast-cheap
+smoke pass followed by at least one standard substantive pass. A
 review on an empty change set requires zero passes.
 
-1. The calling agent must dispatch exactly one haiku-class smoke pass
-   first, before any Sonnet pass, for any code review where the change set
+1. The calling agent must dispatch exactly one fast-cheap smoke pass
+   first, before any standard pass, for any code review where the change set
    is non-empty.
 2. The smoke pass must produce a findings report only. It must not modify
    any code.
@@ -100,14 +81,14 @@ review on an empty change set requires zero passes.
    to act on. Acting on findings is outside the code-reviewer skill; the
    calling agent or another skill performs edits.
 4. After the smoke pass and any caller-driven fixes, the calling agent
-   must dispatch at least one sonnet-class substantive pass.
+   must dispatch at least one standard substantive pass.
 5. The substantive pass must produce a findings report only. It must not
    modify any code.
-6. The calling agent may dispatch additional sonnet-class passes after
+6. The calling agent may dispatch additional standard passes after
    the first substantive pass if findings warrant re-review of an
    updated change set. (The smoke pass having already run, Constraint 4
-   forbids any further Haiku pass.)
-7. The final dispatched pass must be a sonnet-class pass. This pass is the
+   forbids any further fast-cheap pass.)
+7. The final dispatched pass must be a standard pass. This pass is the
    sign-off. Its report is the authoritative review result.
 8. Each pass must be dispatched as an isolated agent with no ambient
    caller state beyond the enumerated bootstrap inputs (a Dispatch-style
@@ -173,7 +154,7 @@ Every pass must return a findings report containing:
    findings list.
 3. The tier of the pass (smoke or substantive).
 4. The pass index within the review (smoke is always index 0; first
-   Sonnet is index 1; subsequent Sonnet passes increment).
+   standard is index 1; subsequent standard passes increment).
 
 The aggregated review result returned to the calling agent must contain
 exactly these fields:
@@ -181,12 +162,12 @@ exactly these fields:
 1. `passes`: the report from every pass dispatched, in dispatch order.
    Each entry is the per-pass report defined above.
 2. `sign_off_pass_index`: the index of the authoritative sign-off pass
-   (the most recent successful Sonnet pass). When the change set is
+   (the most recent successful standard pass). When the change set is
    empty and no passes were dispatched, this field must be `null`. When
-   only failed passes exist (no successful Sonnet pass yet), this field
+   only failed passes exist (no successful standard pass yet), this field
    must also be `null` and the aggregated result is not a valid
    sign-off — the calling agent must continue dispatching until a
-   successful Sonnet pass produces a valid index.
+   successful standard pass produces a valid index.
 3. `severity_aggregate`: a count of findings by severity across the
    sign-off pass only (not summed across all passes), with a key for
    each severity value in the fixed vocabulary (`blocker`, `major`,
@@ -196,7 +177,7 @@ exactly these fields:
    `findings`), propagated. When `sign_off_pass_index` is `null` because
    the change set was empty, `verdict` must be `clean`. When
    `sign_off_pass_index` is `null` because all dispatched passes have
-   failed and no successful Sonnet pass exists yet, `verdict` must be
+   failed and no successful standard pass exists yet, `verdict` must be
    `error`. The aggregated `verdict` vocabulary is therefore `clean`,
    `findings`, or `error`.
 5. `preserved_contradictions`: the list of smoke-pass findings the
@@ -209,12 +190,12 @@ aggregated result must be exactly: `passes` empty, `sign_off_pass_index`
 `null`, `severity_aggregate` zero in every bucket, `verdict` `clean`,
 `preserved_contradictions` empty.
 
-When all dispatched passes have failed and no successful Sonnet pass
+When all dispatched passes have failed and no successful standard pass
 exists, the aggregated result must be: `passes` containing the failed
 entries (per Error Handling), `sign_off_pass_index` `null`,
 `severity_aggregate` zero in every bucket, `verdict` `error`,
 `preserved_contradictions` empty. This is not a valid sign-off; the
-calling agent must continue dispatching until a successful Sonnet pass
+calling agent must continue dispatching until a successful standard pass
 produces a valid index.
 
 When the substantive (sign-off) pass contradicts a smoke-pass finding,
@@ -261,23 +242,23 @@ values. The vocabulary is:
 
 ## Constraints
 
-1. The smoke pass tier is haiku-class. The substantive pass tier is
-   sonnet-class. Tier substitution is prohibited: the smoke pass must
-   not be sonnet-class, and the substantive pass must not be haiku-class.
+1. The smoke pass tier is fast-cheap. The substantive pass tier is
+   standard. Tier substitution is prohibited: the smoke pass must
+   not be standard, and the substantive pass must not be fast-cheap.
 2. Dispatched review agents must not commit, push, edit, stage, or
    otherwise mutate the working tree or the repository state. They are
    read-only.
 3. Dispatched review agents must not fix findings, even when the fix is
    obvious. Reporting and fixing are separate concerns owned by separate
    actors.
-4. The Haiku smoke pass runs at most once per code review. Repeated Haiku
+4. The fast-cheap smoke pass runs at most once per code review. Repeated fast-cheap
    passes within a single review are prohibited. (This contrasts with
-   audit procedures, which permit up to two Haiku iterations before
-   escalating to Sonnet. The audit pattern lives in the spec-auditing and
+   audit procedures, which permit up to two fast-cheap iterations before
+   escalating to standard. The audit pattern lives in the spec-auditing and
    skill-auditing skills and is intentionally different.)
-5. Sonnet iteration after the first substantive pass is permitted and
+5. standard iteration after the first substantive pass is permitted and
    expected when findings warrant re-review of an updated change set.
-   The final Sonnet pass is always the sign-off.
+   The final standard pass is always the sign-off.
 6. A code review with an empty change set must return a sign-off report
    with an empty findings list and no passes dispatched.
 7. Dispatched agents must operate with zero caller context. The
@@ -313,7 +294,7 @@ aggregated result shape. No tier policy applies; no pass is dispatched.
 ### Single-file or trivially small change
 
 The two-pass requirement holds regardless of change-set size. A
-one-line change still receives a Haiku smoke pass and a Sonnet
+one-line change still receives a fast-cheap smoke pass and a standard
 substantive pass. Cost is bounded by the change-set size, so trivial
 changes are cheap; the policy does not change.
 
@@ -340,8 +321,8 @@ prohibits passing the caller's dispute to the substantive pass.
 
 ## Defaults and Assumptions
 
-- Smoke pass tier defaults to haiku-class. No override permitted.
-- Substantive pass tier defaults to sonnet-class. No override permitted.
+- Smoke pass tier defaults to fast-cheap. No override permitted.
+- Substantive pass tier defaults to standard. No override permitted.
 - Focus areas: default none (full review). Behavior constraints defined
   under Requirements > Inputs item 4.
 - See Calling agent obligations item 4 — no maximum pass count, no
@@ -365,7 +346,7 @@ prohibits passing the caller's dispute to the substantive pass.
   output, or other). The error entry must NOT contain a findings list.
   The re-dispatched replacement pass appends as a new entry at the next
   index. The `sign_off_pass_index` always points to the most recent
-  successful Sonnet pass and never to an error entry.
+  successful standard pass and never to an error entry.
 - If the smoke pass produces a finding the calling agent disputes, the
   caller may proceed to the substantive pass without acting on the
   disputed finding. The substantive pass will re-examine it
@@ -376,7 +357,7 @@ prohibits passing the caller's dispute to the substantive pass.
 
 - Substantive pass findings govern over smoke pass findings on
   contradiction.
-- The most recent Sonnet pass governs over earlier Sonnet passes for
+- The most recent standard pass governs over earlier standard passes for
   sign-off purposes.
 - Severity vocabulary defined in this spec governs over any
   project-local severity convention.
@@ -386,18 +367,18 @@ prohibits passing the caller's dispute to the substantive pass.
 
 ## Don'ts
 
-- Don't run only Haiku and treat the result as a complete review.
-- Don't run only Sonnet and skip the smoke pass on routine reviews. The
+- Don't run only fast-cheap and treat the result as a complete review.
+- Don't run only standard and skip the smoke pass on routine reviews. The
   smoke pass exists to absorb cheap findings before the expensive pass.
   (Exception: an empty change set, per Behavior.)
 - Don't let dispatched agents fix code (see Constraints item 3).
 - Don't let dispatched agents commit, push, stage, or otherwise mutate
   repository state.
-- Don't introduce a third tier (for example, a sonnet-class smoke pass
+- Don't introduce a third tier (for example, a standard smoke pass
   followed by an opus-class substantive pass). The two-tier model is
   fixed by this spec.
 - Don't conflate the code review pattern with the audit pattern. Audits
-  permit Haiku iteration; code reviews do not. The two patterns are
+  permit fast-cheap iteration; code reviews do not. The two patterns are
   intentionally different and live in different skills.
 - Don't dispatch review agents with caller context. Zero-context
   isolation is a normative requirement, not an optimization.
@@ -410,8 +391,8 @@ prohibits passing the caller's dispute to the substantive pass.
 - **skill-writing**: governs the structure of the SKILL.md, uncompressed,
   and dispatch instruction file derived from this spec.
 - **spec-auditing**: verifies this spec meets quality bar before the
-  derived skill is written. Uses the audit pattern (up to two Haiku
-  iterations, then Sonnet final), which is deliberately different from
+  derived skill is written. Uses the audit pattern (up to two fast-cheap
+  iterations, then standard final), which is deliberately different from
   the code review pattern this spec defines.
 - **skill-auditing**: verifies the derived SKILL.md and dispatch
   instruction file match this spec. Uses the same audit pattern as

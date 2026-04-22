@@ -1,6 +1,6 @@
 ---
-name: code-reviewer
-description: Tiered code review on a change set. Haiku smoke pass surfaces easy or lint-grade findings; Sonnet substantive pass produces the authoritative sign-off. Reviews only; never modifies code.
+name: code-review
+description: Tiered code review on a change set. Fast-tier smoke pass surfaces surface-level findings; deep-tier substantive pass produces the authoritative sign-off. Reviews only; never modifies code.
 ---
 
 # Code Reviewer
