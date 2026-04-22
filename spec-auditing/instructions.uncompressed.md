@@ -5,6 +5,11 @@ Disposition: strict, skeptical, evidence-based, non-creative during audit.
 Input: `<target-path> [--spec <spec-path>] [--fix]`
 Default: audit (read-only). One spec or spec/target pair per invocation;
 multi-subject audits chain as separate runs.
+Optional audit context may accompany the invocation: explicit spec-only
+request, repository or project conventions, and custom severity thresholds.
+
+Invocation requirement: run this skill only through a dispatch agent with zero
+inherited context. Inline invocation is unsupported.
 
 Gates:
 
@@ -23,7 +28,7 @@ Gates:
    c. `--spec` not provided AND target does NOT end in `spec.md`:
       - Resolve spec from sibling `<basename>.spec.md`. Missing → STOP: spec file missing.
 3. Read all resolved files fully before judging. Partial → STOP: incomplete input.
-4. Precedence: this file controls procedure, spec controls domain, target subordinate. Report every conflict; never normalize.
+4. Precedence: this instruction file controls audit procedure; the audited spec controls domain content; the companion target is subordinate. Report every conflict; never normalize.
 5. `--fix` requires target git-tracked and clean. Untracked/modified/deleted/conflicted → STOP: target must be tracked and clean.
 6. Reject approve/stamp requests → STOP: approve mode not supported.
 7. Spec-only mode: skip companion-dependent gates (gate 3 reads spec only; skip gate 5 — no writes will occur; gate 6 unchanged). `--fix` in spec-only → report unsupported, proceed audit-only.
@@ -63,7 +68,7 @@ Audit (pair-audit mode):
 9. Terminology: stable defined terms, undefined critical terms, synonym drift, renamed concept mapping.
 10. Change Drift Risk: duplicated text, loose paraphrases, isolated assumptions, missing cross-refs, future divergence hotspots.
 11. Unauthorized Additions: classify target-only additions as `Valid Extension`, `Derived but Unstated`, or `Unauthorized Addition`.
-12. Economy: apply the removal test to duplicated rules, unnecessary scaffolding, and prose that can be removed without changing effect. Consolidation opportunities = Informational; escalate to Low/Medium where waste creates drift risk.
+12. Economy: apply the removal test to duplicated rules, unnecessary scaffolding, and prose that can be removed without changing effect. Confirm the effect before reporting waste. Consolidation opportunities = Informational; escalate to Low/Medium where waste creates drift risk.
 13. Compression fidelity: flag loss, gain, bloat. Loss/gain = governance failures (High+); bloat = quality issue (Medium).
 
 Audit (spec-only mode — apply instead of pair-audit when no companion):
@@ -92,6 +97,12 @@ Reflect all material spec reqs without simplifying away meaning.
 Self-contained — never reference/depend on spec at runtime.
 Content not justified by spec's purpose = finding.
 Expected smaller than spec; if not, examine for unjustified additions.
+
+Dispatch-pattern exception: a companion for a dispatch skill may be an
+intentionally thin invocation reference. Do not flag missing behavioral detail
+as an omission when the design explicitly delegates that detail to the
+companion dispatch instructions file. The thin companion must still cover:
+invocation syntax, parameters, return values, and key error conditions.
 
 Severity:
 Critical: reverses meaning, breaks trust, unsafe impl, violates gating/precedence/safety.
@@ -128,14 +139,6 @@ Output:
    Spec-only mode: internal consistency observations only (no cross-file drift).
 7. `Repair Priorities`: highest-value fix order first.
 8. Quote evidence inline for every finding.
-
-Fix mode:
-
-1. Run full audit first.
-2. Modify target only; never modify spec. Spec defects found during audit → report as finding; do not repair spec.
-3. Fix in severity order: Critical → High → Medium → Low. Within severity: semantic → terminology → structural → stylistic.
-4. When spec lacks detail to guide a fix, report as spec critique rather than guessing.
-5. Re-audit after fixes. Maximum 3 passes. Stop early if aligned.
 
 When in doubt: optimize for preserving meaning, exposing mismatch, and preventing silent drift.
 
