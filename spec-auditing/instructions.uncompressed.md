@@ -19,8 +19,7 @@ Gates:
    b. `--spec` not provided AND target ends in `spec.md`:
    - If caller explicitly requested spec-only mode → spec-only mode.
    - Otherwise auto-detect companion in this order:
-     0. `companion:` frontmatter field in target spec, if present → resolve that path first; if invalid, report invalid companion reference and continue the remaining chain.
-     1. If target is a named companion spec, `<same-dir>/<name>.md`
+       1. If target is a named file spec, `<same-dir>/<name>.md`
       - Companion found → pair-audit mode; report which file was auto-detected.
         Multiple candidates → use first in order above; report ambiguity.
    - Folder-level `spec.md` has no additional universal fallback.

@@ -27,7 +27,7 @@ This skill applies when:
 
 - writing a new specification document (spec.md)
 - updating an existing specification document
-- writing a derived target document governed by an existing spec
+- writing a derived specification document governed by an existing spec
 
 This skill does not apply to:
 
@@ -35,8 +35,8 @@ This skill does not apply to:
 - auditing specifications (see `spec-auditing`)
 - retroactive application to existing artifacts without a re-audit
 
-All scope must be explicitly declared. Silent scope expansion is
-prohibited.
+All scope must be explicitly declared. The canonical scope-expansion rule
+is `Requirements > No Silent Scope Expansion`.
 
 This spec governs all specification documents, including itself.
 
@@ -48,6 +48,22 @@ This spec governs all specification documents, including itself.
 
 **Spec:** A normative document defining rules, requirements,
 constraints, and expected behavior.
+
+**Target spec:** The specification document being authored or updated
+under this spec.
+
+**Derived spec:** A target spec written under the authority of an
+existing governing spec.
+
+**Governing spec:** The authoritative spec that constrains a derived
+spec.
+
+**Source requirement:** The requirement or rule in the governing spec
+that authorizes a corresponding requirement in a derived spec.
+
+**Unauthorized Addition:** A requirement, behavior, or constraint in a
+derived spec that has no supporting source requirement in the governing
+spec.
 
 **Atomic:** A requirement expressing exactly one testable condition;
 cannot be decomposed further.
@@ -99,6 +115,40 @@ Each section must be classified as one of:
 - Only **Normative sections** are strictly enforceable.
 - Non-normative sections must not introduce hidden requirements.
 - If a statement affects behavior, it must be moved to a normative section.
+- Section classification must be explicit in a `Section Classification`
+  table inside `Content Modes`. Each top-level section must appear exactly
+  once with exactly one mode.
+
+### Section Classification
+
+| Section | Mode |
+| --- | --- |
+| Purpose | Normative |
+| Scope | Normative |
+| Definitions | Normative |
+| Content Modes | Normative |
+| Definition of a Specification | Normative |
+| Requirements | Normative |
+| Normative Language | Normative |
+| Target Spec Contract | Normative |
+| Allowed Transformations | Normative |
+| Traceability Requirement | Normative |
+| Behavior | Normative |
+| Defaults and Assumptions | Normative |
+| Required Sections | Normative |
+| Optional but Recommended Sections | Normative |
+| Requirement Writing Rules | Normative |
+| Requirement Clarity | Normative |
+| Constraints | Normative |
+| Error Handling | Normative |
+| Extension Rules | Normative |
+| Consistency Requirements | Normative |
+| Output Quality Criteria | Normative |
+| Self-Validation Checklist | Informational |
+| Relationship to Spec Auditor | Descriptive |
+| Derivation Workflow | Normative |
+| Precedence Rules | Normative |
+| Don'ts | Normative |
 
 ---
 
@@ -151,44 +201,46 @@ When writing any spec governed by this spec, the spec author must clearly distin
 
 ---
 
-## Target Document Contract
+## Target Spec Contract
 
-This spec defines the structure and constraints of a derived target document.
+This spec defines the structure and constraints of a target spec.
+When the target spec is a derived spec, the derived-spec rules below apply.
 
-The target document must:
+The target spec must:
 
 - conform to this spec’s structure and requirements
 - include all required sections
 - preserve the meaning of all normative statements
+- keep definitions, scope, constraints, and defaults semantically stable
 
-The target document must not:
+The target spec must not:
 
-- introduce new normative requirements
+- introduce new requirements
 - redefine terms
 - expand scope beyond this spec
+- change constraints or defaults
+- introduce new behavior or terminology without explicit support in the governing spec
 
 ---
 
 ## Allowed Transformations
 
-The target document may:
+A derived spec may:
 
 - reword for clarity
 - reorganize structure
 - aggregate related requirements
 - add descriptive explanations
 
-The target document must not:
-
-- introduce new requirements
-- change constraints or defaults
-- introduce new concepts
+These transformations are allowed only when they preserve the Target Spec
+Contract above.
 
 ---
 
 ## Traceability Requirement
 
-Every normative requirement in the target must map to this spec.
+Every normative requirement in a derived spec must map to a source
+requirement in its governing spec.
 
 - no requirement may exist without a source
 - mappings must be one-to-one or one-to-many
@@ -198,16 +250,12 @@ Every normative requirement in the target must map to this spec.
 
 ## Behavior
 
-Every statement that affects behavior must be placed in a Normative
-section. Descriptive, exploratory, and informational sections must not
-introduce hidden requirements.
+This section is where a governed spec places behavior-specific rules,
+including edge cases. Section-mode placement rules are defined in
+`Content Modes`.
 
-Derived targets must preserve the meaning of all normative statements.
-Allowed transformations are: reword for clarity, reorganize structure,
-aggregate related requirements, add descriptive explanations.
-
-Derived targets must not introduce new requirements, change
-constraints or defaults, or introduce new concepts.
+Derived-spec transformation rules are defined in `Target Spec Contract` and
+`Allowed Transformations`.
 
 ---
 
@@ -223,12 +271,13 @@ detected, and every ambiguity will be flagged during audit.
 
 ## Required Sections
 
-Every spec derived from this spec must contain all of the following
+Every spec governed by this spec must contain all of the following
 top-level sections:
 
 - **Purpose** — defines intent
 - **Scope** — defines boundaries
 - **Definitions** — defines all key terms
+- **Content Modes** — explicit section classification
 - **Requirements** — atomic, testable rules
 - **Constraints** — limits and prohibitions
 - **Behavior** — system behavior including edge cases
@@ -273,11 +322,11 @@ Each requirement must:
 
 Each normative requirement must be written using plain, explicit sentences.
 
-- Use subject-verb-object form. Name the actor. Name the artifact acted upon. Name the trigger condition.
-- Two clear sentences are preferred over one dense, nested clause.
-- A reader must be able to parse any single requirement on first read without re-scanning surrounding text.
+- Use subject-verb-object form or an equivalent explicit actor-action-object structure.
+- Name the actor, the artifact acted upon, and the trigger condition when they apply.
+- Split a requirement if it contains more than one independent obligation or a nested exception chain that obscures the main rule.
 
-Dense or compressed phrasing in a normative requirement is a defect.
+A normative requirement is defective if the actor, required action, or trigger condition cannot be identified from the text.
 
 ---
 
@@ -343,7 +392,8 @@ A spec is acceptable only if:
 - no critical ambiguity exists
 - terminology is stable
 - no contradictions exist
-- no unauthorized scope expansion exists
+- no unauthorized scope expansion exists relative to the declared Scope
+  section, and for a derived spec relative to the governing spec
 
 ---
 
@@ -363,11 +413,7 @@ A spec is acceptable only if:
 
 This spec is designed to be audited.
 
-Assume:
-
-- every requirement will be challenged
-- every omission will be detected
-- every ambiguity will be flagged
+Audit assumptions are defined in `Defaults and Assumptions`.
 
 ---
 
@@ -397,7 +443,7 @@ If a normative statement can be interpreted in more than one
 reasonable way, it is invalid and must be rewritten.
 
 Normative content governs behavior. Non-normative content must not
-introduce hidden requirements or override normative content.
+override normative content.
 
 ---
 
@@ -406,8 +452,6 @@ introduce hidden requirements or override normative content.
 - Do not write specs for non-specification documents.
 - Do not embed normative requirements in examples, descriptive text,
   or exploratory sections.
-- Do not expand scope without explicit declaration in the Scope
-  section.
 - Do not apply this spec retroactively to existing artifacts without
   a re-audit.
 - Do not treat paraphrase as acceptable unless semantically

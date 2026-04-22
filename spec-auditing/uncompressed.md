@@ -35,19 +35,17 @@ inline editing and may not be suitable for large files in fix mode.
   Economy, Terminology, Internal Consistency. Coverage Summary set to:
   N/A — spec-only mode, no companion present. If spec-only is not explicitly
   requested, targeting `spec.md` auto-upgrades to Pair-Audit when a companion is
-  found via auto-detect fallback chain: `companion:` frontmatter → sibling
-  `<name>.md` for named companion specs. Folder-level `spec.md` has no extra
+  found via auto-detect fallback chain: sibling `<name>.md` for named file
+  specs. Folder-level `spec.md` has no extra
   universal fallback and otherwise remains spec-only.
 
 ### Companion Auto-Detect
 
 When target ends in `spec.md`, `--spec` is not provided, and spec-only was not
 explicitly requested, the auditor checks for a companion in this order:
-`companion:` frontmatter field → sibling `<name>.md` for a named
-companion spec. Folder-level `spec.md` has no additional universal fallback.
-If the frontmatter companion
-path is invalid, report that and continue the remaining chain. Reports which
-file was found, or reports none and uses spec-only mode.
+sibling `<name>.md` for a named file spec. Folder-level `spec.md` has no
+additional universal fallback. Reports which file was found, or reports none
+and uses spec-only mode.
 
 ## STOP Conditions
 

@@ -1,8 +1,4 @@
----
-title: Spec Auditing Specification
-companion: instructions.txt
-last-updated: 2026-04-15
----
+# Spec Auditing Specification
 
 ## Purpose
 
@@ -50,7 +46,7 @@ In pair-audit mode, the auditor evaluates:
    - Usually a markdown file intended to serve as the specification
 
 2. **Target File** (companion)
-   - A related markdown file that implements, explains, summarizes, derives from, or operationalizes the spec
+   - A related file that implements, explains, summarizes, derives from, or operationalizes the spec
    - Examples:
      - an agent file
      - a README
@@ -66,9 +62,9 @@ The auditor must treat the spec as normative unless this file explicitly declare
 ## Definitions
 
 - **Spec file**: the normative markdown document describing rules, requirements, expectations, structure, or behavior for a system or artifact.
-- **Named companion spec**: a spec file named `<name>.spec.md` that targets one sibling file named `<name>.md`.
+- **Named file spec**: a spec file named `<name>.spec.md` that targets one sibling file named `<name>.md`.
 - **Folder spec**: a bare `spec.md` file that governs a directory, artifact set, primary thing in that directory, or a hierarchy of child specs/folders. It is not interpreted as a same-basename file-targeting spec.
-- **Companion file**: a related markdown file that implements, explains, summarizes, derives from, or operationalizes the spec. Also called "target file."
+- **Companion file**: a related file that implements, explains, summarizes, derives from, or operationalizes the spec. Also called "target file."
 - **Target file**: synonym for companion file in pair-audit mode; the file being evaluated against the spec.
 - **Finding**: a numbered, severity-labeled observation of a defect, weakness, or risk in the audited material.
 - **Pair-audit mode**: the auditor evaluates a spec file and its companion file together.
@@ -101,13 +97,15 @@ The auditor must identify:
 
 Unless otherwise stated:
 
-1. `spec.md` defines how the audit must be conducted
-2. The spec file defines what is authoritative about the subject matter
-3. The target file is subordinate to the spec
+1. This skill spec defines how the audit must be conducted.
+2. The audited spec defines what is authoritative about the subject matter.
+3. The companion target is subordinate to the audited spec.
 
-If the target file conflicts with the spec, the spec wins.
+If the companion target conflicts with the audited spec, the audited spec wins.
 
-If the spec conflicts with this file’s audit rules, this file wins for audit procedure, while the spec remains authoritative for domain content.
+If the audited spec conflicts with this skill spec's audit rules, this skill
+spec wins for audit procedure, while the audited spec remains authoritative for
+domain content.
 
 The auditor must never silently reconcile conflicts. All meaningful conflicts must be reported.
 
@@ -117,8 +115,8 @@ The auditor must never silently reconcile conflicts. All meaningful conflicts mu
 
 The auditor expects:
 
-- the path or content of the spec file
-- the path or content of the target file
+- one target path: either the spec file or the companion file being audited
+- optional explicit spec path override when the target path points to a companion file
 - optional audit context, including an explicit request for spec-only mode when the caller wants to audit a spec in isolation
 - optional repository or project conventions
 - optional severity thresholds
@@ -139,13 +137,11 @@ When the target filename ends in `spec.md`, no `--spec` flag is provided, and
 the caller has not explicitly requested spec-only mode, the auditor checks for
 a companion via this fallback chain (in order):
 
-0. `companion:` frontmatter field in the target spec, if present — resolve that path first; if it does not resolve, report an invalid companion reference and continue the remaining chain
-1. If the target is a named companion spec, sibling `<name>.md` in the same directory
+1. If the target is a named file spec, sibling `<name>.md` in the same directory
 
 For a folder spec, companion auto-detect has no additional universal fallback.
 If the folder spec should pair-audit against a specific companion, that
-relationship must be declared explicitly via `companion:` or supplied by the
-caller through an explicit path.
+relationship must be supplied by the caller through an explicit path.
 
 If a companion is found, the auditor proceeds in pair-audit mode and reports
 which candidate was auto-detected. If multiple candidates match, the first in
@@ -316,6 +312,21 @@ Checks include:
 - structural scaffolding that exceeds the complexity of the content it frames
 
 The auditor must apply the removal test to each flagged element and confirm the effect before reporting it. Consolidation opportunities are Informational findings. Where waste creates drift risk, escalate to Low or Medium.
+
+### 11. Compression Fidelity
+
+Determine whether the companion preserves the spec's meaning without loss,
+gain, or unjustified bloat.
+
+Checks include:
+
+- loss: requirements, constraints, or distinctions dropped from the spec
+- gain: new requirements or behaviors introduced without support in the spec
+- bloat: added material that does not improve the companion's fit for purpose
+
+Compression fidelity failures are governance defects: loss and gain should be
+treated as High or higher depending on impact; bloat is normally Medium unless
+it materially increases drift risk.
 
 ---
 
