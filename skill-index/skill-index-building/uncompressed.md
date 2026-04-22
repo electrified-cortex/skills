@@ -102,6 +102,7 @@ No early termination between these two writes for a single node.
 ### Combo Nodes
 
 A combo node is a directory that has both a skill manifest of its own and at least one manifest-bearing child. A combo node:
+
 - Emits a `.` self entry in its own `skill.index`.
 - Emits a sub-node-marked entry (key ending in `/`) in its parent's `skill.index`.
 - Has its manifest-bearing subdirectories traversed normally.
@@ -111,6 +112,7 @@ A combo node is a directory that has both a skill manifest of its own and at lea
 Shortcut entries have multi-segment keys (e.g. `tools/compression/`). They are curator-added and are never mechanically generated.
 
 When the existing `skill.index` at a node already contains shortcut entries:
+
 - Preserve them verbatim: same key, same keyword list, same character sequence.
 - Merge with the freshly generated mechanical portion.
 - Sort the combined list per the sort rule. Self entry (if any) remains first.

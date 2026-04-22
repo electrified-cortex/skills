@@ -131,7 +131,7 @@ Maintain the ordered set of nodes visited on the current resolution path. A node
 
 ## Audit Report Format
 
-```
+```md
 ## Skill Index Audit Report
 
 root: <absolute path>

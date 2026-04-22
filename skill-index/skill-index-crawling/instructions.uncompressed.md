@@ -28,12 +28,14 @@ Open `skill.index` at `root`. If the file does not exist: return outcome `no ind
 ### Step 2 — Parse entries
 
 Parse each line of `skill.index` as one entry in the form `key: keyword, keyword, keyword`:
+
 - Split at the first colon. Everything before the first colon is the entry key. Everything after (trimmed) is the keyword list, split on `, `.
 - Malformed lines (no colon, empty key, forbidden characters): record in the crawl report under `inconsistencies` and skip that line. Other entries at the same node remain usable.
 
 ### Step 3 — Check the stamp
 
 Open `skill.index.sha256` at the current node's directory. Compute the SHA-256 of the stored bytes of `skill.index`. Compare:
+
 - Match: overlay is trusted for this node (if needed for disambiguation).
 - Mismatch or file missing: overlay is untrusted for this node. Record the finding in `inconsistencies`. The raw index is still usable; only overlay-based disambiguation is suppressed at this node.
 
@@ -44,6 +46,7 @@ Case-fold both the `need` phrase and all entry keys and keywords. Declare an ent
 ### Step 5 — Rank Hits
 
 Apply ranking:
+
 - Self entry (key `.`) or plain leaf entry (key with no trailing `/`) beats a descent-marked entry (key ending in `/`) when ranking is otherwise equal.
 - If the overlay is trusted and two or more Hits are tied after the above ranking: consult `skill.index.md` for the tied entries to break the tie. The overlay may only be used to disambiguate among existing Hits — it cannot produce new candidates not already in the raw index.
 
@@ -62,6 +65,7 @@ Apply ranking:
 ### Step 8 — Descend
 
 Determine the target path:
+
 - Single-segment key (e.g. `foo/`): target is `<current node directory>/foo/`.
 - Multi-segment key / shortcut entry (e.g. `tools/compression/`): walk each segment from the current node's directory. At every step, verify the resolved path does not contain `..` segments, does not use an absolute-path indicator, and does not escape above the invocation root. If any step escapes: record `subtree-escape` in `inconsistencies`, return outcome `subtree-escape` and stop.
 
@@ -72,6 +76,7 @@ Otherwise: append the resolved target to the visited set. Open `skill.index` ins
 ### Combo Entry Handling
 
 A combo entry is a descent-marked entry whose target also has a self entry in its own `skill.index` — meaning the target is simultaneously a skill and a parent of further skills. Handle as follows:
+
 1. Attempt to match as a plain leaf first (as if it had no trailing `/`).
 2. If the leaf produces a Hit at the current ranking step, return it.
 3. If the leaf does not produce a Hit, descend into the sub-node and re-apply from Step 2.

@@ -50,4 +50,3 @@ The prs domain has its own sub-skills under gh-cli-prs/:
 ## Related
 
 `dispatch`, `gh-cli-actions`, `gh-cli-api`, `gh-cli-issues`, `gh-cli-projects`, `gh-cli-prs`, `gh-cli-releases`, `gh-cli-repos`, `gh-cli-setup`
-

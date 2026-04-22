@@ -72,6 +72,7 @@ R4. Must include a Well-Formed Prompt section listing the four required componen
 R5. Must enumerate footguns F1–F5 as a table with two columns only: footgun name + mitigation. No "why" prose. Rationale lives in this spec and may be expanded in `supplemental.md`.
 
 R6. Must instruct on subagent-type selection at minimum:
+
 - Project context inherits; don't hand-feed.
 - Conversation context does not inherit; hand-feed everything else.
 - Select narrowest type covering required tool scope.
@@ -82,6 +83,7 @@ R7. Must state the inline-cost-unaffordable fallback: (a) dispatch with fully ha
 R8. Must point to `supplemental.md` for nuance. Must NOT inline supplemental content.
 
 R9. Must NOT contain:
+
 - Empirical test descriptions (date, method, token examples) — those live in `supplemental.md`.
 - Anti-pattern walkthroughs — `supplemental.md`.
 - Error-handling tables — `supplemental.md`.
