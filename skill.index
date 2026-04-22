@@ -1,3 +1,4 @@
+audit-reporting: audit report output, report file convention, output path, audit report location
 code-reviewer: code review, review code, review diff, review PR, find findings, check code, another agent's code
 compression: compress, compress markdown, compress text, shrink, condense, reduce tokens, smaller budget
 dispatch: dispatch, dispatch agent, subagent, background agent, foreground agent, model choice, how to dispatch
