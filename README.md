@@ -43,6 +43,12 @@ Skills ship with companion `.spec.md` files that preserve design rationale,
 credits, and constraints in full natural language. The skill tells machines
 *what* to do; the spec tells humans and agents *why*.
 
+## Tiered Model Strategy
+
+Across dispatch and audit loops, use an inexpensive/fast model for iterate
+passes and a default model for final sign-off. Keep skill-specific caveats in
+the individual skill docs.
+
 ## Journey
 
 ### Compression
@@ -85,7 +91,7 @@ Drift between a spec and its compiled companion is silent debt. Spec auditing wa
 
 ### Skill Auditing
 
-Once skill-writing established what a correct skill looks like, skill auditing was the enforcement arm. It checks the spec gate, runs a smoke pass over the skill file itself, then verifies compliance against the skill-writing spec in a single dispatched agent. The tiered model strategy — inexpensive model for iterate passes, default model for final sign-off — keeps audit costs proportional to the depth of scrutiny needed.
+Once skill-writing established what a correct skill looks like, skill auditing was the enforcement arm. It checks the spec gate, runs a smoke pass over the skill file itself, then verifies compliance against the skill-writing spec in a single dispatched agent.
 
 [Read more](skill-auditing/README.md)
 
