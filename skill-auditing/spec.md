@@ -363,7 +363,7 @@ is the caller's responsibility (fix → recompress → re-audit). This is intent
 narrower than `spec-auditing`'s in-process loop because skill-auditing operates on a
 multi-file artifact pair where re-audit requires regenerating compiled runtime.
 
-## Constraints
+## Auditing Constraints
 
 - Auditor is read-only by default; in `--fix` mode it may modify only
   `uncompressed.md` and `instructions.uncompressed.md` co-located with `skill_path`.

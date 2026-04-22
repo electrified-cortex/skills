@@ -66,6 +66,8 @@ The auditor must treat the spec as normative unless this file explicitly declare
 ## Definitions
 
 - **Spec file**: the normative markdown document describing rules, requirements, expectations, structure, or behavior for a system or artifact.
+- **Named companion spec**: a spec file named `<name>.spec.md` that targets one sibling file named `<name>.md`.
+- **Folder spec**: a bare `spec.md` file that governs a directory, artifact set, primary thing in that directory, or a hierarchy of child specs/folders. It is not interpreted as a same-basename file-targeting spec.
 - **Companion file**: a related markdown file that implements, explains, summarizes, derives from, or operationalizes the spec. Also called "target file."
 - **Target file**: synonym for companion file in pair-audit mode; the file being evaluated against the spec.
 - **Finding**: a numbered, severity-labeled observation of a defect, weakness, or risk in the audited material.
@@ -133,15 +135,17 @@ their files and makes the relationship discoverable without a registry.
 
 ### Companion Auto-Detect
 
-When the target is a `spec.md` file, no `--spec` flag is provided, and the
-caller has not explicitly requested spec-only mode, the auditor checks for a
-companion via this fallback chain (in order):
+When the target filename ends in `spec.md`, no `--spec` flag is provided, and
+the caller has not explicitly requested spec-only mode, the auditor checks for
+a companion via this fallback chain (in order):
 
 0. `companion:` frontmatter field in the target spec, if present — resolve that path first; if it does not resolve, report an invalid companion reference and continue the remaining chain
-1. `<basename-without-spec-suffix>.md` in the same directory
-2. `uncompressed.md` in the same directory
-3. `SKILL.md` in the same directory
-4. Any `*.agent.md` file in the same directory
+1. If the target is a named companion spec, sibling `<name>.md` in the same directory
+
+For a folder spec, companion auto-detect has no additional universal fallback.
+If the folder spec should pair-audit against a specific companion, that
+relationship must be declared explicitly via `companion:` or supplied by the
+caller through an explicit path.
 
 If a companion is found, the auditor proceeds in pair-audit mode and reports
 which candidate was auto-detected. If multiple candidates match, the first in

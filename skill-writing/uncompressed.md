@@ -26,8 +26,8 @@ When creating a new skill, follow this order. Never skip steps.
    flags any markdown issues. Fix findings, recompress, re-audit
    until PASS.
 
-For dispatch skills, also write the companion agent file (see Dispatch
-Skill section).
+For dispatch skills, also write the companion instruction source file (see
+Dispatch Skill section).
 
 When revising an existing skill: always update the spec first. The only
 exception is changes limited to non-normative content (README, examples,
@@ -54,7 +54,7 @@ skill-name/
 └── spec.md             ← normative spec (never at runtime)
 ```
 
-`instructions.txt` or `<name>.md` present = dispatch skill. Absent = inline.
+`instructions.txt` present = dispatch skill. Absent = inline.
 
 ## Inline Skill
 
@@ -68,6 +68,17 @@ Dispatch via Dispatch agent: "Read and follow `instructions.txt`.
 Input: `<params>`"
 
 Parameters: types, required/optional, defaults. Output format specified.
+
+Any dispatch-time constraint the caller must know before invocation belongs in
+the routing card (`uncompressed.md` / `SKILL.md`), not only in
+`instructions.txt`. Examples: required model tier for `--fix`, required tool
+class, or any refusal condition the caller can determine before dispatch.
+`instructions.txt` may enforce the rule defensively, but that is secondary.
+
+If a folder-level `spec.md` should pair-audit against a specific companion,
+declare that relationship explicitly with `companion:` frontmatter in the spec.
+Do not rely on repo-local fallback filenames — those belong in skill-specific
+auditors, not in universal spec-auditing rules.
 
 Dispatch instruction file must be in the same directory or a known path.
 Compressed `instructions.txt` contains only instructions — no title
