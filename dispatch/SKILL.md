@@ -151,5 +151,4 @@ Empirical claims in this skill conflict with agent expectation about inherited c
 Correctness > throughput. Decision tree says inline but host overloaded → not permission to dispatch incorrectly. Defer or reduce scope.
 
 Related Skills:
-`skill-writing` — how to structure a skill that dispatches (routing card, inline vs dispatch decision).
 Agent files: `dispatch/agents/` — ready-to-install Dispatch agent definitions for Claude Code CLI and VS Code.

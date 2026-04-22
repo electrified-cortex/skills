@@ -5,241 +5,80 @@ description: Decision tree for whether, how, and at what model tier to dispatch 
 
 # Dispatch
 
-Read this skill once. Its terms — `fast-cheap`, `standard`, `deep`, foreground/background, footguns F1–F5 — are assumed known by any skill or agent that references `dispatch`. Inline skills don't need this skill. Skills that dispatch sub-agents must reference it, and callers of those skills are expected to have read it.
-
-When a calling agent (the host) faces a piece of work, the instinct to delegate is often right — but the mechanics of dispatch carry sharp edges. Dispatched agents bootstrap from scratch: no conversation history, no awareness of what the host has been doing, no implicit context beyond what the platform injects and what the host writes into the prompt. Getting the dispatch decision wrong produces token waste at best and trust-boundary violations at worst. This skill replaces tribal knowledge with an explicit decision tree, a footgun catalogue, and a well-formed-prompt template.
-
----
+Read once. Terms (`fast-cheap`, `standard`, `deep`, foreground/background, F1–F5) assumed known by any caller. Inline skills don't reference this skill.
 
 ## Decision Tree
 
-Apply the questions below in order. Stop at the first answer that gives you an outcome.
+Apply in order. Stop at first match.
 
-### Q1: Is the work worth doing at all right now?
-
-If the work is speculative, blocked, or lower priority than current obligations, **Defer**: record it as a draft task and move on. Do not dispatch or execute.
-
-### Q2: Does the work require the host's conversation context?
-
-Conversation context — the in-memory turn history the host has accumulated — does not transfer to any dispatched agent.
-
-Empirical (2026-04-19, secret-phrase test): the host wrote a unique token (`purple-tractor-mountain-9183`) in conversation, dispatched a sub-agent and asked it to quote the token; the sub-agent reported no conversation context visible. Conversation context is not inherited by any dispatched subagent type.
-
-If the work cannot be stated without reference to that history, and summarizing it would cost more tokens than doing the work inline, **Do not dispatch — perform inline.**
-
-### Q3: Does the work hold an exclusive resource the host already owns?
-
-If the work requires acting as the host on a resource for which there is no clean handoff (a live session, an authenticated channel, an open file lock), **Do not dispatch — perform inline.** See F1.
-
-### Q4: Is the work large enough to justify dispatch overhead?
-
-Every dispatch carries fixed overhead: system prompt injection, project context loading, output round-trip. If the host can complete the work in fewer than approximately three of its own turns, **Do not dispatch — perform inline.** See F2.
-
-### Q5: Does the work result need to be acted on in the same host turn?
-
-- If **yes and you need to keep responding to your driver**: you cannot block. Consider whether the work can be deferred or batched.
-- If **yes and blocking is acceptable**: **Dispatch foreground** — the host blocks until the result arrives.
-- If **no (result can arrive later)**: **Dispatch background** — the host continues and receives a notification on completion.
-
-Default (D3): when the host is in a long-poll loop or has any responsiveness obligation, prefer background dispatch.
-
-### Q6: Decision summary
-
-| Answer | Outcome |
+| Condition | Outcome |
 | --- | --- |
-| Work is speculative or blocked | Defer |
+| Speculative, blocked, or low priority | Defer (record draft, move on) |
 | Requires host conversation context | Inline |
-| Holds exclusive resource, no handoff | Inline |
-| Completable in fewer than ~3 host turns | Inline |
+| Holds exclusive resource host already owns | Inline (F1) |
+| Completable in <~3 host turns | Inline (F2) |
 | Result needed this turn, blocking unacceptable | Defer or batch |
 | Result needed this turn, blocking acceptable | Dispatch foreground |
 | Result can arrive later | Dispatch background |
 
-Default (D1): the default is **inline**. Dispatch is the exception, not the rule.
+Default: inline. Dispatch is the exception.
 
----
+## Model Tier
 
-## Subagent Type Selection
+| Tier | Use for | Risk |
+| --- | --- | --- |
+| `fast-cheap` | Shallow/mechanical, true zero-context work | Shallow output → re-dispatch higher |
+| `standard` | Moderate reasoning. Most common explicit override | — |
+| `deep` | Critical-path, max reasoning | Rarely correct as override; consider inline |
 
-Project context IS inherited automatically by every subagent type.
+Default tier: host's own.
 
-Empirical (2026-04-19, enumerate-context test): both a `Dispatch`-type and a `general-purpose`-type sub-agent were asked to list the CLAUDE.md and memory files visible in their system prompts; both reported the workspace and project-scoped CLAUDE.md files plus the project memory index. Project context is inherited.
+`fast-cheap` pre-pass: appropriate only when work is genuinely zero-scope (mechanical pattern match, format check, extraction). Not appropriate when sub-agent needs judgment, prior context, or chained reasoning.
 
-This means dispatched agents already have baseline awareness of project conventions. You do not need to hand-feed project-level rules into every dispatch prompt.
+## Subagent Type
 
-### Dimensions on which subagent types differ
+Project context (CLAUDE.md, memory index) inherits automatically. Don't hand-feed it.
+Conversation context does NOT inherit. Hand-feed everything else the agent needs.
 
-When choosing a subagent type, consider three dimensions:
+Select narrowest type covering required tool scope. Don't default to maximally permissive.
+Type names evolve between releases — treat as examples, verify from current platform docs.
 
-**Tool scope**: different types are permitted to call different tools. Some types are deliberately restricted (for example, a type intended for scope-isolated audit work may have no access to file-write tools). Match the type to the tools the task actually needs — do not reach for a broader-scoped type merely because it is familiar.
+## Well-Formed Prompt
 
-**System prompt size**: some types carry a large default instruction set; others are lean. A type with a heavy system prompt costs more tokens per dispatch. Prefer leaner types when the task is simple.
+Required:
 
-**Default model**: some subagent types may pin a default model. If a type's pinned model is heavier than the task warrants, override it (see Model Override below).
+1. Goal (one sentence, no implicit context)
+2. Hand-fed context (prior decisions, operator preferences, file paths absolute, term definitions, prior findings)
+3. Output shape (verdict, file path, list format)
+4. Scope/length constraints
 
-The platform's list of named subagent types evolves between Claude Code releases. Treat any type name you know as an example, not a stable enumeration. Verify available types from current platform documentation before relying on a specific name. For example, as of 2026-04-19 Claude Code offers types such as `Dispatch` (scope-isolated) and `general-purpose` (broader), but the complete list and their properties may change.
+Checklist:
 
-### Selecting in practice
+- [ ] Stranger reading cold knows exactly what to do?
+- [ ] Every needed file referenced by absolute path?
+- [ ] Every constraint stated?
+- [ ] Output described?
 
-Ask: "Does this task need file writes, external tool calls, or only read/analysis?" Match the narrowest type whose tool scope covers the task. Avoid selecting a maximally permissive type by default — that defeats the purpose of scoped dispatch.
+Any "no" → prompt not ready.
 
----
+## Footguns
 
-## Model Override
+| ID | Footgun | Mitigation |
+| --- | --- | --- |
+| F1 | Host-impersonation on shared exclusive resource | Prompt forbids sub-agent from initiating sessions/auth/touching named resource. If work needs it, inline. |
+| F2 | Dispatch for trivial work | Apply Q4 — <3 host turns → inline. |
+| F3 | Tight-loop micro-dispatches | Aggregate into one dispatch with structured result. If impossible, reconsider dispatch. |
+| F4 | Hook-denial escape via dispatch | Never. Treat denial as authoritative; request permission, change approach, or escalate. |
+| F5 | Thin-prompt context assumption | Every prompt satisfies Well-Formed Prompt. Hand-feed all context agent can't inherit. |
 
-The `model` parameter on the dispatch lets you specify a model class that differs from the host's own. The platform default (D2) is the host's own model when no override is specified.
+## When Inline Cost Is Unaffordable
 
-### When to override
+(a) Dispatch with fully hand-fed context prompt, or (b) defer. Don't dispatch incorrectly because inline is expensive.
 
-**fast-cheap**: correct when the work is shallow and mechanical — pattern matching, formatting, simple extraction. Lowest cost and fastest; if the task turns out to require more depth, you will receive a weak result and need to re-dispatch at a higher tier.
+## Supplemental
 
-**standard**: correct when the task requires moderate reasoning but not the host's full depth. The most common explicit override (typical when dispatching from a `deep`-tier host). Captures most cost savings with less risk of shallow output.
+For empirical evidence (context-inheritance tests), anti-pattern walkthroughs, error-handling guidance, and precedence notes: see `supplemental.md` in this skill folder.
 
-**deep**: correct when the dispatched task requires maximum reasoning depth, or when the task is the critical-path work and errors are expensive to retry. Upgrade to this tier from a lower-tier host is unusual; consider whether inline is better.
+## Related
 
-### Trade-off summary
-
-| Tier | Trade-off |
-| --- | --- |
-| fast-cheap | Lowest cost, fastest, risks shallow output |
-| standard | Moderate cost, capable for most tasks |
-| deep | Highest cost, maximum reasoning, rarely needed as explicit override |
-
----
-
-## When NOT to Dispatch
-
-These classes of work belong inline regardless of size or duration:
-
-1. **Work that requires the host's conversation context** and where summarizing that context costs more than doing the work directly. Conversation context does not inherit; you would have to hand-feed a full summary, and writing the summary is often the work.
-
-2. **Work whose result must drive the host's current-turn response**, when blocking is unacceptable. Background dispatch delivers later; foreground dispatch blocks. Neither fits "I need this right now to finish composing my reply."
-
-3. **Work that holds an exclusive resource with no clean handoff**: authenticated sessions, open connections, resources the host must hold continuously. Dispatching into these produces F1.
-
-4. **Work small enough to be trivial inline**: if the host can complete it in under three turns, dispatch overhead exceeds work value.
-
-If the host cannot afford the inline cost (context is too large, work is too slow), the alternatives are: (a) dispatch with a fully hand-fed context prompt and accept the prompt-construction cost, or (b) defer the work. The host must not dispatch incorrectly because inline is expensive.
-
----
-
-## Well-Formed Dispatch Prompt
-
-A dispatch prompt that omits any of these components will produce poor or incoherent output.
-
-**Required components:**
-
-1. **Goal**: one sentence stating exactly what the dispatched agent is to accomplish. No ambiguity. No implicit prior context.
-
-2. **Hand-fed context**: everything the dispatched agent needs that it cannot inherit. This includes:
-   - Prior decisions the host has made that constrain the task.
-   - Operator preferences relevant to this task.
-   - References to files by absolute path (the dispatched agent cannot infer paths from conversation).
-   - Definitions of project-specific terms not in CLAUDE.md.
-   - Any findings from the host's prior turns that the task depends on.
-
-3. **Expected output shape**: what should come back. Examples: "a single verdict: PASS or FAIL", "a written file at the path I specified", "a bullet list of findings, one per line", "a single line of text". Vague output expectations produce vague output.
-
-4. **Scope and length constraints**: what is out of scope, what should the agent NOT do, and any length limits on the response.
-
-### Prompt construction checklist
-
-Before dispatching, verify:
-
-- [ ] Can a stranger with no prior context read this prompt and know exactly what to do?
-- [ ] Have I referenced every needed file by absolute path?
-- [ ] Have I stated every constraint the task requires?
-- [ ] Have I described what output I expect?
-
-If any answer is no, the prompt is not ready. Fill the gaps before dispatching.
-
----
-
-## Footgun Catalogue
-
-### F1: Host-impersonation on a shared exclusive resource
-
-The dispatched agent attempts to act as the host with respect to a resource the host already holds open — for example, authenticating to a session, channel, or external service the host is already connected to.
-
-Why it is a footgun: the host's session may be invalidated, or the dispatched agent receives an error and consumes tokens reporting it. The resource now has two competing owners.
-
-Mitigation: state explicitly in the dispatch prompt that the dispatched agent must NOT initiate sessions, authenticate, or interact with the named shared resource. If the work genuinely needs that resource, perform it inline.
-
----
-
-### F2: Dispatch for trivial work
-
-The dispatched agent is given work small enough to complete inline in a few host turns.
-
-Why it is a footgun: dispatch overhead — system prompt injection, project context loading, output round-trip — exceeds the work value. You spend more tokens dispatching than the task costs.
-
-Mitigation: apply Q4 from the decision tree. If the host can complete the work in fewer than approximately three of its own turns, do not dispatch.
-
----
-
-### F3: Tight-loop micro-dispatches
-
-The host fires many small dispatches sequentially where one batched dispatch would suffice.
-
-Why it is a footgun: each dispatch carries fixed overhead. Sequential micro-dispatches multiply that overhead; aggregate token churn dominates the useful work.
-
-Mitigation: aggregate the work into a single dispatch prompt that returns a single structured result. If aggregation is genuinely impossible, reconsider whether dispatch is the right pattern at all — sequential micro-dispatches that cannot be batched often indicate the work should be inline.
-
----
-
-### F4: Hook-denial escape via dispatch
-
-The host dispatches in order to bypass a hook or permission denial that correctly applies to the host.
-
-Why it is a footgun: trust boundary violation. The dispatched agent may inadvertently perform actions the host was correctly prevented from performing. The hook denial was authoritative.
-
-Mitigation: never dispatch as a workaround for a denial. Treat the denial as authoritative. Address it directly: request permission from the operator, change your approach, or escalate. Do not route around governance.
-
----
-
-### F5: Thin-prompt context assumption
-
-The host writes a sparse dispatch prompt expecting the dispatched agent to reconstruct intent from conversation context that does not actually transfer.
-
-Why it is a footgun: the dispatched agent has zero visibility into the host's prior turns. A prompt that says "continue the analysis we discussed" delivers nothing — the dispatched agent has no "we," no "analysis," no prior turns.
-
-Mitigation: every dispatch prompt must satisfy the well-formed prompt requirements above. The host must hand-feed every piece of context the dispatched agent needs but cannot inherit. Write the prompt as if the dispatched agent is a stranger reading it cold — because it is.
-
----
-
-## Anti-Pattern Example
-
-ANTI-PATTERN: A host is midway through a research conversation. The operator has given several instructions narrowing the scope of a code audit, and the host has produced partial findings in prior turns. The host decides to dispatch a sub-agent with the prompt: "Continue the code audit and produce the final findings report."
-
-What goes wrong: the dispatched agent has no conversation context. It does not know what instructions the operator gave, what scope was narrowed, or what the partial findings were. It will either refuse (no goal), produce a full unscopecd audit (ignoring narrowing), or invent findings to fill the gap. The host receives an unusable result and must re-dispatch or redo the work inline.
-
-The correct decision: either (a) perform inline where the host has the conversation context, or (b) dispatch with a fully hand-fed prompt that includes the operator's scope instructions (quoted or paraphrased), the partial findings to date (written out explicitly), and the specific remaining work to complete. Option (a) is usually cheaper.
-
----
-
-## Error Handling
-
-**Decision tree returns no clear outcome**: default to inline. File a draft task or feedback note describing the ambiguous case. Do not guess.
-
-**A footgun fires** (for example, the dispatched agent errors on a shared resource): treat the error as evidence of a wrong dispatch decision, not as transient noise. Revise the dispatch decision before retrying. Do not retry the same dispatch unchanged.
-
-**Dispatched agent output is incoherent or off-topic**: the most likely cause is conversation-context absence (F5). Inspect the dispatch prompt for missing hand-fed context before re-dispatching. Correct the prompt, then re-dispatch.
-
-**Inline cost is unaffordable**: the alternatives are (a) dispatch with a fully hand-fed context prompt, accepting the prompt-construction overhead, or (b) defer the work. Do not dispatch incorrectly because inline is expensive.
-
----
-
-## Precedence Notes
-
-When a consuming skill (`skill-writing`) describes a specific dispatch pattern for its domain, that procedure governs over this skill's general guidance for that domain. This skill provides primitives; consumers shape them for their context.
-
-Where this skill's empirical claims conflict with an agent's expectation about what dispatched agents inherit, the empirical claim governs.
-
-Correctness over throughput: when the decision tree's correct outcome is "inline" but the host is overloaded, this skill is not permission to dispatch incorrectly. Defer or reduce scope; do not dispatch wrongly.
-
----
-
-## Related Skills
-
-- `skill-writing` — how to structure a skill that dispatches (routing card pattern, inline vs dispatch decision tree).
 - Agent files: `dispatch/agents/` — ready-to-install Dispatch agent definitions for Claude Code CLI and VS Code.
