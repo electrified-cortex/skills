@@ -20,6 +20,7 @@ Phase 2 — Skill Smoke Check: quick structural verification.
 3. Structure:
    Inline: frontmatter (`name`, `description`), direct instructions, self-contained.
    Dispatch: SKILL.md should be minimal lines routing content; instruction file exists and reachable; params typed (required/optional/defaults); output format specified; uses Dispatch agent (isolated), not background agent.
+   Stop gates in routing card (dispatch only): refusal conditions, eligibility guards, git-clean checks, path-escape rules in SKILL.md → NEEDS_REVISION. Finding: `stop gates belong in instructions.txt, not the routing card`.
 4. Frontmatter — `name` and `description` present and accurate.
 5. No duplication — not duplicating existing capability; if similar exists, recommend merge or distinguish.
 Phase 2 fail → verdict FAIL, don't proceed to Phase 3.

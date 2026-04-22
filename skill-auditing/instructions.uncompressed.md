@@ -92,6 +92,11 @@ and is reachable. Params typed with required/optional/defaults. Output
 format specified. Uses Dispatch agent (isolated), not background agent with
 host context.
 
+**Stop gates in routing card** (dispatch only): if SKILL.md contains refusal
+conditions, eligibility guards, git-clean checks, or path-escape rules, flag
+as NEEDS_REVISION. Finding text: `stop gates belong in instructions.txt, not
+the routing card`. Routing card = invocation signature + output format.
+
 ### 4. Frontmatter
 
 `name` and `description` present and accurate.

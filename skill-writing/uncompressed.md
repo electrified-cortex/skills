@@ -71,11 +71,10 @@ Input: `<params>`"
 
 Parameters: types, required/optional, defaults. Output format specified.
 
-Any dispatch-time constraint the caller must know before invocation belongs in
-the routing card (`uncompressed.md` / `SKILL.md`), not only in
-`instructions.txt`. Examples: required model tier for `--fix`, required tool
-class, or any refusal condition the caller can determine before dispatch.
-`instructions.txt` may enforce the rule defensively, but that is secondary.
+Routing card = invocation signature + output format. Stop gates (refusal
+conditions, git-clean checks, path escape guards, eligibility rules) belong in
+`instructions.txt` only — not the routing card. The dispatched agent enforces
+them; the host doesn't need to know them before dispatch.
 
 Do not rely on repo-local fallback filenames — those belong in skill-specific
 auditors, not in universal spec-auditing rules.

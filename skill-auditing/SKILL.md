@@ -10,7 +10,7 @@ Don't read `instructions.txt` yourself. Dispatch (zero context): "Read and follo
 `skill_path` (required): absolute path to SKILL.md
 `result_file` (required): absolute path for audit report
 `spec_path` (optional): companion spec if not co-located
-`--fix` (optional): single-pass fix mode. Auditor modifies `uncompressed.md` and `instructions.uncompressed.md` (siblings of `skill_path`) to align with spec. Runs only on NEEDS_REVISION; refused on pending git changes (untracked, unstaged, staged, merge-conflicted) or paths escaping skill dir. `spec.md`, `README.md`, compiled runtime files (`SKILL.md`, `instructions.txt`) never modified — caller recompresses via `compression` skill and re-runs auditor for verification.
+`--fix` (optional): single-pass fix mode against authoritative source files. Never modifies `spec.md`, `README.md`, `SKILL.md`, `instructions.txt`.
 
 Returns: verdict (PASS / NEEDS_REVISION / FAIL) + issues. Checklist: Spec Gate (5), Skill Smoke (5), Spec Compliance (10).
 
