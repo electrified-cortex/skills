@@ -10,14 +10,20 @@ Read the change set, produce a findings report. Read-only — never edit, commit
 - `focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorder priority; do not reduce depth.
 - `context_pointer` (optional): path to CLAUDE.md / README / style guide for local conventions. Read for conventions only.
 
+## Gates
+
+1. Resolve `change_set`. Path missing, ref unreachable, PR not found → STOP: return `verdict: error`, `failure_reason`.
+2. `tier=substantive` and `prior_findings` absent → STOP: return `verdict: error`, `failure_reason: "missing prior_findings"`.
+3. `change_set` is empty (no files, no diff content, no refs resolving to changes) → return empty result: `verdict: clean`, `findings: []`, no `prior_findings_disposition`.
+4. Read all files in the change set fully before judging. Partial read → STOP: return `verdict: error`, `failure_reason: "incomplete change set read"`.
+
 ## Procedure
 
-1. Resolve the change set. If the form cannot be resolved (path missing, ref unreachable, PR not found), return verdict `error` with `failure_reason`. Do NOT return findings.
-2. If `tier=smoke`: review for surface-level findings — style, naming, obvious bugs, missing error handling on observable failures, lint-grade defects. Bound depth to a fast pass. Skip design and architecture critique.
-3. If `tier=substantive`: review for design, correctness, security, concurrency, architectural risk, test adequacy, public API surface. Read every file touched by the change set, not just the diff hunks.
-4. Substantive pass MUST re-examine each `prior_findings` entry. For each prior finding, decide: agree (carry forward, severity may change), or contradict (mark false-positive or out-of-scope). Contradictions go in your output so the calling agent can preserve them.
-5. Apply focus areas if provided: examine focus areas first and most thoroughly. Still surface every `blocker` and `major` finding outside focus. `minor`/`nit` outside focus may be deprioritized.
-6. Read `context_pointer` if provided, for local conventions only. It does NOT replace your judgment.
+1. If `tier=smoke`: review for surface-level findings — style, naming, obvious bugs, missing error handling on observable failures, lint-grade defects. Bound depth to a fast pass. Skip design and architecture critique.
+2. If `tier=substantive`: review for design, correctness, security, concurrency, architectural risk, test adequacy, public API surface. Read every file touched by the change set, not just the diff hunks.
+3. Substantive pass MUST re-examine each `prior_findings` entry. For each prior finding, decide: agree (carry forward, severity may change), or contradict (mark false-positive or out-of-scope). Contradictions go in your output so the calling agent can preserve them.
+4. Apply focus areas if provided: examine focus areas first and most thoroughly. Still surface every `blocker` and `major` finding outside focus. `minor`/`nit` outside focus may be deprioritized.
+5. Read `context_pointer` if provided, for local conventions only. It does NOT replace your judgment.
 
 ## Severity vocabulary (use only these)
 
@@ -60,7 +66,6 @@ Read the change set, produce a findings report. Read-only — never edit, commit
 - Do not fix findings, even when the fix is one line. Report only.
 - Use only the severity vocabulary above. Do not invent severities.
 - Smoke pass must NOT receive `prior_findings`. If it arrives anyway, ignore and proceed.
-- Substantive pass without `prior_findings` is a malformed dispatch — return verdict `error` with `failure_reason: "missing prior_findings"`.
 - Single pass per dispatch. Do not chain or self-iterate.
 - Do not consult agent memories, working-tree state, or repository history beyond what `change_set` and `context_pointer` give you. Zero-context isolation is normative.
 - Caller disputes about prior findings will not be passed to you. Form your own judgment.

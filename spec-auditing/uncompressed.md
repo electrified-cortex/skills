@@ -35,17 +35,6 @@ One skill per invocation. Chain multiple subjects as separate runs.
   explicit spec-only request, auto-detects companion (sibling `<name>.md`) and
   upgrades to Pair-Audit if found.
 
-## STOP Conditions
-
-| Condition | Action |
-| --- | --- |
-| Target file missing or unreadable | STOP: target file missing |
-| Spec file missing when required | STOP: spec file missing |
-| Unable to read the resolved file set fully | STOP: incomplete input |
-| `--fix` target is not git-tracked and clean | STOP: target must be git-tracked and clean |
-| Approve or stamp mode requested | STOP: approve mode not supported |
-| `--fix` in spec-only mode | Report fix mode unavailable; continue with read-only audit |
-
 ## When to Use
 
 - Before committing compressed files (post-compression verification)
