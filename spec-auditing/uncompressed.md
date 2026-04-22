@@ -22,8 +22,9 @@ own strict disposition (defined in `instructions.txt`).
 
 **Returns:** Pass / Pass with Findings / Fail. Each finding includes: Finding ID, Severity, Title, Affected file(s), Evidence (with quote), Explanation, Recommended fix.
 
-Dispatch tier: read-only audit may use an inexpensive iterate tier.
-If `--fix` is requested, dispatch to an edit-capable default tier up front; haiku-class models may struggle with inline edits.
+Tiered model strategy: dispatch an inexpensive/fast model for iterate
+passes, default model for final sign-off. Warn: some models struggle with
+inline editing and may not be suitable for large files in fix mode.
 
 ## Modes
 

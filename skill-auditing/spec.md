@@ -325,6 +325,9 @@ Class names (haiku/sonnet/opus) are Anthropic-specific labels used
 as a convenient shorthand. Hosts running other model families should
 map these to their own inexpensive/default/premium tiers.
 
+Warn: some models struggle with inline editing and may not be suitable
+for large files in fix mode.
+
 ## Fix Mode Behavior
 
 When `--fix` is active, the auditor performs a **single-pass** repair against the

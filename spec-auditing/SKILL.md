@@ -19,6 +19,8 @@ Parameters:
 
 Returns: Pass / Pass with Findings / Fail verdict with numbered findings (Severity, Evidence, Recommended fix per finding)
 
+Tiered model strategy: dispatch inexpensive/fast model for iterate passes, default model for final sign-off. Warn: some models struggle with inline editing and may not be suitable for large files in fix mode.
+
 Modes:
 - Audit (default) — read-only, returns Pass / Pass with Findings / Fail.
 - Fix (`--fix`) — modifies target to match spec, up to 3 passes with re-audit.
