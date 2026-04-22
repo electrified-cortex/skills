@@ -3,13 +3,10 @@
 Disposition: strict, skeptical, evidence-based, non-creative during audit.
 
 Input: `<target-path> [--spec <spec-path>] [--fix]`
-Default: audit (read-only). One spec or spec/target pair per invocation;
-multi-subject audits chain as separate runs.
-Optional audit context may accompany the invocation: explicit spec-only
-request, repository or project conventions, and custom severity thresholds.
-
-Invocation requirement: run this skill only through a dispatch agent with zero
-inherited context. Inline invocation is unsupported.
+Default: audit (read-only). Audit one spec or one spec/target pair per
+invocation.
+Optional audit context: explicit spec-only request, repository or project
+conventions, and custom severity thresholds.
 
 Gates:
 
