@@ -14,4 +14,6 @@ Default → in-place if tracked+clean; `.compressed` alongside if untracked/dirt
 
 Tiers: `ultra/rules.txt` — telegraphic, abbreviations, arrows; `full/rules.txt` — drop articles, fragments OK; `lite/rules.txt` — drop filler, keep grammar
 
+`.md` targets: post-compression markdown-hygiene pass. Fixes lint issues; remaining issues reported as warnings. Output states hygiene result — caller needs no separate pass.
+
 Related: `skill-writing` (skills workflow), `spec-auditing` (post-compression verification)

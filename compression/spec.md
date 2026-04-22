@@ -46,6 +46,7 @@ Targets `.md` files loaded into agent context: agent definition files, skill fil
 - In-place mode requires the target to be git-tracked and clean before modification.
 - Fallback mode must write `<filename>.compressed` alongside the original without modifying it.
 - Compressed output must preserve the semantic meaning of the input; when compression introduces ambiguity, the original wording must be retained.
+- When the target is a `.md` file, the skill must run a markdown-hygiene pass on the compressed result after step 5 verification. Any lint issues introduced by compression must be fixed before writing. Remaining unfixable issues are reported as warnings — they do not cause rejection. The output must always state the hygiene outcome (`clean`, `fixed N issue(s)`, or `N warning(s)`) so callers know a hygiene pass has already been performed and need not repeat it.
 
 ## Constraints
 
