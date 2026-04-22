@@ -22,9 +22,7 @@ own strict disposition (defined in `instructions.txt`).
 
 **Returns:** Pass / Pass with Findings / Fail. Each finding includes: Finding ID, Severity, Title, Affected file(s), Evidence (with quote), Explanation, Recommended fix.
 
-Tiered model strategy: dispatch an inexpensive/fast model for iterate
-passes, default model for final sign-off. Warn: some models struggle with
-inline editing and may not be suitable for large files in fix mode.
+One skill per invocation. Chain multiple subjects as separate runs.
 
 ## Modes
 
@@ -33,19 +31,9 @@ inline editing and may not be suitable for large files in fix mode.
 - **Spec-only** — used when explicitly requested for isolated spec review, or when target is `spec.md` and no companion is present.
   Audits spec quality alone: Completeness, Enforceability, Structural Integrity,
   Economy, Terminology, Internal Consistency. Coverage Summary set to:
-  N/A — spec-only mode, no companion present. If spec-only is not explicitly
-  requested, targeting `spec.md` auto-upgrades to Pair-Audit when a companion is
-  found via auto-detect fallback chain: sibling `<name>.md` for named file
-  specs. Folder-level `spec.md` has no extra
-  universal fallback and otherwise remains spec-only.
-
-### Companion Auto-Detect
-
-When target ends in `spec.md`, `--spec` is not provided, and spec-only was not
-explicitly requested, the auditor checks for a companion in this order:
-sibling `<name>.md` for a named file spec. Folder-level `spec.md` has no
-additional universal fallback. Reports which file was found, or reports none
-and uses spec-only mode.
+  N/A — spec-only mode, no companion present. When targeting `spec.md` without
+  explicit spec-only request, auto-detects companion (sibling `<name>.md`) and
+  upgrades to Pair-Audit if found.
 
 ## STOP Conditions
 
