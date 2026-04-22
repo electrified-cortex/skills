@@ -40,7 +40,7 @@ Applies to any directory subtree containing one or more index nodes. The auditor
 - **Auditor** — the actor performing operations defined by this spec.
 - **Audit report** — the auditor's structured output: a verdict, a reason (if any), and the path to the first failing node (if any).
 - **Verdict** — one of `ok`, `rebuild-needed`, `inconclusive`.
-- **PASS** — informal shorthand for an `ok` verdict: the walk completed with no fail-fast failures and no malformed-line findings per R12. Used throughout this spec for readability; equivalent to `ok`.
+- **PASS** — informal shorthand for an `ok` verdict: the walk completed with no fail-fast failures, no malformed-line findings per R12, no overlay trigger-shape findings per R24, and no keyword-quality findings per R25. Used throughout this spec for readability; equivalent to `ok`.
 - **Fail-fast check** — a check that, on failure, produces a `rebuild-needed` verdict and halts the audit.
 - **Continue-past check** — a check that, on failure, is recorded in the audit report but does not halt the audit.
 - **Orphan** — an integrity stamp or metadata overlay with no corresponding raw index.

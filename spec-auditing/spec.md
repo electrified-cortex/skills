@@ -135,6 +135,7 @@ their files and makes the relationship discoverable without a registry.
 When the target is a `spec.md` file and no `--spec` flag is provided, the
 auditor checks for a companion via this fallback chain (in order):
 
+0. `companion:` frontmatter field in the target spec, if present — use that path directly; skip the rest of the chain
 1. `<basename-without-spec-suffix>.md` in the same directory
 2. `uncompressed.md` in the same directory
 3. `SKILL.md` in the same directory
@@ -152,9 +153,9 @@ If no companion is found, the auditor proceeds in spec-only mode and reports
 The auditor evaluates exactly one spec or spec-file pair per invocation.
 Callers chain multiple subjects as separate runs.
 
-### Caller Responsibilities
+### Dispatch Requirement
 
-The caller must not read `instructions.txt` themselves. Pass the file path to a dispatch agent and let it read the file.
+This skill must be invoked via a dispatch agent with zero inherited context. Inline invocation is prohibited — it produces shallow, inconsistent audits and burns tokens on content only the dispatched auditor needs.
 
 ---
 
@@ -295,6 +296,20 @@ Each addition must be classified as one of:
   No support in the spec. This is a defect.
 
 The auditor must not assume additions are acceptable unless the spec explicitly allows extension.
+
+### 10. Economy
+
+Determine whether the spec (and its companion) are as lean as they can be while remaining complete.
+
+Checks include:
+
+- sections that duplicate content already stated elsewhere
+- requirements that could be merged without loss of precision
+- definitions, examples, or prose that add length but not meaning
+- companion longer than the spec it implements (signal of bloat)
+- structural scaffolding that exceeds the complexity of the content it frames
+
+The auditor must recommend consolidation opportunities as Informational findings. Where duplication creates drift risk, escalate to Low or Medium.
 
 ---
 
@@ -608,6 +623,8 @@ Unless explicitly exempted, the companion file should:
 - never reference the spec — the companion must be self-contained and operate as if the spec does not exist
 - avoid loose paraphrasing of critical requirements
 - contain only content that serves the file's purpose — unnecessary information is a finding
+
+**Dispatch-pattern exception:** A companion for a dispatch skill (one whose behavioral contract lives in a separate `instructions.txt` file) is intentionally a thin invocation reference. It need not replicate all behavioral detail from the spec. The auditor must not flag missing detail as an omission when the design intent is explicit delegation to the dispatch instructions file. The companion is still expected to cover: invocation syntax, parameters, return values, and key error conditions.
 
 A companion file may simplify wording, but it must not simplify away meaning.
 

@@ -35,6 +35,12 @@ and should run in an isolated agent via the Dispatch agent pattern.
   prompt, conversation history) into a dispatched agent's turns.
 - **Routing depth**: How many sub-skills a skill references. Deeper =
   more modular but harder to trace.
+- **Simple inline skill**: An inline skill with no configurable
+  parameters, no conditional branching, and no multi-step decision
+  procedure. These may omit a companion `spec.md`.
+- **Complex inline skill**: An inline skill that is not simple — it
+  has configurable parameters, conditional branching, or multi-step
+  decision logic. A companion `spec.md` is required.
 
 ## Requirements
 
@@ -55,6 +61,24 @@ and should run in an isolated agent via the Dispatch agent pattern.
 15. Fix mode is single-pass and **must** only run after a successful read-only audit verdict of NEEDS_REVISION. PASS → nothing to fix; FAIL at any phase → fix mode is skipped, defects are reported for author action. The auditor does not loop over re-audits because re-audit requires recompression, which the auditor does not perform.
 16. In fix mode, fixes **must** be applied in severity order: critical Phase 3 issues → non-critical Phase 3 issues → hygiene fixes scoped to writable source files. Phase 1 (spec) defects and any defect whose root cause is in `spec.md`, `README.md`, or a compiled artifact are **never** auto-fixed — surfaced as findings for the author.
 17. Before any fix is applied, the auditor **must** preflight `result_file` writability. An unwritable `result_file` **must** STOP fix mode without modifying any skill file.
+18. If no companion spec exists and the skill is dispatch or complex
+    inline, the auditor **must** FAIL immediately without entering
+    Phase 1.
+
+## Constraints
+
+- **One skill per invocation**: each invocation audits exactly one
+  skill; multi-skill audits are separate runs.
+- **Single fix pass**: fix mode runs once per invocation; the auditor
+  does not loop over re-audits. Re-audit after recompression is the
+  caller's responsibility.
+- **Fix mode conditional**: fix mode only runs on a NEEDS_REVISION
+  verdict. PASS and FAIL verdicts suppress fix mode entirely.
+- **No concurrent fix passes**: only one fix pass may execute per
+  invocation.
+- **Compiled artifacts immutable**: `SKILL.md`, `instructions.txt`,
+  `spec.md`, and `README.md` must never be modified by the auditor
+  in any mode.
 
 ## Behavior
 
@@ -93,8 +117,8 @@ caller's responsibility after recompression.
   creative interpretation of intent is not permitted.
 - **Spec location default**: companion spec is assumed to be `spec.md` co-located with
   `skill_path`; `spec_path` overrides this.
-- **Simple inline exemption**: skills under ~30 lines with no design decisions may omit
-  spec.md; these skip Phase 1 entirely.
+- **Simple inline exemption**: simple inline skills (see Definitions) may omit
+  `spec.md`; these skip Phase 1 entirely.
 - **Markdown hygiene scope**: the audit checks every `.md` file in the skill. In fix mode,
   hygiene auto-fixes are limited to the writable source files; hygiene defects in other files
   are reported as findings.
@@ -110,9 +134,8 @@ Verify the companion spec exists and is structurally sound. This phase
 must pass before any skill-level checks.
 
 1. **Spec exists** — `spec.md` must exist in the skill folder (or at
-   `spec_path` if provided). Exception: simple inline skills under ~30
-   lines with no design decisions may omit the spec — in that case,
-   skip to Phase 2.
+   `spec_path` if provided). Exception: simple inline skills (see
+   Definitions) may omit the spec — in that case, skip to Phase 2.
 2. **Required sections** — the spec must contain these sections:
    Purpose, Scope, Definitions, Requirements, Constraints. Missing
    sections → FAIL.
@@ -168,6 +191,10 @@ This is the final quality gate.
 4. **Conciseness** — every line in SKILL.md must affect runtime
    behavior. No design rationale (belongs in spec). No redundant
    explanations. Agent-facing density, not human-facing readability.
+   The auditor must also check for consolidation opportunities: sections
+   that could be merged, rules that repeat content already stated, and
+   length that exceeds the complexity of what is described. Flag as
+   Informational; escalate to Low if duplication creates drift risk.
 5. **Completeness** — all runtime instructions present. No implicit
    assumptions. Edge cases addressed or explicitly excluded. Defaults
    stated, not assumed.
