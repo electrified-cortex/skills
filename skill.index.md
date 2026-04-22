@@ -44,6 +44,10 @@ Verify a spec still holds up — after you wrote or changed it, or after its sub
 
 Authoring a new spec — requirements before implementation, phrased so they are actually verifiable.
 
+## hash-stamp
+
+SHA-256 integrity stamp suite — verify whether stamped files have drifted (audit) or write/update `.sha256` companions after edits (stamp).
+
 ## tool-auditing
 
 Check a Bash or PowerShell script against conventions — error handling, path safety, no interactive prompts.

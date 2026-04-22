@@ -9,5 +9,6 @@ skill-index/: skill index, per-directory index, cascading index, agent skill dis
 skill-writing: write skill, create skill, author skill, new skill, writing a skill
 spec-auditing: audit spec, verify spec, check spec, spec drift, validate spec, review spec, spec changed
 spec-writing: write spec, create spec, author spec, specify, specification, requirements, new spec
+hash-stamp/: verify stamp, check sha256, stamp mismatch, write stamp, update sha256, hash drift, stamp integrity, restamp, file changed
 tool-auditing: audit tool, review script, check tool, script audit, tool quality
 tool-writing: write tool, create tool, author script, new script, bash script, powershell script, automate workflow
