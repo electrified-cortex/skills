@@ -3,8 +3,6 @@ name: skill-index-integration
 description: >-
   Wire a skill-index cascade into an agent's context: place the index pointer,
   write the discovery mandate, enforce demand loading, and verify keyword quality.
-spec: spec.md
-spec-version: 1.3.1
 ---
 
 # Skill Index Integration

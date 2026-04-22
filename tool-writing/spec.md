@@ -1,10 +1,3 @@
----
-name: tool-writing
-description: >-
-  Spec for writing tool scripts — bash default for agents, PowerShell
-  legitimate, companion spec required, scripts can live in skill folders.
----
-
 # Tool Writing — Spec
 
 How to write tool scripts in the cortex.lan workspace.

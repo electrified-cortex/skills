@@ -47,3 +47,7 @@ The prs domain has its own sub-skills under gh-cli-prs/:
 - Never improvise commands — use only what the domain skill documents.
 - One domain per invocation. If the task spans multiple domains, complete the primary one first and note remaining work.
 
+## Related
+
+`dispatch`, `gh-cli-actions`, `gh-cli-api`, `gh-cli-issues`, `gh-cli-projects`, `gh-cli-prs`, `gh-cli-releases`, `gh-cli-repos`, `gh-cli-setup`
+

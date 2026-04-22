@@ -1,12 +1,3 @@
----
-name: skill-index
-description: >-
-  Specification for the skill-index toolkit — a cascading, per-directory index
-  system that lets agents discover skills by reading compact index nodes rather
-  than walking the filesystem.
-type: spec
----
-
 # Skill Index Specification
 
 ## Changelog

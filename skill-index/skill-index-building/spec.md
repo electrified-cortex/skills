@@ -1,12 +1,3 @@
----
-name: skill-index-building
-description: >-
-  Specification for the builder half of the skill-index toolkit — creates or
-  updates the raw index and the markdown overlay for a directory of skills.
-  The auditor writes the integrity stamp after a PASS.
-type: spec
----
-
 # Skill Index Building Specification
 
 Normative spec for the builder. The builder creates or updates two artifacts at every indexed directory: `skill.index` (raw), `skill.index.md` (overlay). The integrity stamp (`skill.index.sha256`) is written by the auditor after a PASS, not by the builder. Conforms to the root `skill-index` spec.

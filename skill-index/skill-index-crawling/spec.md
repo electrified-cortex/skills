@@ -1,12 +1,3 @@
----
-name: skill-index-crawling
-description: >-
-  Specification for the consumer half of the skill-index toolkit — how an agent
-  opens, reads, and descends a skill-index cascade to locate a skill without
-  walking the filesystem.
-type: spec
----
-
 # Skill Index Crawling Specification
 
 Normative spec for the consumer. The crawler uses existing index artifacts to locate a skill. It is read-only; see Don'ts. Conforms to the root `skill-index` spec.

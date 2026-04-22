@@ -40,3 +40,5 @@ Rules:
 Verify `gh auth status` before executing if setup skill wasn't loaded.
 Never improvise commands — use only what domain skill documents.
 One domain per invocation. Multiple domains → complete primary first, note remaining.
+
+Related: `dispatch`, `gh-cli-actions`, `gh-cli-api`, `gh-cli-issues`, `gh-cli-projects`, `gh-cli-prs`, `gh-cli-releases`, `gh-cli-repos`, `gh-cli-setup`

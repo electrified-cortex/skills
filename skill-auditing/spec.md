@@ -1,11 +1,3 @@
----
-name: skill-auditing
-description: >-
-  Specification for auditing skills — the quality rules, compliance checks,
-  and cost analysis that govern skill quality in the workspace.
-type: spec
----
-
 # Skill Auditing Specification
 
 ## Purpose

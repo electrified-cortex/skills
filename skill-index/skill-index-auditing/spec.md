@@ -1,12 +1,3 @@
----
-name: skill-index-auditing
-description: >-
-  Specification for the validator half of the skill-index toolkit — detects
-  first failure in a cascade, signals whether a rebuild is needed, and writes
-  the integrity stamp on PASS as a sign-off artifact.
-type: spec
----
-
 # Skill Index Auditing Specification
 
 Normative spec for the auditor. The auditor validates existing index artifacts and, on PASS, writes the integrity stamp (`skill.index.sha256`) as a sign-off artifact. It conforms to the root `skill-index` spec.

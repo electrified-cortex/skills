@@ -1,11 +1,3 @@
----
-name: skill-writing
-description: >-
-  Specification for writing skills — the decision framework, structural
-  patterns, and quality requirements for creating new skills in the workspace.
-type: spec
----
-
 # Skill Writing Specification
 
 ## Purpose
