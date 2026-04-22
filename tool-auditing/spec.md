@@ -1,10 +1,3 @@
----
-name: tool-auditing
-description: >-
-  Spec for auditing tool scripts — verify companion spec exists, script
-  follows conventions, parameters documented, output predictable.
----
-
 # Tool Auditing — Spec
 
 Audit tool scripts for completeness and convention compliance.
@@ -31,6 +24,15 @@ haiku-class models can run.
 - Evaluating script logic correctness
 - Performance testing
 - Security review (separate skill)
+
+## Definitions
+
+- **Tool script**: a PowerShell or Bash script in the `tools/` directory that provides an operator-facing utility.
+- **Companion spec**: the `<name>.spec.md` file co-located with a tool script that documents its purpose, parameters, and contract.
+- **PASS**: all normative checks pass — the script meets conventions.
+- **FAIL**: one or more FAIL-level checks fail — the script violates a hard convention.
+- **WARN**: one or more WARN-level checks fail — the script is missing recommended practices but not fatally non-conformant.
+- **Haiku-class model**: a lightweight, fast model (e.g. Claude Haiku) sufficient for read-only checklist auditing.
 
 ## Requirements
 

@@ -16,5 +16,6 @@ desktop.ini
 logs/
 *.log
 
+audit-reports/
 .audit-reports/
 .audit-report*

@@ -1,8 +1,3 @@
----
-name: gh-cli
-description: Spec for the gh-cli router skill — intent, scope, and routing rules for dispatching GitHub CLI tasks to domain sub-skills.
----
-
 # gh-cli — Spec
 
 ## Purpose
@@ -12,6 +7,14 @@ Define the intent and scope of a top-level router skill that accepts any GitHub 
 ## Scope
 
 Covers routing logic only. The eight domains are: actions, api, issues, projects, prs, releases, repos, and setup. Each domain has its own sub-skill. The prs domain has four further sub-skills (create, review, comments, merge).
+
+## Definitions
+
+- **Domain**: a category of GitHub CLI operations handled by a dedicated sub-skill (actions, api, issues, projects, prs, releases, repos, setup).
+- **Sub-skill**: a skill that handles one domain's full operation surface.
+- **Router**: this skill; accepts any GitHub CLI task and dispatches to the correct domain sub-skill without executing commands itself.
+- **Primary domain**: the single domain selected for execution when a task spans multiple domains.
+- **Multi-domain task**: a task whose operations fall under more than one domain; only the primary domain is dispatched per invocation.
 
 ## Intent
 
@@ -55,7 +58,7 @@ If no domain matches the task, the router must ask the caller for clarification 
 
 Authentication verification takes precedence over domain dispatch. Clarification takes precedence over guessing when domain is ambiguous. Primary domain execution takes precedence over multi-domain splitting when the task is clear.
 
-## Don'ts
+## Constraints
 
 - Does not execute any `gh` subcommand itself.
 - Does not manage routing state across multiple invocations.

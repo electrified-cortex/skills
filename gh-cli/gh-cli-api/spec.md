@@ -1,8 +1,3 @@
----
-name: gh-cli-api
-description: Spec for the gh-cli-api skill — intent, scope, and required behavior for making direct GitHub API calls and GraphQL queries via the CLI.
----
-
 # gh-cli-api — Spec
 
 ## Purpose
@@ -12,6 +7,13 @@ Define the intent and scope of a skill that guides an agent through direct GitHu
 ## Scope
 
 Covers `gh api` for REST endpoint access and `gh api graphql` for GraphQL queries. Includes making authenticated requests, sending fields and bodies, handling pagination, filtering responses with `--jq`, and using `--template` for Go template formatting. Does not cover the higher-level `gh` subcommands — those belong to the domain skills. Does not cover OAuth app or GitHub App development.
+
+## Definitions
+
+- **Escape hatch**: use of `gh api` for operations that have no dedicated higher-level `gh` subcommand; not the default approach.
+- **REST endpoint**: a GitHub API path accessed via HTTP method (GET, POST, PATCH, DELETE) using `gh api`.
+- **GraphQL mutation**: a write operation issued via `gh api graphql` that modifies GitHub data and returns a response body.
+- **Pagination**: automatic multi-request retrieval of full result sets via `--paginate`; can be slow on large datasets.
 
 ## Intent
 
@@ -45,7 +47,7 @@ If the API returns a non-2xx status, `gh api` exits with a non-zero code and pri
 
 Higher-level domain skills (`gh issue`, `gh pr`, etc.) take precedence over `gh api` for operations they cover — `gh api` is the escape hatch, not the default. `--jq` filtering takes precedence over shell-level post-processing when the data can be shaped at the API layer.
 
-## Don'ts
+## Constraints
 
 - Does not cover creating or managing GitHub Apps, OAuth Apps, or personal access tokens.
 - Does not replace the domain-specific skills — `gh api` is for gaps, not everyday use.

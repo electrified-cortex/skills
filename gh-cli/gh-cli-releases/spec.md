@@ -1,8 +1,3 @@
----
-name: gh-cli-releases
-description: Spec for the gh-cli-releases skill — intent, scope, and required behavior for managing GitHub releases via the CLI.
----
-
 # gh-cli-releases — Spec
 
 ## Purpose
@@ -12,6 +7,13 @@ Define the intent and scope of a skill that guides an agent through creating and
 ## Scope
 
 Covers `gh release` subcommands: creating releases, listing and viewing existing releases, uploading and managing assets, editing release notes, deleting releases, and downloading release assets. Does not cover tagging strategy, changelog generation, or CI/CD pipeline orchestration around releases.
+
+## Definitions
+
+- **Draft release**: a release saved but not yet published; invisible to end users and not considered the `latest` release.
+- **Pre-release**: a published release explicitly marked as not production-ready; visible but excluded from `latest` release resolution.
+- **Asset**: a binary file, archive, or artifact attached to a release and available for download.
+- **Tag**: a Git ref that a release is associated with; must exist before or be created as part of `gh release create`.
 
 ## Intent
 
@@ -46,7 +48,7 @@ If a release is created from a tag that does not yet exist, the agent must confi
 
 Draft status takes precedence — a draft release is never exposed as the `latest` release regardless of creation date. The relationship between a release and its tag must be clarified before creation: the tag must exist or be explicitly created as part of the release command.
 
-## Don'ts
+## Constraints
 
 - Does not manage Git tags directly — only interacts with tags through `gh release`.
 - Does not generate changelogs or release notes automatically from commits.

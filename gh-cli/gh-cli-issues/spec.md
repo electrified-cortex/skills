@@ -1,8 +1,3 @@
----
-name: gh-cli-issues
-description: Spec for the gh-cli-issues skill — intent, scope, and required behavior for managing GitHub issues via the CLI.
----
-
 # gh-cli-issues — Spec
 
 ## Purpose
@@ -12,6 +7,13 @@ Define the intent and scope of a skill that guides an agent through the full iss
 ## Scope
 
 Covers issue creation, listing with filters, viewing details, editing metadata (title, body, labels, assignees, milestone), commenting, closing, reopening, transferring, and bulk operations using JSON output piped to shell tools. Does not cover issue templates, project board placement, or linked PRs — those belong to other skills.
+
+## Definitions
+
+- **Lifecycle**: the full state progression of an issue from creation through triage, active work, and closure.
+- **Metadata**: issue fields that classify and organize without being body content — labels, assignees, milestone, title.
+- **Bulk operation**: a pipeline-based pattern that processes multiple issues in a single command chain rather than repeating individual commands.
+- **Triage**: the process of reviewing new issues to assign metadata and determine action.
 
 ## Intent
 
@@ -45,7 +47,7 @@ If an edit command would clear an existing field unintentionally, the agent must
 
 Explicit filter flags (`--state`, `--assignee`, `--label`) take precedence over free-text search query when both are provided. Bulk pipeline operations take precedence over repeated individual commands for multi-issue edits.
 
-## Don'ts
+## Constraints
 
 - Does not cover GitHub issue forms or issue templates configuration.
 - Does not manage milestones — only assigns issues to existing ones.

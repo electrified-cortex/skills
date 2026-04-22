@@ -1,8 +1,3 @@
----
-name: gh-cli-repos
-description: Spec for the gh-cli-repos skill — intent, scope, and required behavior for managing GitHub repositories via the CLI.
----
-
 # gh-cli-repos — Spec
 
 ## Purpose
@@ -12,6 +7,13 @@ Define the intent and scope of a skill that guides an agent through repository l
 ## Scope
 
 Covers all repository management operations: creation from scratch or template, cloning locally, forking upstream repos, syncing forks with upstream, editing repository metadata, and archiving or deleting repos. Does not cover per-file content operations, issues, PRs, or Actions — those belong to their respective domain skills.
+
+## Definitions
+
+- **Upstream remote**: the original repository a fork was created from; configured as a git remote to enable sync operations.
+- **Fork**: a personal or organization-owned copy of another repository; linked to its upstream for sync.
+- **Sync**: bringing a fork's default branch up to date with its upstream via `gh repo sync`.
+- **Default repo context**: the repository set via `gh repo set-default` that subsequent CLI commands target when no `--repo` flag is provided.
 
 ## Intent
 
@@ -45,7 +47,7 @@ If a fork operation completes but the upstream remote is not configured, the age
 
 `gh repo sync` takes precedence over manual git fetch/merge for fork synchronization unless the caller explicitly requests the manual flow. Organization ownership takes precedence — when creating under an org, the `--org` flag must be present; personal repos must not be assumed.
 
-## Don'ts
+## Constraints
 
 - Does not manage repository content (files, branches, commits) — that is git, not `gh repo`.
 - Does not cover repository secrets, deploy keys, or rulesets — those are out of scope for basic repo management.

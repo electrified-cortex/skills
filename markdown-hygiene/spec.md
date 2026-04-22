@@ -1,9 +1,3 @@
----
-name: markdown-hygiene
-description: Spec for the markdown-hygiene dispatch skill — zero-error markdownlint enforcement.
-type: spec
----
-
 # Markdown Hygiene Specification
 
 ## Purpose
@@ -22,6 +16,10 @@ Any `.md` file in the workspace. Primary consumers: skill-writing flow
 Markdown fixing is mechanical — the agent doesn't need caller context.
 It reads a file, applies lint rules, fixes violations, verifies zero
 errors remain. Self-contained input/output. Textbook dispatch pattern.
+
+## Definitions
+
+No domain-specific terms. Rule identifiers (MD001, MD022, etc.) are markdownlint rule codes — their meaning is defined by the markdownlint rule set, not by this spec.
 
 ## Requirements
 

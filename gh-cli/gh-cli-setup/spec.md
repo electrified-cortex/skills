@@ -1,8 +1,3 @@
----
-name: gh-cli-setup
-description: Spec for the gh-cli-setup skill — intent, scope, and required behavior for guiding installation, authentication, and configuration of the GitHub CLI.
----
-
 # gh-cli-setup — Spec
 
 ## Purpose
@@ -12,6 +7,13 @@ Define the intent and scope of a skill that guides an agent through getting the 
 ## Scope
 
 Covers the initial setup lifecycle: installation across supported platforms, authenticating with GitHub (github.com or GitHub Enterprise), and configuring CLI behavior (editor, protocol, pager, prompts). Does not cover workflow-specific usage of `gh` — that belongs to the domain skills.
+
+## Definitions
+
+- **Interactive setup path**: installation and authentication guided by prompts; suitable for human-operated terminals.
+- **Automated setup path**: installation and authentication using non-interactive flags and environment variables; required for scripted or agent environments.
+- **Token-based authentication**: authenticating via `gh auth login --with-token` using a pre-existing Personal Access Token.
+- **Required scopes**: the GitHub API permission scopes a token must carry for subsequent `gh` operations to succeed.
 
 ## Intent
 
@@ -43,7 +45,7 @@ If `gh auth status` reports not authenticated, the agent must guide through the 
 
 Authentication verification takes precedence over all other setup steps — no configuration or default-setting should proceed until `gh auth status` confirms a valid session. Interactive setup paths and automated (scriptable) paths must be presented as distinct options; the automated path takes precedence in non-interactive environments.
 
-## Don'ts
+## Constraints
 
 - Does not cover any `gh` subcommand usage beyond `auth`, `config`, and `repo set-default`.
 - Does not manage GitHub tokens or secrets storage beyond what `gh auth` provides.

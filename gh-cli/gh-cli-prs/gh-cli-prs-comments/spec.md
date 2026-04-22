@@ -1,8 +1,3 @@
----
-name: gh-cli-prs-comments
-description: Spec for commenting on pull requests via the GitHub CLI.
----
-
 # gh-cli-prs-comments — Spec
 
 ## Purpose
@@ -13,7 +8,13 @@ Guide an agent through adding, editing, and deleting comments on a pull request.
 
 `gh pr comment`. Does not cover review submissions (approve/request changes) — see `gh-cli-prs-review`.
 
-## Intent
+## Definitions
+
+- **General PR comment**: a top-level comment on a pull request with no approval verdict; distinct from review-level comments.
+- **Comment ID**: the unique integer identifier for a specific comment; required for edit and delete operations.
+- **Review thread**: a comment thread tied to a specific code line or review submission; not covered by this skill — use `gh-cli-api` for resolution.
+
+## Requirements
 
 The skill must enable an agent to:
 
@@ -33,7 +34,7 @@ If an edit or delete operation is attempted without a comment ID, it will fail �
 
 N/A — add, edit, and delete are discrete non-overlapping operations; no resolution path conflicts exist within this skill.
 
-## Don'ts
+## Constraints
 
 - Does not cover review-level comments (those with approve/request-changes verdicts).
 - Does not cover viewing comments — use `gh pr view --comments`.

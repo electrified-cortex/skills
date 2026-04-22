@@ -1,8 +1,3 @@
----
-name: gh-cli-prs-create
-description: Spec for creating and opening pull requests via the GitHub CLI.
----
-
 # gh-cli-prs-create — Spec
 
 ## Purpose
@@ -13,7 +8,13 @@ Guide an agent through opening a pull request — from a ready branch through to
 
 `gh pr create` and `gh pr ready`. Listing, reviewing, merging out of scope — see sibling skills.
 
-## Intent
+## Definitions
+
+- **Draft PR**: a pull request created with `--draft` that signals work-in-progress; not eligible for merge until promoted to ready.
+- **Ready PR**: a fully open pull request eligible for review and merge; promoted from draft via `gh pr ready`.
+- **Closing issue link**: a `Closes #NNN` reference in the PR body that automatically closes the linked issue when the PR is merged.
+
+## Requirements
 
 The skill must enable an agent to:
 
@@ -35,7 +36,7 @@ If the branch does not exist on the remote, `gh pr create` will fail — the age
 
 N/A — this skill issues a single `gh pr create` or `gh pr ready` command per invocation; there are no competing resolution paths.
 
-## Don'ts
+## Constraints
 
 - Does not cover `gh pr edit` after creation — that is post-creation metadata management.
 - Does not cover branch creation or git push — assumes the branch already exists on remote.

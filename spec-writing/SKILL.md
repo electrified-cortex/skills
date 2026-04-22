@@ -42,10 +42,12 @@ Definitions: defines all key terms
 Requirements: atomic, testable rules
 Constraints: limits and prohibitions
 Behavior: system behavior including edge cases
+Content Modes: operational modes defined (inline, dispatch, etc.) with trigger/behavior distinctions
 Defaults and Assumptions: explicit defaults only
 Error Handling: defined failure behavior
 Precedence Rules: conflict resolution
 Don'ts: explicit exclusions
+After section list, include a Section Classification table: columns = Section, Type (normative/informative/structural), Required (yes/no).
 
 Each requirement must be atomic (one testable condition only), testable (verifiable from doc text alone), and unambiguous.
 Use subject-verb-object form. Name actor, artifact acted upon, and trigger condition. Two clear sentences preferred over one dense nested clause.

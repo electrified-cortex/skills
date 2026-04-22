@@ -1,8 +1,3 @@
----
-name: gh-cli-prs
-description: Spec for the gh-cli-prs skill — intent, scope, and routing rules for the pull request lifecycle via the GitHub CLI.
----
-
 # gh-cli-prs — Spec
 
 ## Purpose
@@ -12,6 +7,12 @@ Define the intent and scope of a top-level PR router skill that handles common p
 ## Scope
 
 Covers all `gh pr` subcommands. Common inspection commands (list, view, diff, checks, status) are handled directly by this skill. Write operations are delegated to sub-skills. Does not cover git operations, branch protection rules, or CODEOWNERS.
+
+## Definitions
+
+- **Inspection command**: a read-only `gh pr` command that retrieves PR state without modifying it (list, view, diff, checks, status).
+- **Write operation**: any `gh pr` command that mutates PR state; always delegated to a sub-skill.
+- **Sub-skill routing**: the explicit dispatch of a write operation to the named sub-skill responsible for that operation class.
 
 ## Intent
 
@@ -52,7 +53,7 @@ If `gh pr checks --watch` exits with a failure, the agent must surface which che
 
 Inspection commands are handled directly by this skill; write operations are always delegated to sub-skills. Sub-skill routing table entries are authoritative — the agent must not infer routing from the operation name alone.
 
-## Don'ts
+## Constraints
 
 - Does not cover git operations (push, checkout, fetch) performed locally.
 - Does not manage branch protection rules or required review policies.

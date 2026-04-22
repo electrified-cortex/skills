@@ -1,10 +1,3 @@
----
-name: compression
-description: >-
-  Spec for the compression skill — design rationale, tier philosophy,
-  credits, gate justifications, and displaced commentary.
----
-
 # Compression — Spec
 
 Design rationale and reference for the compression skill. This file is the
@@ -31,6 +24,35 @@ Compression isn't about readability for humans. It's about density for machines.
 In practice, LLMs parse compressed text with negligible loss of understanding —
 though results vary by model, task, and compression tier. Verify via audit.
 The spec (this file) preserves the human-readable version.
+
+## Scope
+
+Targets `.md` files loaded into agent context: agent definition files, skill files, and instruction files. These are the highest-volume, highest-frequency reads in the workspace. Does not apply to code files (already dense by necessity), binary files, or human-facing prose documents (READMEs, operator messages) where Lite compression is the convention.
+
+## Definitions
+
+- **Compression tier**: a named preset (None, Lite, Full, Ultra) that defines what transformations are permitted on a target file.
+- **Source file**: the human-readable authoritative version of an agent-facing file (e.g. `uncompressed.md`, `instructions.uncompressed.md`).
+- **Companion file**: the compressed runtime artifact derived from the source file (e.g. `SKILL.md`, `instructions.txt`).
+- **Preserve List**: the set of content categories that must never be modified at any tier (code blocks, URLs, technical terms, proper nouns, dates/versions, normative language words such as not/must/only).
+- **BPE token**: the sub-word unit used by LLM tokenizers to count context cost; compression targets token reduction, not character reduction.
+
+## Requirements
+
+- The skill must implement all four tiers (None, Lite, Full, Ultra) as documented in `## Tier Philosophy`.
+- All tiers must apply the Preserve List without exception.
+- The skill must support three operating modes: Source→Target, in-place, and fallback (as defined in `## Operating Modes`).
+- In Source→Target mode the source file must never be modified.
+- In-place mode requires the target to be git-tracked and clean before modification.
+- Fallback mode must write `<filename>.compressed` alongside the original without modifying it.
+- Compressed output must preserve the semantic meaning of the input; when compression introduces ambiguity, the original wording must be retained.
+
+## Constraints
+
+- Spec files must never be compressed — specs contain human-readable rationale whose token cost is acceptable and whose meaning loss from compression is not.
+- The skill must not install or invoke external packages; it operates on the agent's own language understanding.
+- The skill must not compress code files, binary files, or any file not in the target scope.
+- Abbreviations must be introduced at most once per concept per file; abbreviations that could collide with other terms must not be used.
 
 ## Why Markdown Only
 

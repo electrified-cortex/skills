@@ -1,8 +1,3 @@
----
-name: gh-cli-actions
-description: Spec for the gh-cli-actions skill — intent, scope, and required behavior for managing GitHub Actions workflows, runs, secrets, and variables via the CLI.
----
-
 # gh-cli-actions — Spec
 
 ## Purpose
@@ -12,6 +7,13 @@ Define the intent and scope of a skill that guides an agent through GitHub Actio
 ## Scope
 
 Covers `gh run`, `gh workflow`, `gh cache`, `gh secret`, and `gh variable` subcommands. Includes listing, inspecting, triggering, watching, and canceling workflow runs; enabling and disabling workflows; managing action caches; and setting or deleting secrets and environment variables. Does not cover writing workflow YAML or configuring runners.
+
+## Definitions
+
+- **Workflow**: a YAML-defined automation process in `.github/workflows/` identified by filename and `name` field.
+- **Run ID**: the unique integer identifier assigned to a single workflow execution; used to target log, artifact, and rerun operations.
+- **Repository-level secret/variable**: a secret or variable scoped to the entire repository, accessible to all workflows.
+- **Environment-level secret/variable**: a secret or variable scoped to a named deployment environment, overriding repo-level values for that environment.
 
 ## Intent
 
@@ -49,7 +51,7 @@ If a run fails, the agent must view logs for the specific failed job rather than
 
 Repository-level secrets and variables take precedence in scope resolution unless the environment name is explicitly specified. Monitoring a run ID captured at trigger time takes precedence over relisting runs to find the target run.
 
-## Don'ts
+## Constraints
 
 - Does not cover writing or editing workflow YAML files.
 - Does not configure self-hosted runners or runner groups.
