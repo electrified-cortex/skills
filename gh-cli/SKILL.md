@@ -3,22 +3,40 @@ name: gh-cli
 description: GitHub CLI operations — routes to domain-specific sub-skills via dispatch.
 ---
 
-# GH CLI
+# GH CLI Router
 
-Read and follow instructions.txt for the routing procedure.
+Routes GitHub CLI tasks to correct domain sub-skill. Doesn't run `gh` commands itself.
 
-Domains:
-- actions → gh-cli-actions/SKILL.md (workflows, runs, secrets, vars)
-- api → gh-cli-api/SKILL.md (REST/GraphQL)
-- issues → gh-cli-issues/SKILL.md (create, list, close, label, comment)
-- projects → gh-cli-projects/SKILL.md (Projects v2)
-- prs → gh-cli-prs/SKILL.md (PR lifecycle)
-- releases → gh-cli-releases/SKILL.md (create, edit, delete, list)
-- repos → gh-cli-repos/SKILL.md (clone, fork, create, configure)
-- setup → gh-cli-setup/SKILL.md (auth, config, defaults)
+When to Use:
+Use when unsure which sub-skill owns task, or want auto-routing. If domain known, dispatch sub-skill directly.
+
+How It Works:
+1. Parse task → identify domain.
+2. Domain unclear → ask caller before proceeding.
+3. Load + invoke domain sub-skill, follow its instructions.
+4. Sub-skill executes commands, reports results.
+5. Task spans multiple domains → handle primary, report remaining to caller.
+
+Domain Routing:
+| Domain | Sub-skill | Use for |
+| --- | --- | --- |
+| actions | gh-cli-actions/ | Workflows, runs, secrets, variables, caches |
+| api | gh-cli-api/ | Raw REST and GraphQL API calls |
+| issues | gh-cli-issues/ | Issue lifecycle: create, list, edit, close, comment |
+| projects | gh-cli-projects/ | GitHub Projects v2: boards, items, fields |
+| prs | gh-cli-prs/ | Pull request lifecycle router |
+| releases | gh-cli-releases/ | Release lifecycle: create, publish, upload assets |
+| repos | gh-cli-repos/ | Repository management: create, clone, fork, sync |
+| setup | gh-cli-setup/ | Install, authenticate, and configure gh |
+
+PR Sub-skills:
+prs domain sub-skills under `gh-cli-prs/`:
+gh-cli-prs-comments/ — add/edit/delete PR comments
+gh-cli-prs-create/ — open new PRs
+gh-cli-prs-merge/ — merge strategies, branch updates, revert
+gh-cli-prs-review/ — approve, request changes, dismiss reviews
 
 Rules:
-- Domain unclear → ask caller.
-- Verify `gh auth status` if setup skill not loaded.
-- Never improvise commands.
-- One domain per invocation; note remaining work.
+Verify `gh auth status` before executing if setup skill wasn't loaded.
+Never improvise commands — use only what domain skill documents.
+One domain per invocation. Multiple domains → complete primary first, note remaining.

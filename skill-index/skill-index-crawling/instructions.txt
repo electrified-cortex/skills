@@ -1,56 +1,69 @@
-Params: `root` (required); `need` (required)
-
-Read-only. Produces one crawl report. Modifies nothing.
+Params: `root` (required) — absolute path to dir with starting `skill.index`; `need` (required) — stated need as plain phrase (e.g. `compress text`, `build index`).
 
 Procedure:
-1. Open `skill.index` at `root`. Missing → outcome "no index here", stop. Unreadable → outcome "unreadable node" + path, stop.
-2. Parse each line: `key: keyword, keyword, keyword`. Split at first colon; keyword list splits on `, `.
-   Malformed line → record in inconsistencies, skip. Other entries remain usable.
-3. Check stamp: compute SHA-256 of raw `skill.index` bytes; compare against `skill.index.sha256`.
-   Mismatch or missing → overlay untrusted for this node; record finding. Raw index still usable.
-4. Match (case-insensitive substring): `need` appears in entry key or any keyword → Hit.
-   Collect all Hits.
-5. Rank: self entry (key `.`) or plain leaf (no trailing `/`) beats descent-marked (trailing `/`).
-   Ties: consult overlay only if trusted and only to break ties among existing Hits — overlay never produces new candidates.
-6. Evaluate:
-   - Exactly one Hit → proceed to step 7.
-   - No Hits → outcome "no match", stop.
-   - Two or more tied → outcome "ambiguous", stop.
-7. Resolve Hit:
-   - Plain leaf: skill at `<current dir>/<key>/`. Return outcome "hit" + resolved path, stop.
-   - Self entry (`.`): skill at current directory. Return outcome "hit" + path, stop.
-   - Descent-marked: proceed to step 8.
-8. Descend:
-   - Single-segment key `foo/`: target is `<current dir>/foo/`.
-   - Multi-segment / shortcut key: walk each segment from current dir. At every step verify:
-     no `..` segments, no absolute-path indicator, no escape above invocation root.
-     Escape detected → record subtree-escape, outcome "subtree-escape", stop.
-   - Loop check: if resolved target already in visited set → outcome "reference loop" + ordered visited list, stop.
-   - Append resolved target to visited set.
-   - Open `skill.index` inside target.
-     Missing → record "broken descent", treat entry as absent, re-evaluate remaining candidates from step 6.
-     Exists → make target the new current node, repeat from step 2.
+Follow in order. Stop at first stop condition.
 
-Combo entry (descent marker + target has self entry in its own index):
+1. Open `skill.index` at `root`. Missing → `no index here`, stop. Unreadable → `unreadable node` + path, stop.
+2. Parse each line: `key: keyword, keyword, keyword`. Split at first colon — before = key, after (trimmed) = keywords split on `, `. Malformed (no colon, empty key, forbidden chars) → record in `inconsistencies`, skip. Other entries remain usable.
+3. Check stamp: open `skill.index.sha256` at current node's dir. Compute SHA-256 of stored `skill.index` bytes. Match → overlay trusted. Mismatch or missing → overlay untrusted; record in `inconsistencies`. Raw index still usable; overlay disambiguation suppressed.
+4. Match (case-fold): `need` appears as substring of entry key or any keyword → Hit. Collect all Hits.
+5. Rank: self entry (`.`) or plain leaf (no trailing `/`) beats descent-marked (trailing `/`). Overlay trusted + two or more Hits tied → consult `skill.index.md` to break tie. Overlay may only disambiguate existing Hits, never produce new ones.
+6. Evaluate:
+   - One Hit → step 7.
+   - No Hits → `no match`, stop.
+   - Two or more tied after overlay → `ambiguous`, stop.
+7. Resolve Hit:
+   - Plain leaf (no trailing `/`): skill at `<current dir>/<key>/`. Return `hit` + path, stop.
+   - Self entry (`.'): skill at current dir. Return `hit` + path, stop.
+   - Descent-marked (trailing `/`): deeper index. Proceed to step 8.
+8. Descend:
+   Target path: single-segment `foo/` → `<current dir>/foo/`. Multi-segment / shortcut: walk each segment from current dir; at every step verify no `..`, no absolute-path indicator, no escape above invocation root. Escape → record `subtree-escape`, return `subtree-escape`, stop.
+   Loop check: resolved target already in visited set → `reference loop` + ordered visited sequence, stop.
+   Append to visited set. Open `skill.index` inside target. Missing → record `broken descent`, treat entry as absent, re-evaluate remaining from step 6. Exists → new current node, repeat from step 2.
+
+Combo entry (descent-marked + target has self entry in its own `skill.index`):
 1. Try as plain leaf first.
-2. No hit as leaf → descend into sub-node, re-apply from step 2.
+2. Leaf Hit → return it.
+3. No leaf Hit → descend into sub-node, re-apply from step 2.
+
+Entry types:
+| Key form | Meaning |
+| --- | --- |
+| `foo` | Leaf skill at `<current dir>/foo/` |
+| `foo/` | Sub-node: descend into `<current dir>/foo/skill.index` |
+| `.` | Self entry: current dir is skill |
+| `a/b/c/` | Shortcut with descent: walk path, open `skill.index` at `c/` |
+| `a/b/c` | Shortcut leaf: skill at `c/`, no deeper index |
+
+Stop conditions:
+| Outcome | Condition |
+| --- | --- |
+| `hit` | One Hit survives; resolved path returned |
+| `no index here` | `skill.index` absent at working dir |
+| `no match` | No Hits at current node |
+| `ambiguous` | Two or more Hits tied after overlay |
+| `reference loop` | Descent lands on already-visited node |
+| `subtree-escape` | Shortcut exits invocation root's subtree |
+| `unreadable node` | `skill.index` exists but unreadable |
+| `broken descent` | Descent target missing `skill.index`; entry treated as absent |
 
 Visited-node tracking:
-- Maintain ordered list of all node directories opened on the current resolution path.
-- Append before inspecting. Check for revisit before every descent step (direct, shortcut, combo sub-node).
-- Scoped to current path; does not persist across separate crawls.
+Maintain ordered list of every node visited on current resolution path. Node added when `skill.index` first opened. Track across all descent kinds: direct-child, shortcut endpoint, combo sub-node. Before opening any new node, check if dir already in list → reference loop. Scoped to current path; doesn't persist across crawls.
+
+Overlay trust rules:
+- Consult overlay (`skill.index.md`) only to break ties among existing Hits after raw-index ranking.
+- Trusted only when stamp matches SHA-256 of raw `skill.index` bytes.
+- Missing stamp or mismatch → untrusted; raw index only.
+- Never produces new candidates.
 
 Error handling:
+- `skill.index` missing at root: `no index here`, stop.
+- `skill.index` unreadable: `unreadable node` + path, stop.
 - Malformed entry: record, skip, continue.
-- Stamp missing/mismatch: overlay untrusted, record, continue.
-- Broken descent: record, treat entry as absent, continue with remaining candidates.
-- Shortcut intermediate segment missing: record "broken shortcut path" (first missing segment), treat entry as absent, continue.
-
-Fail-fast rules:
-- Empty `need` → report missing parameter, stop.
-- Never open files inside a skill's folder (only `skill.index`, `skill.index.md`, `skill.index.sha256` are permitted reads).
-- Never climb above invocation root.
-- Never follow a descent marker not present in the current raw index.
+- Missing stamp: overlay untrusted; record, continue.
+- Stamp mismatch: same as missing stamp.
+- Broken descent: record, treat as absent, re-evaluate remaining.
+- Shortcut intermediate segment missing: record `broken shortcut path` (first missing segment), treat as absent, continue.
 
 Crawl report format:
 ```
@@ -74,6 +87,18 @@ resolved path: <absolute path>
 (omit if none)
 ```
 
-Don'ts: no file writes; no skill content reads; no climbing above working directory; no overlay trust when stamp absent/mismatched; no shortcut escape; no network access.
+Fail-fast rules:
+- `root` missing or dir doesn't exist: `no index here`, stop.
+- `need` empty: report missing parameter, stop.
+- Never open files inside skill's folder (only `skill.index`, `skill.index.md`, `skill.index.sha256` permitted).
+- Never climb above invocation root.
+- Never follow descent marker not in current raw index.
 
-Related: `skill-index`, `skill-index-building`, `skill-index-auditing`
+Don'ts:
+- Don't produce, author, or update any file.
+- Don't open skill contents (only three index artifacts permitted).
+- Don't climb above working dir.
+- Don't trust overlay when stamp absent or mismatched.
+- Don't follow shortcut out of invocation root's subtree.
+- Don't consult network.
+- Don't cache results across separate crawls.

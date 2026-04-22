@@ -3,7 +3,9 @@ name: gh-cli-actions
 description: Trigger, monitor, manage GitHub Actions workflows, runs, secrets, variables via CLI.
 ---
 
-List workflows: `gh workflow list`
+Workflows:
+
+List: `gh workflow list`
 Enable/disable: `gh workflow enable ci.yml` / `gh workflow disable ci.yml`
 
 Trigger + capture run ID:
@@ -18,7 +20,7 @@ gh run list --workflow ci.yml --branch main --json databaseId,status,conclusion
 gh run watch "$RUN_ID"
 ```
 
-Logs (failed run):
+Logs:
 ```
 gh run view "$RUN_ID" --log-failed
 gh run view "$RUN_ID" --job 987654321 --log
@@ -26,7 +28,7 @@ gh run view "$RUN_ID" --job 987654321 --log
 
 Rerun/cancel:
 ```
-gh run rerun "$RUN_ID" --failed    # rerun only failed jobs
+gh run rerun "$RUN_ID" --failed
 gh run cancel "$RUN_ID"
 ```
 
@@ -36,13 +38,17 @@ gh run download "$RUN_ID" --dir ./artifacts
 gh run download "$RUN_ID" --name build
 ```
 
-Secrets (never pass as arg; pipe or use env):
+Secrets (never pass as CLI arg; pipe from stdin or use env var):
 ```
 echo "$SECRET_VALUE" | gh secret set MY_SECRET
-gh secret set MY_SECRET --env production
+gh secret set MY_SECRET --body "value"
 gh secret list
 gh secret delete MY_SECRET
 ```
+
+Scope to env: `echo "$SECRET_VALUE" | gh secret set MY_SECRET --env production`
+
+`gh secret set` without `--body` or stdin prompts interactively. Always pipe or use `--body` in automated contexts.
 
 Variables:
 ```
@@ -59,3 +65,5 @@ gh cache list --branch main
 gh cache delete "$CACHE_ID"
 gh cache delete --all
 ```
+
+Scope: `gh run`, `gh workflow`, `gh secret`, `gh variable`, `gh cache`. Doesn't cover workflow YAML, self-hosted runners, or OIDC trust configs.

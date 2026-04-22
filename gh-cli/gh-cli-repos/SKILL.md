@@ -4,23 +4,29 @@ description: Create, clone, fork, sync, edit, delete GitHub repositories via CLI
 ---
 
 Create:
-```
+Always specify visibility — no default:
+
+```bash
 gh repo create owner/name --public --description "desc" --clone
 gh repo create owner/name --private --gitignore node --license mit
 ```
-Always specify `--public` or `--private` — no default assumed.
 
 Clone: `gh repo clone owner/repo [dir]`
 
-Fork + configure upstream:
-```
+Fork:
+Fork and set upstream remote:
+
+```bash
 gh repo fork owner/repo --clone --remote-name upstream
 ```
 
-Sync fork with upstream: `gh repo sync [--branch branch] [--force]`
+`--remote-name upstream` sets original as `upstream` remote in cloned fork.
 
-Edit metadata:
-```
+Fork Sync: `gh repo sync [--branch branch] [--force]`
+`--force` overwrites local changes to match upstream.
+
+Edit Metadata:
+```bash
 gh repo edit --description "new" --homepage https://example.com
 gh repo edit --visibility private
 gh repo edit --default-branch main
@@ -31,9 +37,13 @@ Archive: `gh repo archive` / `gh repo unarchive`
 Delete: `gh repo delete owner/repo --yes`
 
 List:
-```
+```bash
 gh repo list [owner] --limit 50 --json name,visibility,owner --jq '.[].name'
 ```
 
-Set default repo (current dir): `gh repo set-default owner/repo`
-Unset: `gh repo set-default --unset`
+Default Repo:
+Set default for current dir so subsequent commands don't need `--repo`:
+`gh repo set-default owner/repo` / `gh repo set-default --unset`
+
+Scope:
+Covers `gh repo` only. Doesn't manage repo content (files, branches, commits — git ops), secrets, deploy keys, GitHub Apps, webhooks, or integrations.

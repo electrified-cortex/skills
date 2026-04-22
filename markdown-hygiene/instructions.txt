@@ -1,32 +1,32 @@
-Fix all markdownlint violations in a .md file. Zero errors is gate.
+Fix all markdownlint violations in a .md file. Zero errors is the gate.
 
 Params:
-`file_path` (required): absolute path to .md file
+`file_path` (required): absolute path to .md file to fix
 `result_file` (required): absolute path for report
 `--source X --target Y` (optional): read X, fix, write Y; X untouched, no git check
 
 Modes:
-Source→Target: `--source X --target Y` → fix all violations, write to Y. Source untouched.
+Source→Target: `--source X --target Y` → fix violations, write to Y. Source untouched.
 In-place (default): run `git status --porcelain -- <file>`. Empty or `M ` (staged only) → fix directly.
-Fallback: unstaged changes or `??` and no `--target` → create `<file>.fixed` alongside.
+Fallback: unstaged changes or `??`, no `--target` → create `<file>.fixed` alongside.
 
 Procedure:
-1. Read file and scan for markdownlint violations using your own knowledge.
-2. Use available tools (built-in, MCP) — do not install external packages.
+1. Read file, scan for markdownlint violations using own knowledge.
+2. Use available tools (built-in, MCP) — don't install external packages.
 3. Read file.
 4. Fix every violation:
-   - Blank lines around headings/code blocks (MD022, MD031)
-   - Heading level increments (MD001)
-   - List markers + ordered list prefixes (MD004, MD029)
-   - Trailing spaces + hard tabs (MD009, MD010)
-   - Collapse multiple blank lines to one (MD012)
-   - File ends with single newline (MD047)
-   - Bare URLs in angle brackets (MD034)
-   - Language IDs on fenced code blocks (MD040)
-   - Table pipe spacing (MD060), blank lines around tables (MD058), equal column count (MD056), consistent pipe style (MD055)
-   - No trailing punctuation in headings (MD026)
-   - No inline HTML where markdown works (MD033)
-   - All other markdownlint rules
+   blank lines around headings + code blocks (MD022, MD031)
+   heading level increments (MD001)
+   list markers + ordered list prefixes (MD004, MD029)
+   trailing spaces + hard tabs (MD009, MD010)
+   collapse multiple blank lines to one (MD012)
+   file ends with single newline (MD047)
+   bare URLs → angle brackets (MD034)
+   language IDs on fenced code blocks (MD040)
+   table pipe spacing (MD060), blank lines around tables (MD058), equal column count (MD056), consistent pipe style (MD055)
+   no trailing punctuation in headings (MD026)
+   no inline HTML where markdown works (MD033)
+   all other markdownlint rules
 5. Write to target (in-place, `.fixed`, or `--target`).
 6. Verify: re-run linter on output, confirm zero errors.
 7. Write report to `result_file`.
@@ -52,6 +52,6 @@ Fix every violation. Never suppress a rule.
 Never change content meaning — only formatting.
 Never introduce new violations while fixing others.
 Preserve code blocks, frontmatter, technical strings exactly.
-If fix would change meaning, report as unfixable.
+Fix would change meaning → report as unfixable.
 One file per dispatch.
-Use available tools and own knowledge — no external packages.
+Use available tools + own knowledge — don't install external packages.

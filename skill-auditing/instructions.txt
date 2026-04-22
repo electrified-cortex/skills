@@ -1,40 +1,40 @@
-Params: `skill_path` (required); `result_file` (required); `spec_path` (optional); `--fix` (optional flag — enables single-pass fix mode against authoritative sources)
+Params: `skill_path` (required); `result_file` (required); `spec_path` (optional); `--fix` (optional): single-pass fix mode against authoritative sources (`uncompressed.md`, `instructions.uncompressed.md` siblings of `skill_path`). Runs only on NEEDS_REVISION verdict. Refused on any candidate with pending git changes (untracked, unstaged, staged, or merge-conflicted) and on paths escaping skill dir. `spec.md`, `README.md`, `SKILL.md`, `instructions.txt` never modified.
 
 Procedure:
 1. Read skill at `skill_path`; determine type: inline or dispatch
-2. Locate companion spec — check: `spec_path` if provided → `spec.md` in same dir as `skill_path`. Not found: simple inline (<30 lines) may skip Phase 1; dispatch/complex inline → FAIL immediately.
+2. Locate companion spec: `spec_path` if provided → `spec.md` in same dir as `skill_path`. Not found: simple inline (<30 lines) may skip Phase 1; dispatch/complex inline → FAIL immediately.
 3. Run Phase 1 → Phase 2 → Phase 3 (stop on first failure) → assign verdict → write report to `result_file`
-4. If `--fix` active AND verdict == NEEDS_REVISION: run Fix Mode (see below). PASS → nothing to do; FAIL → fix is skipped, defects reported for author action.
+4. If `--fix` active AND verdict == NEEDS_REVISION: run Fix Mode. PASS → nothing to do; FAIL → skip fix, report defects for author.
 
-Phase 1 — Spec Gate: verify companion spec structurally sound before any skill-level checks.
-1. Spec exists — `spec.md` must exist (or `spec_path` resolves). Exception: simple inline (<30 lines) → skip phase entirely.
+Phase 1 — Spec Gate: verify companion spec structurally sound before skill-level checks.
+1. Spec exists — `spec.md` must exist (or `spec_path` resolves). Exception: simple inline (<30 lines) → skip phase.
 2. Required sections — spec must contain: Purpose, Scope, Definitions, Requirements, Constraints. Missing → FAIL.
-3. Normative language — requirements must use enforceable language (must/shall/required). Vague terms in normative sections → FAIL.
-4. Internal consistency — no contradictions between sections; no duplicate rules; no normative content in descriptive sections.
+3. Normative language — reqs must use enforceable language (must/shall/required). Vague terms in normative sections → FAIL.
+4. Internal consistency — no contradictions; no duplicate rules; no normative content in descriptive sections.
 5. Completeness — all terms defined; all behavior explicitly stated, not implied.
 Phase 1 fail → verdict FAIL, report which check failed, don't proceed to Phase 2.
 
 Phase 2 — Skill Smoke Check: quick structural verification.
-1. Classification — "Could someone with no context do this from just the inputs?" Yes → should be dispatch; No → should be inline. Flag misclassification.
-2. Inline/dispatch file consistency — File presence is definitive: any allowed dispatch instruction file present (`instructions.txt`, `<name>.md` in skill dir, or instruction file referenced by SKILL.md) → dispatch; none found → inline. If Check #1 and this check disagree, flag the conflict as a finding but do NOT double-fail — note conflict and let auditor decide. If dispatch: verify SKILL.md is a short routing card (structural details in Check #3). If inline: verify SKILL.md contains full procedure. Mismatch between file-system evidence and SKILL.md structure → FAIL.
-3. Structure
+1. Classification — "Could someone with no context do this from just inputs?" Yes → dispatch; No → inline. Flag misclassification.
+2. Inline/dispatch file consistency — file presence is definitive: any allowed dispatch instruction file (`instructions.txt`, `<name>.md` in skill dir, or file referenced by SKILL.md) → dispatch; none → inline. If Check #1 and this disagree, flag conflict as finding, don't double-fail. Dispatch: verify SKILL.md is short routing card (see Check #3). Inline: verify SKILL.md has full procedure. Mismatch between file-system evidence and SKILL.md structure → FAIL.
+3. Structure:
    Inline: frontmatter (`name`, `description`), direct instructions, self-contained.
-   Dispatch: SKILL.md ≤15 lines routing content; instruction file exists and reachable; params typed with required/optional/defaults; output format specified; uses Dispatch agent (isolated), not background agent with host context.
+   Dispatch: SKILL.md ≤15 lines routing content; instruction file exists and reachable; params typed (required/optional/defaults); output format specified; uses Dispatch agent (isolated), not background agent.
 4. Frontmatter — `name` and `description` present and accurate.
 5. No duplication — not duplicating existing capability; if similar exists, recommend merge or distinguish.
 Phase 2 fail → verdict FAIL, don't proceed to Phase 3.
 
 Phase 3 — Spec Compliance Audit: deep verification SKILL.md faithfully represents spec.
-1. Coverage — every normative requirement in spec represented in SKILL.md. Missing → FAIL.
+1. Coverage — every normative req in spec represented in SKILL.md. Missing → FAIL.
 2. No contradictions — SKILL.md mustn't contradict spec. Spec authoritative; SKILL.md subordinate.
-3. No unauthorized additions — SKILL.md mustn't introduce normative requirements not in spec.
+3. No unauthorized additions — SKILL.md mustn't introduce normative reqs not in spec.
 4. Conciseness — every line affects runtime behavior; no rationale (belongs in spec); no redundant explanations; agent-facing density.
 5. Completeness — all runtime instructions present; no implicit assumptions; edge cases addressed or excluded; defaults stated.
 6. Breadcrumbs — ends with related skills/topics; references valid (targets exist); no stale references.
 7. Cost analysis (dispatch only) — uses Dispatch agent (zero-context isolation); instruction file <500 lines; sub-skills by pointer, not inlined; single dispatch turn when possible.
-8. Markdown hygiene — report no errors on every `.md` file in the skill.
+8. Markdown hygiene — report no errors on every `.md` file in skill dir.
 9. No dispatch refs in instructions — `instructions.txt` mustn't tell agent to dispatch other skills; subagents can't dispatch, only host agent can; "Related" context refs OK; "run this skill"/"dispatch this" → FAIL; remediation: move dispatch steps to SKILL.md.
-10. No spec breadcrumbs in runtime — SKILL.md and `instructions.txt` must not reference the skill's own companion `spec.md` (pointer, breadcrumb, "see spec.md"); compressed runtime is self-contained. Exception: skills operating on specs as input (spec-auditing, skill-auditing) may reference the spec under audit, never their own companion.
+10. No spec breadcrumbs in runtime — SKILL.md and `instructions.txt` mustn't reference skill's own companion `spec.md` (pointer, breadcrumb, "see spec.md"); compressed runtime is self-contained. Exception: skills operating on specs as input (`spec-auditing`, `skill-auditing`) may reference spec under audit, never their own. Remediation: delete reference; if info genuinely needed at runtime, inline it.
 
 Verdict Rules:
 PASS: all 3 phases pass.
@@ -42,15 +42,26 @@ NEEDS_REVISION: Phase 1 and 2 pass; Phase 3 has 1-2 non-critical issues. List fi
 FAIL: any phase fails, or Phase 3 has critical issues.
 
 Fix Mode (`--fix`, single-pass, source-first):
-1. Eligibility: only enter on verdict == NEEDS_REVISION. PASS → exit; FAIL → skip fix, report defects.
-2. Preflight `result_file` writability. Unwritable → STOP fix; exit without modifying anything.
-3. Identify writable candidates: `uncompressed.md` and `instructions.uncompressed.md` as siblings of `skill_path`. Reject any path resolving outside the skill directory → STOP "refusing to fix: <path> escapes skill directory". If neither exists → STOP "no writable source files; fix mode unavailable". Compiled runtime (`SKILL.md`, `instructions.txt`) and `spec.md`/`README.md` are NEVER candidates.
-4. Git-clean check on every candidate. Untracked/unstaged/staged/merge-conflicted on ANY → STOP "refusing to fix: <path> has pending git changes". No git repo → STOP "refusing to fix: skill is not under git control". The read-only audit report is still written.
-5. Write the read-only audit report to `result_file`.
-6. Apply fixes to writable sources only, in severity order: critical Phase 3 (coverage, contradictions, unauthorized additions) → non-critical Phase 3 (conciseness, breadcrumbs, cost analysis, dispatch refs, spec breadcrumbs) → hygiene fixes scoped to writable sources only.
-7. Phase 1 defects, spec critiques, hygiene defects in unwritable files, and any defect requiring author judgment are NEVER auto-fixed — surface as findings.
-8. Append a "Fix Mode Addendum" to `result_file`: files modified, fixes applied, defects not auto-fixed, instruction to caller to recompress via `compression` skill (`uncompressed.md` → `SKILL.md`, `instructions.uncompressed.md` → `instructions.txt`) and re-run the auditor.
-9. Single-pass only — no in-process re-audit, no recompression. Caller drives the next cycle.
+Targets authoritative sources — not compiled runtime. Compiled runtime regenerated by caller via `compression` skill. Preserves source-of-truth chain (`spec.md` → `uncompressed.md` → `SKILL.md`).
+1. Eligibility: enter only on verdict == NEEDS_REVISION. PASS → exit; FAIL → skip, report defects.
+2. Preflight `result_file` writability. Unwritable → STOP without modifying anything.
+3. Identify writable candidates: `uncompressed.md` and `instructions.uncompressed.md` siblings of `skill_path`.
+   - Path resolves outside skill dir → STOP `refusing to fix: <path> escapes skill directory`.
+   - Neither exists → STOP `no writable source files; fix mode unavailable`.
+   - Never modify `spec.md`, `README.md`, `SKILL.md`, `instructions.txt`.
+4. Git-clean check on every candidate:
+   - Untracked/unstaged/staged/merge-conflicted on any → STOP `refusing to fix: <path> has pending git changes`.
+   - Not under git → STOP `refusing to fix: skill is not under git control`.
+   - Read-only audit report still written in either case.
+5. Write audit report to `result_file` first (commit point).
+6. Apply fixes in severity order: critical Phase 3 (coverage, contradictions, unauthorized additions) → non-critical Phase 3 (conciseness, breadcrumbs, cost analysis, dispatch refs, spec breadcrumbs) → hygiene (scoped to writable candidates only). Hygiene defects in `spec.md`, `README.md`, or compiled artifacts → findings only, not auto-fixed.
+7. Never auto-fix: Phase 1 defects, defects rooted in `spec.md`/`README.md`/compiled artifacts, defects requiring author judgment. Surface as findings.
+8. Append Fix Mode Addendum to `result_file`:
+   - `Files Modified` — absolute paths of every file written.
+   - `Fixes Applied` — per file, what changed and which finding resolved.
+   - `Not Auto-Fixed` — defects deferred to author.
+   - `Next Steps` — instruct caller: recompress via `compression` skill (`uncompressed.md` → `SKILL.md`, `instructions.uncompressed.md` → `instructions.txt`), then re-run auditor.
+9. Single-pass only — no in-process re-audit, no recompression. Caller drives next cycle.
 
 Report Format:
 ```markdown
@@ -103,4 +114,4 @@ Report Format:
 <one line>
 ```
 
-Rules: read-only by default. With `--fix`: single-pass; modify only `uncompressed.md` and `instructions.uncompressed.md` (sibling sources); never `spec.md`, `README.md`, `SKILL.md`, or `instructions.txt`; never any file with pending git changes; never paths outside the skill directory. One skill per dispatch; evidence-based verdicts; when in doubt, NEEDS_REVISION over PASS.
+Rules: read-only by default. With `--fix`: single-pass; modify only `uncompressed.md` and `instructions.uncompressed.md` (sibling sources); never `spec.md`, `README.md`, `SKILL.md`, `instructions.txt`; never files with pending git changes; never paths outside skill dir. One skill per dispatch; evidence-based verdicts; when in doubt, NEEDS_REVISION over PASS.

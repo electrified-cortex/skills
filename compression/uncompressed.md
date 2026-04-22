@@ -5,7 +5,8 @@ description: Compress .md files via subagent dispatch. Supports in-place, source
 
 # Compression
 
-Dispatch via Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory). Input: `<file-path> [--tier <lite|full|ultra>] [--source <src> --target <dst>]`" (default: ultra)
+Without reading `instructions.txt` yourself, use a Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory).
+Input: `<file-path> [--tier <lite|full|ultra>] [--source <src> --target <dst>]`" (default: ultra)
 
 Modes:
 
