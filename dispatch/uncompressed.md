@@ -63,13 +63,13 @@ Any "no" → prompt not ready.
 
 ## Footguns
 
-| ID | Footgun | Mitigation |
-| --- | --- | --- |
-| F1 | Host-impersonation on shared exclusive resource | Prompt forbids sub-agent from initiating sessions/auth/touching named resource. If work needs it, inline. |
-| F2 | Dispatch for trivial work | Apply Q4 — <3 host turns → inline. |
-| F3 | Tight-loop micro-dispatches | Aggregate into one dispatch with structured result. If impossible, reconsider dispatch. |
-| F4 | Hook-denial escape via dispatch | Never. Treat denial as authoritative; request permission, change approach, or escalate. |
-| F5 | Thin-prompt context assumption | Every prompt satisfies Well-Formed Prompt. Hand-feed all context agent can't inherit. |
+| Footgun | Mitigation |
+| --- | --- |
+| F1 — Host-impersonation on shared exclusive resource | Prompt forbids sub-agent from initiating sessions/auth/touching named resource. If work needs it, inline. |
+| F2 — Dispatch for trivial work | Apply Q4 — <3 host turns → inline. |
+| F3 — Tight-loop micro-dispatches | Aggregate into one dispatch with structured result. If impossible, reconsider dispatch. |
+| F4 — Hook-denial escape via dispatch | Never. Treat denial as authoritative; request permission, change approach, or escalate. |
+| F5 — Thin-prompt context assumption | Every prompt satisfies Well-Formed Prompt. Hand-feed all context agent can't inherit. |
 
 ## When Inline Cost Is Unaffordable
 

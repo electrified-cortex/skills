@@ -6,13 +6,13 @@ Background, evidence, and nuance for the `dispatch` skill. Agents read this on d
 
 **Conversation context does NOT inherit.**
 
-Test (2026-04-19, secret-phrase): host wrote `purple-tractor-mountain-9183` in conversation, then dispatched a sub-agent and asked it to quote the token. Sub-agent reported nothing visible. Confirmed across all subagent types tested.
+Empirical (2026-04-19, secret-phrase): host wrote `purple-tractor-mountain-9183` in conversation, then dispatched a sub-agent and asked it to quote the token. Sub-agent reported nothing visible. Confirmed across all subagent types tested.
 
 Implication: any prompt that says "continue what we were doing" or "use the findings from earlier" delivers zero context to the dispatched agent. Hand-feed every relevant prior turn.
 
 **Project context IS inherited.**
 
-Test (2026-04-19, enumerate-context): dispatched both a `Dispatch`-type and a `general-purpose`-type sub-agent and asked each to list `CLAUDE.md` and memory files visible in its system prompt. Both reported workspace and project-scoped `CLAUDE.md` files plus the project memory index.
+Empirical (2026-04-19, enumerate-context): dispatched both a `Dispatch`-type and a `general-purpose`-type sub-agent and asked each to list `CLAUDE.md` and memory files visible in its system prompt. Both reported workspace and project-scoped `CLAUDE.md` files plus the project memory index.
 
 Implication: don't waste tokens repeating project conventions in every prompt. The agent already has them.
 
