@@ -34,7 +34,7 @@ Returns: a change manifest listing which nodes were created, updated, unchanged,
 
 Each entry is one line:
 
-```
+```text
 key: keyword, keyword, keyword
 ```
 
