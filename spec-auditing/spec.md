@@ -39,8 +39,9 @@ The agent must behave as an auditor, not as an author, unless explicitly asked t
 The auditor operates in one of two modes:
 
 **Pair-audit mode** (default): evaluates a spec file and its companion file together.
-**Spec-only mode**: evaluates a single spec file for spec quality alone (see
-§ Spec-Only Mode).
+**Spec-only mode**: evaluates a single spec file for spec quality alone. This
+mode may be requested explicitly via audit context, or entered automatically
+when no companion is present (see § Spec-Only Mode).
 
 In pair-audit mode, the auditor evaluates:
 
@@ -69,7 +70,7 @@ The auditor must treat the spec as normative unless this file explicitly declare
 - **Target file**: synonym for companion file in pair-audit mode; the file being evaluated against the spec.
 - **Finding**: a numbered, severity-labeled observation of a defect, weakness, or risk in the audited material.
 - **Pair-audit mode**: the auditor evaluates a spec file and its companion file together.
-- **Spec-only mode**: the auditor evaluates a single spec file for spec quality alone (no companion present).
+- **Spec-only mode**: the auditor evaluates a single spec file for spec quality alone, either because the caller explicitly requested that mode or because no companion is present.
 - **Drift**: accidental semantic divergence between the spec and its companion over time, or within the spec itself.
 - **Compression fidelity**: the degree to which the companion faithfully preserves the meaning of the spec without loss (dropped requirements) or gain (unauthorized additions).
 - **Unauthorized addition**: content in the companion that has no basis in the spec and that the spec does not permit via extension. A defect.
@@ -116,7 +117,7 @@ The auditor expects:
 
 - the path or content of the spec file
 - the path or content of the target file
-- optional audit context
+- optional audit context, including an explicit request for spec-only mode when the caller wants to audit a spec in isolation
 - optional repository or project conventions
 - optional severity thresholds
 
@@ -132,10 +133,11 @@ their files and makes the relationship discoverable without a registry.
 
 ### Companion Auto-Detect
 
-When the target is a `spec.md` file and no `--spec` flag is provided, the
-auditor checks for a companion via this fallback chain (in order):
+When the target is a `spec.md` file, no `--spec` flag is provided, and the
+caller has not explicitly requested spec-only mode, the auditor checks for a
+companion via this fallback chain (in order):
 
-0. `companion:` frontmatter field in the target spec, if present — use that path directly; skip the rest of the chain
+0. `companion:` frontmatter field in the target spec, if present — resolve that path first; if it does not resolve, report an invalid companion reference and continue the remaining chain
 1. `<basename-without-spec-suffix>.md` in the same directory
 2. `uncompressed.md` in the same directory
 3. `SKILL.md` in the same directory
@@ -299,7 +301,7 @@ The auditor must not assume additions are acceptable unless the spec explicitly 
 
 ### 10. Economy
 
-Determine whether the spec (and its companion) are as lean as they can be while remaining complete.
+Determine whether every element earns its place. The test for each element: *can it be removed and the effect is the same?* If yes, it is waste.
 
 Checks include:
 
@@ -309,7 +311,7 @@ Checks include:
 - companion longer than the spec it implements (signal of bloat)
 - structural scaffolding that exceeds the complexity of the content it frames
 
-The auditor must recommend consolidation opportunities as Informational findings. Where duplication creates drift risk, escalate to Low or Medium.
+The auditor must apply the removal test to each flagged element and confirm the effect before reporting it. Consolidation opportunities are Informational findings. Where waste creates drift risk, escalate to Low or Medium.
 
 ---
 
@@ -376,10 +378,12 @@ Default rules:
 
 - **Fail** if any Critical finding exists
 - **Fail** if two or more High findings exist
-- **Pass with Findings** if only Medium, Low, or Informational findings exist
-- **Pass** only if no material issues are found
+- **Pass with Findings** if the audit produces any finding and no fail condition is met
+- **Pass** only if no findings are produced
 
-If a custom threshold is provided, the auditor may apply it, but must state the threshold used.
+If a custom threshold is provided and it tightens the default rules, the
+auditor must apply it and state the threshold used. Custom thresholds must
+never loosen the default rules.
 
 ---
 
@@ -530,8 +534,8 @@ Atomic, testable requirements for the auditor:
 
 - **Fail** if any Critical finding exists.
 - **Fail** if two or more High findings exist.
-- **Pass with Findings** if all findings are Medium, Low, or Informational.
-- **Pass** only if no material issues are found.
+- **Pass with Findings** if the audit produces any finding and no fail condition is met.
+- **Pass** only if no findings are produced.
 - Custom thresholds may tighten (never loosen) these rules; the threshold used must be stated.
 
 ### Fix mode behavior
@@ -548,7 +552,7 @@ When `--fix` is active:
 ## Error Handling
 
 | Condition | Action |
-|---|---|
+| --- | --- |
 | Target file missing or unreadable | STOP: report "target file missing" |
 | Spec file path explicitly provided but missing | STOP: report "spec file missing" |
 | Target not ending in `spec.md` and sibling `<basename>.spec.md` absent | STOP: report "spec file missing" |
@@ -683,8 +687,9 @@ If no mode is specified, use the default balanced mode.
 
 ## Spec-Only Mode
 
-When the target is a `spec.md` file with no companion present (see §Companion
-Auto-Detect), the auditor operates in spec-only mode.
+When the target is a `spec.md` file and the caller explicitly requests
+spec-only mode, or when no companion is present (see §Companion Auto-Detect),
+the auditor operates in spec-only mode.
 
 ### What is audited
 
@@ -697,6 +702,8 @@ criteria:
   vague/aspirational statements flagged?
 - **Structural Integrity** — logical ordering; stable headings; no hidden
   requirements in examples; normative language consistent.
+- **Economy** — duplicated rules, unnecessary scaffolding, or prose that can be
+  removed without changing the spec's effect.
 - **Terminology** — defined terms used consistently; undefined critical terms
   flagged; synonym drift flagged.
 - **Internal Consistency** — no contradictions within the spec itself.
