@@ -1,0 +1,12 @@
+{
+  "name": "electrified-cortex",
+  "version": "0.1.0",
+  "description": "Human-curated skills for workspace automation, QA, and token efficiency. Bundles 15 skills (authoring, auditing, compression, dispatch, gh-cli, indexing) plus dispatch agents.",
+  "author": {
+    "name": "Electrified Cortex",
+    "url": "https://github.com/electrified-cortex/skills"
+  },
+  "homepage": "https://github.com/electrified-cortex/skills",
+  "license": "MIT",
+  "keywords": ["skills", "agent-skills", "audit", "compression", "dispatch", "gh-cli", "markdown-hygiene", "spec-writing"]
+}

@@ -107,7 +107,7 @@ R14. Must enumerate subagent-type dimensions (tool scope, system prompt size, de
 
 ### Boundary
 
-R15. Cross-references are one-way. `dispatch` is referenced by authoring skills (`skill-writing`, `spec-writing`) and by runtime callers; `dispatch` itself references only `dispatch/agents/` (companion artifacts). The runtime card and supplemental must NOT reference authoring skills.
+R15. Cross-references are one-way. `dispatch` is referenced by authoring skills (`skill-writing`, `spec-writing`) and by runtime callers; `dispatch` itself references only the top-level `agents/claude-dispatch.md` and `agents/vscode-dispatch.md` (companion artifacts). The runtime card and supplemental must NOT reference authoring skills.
 
 R16. Use role-agnostic language. Terms "Curator," "Worker," "Overseer," or any project-internal role name must not appear. Canonical labels: "host," "dispatched agent," "calling agent."
 

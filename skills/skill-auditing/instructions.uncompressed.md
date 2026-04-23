@@ -146,13 +146,6 @@ Named finding patterns to flag:
 - **"Prose conditionals"**: if/else logic written as prose paragraphs instead
   of a decision tree or table. Finding text: `replace prose conditionals with
   decision tree or table`.
-- **"Meta-architectural label"**: any line describing the skill's own execution
-  pattern rather than instructing the agent what to do. Meta-architectural
-  labels are design rationale and must be flagged. Examples: "this is an inline
-  skill", "must not dispatch", "Worker runs directly". The agent follows
-  instructions as written — it does not need to know its classification or be
-  told what not to do. Finding text: `meta-architectural label — remove, this is
-  design rationale`.
 
 A skill passes conciseness only if an agent can skim it in one pass and know
 exactly what to do — no hunting through paragraphs for the operative rule.

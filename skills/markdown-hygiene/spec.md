@@ -91,15 +91,11 @@ Remaining: M errors (manual fix required)
 
 ## Constraints
 
-- The dispatch agent must not invoke, recommend, or install any specific
-  external tool. It uses built-in tools and agent intelligence only.
-  "markdownlint" here refers to the rule set, not any CLI package.
-- Never suggest installing anything — if tooling is not already present
-  in the caller's environment, dispatch this skill rather than installing.
-- If the calling environment already has linting tooling in place
-  (e.g. an active IDE markdown extension, a CLI linter already installed),
-  using that directly is preferred over dispatching — it saves tokens
-  and avoids LLM-based parsing. `tooling.md` (co-located) lists options.
+- Do not recommend, install, or invoke specific external
+  tools (e.g. npx, markdownlint-cli2). Use available
+  built-in tools and agent intelligence to identify and
+  fix violations. "markdownlint" here refers to the rule
+  set, not a specific CLI package.
 - Never suppress rules — fix them
 - Never modify content meaning — only formatting
 - Never introduce new violations while fixing others (e.g.,

@@ -89,5 +89,5 @@ For empirical evidence (context-inheritance tests), anti-pattern walkthroughs, e
 
 ## Related
 
-- Agent files: `dispatch/agents/` — ready-to-install Dispatch agent definitions for Claude Code CLI and VS Code.
+- Agent files: `agents/claude-dispatch.md` and `agents/vscode-dispatch.md` at the repo root — ready-to-install Dispatch agent definitions for Claude Code CLI and VS Code.
 - Installation: `installation.md` — where to put agent files, VS Code invocation, and what to do if not installed.

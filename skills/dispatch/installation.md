@@ -4,12 +4,12 @@ The dispatch skill requires a companion agent file installed in your project's a
 
 ## Agent Files
 
-Source: `dispatch/agents/`
+Source: `agents/` at the repo root
 
 | File | Environment | Install path |
 | --- | --- | --- |
-| `claude-dispatch.agent.md` | Claude Code CLI | `.claude/agents/dispatch.agent.md` |
-| `vscode-dispatch.agent.md` | VS Code (GitHub Copilot) | `.github/agents/dispatch.agent.md` |
+| `agents/claude-dispatch.md` | Claude Code CLI | `.claude/agents/dispatch.agent.md` |
+| `agents/vscode-dispatch.md` | VS Code (GitHub Copilot) | `.github/agents/dispatch.agent.md` |
 
 Copy the appropriate file. The agent name is `Dispatch` in both environments.
 
