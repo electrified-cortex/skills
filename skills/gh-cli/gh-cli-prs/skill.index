@@ -1,0 +1,5 @@
+.: pull request lifecycle, PR overview, which PR sub-skill, choose PR operation
+gh-cli-prs-comments: PR comment, add comment to PR, edit PR comment, delete PR comment
+gh-cli-prs-create: open PR, create PR, new pull request, branch to PR, draft PR
+gh-cli-prs-merge: merge PR, squash merge, close PR, update PR branch, revert PR
+gh-cli-prs-review: approve PR, request changes, dismiss review, submit review, LGTM

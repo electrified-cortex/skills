@@ -1,0 +1,17 @@
+{
+  "name": "electrified-cortex",
+  "owner": {
+    "name": "Electrified Cortex",
+    "url": "https://github.com/electrified-cortex"
+  },
+  "plugins": [
+    {
+      "name": "electrified-cortex",
+      "source": "./",
+      "description": "Human-curated skills for workspace automation, QA, and token efficiency — skills, agents, and companion specs bundled as one plugin.",
+      "version": "0.1.0",
+      "category": "productivity",
+      "tags": ["skills", "agents", "audit", "compression", "gh-cli"]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+Input: `<file-path>` [`--tier <lite|full|ultra>`] [`--source <src> --target <dst>`] (default tier: ultra)
+Blurb → skip gate, step 4
+
+Modes:
+
+Source→Target: `--source X --target Y` → read X, compress, write Y. No git check. X untouched.
+In-place (default): compress file directly. Git check required.
+Fallback: if file is untracked/dirty and no `--target`, create `<file>.compressed` alongside.
+
+Steps:
+
+1. Parse path + tier (default ultra) + mode. Blurb → step 4.
+2. Gate (skip if `--source`/`--target` provided):
+   - cd to file's parent dir, `git status --porcelain -- <basename>`.
+   - Clean (`  ` or `M `) → in-place mode.
+   - Untracked (`??`) or dirty (`M`, `A`, etc.) → fallback: target = `<file>.compressed`.
+   - `REJECTED` only on conflict/deleted states.
+3. Resolve tier: `--tier` or ultra.
+4. Load tier rules: `<tier>/rules.txt` (in this directory). Apply.
+5. Verify (file mode only, not blurb): compare compressed result against original. Every fact, rule, and constraint must survive.
+   - Recoverable (single dropped item or collapsed qualifier) → fix in-place, report fix + suggest prevention.
+   - Not recoverable (multi-element loss, structural damage, meaning reversal) → restore original, `REJECTED: content lost — <details>`.
+5a. If target is `.md`: run markdown-hygiene pass on compressed result. Fix any lint issues in-place.
+   - All fixed → record fixes in output.
+   - Partially fixed (some issues remain) → record fixes and list remaining issues as warnings in output.
+   - Nothing to fix → record `hygiene: clean` in output.
+   Hygiene issues never cause rejection — caller is informed so no further hygiene pass is needed.
+6. Write result to target (in-place, `.compressed`, or `--target` path).
+
+Output (required): `<before>→<after> bytes | <N>% reduction | <tier> | <mode>`
+Mode = `in-place`, `alongside (<file>.compressed)`, or `source→target (<dst>)`
+If content fixed: append `Fixed: <what>` + `Suggest: <prevention>`
+If `.md`: append `Hygiene: clean` or `Hygiene: fixed <N> issue(s)` or `Hygiene: <N> warning(s) — <details>`
+Blurb mode: compressed text, then `---`, then reduction line.

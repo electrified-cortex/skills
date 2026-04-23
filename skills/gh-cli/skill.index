@@ -1,0 +1,9 @@
+.: github cli routing, route gh operation, choose gh domain skill
+gh-cli-actions: github actions, trigger workflow, monitor run, workflow secrets, actions management
+gh-cli-api: github rest api, graphql api, gh api call, authenticated api, no dedicated subcommand
+gh-cli-issues: github issues, create issue, list issues, edit issue, close issue, bulk issue
+gh-cli-projects: github projects v2, project board, project items, project fields, manage project
+gh-cli-prs/: pull request, PR lifecycle, create PR, review PR, merge PR, PR comments
+gh-cli-releases: github release, create release, publish release, upload asset, release management
+gh-cli-repos: github repository, create repo, clone, fork, sync, repo management
+gh-cli-setup: install gh cli, gh auth, authenticate, configure github cli
