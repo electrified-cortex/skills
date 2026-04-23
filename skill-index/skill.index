@@ -1,5 +1,0 @@
-.: skill index system, per-directory index, cascading index, agent skill discovery
-skill-index-auditing: audit index, validate index, check index, rebuild needed, index drift
-skill-index-building: build index, rebuild index, rebuild skill index, create index artifacts, update index, generate skill.index
-skill-index-crawling: crawl index, find skill, locate skill, search index, skill discovery
-skill-index-integration: wire index, agent integration, index pointer, discovery mandate, demand loading
