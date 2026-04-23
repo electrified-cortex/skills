@@ -12,6 +12,9 @@
   merge-conflicted) and on any path that escapes the skill directory. The
   companion `spec.md`, the `README.md`, and the compiled runtime files
   (`SKILL.md`, `instructions.txt`) are never modified.
+- `--uncompressed` (optional flag): Audit the uncompressed source files
+  (`uncompressed.md`, `instructions.uncompressed.md`) instead of the compiled
+  runtime (`SKILL.md`, `instructions.txt`).
 
 ## Procedure
 
@@ -87,10 +90,10 @@ Mismatch between file-system evidence and SKILL.md structure → FAIL.
 
 **Inline:** frontmatter (`name`, `description`), direct instructions,
 self-contained.
-**Dispatch:** SKILL.md ≤15 lines routing content. Instruction file exists
-and is reachable. Params typed with required/optional/defaults. Output
-format specified. Uses Dispatch agent (isolated), not background agent with
-host context.
+**Dispatch:** Instruction file exists and is reachable. Params typed with
+required/optional/defaults. Output format specified. Uses Dispatch agent
+(isolated), not background agent with host context. SKILL.md is minimal
+routing content.
 
 **Stop gates in routing card** (dispatch only): if SKILL.md contains refusal
 conditions, eligibility guards, git-clean checks, or path-escape rules, flag
@@ -158,6 +161,8 @@ Ends with related skills/topics. References are valid (targets exist). No
 stale references.
 
 ### 7. Cost analysis (dispatch only)
+
+**`--uncompressed` mode: SKIP.**
 
 Uses Dispatch agent (zero-context isolation). Instruction file right-sized
 (<500 lines). Sub-skills referenced by pointer, not inlined. Single dispatch
@@ -235,9 +240,7 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
    - `Files Modified` — absolute paths of every file the auditor wrote.
    - `Fixes Applied` — per file, what changed and which finding it resolves.
    - `Not Auto-Fixed` — defects deferred to the author.
-   - `Next Steps` — instruct the caller to recompress via the `compression`
-     skill (`uncompressed.md` → `SKILL.md`, `instructions.uncompressed.md` →
-     `instructions.txt`) and re-run the auditor for verification.
+   - `Next Steps` — re-audit until PASS.
 9. **Single-pass only.** The auditor does not re-audit and does not invoke
    compression. Multi-pass convergence is the caller's responsibility
    (fix → recompress → re-audit).
@@ -248,6 +251,7 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
 ## Skill Audit: <skill-name>
 
 **Verdict:** PASS | NEEDS_REVISION | FAIL
+**Mode:** uncompressed  ← include only when --uncompressed is active; omit in standard mode
 **Type:** inline | dispatch
 **Path:** <path>
 **Failed phase:** <1 | 2 | 3 | none>

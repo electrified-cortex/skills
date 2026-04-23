@@ -98,8 +98,12 @@ Before writing any artifact derived from spec (skill, agent, or tool), spec must
 3. Dispatch spec-auditor: fast-cheap iterations first, standard for final pass.
 4. Fix all findings.
 5. Re-audit until PASS.
-6. Write derived artifact (skill, agent, or tool) only after PASS.
-7. Dispatch appropriate artifact auditor (skill-auditor, agent-auditor, or tool-auditor) on derived artifact as separate pass.
+6. Write derived artifact only after PASS.
+7. Dispatch appropriate artifact auditor on derived artifact as separate pass.
+
+Completion Gate:
+NOT done until `spec-auditing` returns PASS. No exceptions. Never derive artifacts, commit, or hand off without PASS in hand. Receiving FAIL and stopping is a workflow violation.
+
 Skipping spec-auditor pass before writing derived artifact is prohibited.
 
 Don't use descriptive, exploratory, or informational content as substitute for normative requirements. Don't use this skill to justify silent scope expansion. Don't embed normative requirements in examples, descriptive text, or exploratory sections.

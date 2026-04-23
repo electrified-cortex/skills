@@ -136,6 +136,16 @@ tool), the spec must pass a full audit.
 
 Skipping the spec-auditor pass before writing a derived artifact is prohibited.
 
+## Completion Gate
+
+> **The spec is NOT done until `spec-auditing` returns PASS.**
+
+FAIL → fix all findings → re-audit. Repeat until PASS.
+
+Do not derive any artifact, commit, or hand off a spec until a PASS verdict
+is in hand. There are no exceptions. Receiving FAIL and stopping work is a
+workflow violation.
+
 Don't use descriptive, exploratory, or informational content as substitute for normative requirements. Don't use this skill to justify silent scope expansion. Do not embed normative requirements in examples, descriptive text, or exploratory sections.
 
 ## Footgun Convention

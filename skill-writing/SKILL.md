@@ -17,12 +17,16 @@ New skill — follow order. Never skip steps.
 1. Spec first — write `spec.md` via `spec-writing`. Defines requirements, constraints, acceptance criteria.
 2. Write `uncompressed.md` from spec. Human-readable baseline.
 3. Markdown hygiene — run `markdown-hygiene` skill on `uncompressed.md`. Zero errors required before proceeding.
-4. Compress via `compression` skill (`--source uncompressed.md --target SKILL.md`). SKILL.md = compressed runtime.
-5. Audit via `skill-auditing`. Fix findings, recompress, re-audit until PASS.
+4. Intermediate audit — dispatch `skill-auditing --uncompressed` on the skill. FAIL → fix → re-audit until PASS. Never compress a failing `uncompressed.md`.
+5. Compress via `compression` skill (`--source uncompressed.md --target SKILL.md`). SKILL.md = compressed runtime.
+6. Final audit via `skill-auditing` (standard mode) on `SKILL.md`. FAIL → fix source → recompress → re-audit until PASS.
 
 Dispatch skills: also write companion instruction source file (see Dispatch Skill).
 
-Revising: update spec first. Exception: non-normative changes (README, examples, typo fixes) → skip to step 2. Update `uncompressed.md` → hygiene → recompress → re-audit. Never modify SKILL.md directly — compiled artifact.
+Completion Gate:
+NOT done until both audits return PASS. Intermediate gate (step 4): PASS required before compression. Final gate (step 6): PASS required before declaring complete. No exceptions. Receiving FAIL and stopping is a workflow violation.
+
+Revising: update spec first. Exception: non-normative changes (README, examples, typo fixes) → skip to step 2. Update `uncompressed.md` → hygiene → intermediate audit (`--uncompressed`) → compress → final audit. Never modify SKILL.md directly — compiled artifact.
 
 Decision: Inline or Dispatch?
 
@@ -50,7 +54,7 @@ SKILL.md IS the full instruction set. Agent reads and applies directly.
 
 Dispatch Skill (Routing Card):
 
-SKILL.md = ~10-15 line routing card. `instructions.txt` holds procedure.
+SKILL.md = minimal routing card. `instructions.txt` holds procedure.
 Dispatch via Dispatch agent: "Read and follow `instructions.txt`. Input: `<params>`"
 Parameters: types, required/optional, defaults. Output format specified.
 

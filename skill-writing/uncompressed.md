@@ -21,20 +21,38 @@ When creating a new skill, follow this order. Never skip steps.
    spec. This is the human-readable baseline.
 3. **Markdown hygiene** — run the `markdown-hygiene` skill on
    `uncompressed.md`. Zero errors required before proceeding.
-4. **Compress** — use the `compression` skill (source→target mode:
+4. **Intermediate audit** — dispatch `skill-auditing --uncompressed` on the skill.
+   FAIL → fix all findings → re-audit. **Repeat until PASS.**
+5. **Compress** — use the `compression` skill (source→target mode:
    `--source uncompressed.md --target SKILL.md`). The SKILL.md is the
    compressed runtime agents load.
-5. **Audit** — use the `skill-auditing` skill to verify. Fix findings,
-   recompress, re-audit until PASS.
+6. **Final audit** — dispatch `skill-auditing` (standard mode) on `SKILL.md`.
+   FAIL → fix all findings → recompress → re-audit. **Repeat until PASS.**
 
 For dispatch skills, also write the companion instruction source file (see
 Dispatch Skill section).
 
+### Completion Gate
+
+> **The skill is NOT done until both audits return PASS.**
+
+Intermediate gate (step 4): `skill-auditing --uncompressed` on `uncompressed.md`
+must PASS before compression runs. FAIL → fix → re-audit. Never compress a
+failing `uncompressed.md`.
+
+Final gate (step 6): `skill-auditing` (standard) on `SKILL.md` must PASS.
+FAIL → fix source (`uncompressed.md`) → recompress → re-audit.
+
+Do not declare a skill complete, commit it, or hand it off until the final
+standard-mode PASS verdict is in hand. There are no exceptions. Receiving FAIL
+and stopping work is a workflow violation.
+
 When revising an existing skill: always update the spec first. The only
 exception is changes limited to non-normative content (README, examples,
 typo fixes in informational sections) — in that case skip to step 2.
-Then update `uncompressed.md` → hygiene → recompress → re-audit. Never modify
-SKILL.md directly — it is a compiled artifact.
+Then update `uncompressed.md` → hygiene → intermediate audit (`--uncompressed`)
+→ compress → final audit. Never modify SKILL.md directly — it is a compiled
+artifact.
 
 ## Decision: Inline or Dispatch?
 
@@ -64,7 +82,7 @@ SKILL.md IS the full instruction set. Agent reads and applies directly.
 
 ## Dispatch Skill (Routing Card)
 
-SKILL.md = ~10-15 line routing card. `instructions.txt` holds procedure.
+SKILL.md = minimal routing card. `instructions.txt` holds procedure.
 
 Dispatch via Dispatch agent: "Read and follow `instructions.txt`.
 Input: `<params>`"
