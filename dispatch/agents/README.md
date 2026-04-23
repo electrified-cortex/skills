@@ -22,12 +22,17 @@ Install path: `.github/agents/dispatch.agent.md`
 
 ## Orchestrator
 
-Dispatch-first agent. Delegates everything possible to the `Dispatch` sub-agent.
+A first-class VS Code agent mode — not a sub-agent. Select it from the VS Code
+chat panel agent picker just like any other mode. It handles all dispatch
+for you so your VS Code session requires no other wiring.
+
+VS Code does not support nested sub-agents by default. Orchestrator is always
+the host. It dispatches to Dispatch one level down — that's the full depth.
+
 Companion `vscode-orchestration.txt` (same folder) — ultra-compressed how-to.
 
-Install path: `.github/agents/orchestrator.agent.md`
-
-If Orchestrator is installed, Dispatch must be installed too.
+Install path: `.github/agents/orchestrator.agent.md`  
+Requires: Dispatch agent also installed at `.github/agents/dispatch.agent.md`
 
 ## Source
 
