@@ -11,6 +11,8 @@ target instruction file.
 | [vscode-dispatch.agent.md](vscode-dispatch.agent.md) | VS Code (GitHub Copilot) | Minimal executor — reads a file and follows it |
 | [vscode-orchestrator.agent.md](vscode-orchestrator.agent.md) | VS Code (GitHub Copilot) | Dispatch-first orchestrator — delegates to Dispatch |
 
+Companion: `vscode-orchestration.txt` — ultra-compressed how-to for the orchestrator.
+
 ## Executor (Dispatch)
 
 Intentionally minimal — carries no context of its own. All behavior comes from
@@ -21,7 +23,7 @@ Install path: `.github/agents/dispatch.agent.md`
 ## Orchestrator
 
 Dispatch-first agent. Delegates everything possible to the `Dispatch` sub-agent.
-Companion file `orchestration.md` (same folder) describes how to dispatch.
+Companion `vscode-orchestration.txt` (same folder) — ultra-compressed how-to.
 
 Install path: `.github/agents/orchestrator.agent.md`
 

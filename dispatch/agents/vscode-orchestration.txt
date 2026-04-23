@@ -1,0 +1,5 @@
+runSubagent(agentName: "Dispatch", prompt: "...", description: "...")
+Prompt: goal (1 sentence) + conversation context + output shape + scope constraints.
+Skip: project docs, CLAUDE.md, memory — inherited.
+Dispatch: all work not needing live chat context.
+Inline: <3 turns, or requires live context.
