@@ -4,12 +4,13 @@
 
 Define the runtime decision an agent makes when considering whether and how to dispatch a sub-agent. Replaces tribal knowledge with an explicit decision tree, model tier table, footgun list, and well-formed-prompt template.
 
-This skill governs four artifacts:
+This skill governs five artifacts:
 
 - `spec.md` (this file): the normative specification. Audited but never loaded at runtime.
 - `uncompressed.md`: the human-readable source for the runtime card. Edited by `--fix` mode.
 - `SKILL.md`: the compiled runtime card (compressed from `uncompressed.md`). Loaded by every caller.
 - `supplemental.md`: optional read for nuance. Empirical evidence, anti-pattern walkthroughs, error handling, precedence rules, subagent-type dimensions. Not loaded by default; agents fetch it on demand when the runtime card is insufficient.
+- `installation.md`: agent file installation instructions. Read when the host environment requires setup before dispatch can function.
 
 ## Scope
 

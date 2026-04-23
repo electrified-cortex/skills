@@ -75,6 +75,14 @@ Any "no" → prompt not ready.
 
 (a) Dispatch with fully hand-fed context prompt, or (b) defer. Don't dispatch incorrectly because inline is expensive.
 
+## Dispatch Install
+
+Requires a companion agent file in your project's agent directory. See `installation.md`.
+
+## Platform Gotchas
+
+**VS Code (GitHub Copilot):** Use `runSubagent` with `agentName: "Dispatch"`. It is blocking — no background dispatch.
+
 ## Supplemental
 
 For empirical evidence (context-inheritance tests), anti-pattern walkthroughs, error-handling guidance, and precedence notes: see `supplemental.md` in this skill folder.
@@ -82,3 +90,4 @@ For empirical evidence (context-inheritance tests), anti-pattern walkthroughs, e
 ## Related
 
 - Agent files: `dispatch/agents/` — ready-to-install Dispatch agent definitions for Claude Code CLI and VS Code.
+- Installation: `installation.md` — where to put agent files, VS Code invocation, and what to do if not installed.
