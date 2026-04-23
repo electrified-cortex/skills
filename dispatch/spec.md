@@ -197,3 +197,17 @@ DN10. Do not extend the skill scope to non-dispatch delegation patterns.
 DN11. Do not move runtime instructions into `supplemental.md`. Supplemental is for nuance only; the runtime card must stand alone.
 
 DN12. Do not move spec rationale into `supplemental.md`. Spec rationale lives in the spec.
+
+## Platform Gotchas
+
+The skill is written primarily against the Claude Code runtime. Other environments that read and apply this skill may have structural differences. Platform gotchas are normative deviations from the general model — not suggestions.
+
+### VS Code (GitHub Copilot)
+
+PG1. **No background dispatch.** VS Code has no background agent primitive. There is no `run_in_background` equivalent. Every dispatch in VS Code is foreground — the host blocks until the sub-agent returns. References to "background dispatch" in the runtime card and default D3 do not apply; use foreground dispatch and manage responsiveness inline.
+
+PG2. **Different dispatch primitive.** The dispatch tool in VS Code is `runSubagent`, not the `Agent` tool. The parameter for naming the agent is `agentName` (not `subagent_type`). All runtime card guidance about dispatch applies to `runSubagent`; translate parameter names accordingly.
+
+PG3. **All dispatch is blocking.** In VS Code, `runSubagent` is always synchronous — the host blocks until the sub-agent returns, even when multiple sub-agents appear to be fired in parallel. There is no true parallel execution; concurrent `runSubagent` calls serialize. Callers who interpret "Dispatch background" from the decision tree must fall back to foreground and account for the blocking cost inline.
+
+PG4. **Context inheritance is unverified in VS Code.** The empirical claims about project-context inheritance (in `supplemental.md`) are anchored to Claude Code. Whether VS Code/Copilot's `runSubagent` inherits project context is unverified. Treat context as NOT inherited and hand-feed it explicitly.
