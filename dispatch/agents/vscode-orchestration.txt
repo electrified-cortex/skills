@@ -1,5 +1,8 @@
 runSubagent(agentName: "Dispatch", prompt: "...", description: "...")
-Prompt: goal (1 sentence) + conversation context + output shape + scope constraints.
-Skip: project docs, CLAUDE.md, memory — inherited.
+- prompt: full task instructions + all needed context (sub-agent sees nothing from this conversation)
+- description: 3-5 word label shown in UI (e.g. "Scan task queue")
+- model: omit = Sonnet (default); set "Claude Haiku 4.5 (Copilot)" for simple/cheap tasks
+Prompt must include: goal (1 sentence) + conversation context + output shape + scope.
+Skip passing: project docs, CLAUDE.md, memory — inherited automatically.
 Dispatch: all work not needing live chat context.
 Inline: <3 turns, or requires live context.
