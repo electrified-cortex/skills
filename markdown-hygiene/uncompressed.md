@@ -22,5 +22,7 @@ Returns: CLEAN (0 errors), FIXED (errors→0), or PARTIAL (unfixable remain).
 
 Run after compression, before stamping, before committing .md files.
 
+If `markdownlint` CLI or VS Code extension is available, use it directly instead of dispatching. See `tooling.md` (co-located).
+
 Related: `compression` (run hygiene after compressing),
 `skill-auditing` (includes hygiene check), `spec-writing`
