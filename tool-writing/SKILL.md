@@ -39,9 +39,10 @@ on remote hosts or in containers may not have PowerShell. Bash is the safe assum
    PSScriptAnalyzer warnings must be resolved before moving on.
 4. **Place it**: Skill-embedded (inside skill dir) if skill-specific.
    Standalone (`tools/`) if general-purpose.
-5. **Audit**: dispatch `tool-auditing` to check spec alignment. Fix all
+5. **Hygiene**: run `markdownlint` on the spec. Zero errors before committing.
+6. **Audit**: dispatch `tool-auditing` to check spec alignment. Fix all
    findings, re-audit. **Repeat until PASS.**
-6. **Port to Bash**: Once PS1 is at PASS, write the Bash analog.
+7. **Port to Bash**: Once PS1 is at PASS, write the Bash analog.
    Same logic, same gates, same output format.
 
 ## Completion Gate
