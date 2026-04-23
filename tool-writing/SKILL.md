@@ -12,7 +12,7 @@ Conventions for creating tool scripts.
 ## Language Tiers
 
 | Tier | Language | When |
-|------|----------|------|
+| --- | --- | --- |
 | 1 (baseline) | **Bash** | Agent runtime default. If Git is present, Bash is present. What agents actually execute. |
 | 2 (prototype) | **PowerShell** | Developer/builder default. Better tooling — VS Code + PSScriptAnalyzer catches errors statically without running. Easier to write correct code fast. |
 | 3 (future) | **C# scripts** (.NET `dotnet-script`) | High complexity or performance demands. Not in regular use yet. |
