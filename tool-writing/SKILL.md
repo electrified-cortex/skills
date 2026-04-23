@@ -1,26 +1,42 @@
 ---
 name: tool-writing
 description: >-
-  Write tool scripts with companion specs. Bash default for agents,
-  PowerShell legitimate. Scripts can live in skill folders.
+  Write tool scripts with companion specs. PowerShell for prototypes,
+  Bash as fallback. Spec first, build, audit, repeat until PASS.
 ---
 
 # Tool Writing
 
 Conventions for creating tool scripts.
 
+## Language Tiers
+
+1. **PowerShell** — default prototype language. Easier to read, better
+   error handling, cross-platform (Windows, macOS, Linux). If you have
+   Git you almost certainly have Bash too, but PowerShell is preferred
+   for readability and development speed.
+2. **Bash** — lowest common denominator. If you have Git, you have Bash.
+   Use for very simple tools or where PowerShell is unavailable.
+3. **C# scripts** (.NET `dotnet-script`) — future tier. Use when complexity
+   demands it. Not yet in regular use.
+
+**Rule:** Prototype in PowerShell. Add a Bash counterpart when the tool
+is stable. Never prototype in Bash and rewrite — start with the better
+language.
+
 ## Checklist
 
-1. **Choose language**: Bash default for agents. PowerShell when more
-   featured or Windows-native. Both first-class.
-2. **Write spec first**: `<name>.spec.md` — purpose, params, output,
+1. **Write spec first**: `<name>.spec.md` — purpose, params, output,
    errors, examples. No spec = suspect.
-3. **Write script**: Self-documenting param block. No hardcoded paths.
-   No interactive input. Works from any CWD.
-4. **Place it**: Skill-embedded (inside skill dir) if skill-specific.
+2. **Write prototype** (PowerShell): self-documenting param block, no
+   hardcoded paths, no interactive input, works from any CWD.
+3. **Place it**: Skill-embedded (inside skill dir) if skill-specific.
    Standalone (`tools/`) if general-purpose.
-5. **Test**: Run with valid + invalid inputs. Verify output format.
-6. **Audit**: use `tool-auditing` to verify. Fix findings, re-audit. **Repeat until PASS.**
+4. **Audit**: dispatch `tool-auditing` to check spec alignment. Fix all
+   findings, re-audit. **Repeat until PASS.**
+5. **Add Bash counterpart** (optional but preferred): same logic, same
+   gates, same output format. Bash version is not required to unblock
+   PASS — it can follow after.
 
 ## Completion Gate
 
@@ -34,9 +50,9 @@ work is a workflow violation.
 
 ## Conventions
 
-- Bash: `set -e`, fail-fast
-- PowerShell: `$ErrorActionPreference = 'Continue'`, collect errors
+- PowerShell: `$ErrorActionPreference = 'Continue'`, collect errors, `$PSScriptRoot` for paths
+- Bash: `set -e`, fail-fast, `$(dirname "$0")` for paths
 - Output: markdown for reports, JSON for data, plain text for status
-- Paths: script-relative via `$PSScriptRoot` or `$(dirname "$0")`
+- Never: hardcoded absolute paths, `Read-Host`, `read -p`, or `Get-Credential`
 
 Related: `tool-auditing`, `skill-writing`, `spec-writing`
