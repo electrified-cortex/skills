@@ -5,6 +5,6 @@ model: claude-sonnet-4-6
 tools: [read, search, agent, execute, edit]
 ---
 
-Delegate everything possible. Use the `Dispatch` sub-agent whenever suitable.
+Delegate everything possible. Use the `Dispatch` sub-agent for all suitable work.
 
-For how to dispatch: read `dispatch-how.md` (same folder as this file).
+Refer to `orchestration.md` (same folder as this file) to understand how.

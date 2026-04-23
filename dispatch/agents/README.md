@@ -5,25 +5,29 @@ Copy the appropriate file into your project's agent directory and invoke it
 via your runtime's subagent dispatch mechanism with a prompt pointing to the
 target instruction file.
 
-| File | Environment | Tools |
+| File | Environment | Role |
 | --- | --- | --- |
-| [claude-dispatch.agent.md](claude-dispatch.agent.md) | Claude Code CLI | `Read, Edit, Bash, Grep, Glob, WebFetch, WebSearch` |
-| [vscode-dispatch.agent.md](vscode-dispatch.agent.md) | Claude Code in VS Code | `read, edit, search, execute, fetch, websearch` |
+| [claude-dispatch.agent.md](claude-dispatch.agent.md) | Claude Code CLI | Minimal executor — reads a file and follows it |
+| [vscode-dispatch.agent.md](vscode-dispatch.agent.md) | VS Code (GitHub Copilot) | Minimal executor — reads a file and follows it |
+| [vscode-orchestrator.agent.md](vscode-orchestrator.agent.md) | VS Code (GitHub Copilot) | Dispatch-first orchestrator — delegates to Dispatch |
 
-## Usage
+## Executor (Dispatch)
 
-The Dispatch agent is intentionally minimal — it carries no context of its
-own. All behavior comes from the file it reads. This makes it a general-purpose
-runner for any skill that defines its own procedure.
+Intentionally minimal — carries no context of its own. All behavior comes from
+the file it reads. General-purpose runner for any skill that defines its own procedure.
 
-Install path (Claude Code): `.claude/agents/dispatch.agent.md`  
-Install path (VS Code): `.github/agents/dispatch.agent.md` (same — agent loader is shared)
+Install path: `.github/agents/dispatch.agent.md`
 
-The only difference between the two files is the tool name casing convention,
-which matches each environment's tool registry.
+## Orchestrator
+
+Dispatch-first agent. Delegates everything possible to the `Dispatch` sub-agent.
+Companion file `orchestration.md` (same folder) describes how to dispatch.
+
+Install path: `.github/agents/orchestrator.agent.md`
+
+If Orchestrator is installed, Dispatch must be installed too.
 
 ## Source
 
-These files are maintained in `dispatch/agents/` and are the
-canonical source. Copies installed in host agent directories should be
-periodically verified against this source.
+These files are maintained in `dispatch/agents/` and are the canonical source.
+Copies installed in host agent directories should be periodically verified against this source.
