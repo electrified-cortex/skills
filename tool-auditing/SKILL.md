@@ -42,10 +42,7 @@ Verdict mapping (tool-auditing → audit-reporting frontmatter): `PASS → PASS`
 
 ## Iteration Safety
 
-Root cause: consecutive audits against an unchanged script waste work and can loop.
-
-**Rule A — Fix before re-audit.** If verdict is FAIL or WARN, caller must resolve findings (fix or dispatch fix) before re-auditing the same script. Re-auditing without acting on prior findings is forbidden.
-
-**Rule B — Never re-audit unchanged content.** "Never re-audit a file that has not been modified since the previous audit, period, full stop." Verify the script has changed before dispatching a follow-up audit. If unchanged, the prior verdict stands; re-dispatch is forbidden.
+Do not re-audit unchanged files.
+See `../iteration-safety/SKILL.md`.
 
 Related: `tool-writing`, `skill-auditing`, `spec-auditing`

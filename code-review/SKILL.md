@@ -51,8 +51,8 @@ Don't modify change set during a pass. Edits happen between passes only.
 Record sign-off so downstream consumers can verify review occurred.
 
 Iteration Safety:
-Rule A — Address findings before re-reviewing. Findings produced → fix, accept, or waive-with-rationale each one before dispatching another pass. Re-dispatch without acting on findings is forbidden.
-Rule B — Never re-review unchanged code. "Never re-audit a file that has not been modified since the previous audit, period, full stop." Verify at least one source file changed since the prior pass. If nothing changed, prior verdict stands; re-dispatch is forbidden.
+Do not re-audit unchanged files.
+See `../iteration-safety/SKILL.md`.
 
 When to Use:
 Reviewing change set of executable or compilable code: source files, build scripts, CI config, IaC manifests.

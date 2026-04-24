@@ -17,9 +17,8 @@ Returns: verdict (PASS / NEEDS_REVISION / FAIL) + issues. Checklist: Spec Gate (
 
 ## Iteration Safety
 
-Rule A — Fix before re-audit: if verdict was NEEDS_REVISION or FAIL, resolve findings before re-dispatching. Re-auditing without acting on prior findings is forbidden.
-
-Rule B — Never re-audit unchanged content: "Never re-audit a file that has not been modified since the previous audit, period, full stop." Caller must verify at least one authoritative source file (`uncompressed.md` or `instructions.uncompressed.md`) changed before re-dispatching. If no file changed, prior verdict stands; re-dispatch forbidden.
+Do not re-audit unchanged files.
+See `../iteration-safety/SKILL.md`.
 
 ## Output
 

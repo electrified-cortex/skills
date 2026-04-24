@@ -30,13 +30,8 @@ One skill per invocation. Chain multiple subjects as separate runs.
 
 ## Iteration Safety
 
-Both rules exist to prevent wasted-work loops where an agent runs consecutive audits against the same spec with no content change between runs.
-
-**Rule A — Fix before re-audit.** If an audit produces findings (verdict is Pass with Findings or Fail), the agent must resolve those findings — by fixing directly or dispatching the fix — before running another audit against the same spec. Running another audit without acting on prior findings is forbidden.
-
-**Rule B — Never re-audit unchanged content.** "Never re-audit a file that has not been modified since the previous audit, period, full stop." If the spec's content is unchanged, the verdict is deterministic and a re-audit is wasted work.
-
-The caller must verify, before dispatching a follow-up audit, that the spec file (or its companion, in pair-audit mode) has changed since the previous audit completed. If no file has changed, the prior verdict stands and re-dispatch is forbidden.
+Do not re-audit unchanged files.
+See `../iteration-safety/SKILL.md`.
 
 ## When to Use
 

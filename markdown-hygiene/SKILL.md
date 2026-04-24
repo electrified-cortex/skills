@@ -33,14 +33,8 @@ Caller must compute `result_file` using the audit-reporting path shape before di
 
 ## Iteration Safety
 
-Rule A — Fix before re-check: findings (FIXED/PARTIAL) → apply or surface
-fixes before another pass. Re-passing without acting is forbidden.
-
-Rule B: "Never re-audit a file that has not been modified since the
-previous audit, period, full stop." Unchanged file = prior verdict stands;
-re-dispatch forbidden.
-
-Caller must verify file changed before any follow-up dispatch.
+Do not re-audit unchanged files.
+See `../iteration-safety/SKILL.md`.
 
 Related: `compression` (run hygiene after compressing),
 `skill-auditing` (includes hygiene check), `spec-writing`
