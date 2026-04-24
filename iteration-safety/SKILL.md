@@ -22,6 +22,13 @@ Either check fails → do not re-dispatch.
 
 ## Cite
 
-> **Iteration Safety.** Do not re-audit unchanged files. See `skills/electrified-cortex/iteration-safety/` for Rule A and Rule B, including caller obligations.
+Callers embed this block (adjust the relative path to match the caller's folder depth):
+
+```markdown
+## Iteration Safety
+
+Do not re-audit unchanged files.
+See `../iteration-safety/SKILL.md`.
+```
 
 Do not restate Rule B's quote in callers.

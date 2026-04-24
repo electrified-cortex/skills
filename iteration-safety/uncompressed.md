@@ -24,8 +24,13 @@ If either check fails, do not re-dispatch.
 
 ## How to cite this skill
 
-Calling skills reference this skill with a short blurb:
+Calling skills embed this block (adjust the relative path to match the caller's folder depth):
 
-> **Iteration Safety.** Do not re-audit unchanged files. See `skills/electrified-cortex/iteration-safety/` for Rule A and Rule B, including caller obligations.
+```markdown
+## Iteration Safety
+
+Do not re-audit unchanged files.
+See `../iteration-safety/SKILL.md`.
+```
 
 Do not restate Rule B's verbatim quote in caller skills.

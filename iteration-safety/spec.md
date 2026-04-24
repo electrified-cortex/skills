@@ -36,13 +36,18 @@ If either check fails, the prior verdict stands and re-dispatch is forbidden.
 
 ## Integration
 
-Iterating skills SHOULD NOT embed the full text of Rules A and B in their own spec/uncompressed/SKILL.md. Instead they include a short pointer blurb that carries the gist of Rule B as a one-liner (so a reader scanning the calling skill knows the warning exists without clicking through) plus a link to this skill for the full rule text. Recommended wording:
+Iterating skills SHOULD NOT embed the full text of Rules A and B in their own spec / uncompressed / SKILL.md. Instead they include this two-line pointer block in spec.md, uncompressed.md, and SKILL.md only. Do NOT include the block in instructions.uncompressed.md or instructions.txt — by the time instructions are loaded, the re-dispatch decision has already been made and the gate is too late.
 
-> **Iteration Safety.** Do not re-audit unchanged files. See `skills/electrified-cortex/iteration-safety/` for Rule A (fix before re-pass) and Rule B (never re-pass on unchanged content), including the caller obligations.
+Caller block (adjust the relative path for the caller's folder depth):
 
-The blurb stays small: one bold label, one imperative sentence carrying the core warning, one pointer. No restated Rule B verbatim quote inside the caller — the quote lives here and here only, so rewording drift cannot occur.
+```markdown
+## Iteration Safety
 
-Keeping a one-line warning in callers lets a scanning reader catch the hazard without chasing the reference. Keeping the authoritative text in one place keeps the rules DRY, makes audit updates cheap, and eliminates drift between sibling skills.
+Do not re-audit unchanged files.
+See `../iteration-safety/SKILL.md`.
+```
+
+No restated Rule B verbatim quote in callers — the quote lives in this skill only, so rewording drift cannot occur.
 
 ## Root cause this skill exists for
 
