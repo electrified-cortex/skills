@@ -1,0 +1,31 @@
+Iteration Safety — shared rules module for iterating skills.
+
+Scope: any skill running repeated verdict-producing passes (audit/review/hygiene/compression).
+Not applicable: read-only skills, single-pass transforms, no-verdict skills.
+
+Definitions:
+Pass → single invocation of iterating skill.
+Findings → verdict artifact indicating more work needed (label per calling skill).
+Source file → file(s) skill evaluates: audit=target, compression=uncompressed source, code-review=change set.
+
+Rule A — fix before re-pass:
+Pass produces findings → resolve before re-passing same source. Resolve = fix / dispatch fix / accept+record rationale. Re-pass without resolution → forbidden.
+
+Rule B — never re-pass on unchanged content:
+"Never re-audit a file that has not been modified since the previous audit, period, full stop."
+Source unchanged → verdict deterministic → re-dispatch forbidden. Prior verdict stands.
+
+Pre-dispatch checklist (BOTH must pass before any follow-up pass):
+1. At least one source file changed since previous pass. Fail → stop, prior verdict stands.
+2. Prior findings addressed or recorded. Fail → stop, prior verdict stands.
+
+Precedence: these rules authoritative. Calling skill contradicts Rule A/B → calling skill must be revised.
+
+Cite this skill (one-line pointer — use verbatim, don't embed rule text):
+> Iteration Safety: see `skills/electrified-cortex/iteration-safety/` — Rule A and Rule B apply to any iteration of this skill.
+
+Don'ts:
+- Don't reword Rule B verbatim quote.
+- Don't copy Rules A/B into other skills — reference instead.
+- Don't add verdict vocabulary not universal — keep findings abstract.
+- Don't use as procedural audit runner.
