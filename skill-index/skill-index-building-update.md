@@ -1,3 +1,22 @@
+# Proposed Update: skill-index-building SKILL.md
+
+**Source file:** `D:\Users\essence\Development\cortex.lan\.agents\skills\electrified-cortex\skill-index\skill-index-building\SKILL.md`
+
+**Change summary:**
+
+- Raw index format updated: `key: keywords` replaced with structured three-line entry (key heading + triggers + path). Pipe-separated trigger phrases replace comma-separated keywords.
+- New requirement: every entry heading must carry `[op]` or `[self]` marker.
+- Overlay format updated: sections must be trigger-shaped (when to load), not description-shaped (what the skill does). Added R29-aligned conformance language.
+- Added trigger-phrase quality rules aligned with R21–R24 and the canonical format spec.
+- Header field rename: builder now emits `role:` (replacing deprecated `agent:`). Readers must accept both; builders must emit `role:`.
+- Header timestamp split: builder now emits two distinct fields — `built:` (set once at first build) and `updated:` (set on every build/rebuild). Legacy single-timestamp indexes are considered legacy format.
+- All existing structural requirements (build logic, traversal rules, combo nodes, shortcut entries, error handling, footguns) preserved unchanged.
+
+---
+
+## Full Proposed Replacement SKILL.md
+
+```markdown
 ---
 name: skill-index-building
 description: Dispatch skill. Creates or updates skill.index and skill.index.md at every indexed directory in a skill tree. Integrity stamp written by auditor after PASS.
@@ -208,3 +227,4 @@ Related:
 `skill-index-auditing` — validates cascade, writes stamp; run after building.
 `skill-index-crawling` — consumes artifacts produced here.
 `compression` — required for overlay compression pass before write.
+```
