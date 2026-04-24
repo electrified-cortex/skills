@@ -51,6 +51,14 @@ Read the change set, produce a findings report. Read-only — never edit, commit
 }
 ```
 
+## Iteration Safety
+
+These rules apply to the calling agent. Both prevent wasted-work loops where repeated review passes run against unchanged code.
+
+**Rule A — Address findings before re-reviewing.** If a review pass produces findings, address each one — by fixing the code, explicitly accepting the finding, or waiving it with a recorded rationale — before dispatching another pass against the same change set. Do not dispatch another pass without acting on prior findings.
+
+**Rule B — Never re-review unchanged code.** "Never re-audit a file that has not been modified since the previous audit, period, full stop." Before dispatching a follow-up pass, verify that at least one source file in the change set has been modified since the previous pass completed. If no file has changed, the prior verdict stands. Do not re-dispatch.
+
 ## Rules
 
 - Read-only. Do not edit, stage, commit, push, or run scripts that mutate state.

@@ -57,6 +57,14 @@ Calling agent assembles after all passes:
 - Do not modify the change set during a pass. Edits happen between passes only.
 - Record the sign-off so downstream consumers can verify the review occurred.
 
+## Iteration Safety
+
+Both rules exist to prevent wasted-work loops where a calling agent dispatches repeated review passes against the same change set with no code changes between runs.
+
+**Rule A — Address findings before re-reviewing.** If a review pass produces findings, the calling agent must address each one — by fixing the code, explicitly accepting the finding, or waiving it with a recorded rationale — before dispatching another pass against the same change set. Dispatching another pass without acting on prior findings is forbidden.
+
+**Rule B — Never re-review unchanged code.** "Never re-audit a file that has not been modified since the previous audit, period, full stop." Before dispatching a follow-up pass, the calling agent must verify that at least one source file in the change set has been modified since the previous pass completed. If no file has changed, the prior verdict stands and re-dispatch is forbidden.
+
 ## When to Use
 
 Reviewing a change set of executable or compilable code: source files, build scripts, CI configuration, infrastructure-as-code manifests.

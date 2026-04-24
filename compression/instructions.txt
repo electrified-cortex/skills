@@ -32,3 +32,9 @@ Mode = `in-place`, `alongside (<file>.compressed)`, or `source→target (<dst>)`
 If content fixed: append `Fixed: <what>` + `Suggest: <prevention>`
 If `.md`: append `Hygiene: clean` or `Hygiene: fixed <N> issue(s)` or `Hygiene: <N> warning(s) — <details>`
 Blurb mode: compressed text, then `---`, then reduction line.
+
+Iteration Safety:
+
+Rule A: audit → NEEDS_REVISION/FAIL → fix in source file first. Recompressing unchanged source = identical artifact = same verdict. Forbidden.
+Rule B: "Never re-audit a file that has not been modified since the previous audit, period, full stop." No source change → re-dispatch forbidden; prior verdict stands.
+Gate: before any compress→audit retry, verify at least one source file changed.

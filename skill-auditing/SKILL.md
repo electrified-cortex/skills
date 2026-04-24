@@ -15,6 +15,12 @@ Don't read `instructions.txt` yourself. Dispatch (zero context): "Read and follo
 
 Returns: verdict (PASS / NEEDS_REVISION / FAIL) + issues. Checklist: Spec Gate (5), Skill Smoke (5), Spec Compliance (10).
 
+## Iteration Safety
+
+Rule A — Fix before re-audit: if verdict was NEEDS_REVISION or FAIL, resolve findings before re-dispatching. Re-auditing without acting on prior findings is forbidden.
+
+Rule B — Never re-audit unchanged content: "Never re-audit a file that has not been modified since the previous audit, period, full stop." Caller must verify at least one authoritative source file (`uncompressed.md` or `instructions.uncompressed.md`) changed before re-dispatching. If no file changed, prior verdict stands; re-dispatch forbidden.
+
 ## Output
 
 Output follows the `audit-reporting` skill at `../audit-reporting/SKILL.md`. Apply its path shape (including target-kind), frontmatter requirements, and .gitignore check before writing any report. Targets are `skills/**` → target-kind is `skill`. Caller must set `result_file` to the audit-reporting path computed for the target (using audit-reporting's path shape including target-kind).

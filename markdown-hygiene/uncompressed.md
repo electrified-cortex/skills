@@ -32,5 +32,24 @@ Verdict mapping (markdown-hygiene → audit-reporting frontmatter): `CLEAN → P
 
 Caller must compute `result_file` using the audit-reporting path shape before dispatch.
 
+## Iteration Safety
+
+Two rules exist to prevent wasted-work loops where an agent runs repeated
+hygiene passes against the same file with no content change between runs.
+
+Rule A — Fix before re-check: If a hygiene pass produces findings (FIXED
+or PARTIAL result), apply those fixes — or surface them for author action
+— before running another hygiene pass against the same file. Running
+another pass without acting on prior findings is forbidden.
+
+Rule B — Never re-check unchanged content: "Never re-audit a file that
+has not been modified since the previous audit, period, full stop." If
+the file's content is unchanged since the last hygiene verdict, the
+result is deterministic and a re-pass is wasted work.
+
+The caller must verify, before dispatching a follow-up hygiene pass, that
+the target file has changed since the previous pass completed. If the file
+is unchanged, the prior verdict stands and re-dispatch is forbidden.
+
 Related: `compression` (run hygiene after compressing),
 `skill-auditing` (includes hygiene check), `spec-writing`

@@ -20,6 +20,25 @@ Returns: verdict (PASS / NEEDS_REVISION / FAIL) and issues. Checklist
 covers 3 phases: Spec Gate (5 checks), Skill Smoke (5 checks), Spec
 Compliance (10 checks).
 
+## Iteration Safety
+
+Two rules prevent wasted-work loops where the same file is audited repeatedly with no
+intervening content change.
+
+**Rule A — Fix before re-audit.** If an audit produces findings (verdict is NEEDS_REVISION or
+FAIL), the agent must resolve those findings — by fixing directly or dispatching the fix —
+before running another audit against the same skill. Running another audit without acting on
+prior findings is forbidden.
+
+**Rule B — Never re-audit unchanged content.** "Never re-audit a file that has not been
+modified since the previous audit, period, full stop." If the source file's content is
+unchanged, the verdict is deterministic and a re-audit is wasted work.
+
+The caller must verify, before dispatching a follow-up audit, that at least one authoritative
+source file (`uncompressed.md` or `instructions.uncompressed.md`) has changed since the
+previous audit completed. If no file has changed, the prior verdict stands and re-dispatch
+is forbidden.
+
 ## Output
 
 Output follows the `audit-reporting` skill at `../audit-reporting/SKILL.md`. Apply its path shape (including target-kind), frontmatter requirements, and .gitignore check before writing any report. Targets are `skills/**` → target-kind is `skill`. Caller must set `result_file` to the audit-reporting path computed for the target (using audit-reporting's path shape including target-kind).

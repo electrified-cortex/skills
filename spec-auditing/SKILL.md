@@ -25,6 +25,11 @@ Audit (default): read-only. Returns Pass / Pass with Findings / Fail.
 Fix (`--fix`): modifies target to match spec. Up to 3 passes with re-audit.
 Spec-only: when explicitly requested for isolated spec review, or target is `spec.md` with no companion. Audits spec quality: Completeness, Enforceability, Structural Integrity, Economy, Terminology, Internal Consistency. Coverage Summary: N/A — spec-only, no companion. When targeting `spec.md` without explicit spec-only request, auto-detects companion (sibling `<name>.md`) → Pair-Audit if found.
 
+Iteration Safety:
+Rule A — fix before re-audit: if verdict is Pass with Findings or Fail, resolve findings before running another audit against the same spec. Re-auditing without acting on prior findings is forbidden.
+Rule B — never re-audit unchanged content: "Never re-audit a file that has not been modified since the previous audit, period, full stop." Unchanged spec → prior verdict stands → re-dispatch forbidden.
+Caller must verify spec or companion changed before dispatching follow-up audit.
+
 When to use:
 Before committing compressed files (post-compression verification)
 Checking agent files against `.spec.md` companions
