@@ -34,4 +34,10 @@ Verify tool scripts follow conventions. Dispatch with fast-cheap model.
 
 Read-only. Report only — caller decides remediation.
 
+## Output
+
+Output follows the `audit-reporting` skill at `../audit-reporting/SKILL.md`. Apply its path shape (including target-kind), frontmatter requirements, and .gitignore check before writing any report. Targets are `tools/**` → target-kind is `tool`.
+
+Verdict mapping (tool-auditing → audit-reporting frontmatter): `PASS → PASS`, `FAIL → FAIL`, `WARN → PASS_WITH_FINDINGS`. The internal `## Report` body may keep `WARN`; the YAML frontmatter `verdict` field must use audit-reporting vocabulary.
+
 Related: `tool-writing`, `skill-auditing`, `spec-auditing`

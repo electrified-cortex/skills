@@ -19,12 +19,25 @@ Root fallback chain:
 Write all report files to:
 
 ```path
-{root}/.audit-reports/YYYYMMDD/HHmm/
+{root}/.audit-reports/{target-kind}/YYYYMMDD/HHmm/
 ```
 
-`YYYYMMDD`/`HHmm` = UTC at run start. All files in one run share one `audit-dir`.
+`target-kind` derived from target path(s) — see Target-kind below. `YYYYMMDD`/`HHmm` = UTC at run start. All files in one run share one `audit-dir`.
 
 Create `audit-dir` (including intermediate dirs) before writing.
+
+Target-kind:
+
+Derive from target file path(s) before constructing audit-dir (first match wins):
+
+- `skills/**` → `skill`
+- `**/*spec*.md` → `spec`
+- `tools/**` → `tool`
+- `.github/agents/**` or `.agents/agents/**` → `agent`
+- else → `other`
+- Batch: all same kind → that kind. Mixed kinds → `mixed`
+
+Note: target-kind patterns match against the repo-root-relative path (the same path used for the `target` frontmatter field).
 
 Filename:
 
@@ -64,7 +77,7 @@ Also write `audit.md` in same `audit-dir`:
 
 .gitignore Check:
 
-root = repo-root: verify `.audit-reports/` in `{repo-root}/.gitignore` before writing. If missing, add it.
+root = repo-root: verify `.audit-reports/` in `{repo-root}/.gitignore` before writing. If missing, add it. The top-level `.audit-reports/` entry covers all subdirectories — do not add subpath entries.
 root = implicit-root (no git): skip.
 
 Constraints:

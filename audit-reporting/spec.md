@@ -14,7 +14,8 @@ Not in scope: general log output, session logs, terminal output, non-audit repor
 
 - **repo-root**: resolved root for locating `.audit-reports/`. Preferred: directory containing `.git/`. Fallback: see R1-fallback.
 - **implicit-root**: fallback root when no `.git/` is found. For a single target: immediate parent directory of the target file. For a batch run: deepest common ancestor directory of all target files.
-- **audit-dir**: `{root}/.audit-reports/YYYYMMDD/HHmm/` — the output directory for one audit run. `YYYYMMDD` and `HHmm` are UTC date and time at run start. All files in one run share one audit-dir.
+- **audit-dir**: `{root}/.audit-reports/{target-kind}/YYYYMMDD/HHmm/` — the output directory for one audit run. `YYYYMMDD` and `HHmm` are UTC date and time at run start. All files in one run share one audit-dir.
+- **target-kind**: a classifier derived from the target file path(s). See R4.
 - **audit run**: a single invocation of an audit skill, covering one or more target files.
 - **target**: file being audited.
 - **target-stem**: filename without extension (e.g. `spec` from `spec.md`).
@@ -33,6 +34,19 @@ R1. Agent must resolve root by walking up from the target file until a directory
 R1-fallback. If no `.git/` is found: use implicit-root. Single target → immediate parent of target file. Batch run → deepest common ancestor of all target files.
 R2. All report files must be written inside audit-dir, where `root` is repo-root (R1) or implicit-root (R1-fallback).
 R3. `YYYYMMDD` and `HHmm` must reflect UTC time at the start of the audit run. All files in one run share the same audit-dir.
+R4. **Target-kind derivation.** Agent must compute `target-kind` from the target file path(s) before constructing audit-dir. Rules (first match wins):
+
+| Condition | target-kind |
+|---|---|
+| Path matches `skills/**` | `skill` |
+| Path matches `**/*spec*.md` | `spec` |
+| Path matches `tools/**` | `tool` |
+| Path matches `.github/agents/**` or `.agents/agents/**` | `agent` |
+| None of the above | `other` |
+
+Note: target-kind patterns match against the repo-root-relative path (the same path used for the `target` frontmatter field).
+
+For a batch run: if all targets resolve to the same kind → use that kind. If targets resolve to two or more different kinds → `target-kind` is `mixed`.
 
 ### Report Filename
 
@@ -68,7 +82,7 @@ R16. `audit.md` must not repeat per-file detail already present in individual re
 
 ### .gitignore
 
-R17. When root is repo-root: `.audit-reports/` must be listed in the `.gitignore` at repo-root. Agent must verify this entry exists before writing any report; if missing, agent must add it.
+R17. When root is repo-root: `.audit-reports/` must be listed in the `.gitignore` at repo-root (the top-level entry covers all subdirectories including target-kind subfolders — do not add subpath entries). Agent must verify this entry exists before writing any report; if missing, agent must add it.
 R18. When root is implicit-root (no git repo found): `.gitignore` check is skipped.
 
 ## Constraints

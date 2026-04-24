@@ -36,4 +36,8 @@ Multi-pass audit: fix findings, re-audit, max 3 passes.
 
 Stops: missing target → STOP; --spec unresolvable → STOP; --fix on untracked/dirty target → STOP; approve/stamp request → STOP.
 
+## Output
+
+When producing file output: follow the `audit-reporting` skill at `../audit-reporting/SKILL.md`. Apply its path shape (target-kind derived dynamically from the actual target-path using audit-reporting's derivation rules), frontmatter (mapping spec-auditing verdicts to audit-reporting vocabulary: `Pass → PASS`, `Pass with Findings → PASS_WITH_FINDINGS`, `Fail → FAIL`), and .gitignore check. Target-kind is computed from the actual target-path, not assumed to always be `spec`.
+
 Related: `spec-writing` (governs specs), `skill-auditing` (audits skills), `compression` (exemplar dispatch pattern)

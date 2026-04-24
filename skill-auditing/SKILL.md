@@ -15,4 +15,8 @@ Don't read `instructions.txt` yourself. Dispatch (zero context): "Read and follo
 
 Returns: verdict (PASS / NEEDS_REVISION / FAIL) + issues. Checklist: Spec Gate (5), Skill Smoke (5), Spec Compliance (10).
 
+## Output
+
+Output follows the `audit-reporting` skill at `../audit-reporting/SKILL.md`. Apply its path shape (including target-kind), frontmatter requirements, and .gitignore check before writing any report. Targets are `skills/**` → target-kind is `skill`. Caller must set `result_file` to the audit-reporting path computed for the target (using audit-reporting's path shape including target-kind).
+
 Related: `skill-writing`, `spec-auditing`, `compression`
