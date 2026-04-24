@@ -71,6 +71,32 @@ For each tool script found:
 - fast-cheap model sufficient for this audit.
 - Report only — caller decides remediation.
 
+## Iteration Safety
+
+Root cause: an agent ran consecutive audits against the same tool script with no content change
+between runs. Both rules below exist to prevent this class of wasted-work loop.
+
+**Rule A — Fix before re-audit.** If an audit produces findings (verdict is FAIL or WARN), the
+caller MUST resolve those findings — by fixing the tool script or dispatching the fix — before
+running another audit against the same tool. Running another audit without acting on prior
+findings is forbidden.
+
+**Rule B — Never re-audit unchanged content.** "Never re-audit a file that has not been modified
+since the previous audit, period, full stop." If the tool script's content is unchanged, the
+verdict is deterministic and a re-audit is wasted work.
+
+The caller MUST verify, before dispatching a follow-up audit, that the tool script file has
+changed since the previous audit completed. If the file has not changed, the prior verdict stands
+and re-dispatch is forbidden.
+
 ## Precedence
 
 - tool-writing spec defines what's correct; this skill checks against it.
+
+## Don'ts
+
+- Do not re-audit a tool script when the prior audit had findings but no fix was applied — resolve findings first (Rule A).
+- Do not re-audit a tool script when its content has not changed since the prior audit — the verdict is deterministic and re-dispatch is wasted work (Rule B).
+- Do not modify any tool script — this audit is read-only in all modes.
+- Do not batch-audit multiple tools in a single dispatch invocation unless the skill explicitly supports it.
+- Do not infer intent — findings must be grounded in explicit file content.

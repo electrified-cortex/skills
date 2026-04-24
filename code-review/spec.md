@@ -330,6 +330,29 @@ prohibits passing the caller's dispute to the substantive pass.
 - Severity vocabulary defaults to the fixed four-value set defined under
   Definitions. No project-local extension permitted.
 
+## Iteration Safety
+
+Root cause: a calling agent ran repeated review passes against the same
+change set with no code changes between runs. Both rules below exist to
+prevent this class of wasted-work loop.
+
+**Rule A — Address findings before re-reviewing.** If a review pass
+produces findings, the calling agent must address them — by fixing the
+code, explicitly accepting each finding, or waiving each with a recorded
+rationale — before dispatching another review pass against the same
+change set. Dispatching another pass without acting on prior findings is
+forbidden.
+
+**Rule B — Never re-review unchanged code.** "Never re-audit a file that
+has not been modified since the previous audit, period, full stop." If
+the source files in the change set are unchanged since the prior pass, the
+verdict is deterministic and a re-review is wasted work.
+
+The calling agent must verify, before dispatching a follow-up pass, that
+at least one source file in the change set has been modified since the
+previous pass completed. If no file has changed, the prior verdict stands
+and re-dispatch is forbidden.
+
 ## Error Handling
 
 - If the change set cannot be resolved (file path missing, ref
@@ -383,6 +406,8 @@ prohibits passing the caller's dispute to the substantive pass.
 - Don't dispatch review agents with caller context. Zero-context
   isolation is a normative requirement, not an optimization.
 - Don't introduce additional severity values or rename the existing four.
+- Don't re-review when the prior pass had findings but no fix was applied — address findings first (Rule A).
+- Don't re-review when no source file in the change set has changed since the prior pass — the verdict is deterministic and re-dispatch is wasted work (Rule B).
 
 ## Relationship to Other Skills
 
