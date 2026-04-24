@@ -47,11 +47,6 @@ Remaining: M errors (manual fix required)
 - <rule>: <description> (line N)
 ```
 
-Iteration Safety:
-Rule A: findings (FIXED/PARTIAL) → must apply or surface fixes before next pass. Re-passing without action = forbidden.
-Rule B: "Never re-audit a file that has not been modified since the previous audit, period, full stop." Unchanged file → prior verdict stands, re-dispatch forbidden.
-Verify file changed before any follow-up pass.
-
 Rules:
 Fix every violation. Never suppress a rule.
 Never change content meaning — only formatting.
@@ -60,5 +55,3 @@ Preserve code blocks, frontmatter, technical strings exactly.
 Fix would change meaning → report as unfixable.
 One file per dispatch.
 Use available tools + own knowledge — don't install external packages.
-Don't re-pass without acting on findings (Rule A).
-Don't re-pass on unchanged file — verdict is deterministic (Rule B).

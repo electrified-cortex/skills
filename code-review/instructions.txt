@@ -55,10 +55,6 @@ Output (JSON-shaped, returned as your final response):
 }
 ```
 
-Iteration Safety (calling agent):
-Rule A: findings produced → fix/accept/waive-with-rationale each before re-dispatching. Re-dispatch without acting on findings forbidden.
-Rule B: "Never re-audit a file that has not been modified since the previous audit, period, full stop." Verify ≥1 source file changed since prior pass. None changed → prior verdict stands, re-dispatch forbidden.
-
 Rules:
 Read-only. Don't edit, stage, commit, push, or run scripts that mutate state.
 Don't fix findings, even when fix is one line. Report only.

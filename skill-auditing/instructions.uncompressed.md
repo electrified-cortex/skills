@@ -204,18 +204,6 @@ needed at runtime, inline it.
   issues. List fixes.
 - **FAIL**: Any phase fails, or Phase 3 has critical issues.
 
-## Iteration Safety
-
-Do not re-audit a skill when prior findings have not been resolved. If the verdict was
-NEEDS_REVISION or FAIL, you must fix the identified issues — directly or by dispatching a
-fix — before running any follow-up audit against the same skill.
-
-Do not re-audit unchanged content. "Never re-audit a file that has not been modified since
-the previous audit, period, full stop." Verify, before dispatching a follow-up audit, that
-at least one authoritative source file (`uncompressed.md` or `instructions.uncompressed.md`)
-has changed since the previous audit completed. If no file has changed, the prior verdict
-stands and re-dispatch is forbidden.
-
 ## Fix Mode (`--fix`, single-pass, source-first)
 
 Fix mode targets the skill's authoritative source files — not the compiled

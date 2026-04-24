@@ -110,9 +110,4 @@ Output:
 
 When in doubt: preserve meaning, expose mismatch, prevent silent drift.
 
-Iteration Safety:
-Rule A — fix before re-audit: verdict = Pass with Findings or Fail → resolve findings before next audit on same spec; re-audit without fix = forbidden.
-Rule B — never re-audit unchanged content: "Never re-audit a file that has not been modified since the previous audit, period, full stop." Spec unchanged → prior verdict stands → re-dispatch forbidden.
-Before follow-up audit: verify spec or companion changed since last audit. No change → skip.
-
 Non-goals: product strategy, inventing missing reqs, judging impl quality outside documents, resolving domain disputes without textual basis, approving vague specs on goodwill.

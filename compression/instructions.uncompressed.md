@@ -28,11 +28,3 @@ Output (required): `<before>→<after> bytes | <N>% reduction | <tier> | <mode>`
 Mode = `in-place`, `alongside (<file>.compressed)`, or `source→target (<dst>)`
 If fixed: append `Fixed: <what>` + `Suggest: <prevention>`
 Blurb mode: compressed text, then `---`, then reduction line.
-
-## Iteration Safety
-
-Before dispatching any compress → audit → recompress cycle, apply both rules:
-
-**Rule A — Fix source before recompressing.** If audit returns NEEDS_REVISION or FAIL, resolve findings in the authoritative source file (`uncompressed.md` or `instructions.uncompressed.md`) before recompressing. Recompressing an unchanged source produces an identical artifact; the verdict is deterministic. The pass is wasted work and must not be performed.
-
-**Rule B — Never re-audit unchanged content.** "Never re-audit a file that has not been modified since the previous audit, period, full stop." If no authoritative source file has changed since the previous compress pass completed, the compressed output is identical and the audit verdict is deterministic. Do not re-dispatch the audit. The prior verdict stands.
