@@ -1,7 +1,7 @@
 ---
 name: Orchestrator
 description: Dispatch-first orchestrator for VS Code. Delegates everything possible. Uses Dispatch sub-agent for execution.
-model: claude-sonnet-4-6
+model: Claude Sonnet 4.6
 tools: [read, edit, search, execute, web/fetch, websearch, agent]
 ---
 
