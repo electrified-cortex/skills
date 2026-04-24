@@ -317,6 +317,24 @@ The terms fast-cheap and standard are model-agnostic. Hosts running
 Anthropic models map these to Haiku-class and Sonnet-class respectively;
 other model families should map to their own inexpensive/default tiers.
 
+## Iteration Safety
+
+Root cause: an agent ran nine consecutive audits against the same file with no content change
+between runs. Both rules below exist to prevent this class of wasted-work loop.
+
+**Rule A — Fix before re-audit.** If an audit produces findings (verdict is NEEDS_REVISION or
+FAIL), the agent MUST resolve those findings — by fixing directly or dispatching the fix — before
+running another audit against the same skill. Running another audit without acting on prior
+findings is forbidden.
+
+**Rule B — Never re-audit unchanged content.** "Never re-audit a file that has not been modified
+since the previous audit, period, full stop." If the source file's content is unchanged, the
+verdict is deterministic and a re-audit is wasted work.
+
+The caller MUST verify, before dispatching a follow-up audit, that at least one authoritative
+source file (`uncompressed.md` or `instructions.uncompressed.md`) has changed since the previous
+audit completed. If no file has changed, the prior verdict stands and re-dispatch is forbidden.
+
 ## Fix Mode Behavior
 
 When `--fix` is active, the auditor performs a **single-pass** repair against the
@@ -416,6 +434,8 @@ multi-file artifact pair where re-audit requires regenerating compiled runtime.
 - Do not write to any file with pending git changes — STOP instead.
 - Do not write to any candidate path that escapes the skill directory — STOP instead.
 - Do not re-audit or recompress in fix mode — single-pass only; caller drives the next cycle.
+- Do not re-audit when the prior audit had findings but no fix was applied — resolve findings first (Rule A).
+- Do not re-audit when no authoritative source file has changed since the prior audit — the verdict is deterministic and re-dispatch is wasted work (Rule B).
 - Do not batch-audit multiple skills in a single dispatch invocation.
 - Do not infer intent — verdicts must be grounded in explicit file content.
 - Do not skip phases or run them out of order.
