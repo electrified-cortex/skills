@@ -119,26 +119,11 @@ Markdown hygiene should run:
 
 ## Iteration Safety
 
-Root cause: an agent ran repeated hygiene passes against the same file with no content change
-between runs. Both rules below exist to prevent this class of wasted-work loop.
-
-**Rule A — Fix before re-check.** If a hygiene pass produces findings (FIXED or PARTIAL result),
-the agent MUST apply those fixes — or surface them for author action — before running another
-hygiene pass against the same file. Running another pass without acting on prior findings is
-forbidden.
-
-**Rule B — Never re-check unchanged content.** "Never re-audit a file that has not been modified
-since the previous audit, period, full stop." If the markdown file's content is unchanged since the
-last hygiene verdict, the result is deterministic and a re-pass is wasted work.
-
-The caller MUST verify, before dispatching a follow-up hygiene pass, that the target file has
-changed since the previous pass completed. If the file is unchanged, the prior verdict stands and
-re-dispatch is forbidden.
+Do not re-audit unchanged files.
+See `../iteration-safety/SKILL.md`.
 
 ## Don'ts
 
 - Content quality (that's spec-auditing/skill-auditing)
 - Spell checking
 - Link validation (future skill)
-- Do not re-check a file that produced findings without first applying or surfacing those fixes (Rule A).
-- Do not re-check a file whose content has not changed since the previous hygiene pass — the verdict is deterministic and re-dispatch is wasted work (Rule B).

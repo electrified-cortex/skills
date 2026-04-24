@@ -567,21 +567,8 @@ When `--fix` is active:
 
 ## Iteration Safety
 
-Root cause: an agent ran consecutive audits against the same spec with no content change
-between runs. Both rules below exist to prevent this class of wasted-work loop.
-
-**Rule A — Fix before re-audit.** If an audit produces findings (verdict is Pass with Findings or
-Fail), the agent MUST resolve those findings — by fixing directly or dispatching the fix — before
-running another audit against the same spec. Running another audit without acting on prior
-findings is forbidden.
-
-**Rule B — Never re-audit unchanged content.** "Never re-audit a file that has not been modified
-since the previous audit, period, full stop." If the spec's content is unchanged, the
-verdict is deterministic and a re-audit is wasted work.
-
-The caller MUST verify, before dispatching a follow-up audit, that the spec file (or its
-companion, in pair-audit mode) has changed since the previous audit completed. If no file
-has changed, the prior verdict stands and re-dispatch is forbidden.
+Do not re-audit unchanged files.
+See `../iteration-safety/SKILL.md`.
 
 ---
 
@@ -790,8 +777,6 @@ The auditor is not responsible for:
 - judging implementation quality outside the documents
 - resolving domain disputes without textual basis
 - approving vague specs on goodwill
-- re-auditing when the prior audit had findings but no fix was applied — resolve findings first (Rule A).
-- re-auditing when no spec or companion file has changed since the prior audit — the verdict is deterministic and re-dispatch is wasted work (Rule B).
 
 ---
 

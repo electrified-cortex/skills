@@ -3,8 +3,6 @@ name: code-review
 description: Tiered code review on a change set. Read-only — never modifies code.
 ---
 
-# Code Review
-
 Don't read `instructions.txt` yourself — use Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory).
 Input: `change_set=<form> tier=<smoke|substantive> [prior_findings=<json>] [focus=<csv>] [context_pointer=<path>]`"
 

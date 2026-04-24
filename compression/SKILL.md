@@ -3,8 +3,6 @@ name: compression
 description: Compress .md files via subagent dispatch. Supports in-place, source→target, and untracked fallback modes.
 ---
 
-# Compression
-
 Without reading `instructions.txt` yourself, use a Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory).
 Input: `<file-path> [--tier <lite|full|ultra>] [--source <src> --target <dst>]`" (default: ultra)
 

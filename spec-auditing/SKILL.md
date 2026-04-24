@@ -5,8 +5,6 @@ description: >-
   don't audit inline.
 ---
 
-# Spec Auditing
-
 Don't read `instructions.txt` yourself. Use Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory).
 Input: `<target-path> [--spec <spec-path>] [--fix]`"
 

@@ -1,3 +1,10 @@
+---
+name: spec-auditing
+description: >-
+  Audit a spec/companion pair or a spec alone. Dispatch instructions.txt —
+  don't audit inline.
+---
+
 # Spec Auditing
 
 Without reading `instructions.txt` yourself, use a Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory).

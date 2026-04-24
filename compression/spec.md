@@ -255,24 +255,8 @@ work-in-progress files.
 
 ## Iteration Safety
 
-Root cause: an agent ran repeated compress → audit → recompress cycles against the same source
-file with no content change between passes. Both rules below exist to prevent this class of
-wasted-work loop.
-
-**Rule A — Land fixes before recompressing.** If an audit of the compressed output surfaces
-findings (verdict is NEEDS_REVISION or FAIL), the agent MUST resolve those findings in the
-authoritative source file (`uncompressed.md` or `instructions.uncompressed.md`) before
-recompressing. Recompressing an unchanged source produces an identical artifact — the audit
-verdict is deterministic and the compress pass is wasted work.
-
-**Rule B — Never re-audit unchanged content.** "Never re-audit a file that has not been modified
-since the previous audit, period, full stop." If the source file's content is unchanged since the
-prior compression pass, the compressed output is identical and the audit verdict is deterministic.
-Re-dispatching the audit without first modifying the source is forbidden.
-
-The caller MUST verify, before dispatching a follow-up compress → audit cycle, that at least one
-authoritative source file has changed since the previous cycle completed. If no source file has
-changed, the prior verdict stands and re-dispatch is forbidden.
+Do not re-audit unchanged files.
+See `../iteration-safety/SKILL.md`.
 
 ## Future Considerations
 
@@ -287,8 +271,6 @@ Credit: Inspired by [JuliusBrussee/caveman](https://github.com/JuliusBrussee/cav
 
 ## Don'ts
 
-- Do not recompress a source file when the prior audit produced findings but no fix has been applied to the source — the output will be identical and the verdict unchanged (Rule A).
-- Do not re-dispatch an audit when no authoritative source file has changed since the previous audit — the verdict is deterministic and re-dispatch is wasted work (Rule B).
 - Do not modify the source file during a compression pass — Source→Target mode reads source, writes target; the source is authoritative and must not be touched.
 - Do not compress spec files — specs contain human-readable rationale whose meaning loss from compression is not acceptable.
 - Do not compress code files, binary files, or files outside the target scope.

@@ -51,6 +51,8 @@ verdict: <PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL>
 root = repo-root: verify `.audit-reports/` in `{repo-root}/.gitignore` before writing. If missing, add it. Top-level entry covers all subdirectories — do not add subpath entries.
 root = implicit-root (no git): skip.
 
+Error: if audit-dir creation fails, stop and report — no partial output.
+
 Constraints:
 
 Never write outside `.audit-reports/`.

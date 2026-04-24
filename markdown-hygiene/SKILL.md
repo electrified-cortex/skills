@@ -3,8 +3,6 @@ name: markdown-hygiene
 description: Fix all markdownlint violations in a .md file. Zero errors gate. Dispatch skill.
 ---
 
-# Markdown Hygiene
-
 Dispatch (Dispatch agent, zero context):
 "Read and follow `instructions.txt` (in this directory).
 Input: `file_path=<path> result_file=<path>`"
