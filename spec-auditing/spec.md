@@ -62,8 +62,8 @@ The auditor must treat the spec as normative unless this file explicitly declare
 ## Definitions
 
 - **Spec file**: the normative markdown document describing rules, requirements, expectations, structure, or behavior for a system or artifact.
-- **Named file spec**: a spec file named `<name>.spec.md` that targets one sibling file named `<name>.md`.
-- **Folder spec**: a bare `spec.md` file that governs a directory, artifact set, primary thing in that directory, or a hierarchy of child specs/folders. It is not interpreted as a same-basename file-targeting spec.
+- **Named file spec**: a spec file named `spec.md` (canonical) or legacy `<name>.spec.md` that governs a directory, skill, or artifact set.
+- **Folder spec**: a `spec.md` file that governs a directory, artifact set, primary thing in that directory, or a hierarchy of child specs/folders. It is not interpreted as a same-basename file-targeting spec.
 - **Companion file**: a related file that implements, explains, summarizes, derives from, or operationalizes the spec. Also called "target file."
 - **Target file**: synonym for companion file in pair-audit mode; the file being evaluated against the spec.
 - **Finding**: a numbered, severity-labeled observation of a defect, weakness, or risk in the audited material.
@@ -127,7 +127,7 @@ mode — it is not an immediate failure.
 
 ### Spec Lookup Convention
 
-If no spec path is provided, the auditor should look for `<basename>.spec.md`
+If no spec path is provided, the auditor should look for `spec.md`
 in the same directory as the target file. This convention co-locates specs with
 their files and makes the relationship discoverable without a registry.
 
@@ -571,7 +571,7 @@ When `--fix` is active:
 | --- | --- |
 | Target file missing or unreadable | STOP: report "target file missing" |
 | Spec file path explicitly provided but missing | STOP: report "spec file missing" |
-| Target not ending in `spec.md` and sibling `<basename>.spec.md` absent | STOP: report "spec file missing" |
+| Target not ending in `spec.md` and sibling `spec.md` absent | STOP: report "spec file missing" |
 | Input files only partially readable | STOP: report "incomplete input — cannot audit partial content" |
 | Companion auto-detect finds no candidate | Proceed in spec-only mode; report "no companion present — auditing spec alone" |
 | Multiple companion candidates found | Use first in priority order; report ambiguity |

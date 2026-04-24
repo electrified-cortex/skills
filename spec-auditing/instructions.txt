@@ -14,7 +14,7 @@ Gates:
       Companion found → pair-audit; report auto-detected file. Multiple → first; report ambiguity.
       Folder-level spec.md: no universal fallback.
       No companion → spec-only; report "no companion present — auditing spec alone."
-   c. --spec absent + target doesn't end in spec.md → resolve <basename>.spec.md. Missing → STOP: spec file missing.
+   c. --spec absent + target doesn't end in spec.md → resolve spec.md in same directory. Missing → STOP: spec file missing.
 3. Read all resolved files fully before judging. Partial → STOP: incomplete input.
 4. Precedence: instructions > spec (domain) > companion. Report every conflict; never normalize.
 5. --fix requires target git-tracked and clean. Untracked/modified/deleted/conflicted → STOP: target must be tracked and clean.
