@@ -293,6 +293,18 @@ The relative path MUST match the caller's actual depth. Callers MUST NOT
 restate Rule A or Rule B verbatim. See `../iteration-safety/SKILL.md` for
 the canonical text.
 
+R-FM-10 **Description carries trigger phrases.** The `description`
+frontmatter field MUST include explicit trigger phrases — short keyword
+clauses that name the situations or vocabulary that should cause an
+agent reading skill discovery to fire this skill. Shy descriptions
+(e.g., "Audit a skill") cause undertriggering; pushy descriptions
+(e.g., "Audit a skill: validate spec compliance, frontmatter integrity,
+iteration-safety placement, lint compliance, classification accuracy")
+cause correct triggering. Authors MUST list at least 3 trigger phrases
+in the description; at most 6 (longer descriptions stop earning their
+keep). Trigger phrases double as the skill's index keywords, so quality
+here propagates into discovery downstream.
+
 ### For dispatch skills specifically
 
 - Dispatch instruction file must be in the same directory or a known path

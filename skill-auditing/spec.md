@@ -328,6 +328,7 @@ This is the final quality gate.
 | Markdown hygiene | PASS/FAIL | |
 | No dispatch refs | PASS/FAIL/N/A | |
 | No spec breadcrumbs | PASS/FAIL | |
+| Lint wins (A-FM-4) | PASS/FAIL | |
 | Description not restated (A-FM-2) | PASS/FAIL | |
 | No exposition in runtime (A-FM-5) | PASS/FAIL | |
 | No non-helpful tags (A-FM-6) | PASS/FAIL | |

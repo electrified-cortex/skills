@@ -122,6 +122,10 @@ passes (MD041); strip the title after compression.
 ### Content
 
 - Frontmatter: `name` + `description`
+- Description carries trigger phrases (3-6): name the situations or
+  keywords that should fire the skill. Shy descriptions undertrigger;
+  pushy descriptions trigger correctly. Trigger phrases double as
+  index keywords downstream.
 - Self-contained: no spec dependency at runtime
 - Concise: agent-facing, every line earns its place
 - Token-efficient: no prose, no rationale, no redundancy

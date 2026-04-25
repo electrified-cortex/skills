@@ -5,10 +5,13 @@ description: >-
   quality criteria.
 ---
 
-# Skill Writing
-
 Create skills agents can discover, invoke, rely on.
 Never reference `spec.md` at runtime. Minimize tokens.
+
+Frontmatter description carries 3-6 trigger phrases — name the
+situations or keywords that should fire the skill. Shy descriptions
+undertrigger; pushy descriptions trigger correctly. Trigger phrases
+double as index keywords.
 
 Workflow:
 
