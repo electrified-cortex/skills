@@ -114,6 +114,17 @@ caller's responsibility after recompression.
 - **Markdown hygiene scope**: the audit checks every `.md` file in the skill. In fix mode,
   hygiene auto-fixes are limited to the writable source files; hygiene defects in other files
   are reported as findings.
+- **Default audit target — compressed runtime**: without `--uncompressed`, the auditor evaluates
+  the compiled runtime artifacts (`SKILL.md`, `instructions.txt`) against `spec.md`. The
+  compressed runtime is what actually executes; auditing it against the spec is the regression /
+  smoke check that catches drift between intent and shipped artifact.
+- **`--uncompressed` for build/iteration**: passing `--uncompressed` switches the auditor to
+  evaluate `uncompressed.md` and `instructions.uncompressed.md` against `spec.md`. Used while
+  iterating on the source. Apply fixes to the source, audit again, repeat until the source
+  passes cleanly. Then recompile and run a final default-mode audit on the compressed result.
+- **Mode selection by intent**: regression / smoke check → default. Building or revising a skill
+  → `--uncompressed` until the source converges, then default for the final pass. The host agent
+  is responsible for choosing the mode based on what it is doing.
 
 ## Audit Phases
 

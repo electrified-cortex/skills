@@ -12,6 +12,14 @@ Don't read `instructions.txt` yourself. Dispatch (zero context): "Read and follo
 
 Returns: verdict (PASS / NEEDS_REVISION / FAIL) + issues. Checklist: Spec Gate (5), Skill Smoke (5), Spec Compliance (10).
 
+## When to audit which artifact
+
+**Default — audit the compressed runtime (SKILL.md, instructions.txt) against `spec.md`.** This is the regression/smoke check: does the shipped artifact match the spec? The compressed runtime is what actually runs, so that is what matters.
+
+**Build / iteration mode — pass `--uncompressed`.** Audits the source artifacts (`uncompressed.md`, `instructions.uncompressed.md`) instead. Apply fixes to source. Iterate until the source passes cleanly. Only then recompile and run a final default-mode pass on the compressed result.
+
+Pick the mode by intent: regression check → default. Building or revising → `--uncompressed` until source converges, then default for the final pass.
+
 ## Iteration Safety
 
 Do not re-audit unchanged files.
