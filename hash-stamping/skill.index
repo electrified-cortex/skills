@@ -1,2 +1,2 @@
-audit/: verify stamps, check sha256, detect drift, stamp mismatch, hash changed, file changed, stamp integrity, unstamped
-stamp/: write stamp, update sha256, generate stamp, rebuild stamp, new stamp, restamp, stamp files
+hash-stamp-audit/: verify stamps, check sha256, detect drift, stamp mismatch, hash changed, file changed, stamp integrity, unstamped
+hash-stamp/: write stamp, update sha256, generate stamp, rebuild stamp, new stamp, restamp, stamp files

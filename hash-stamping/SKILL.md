@@ -1,5 +1,5 @@
 ---
-name: hash-stamp
+name: hash-stamping
 description: SHA-256 integrity stamp suite. Verify stamp drift (audit/) or write/update stamps (stamp/).
 ---
 
