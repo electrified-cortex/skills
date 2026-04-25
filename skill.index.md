@@ -4,13 +4,17 @@
 
 Defines where and how audit skills write report files — applied inline when producing output from any audit skill.
 
-## code-reviewer
+## code-review
 
 Comprehensive review of a diff — your change, another agent's, or an outside PR. Output is findings; fixes are yours to apply.
 
 ## compression
 
 Shrinks a markdown or text file without losing meaning. Common use: a skill that is too long to load cheaply.
+
+## copilot-cli
+
+Routes Copilot CLI tasks (review, ask, explain) to operation sub-skills. Use when you want a non-Claude perspective via the standalone `copilot` binary.
 
 ## dispatch
 
@@ -19,6 +23,10 @@ How to dispatch another agent well — when to, which model, prompt shape, known
 ## gh-cli
 
 All GitHub operations — pull requests, issues, Actions, releases, repos, API.
+
+## hash-stamping
+
+SHA-256 integrity stamp suite — verify whether stamped files have drifted (audit) or write/update `.sha256` companions after edits (stamp).
 
 ## markdown-hygiene
 
@@ -43,10 +51,6 @@ Verify a spec still holds up — after you wrote or changed it, or after its sub
 ## spec-writing
 
 Authoring a new spec — requirements before implementation, phrased so they are actually verifiable.
-
-## hash-stamp
-
-SHA-256 integrity stamp suite — verify whether stamped files have drifted (audit) or write/update `.sha256` companions after edits (stamp).
 
 ## tool-auditing
 
