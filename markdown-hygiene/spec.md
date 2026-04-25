@@ -121,6 +121,13 @@ Markdown hygiene should run:
 Do not re-audit unchanged files.
 See `../iteration-safety/SKILL.md`.
 
+## Known Gotchas
+
+- **MD060 — table separator, no auto-fix:** Table separator rows using `|---|---|`
+  (no spaces) trigger MD060. Canonical form is `| --- | --- |` (spaces around hyphens).
+  markdownlint CLI does not auto-fix this rule — author must write canonical form from
+  the start or catch it manually. Generated tables commonly produce the wrong form.
+
 ## Don'ts
 
 - Content quality (that's spec-auditing/skill-auditing)

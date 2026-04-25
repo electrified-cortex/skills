@@ -68,6 +68,8 @@ R2. Must present the model tier table with three rows: `fast-cheap`, `standard`,
 
 R3. Must state that **project context inherits automatically** and **conversation context does not**. Empirical evidence lives in `supplemental.md`, not the runtime card.
 
+R3a. Must include a "Model class mapping" subsection inside the Model Tier section. The subsection must contain: (a) an explicit "as of YYYY-MM-DD" date anchor, (b) a table mapping each tier alias (`fast-cheap`/haiku-class, `standard`/sonnet-class, `deep`/opus-class) to a concrete model ID, and (c) an instruction to update the table and refresh the date when Anthropic releases a new model. This is the ONE sanctioned location for bare model IDs — all other skills use class names only.
+
 R4. Must include a Well-Formed Prompt section listing the four required components (Goal, Hand-fed context, Output shape, Scope/length constraints) and a four-item checklist.
 
 R5. Must enumerate footguns F1–F5 as a table with two columns only: footgun name + mitigation. No "why" prose. Rationale lives in this spec and may be expanded in `supplemental.md`.

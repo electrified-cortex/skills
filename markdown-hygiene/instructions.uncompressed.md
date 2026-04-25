@@ -76,6 +76,13 @@ Remaining: M errors (manual fix required)
 - <rule>: <description> (line N)
 ```
 
+## Known Gotchas
+
+- **MD060 — no auto-fix:** Separator rows like `|---|---|` trigger MD060.
+  Canonical form: `| --- | --- |` (spaces around hyphens). markdownlint CLI
+  does not auto-fix this rule. Generated tables commonly produce the wrong form.
+  Report as PARTIAL if you cannot safely rewrite without changing meaning.
+
 ## Rules
 
 - Fix every violation. Never suppress a rule.

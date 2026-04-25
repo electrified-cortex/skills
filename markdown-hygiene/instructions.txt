@@ -46,6 +46,10 @@ Remaining: M errors (manual fix required)
 - <rule>: <description> (line N)
 ```
 
+Gotcha — MD060 (no auto-fix): separator `|---|---|` → must be `| --- | --- |`.
+markdownlint CLI does not auto-fix MD060. Generated tables commonly produce wrong form.
+Report PARTIAL if rewrite would change meaning.
+
 Rules:
 Fix every violation. Never suppress a rule.
 Never change content meaning — only formatting.

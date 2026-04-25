@@ -35,6 +35,18 @@ Default tier: host's own.
 
 `fast-cheap` pre-pass: appropriate only when work is genuinely zero-scope (mechanical pattern match, format check, extraction). Not appropriate when sub-agent needs judgment, prior context, or chained reasoning.
 
+### Model class mapping (as of 2026-04-24)
+
+Use class names in all skill artifacts. Resolve to a concrete model ID only at dispatch time.
+
+| Class | Concrete model ID |
+| --- | --- |
+| `fast-cheap` / haiku-class | `claude-haiku-4-5-20251001` |
+| `standard` / sonnet-class | `claude-sonnet-4-6` |
+| `deep` / opus-class | `claude-opus-4-6`+ |
+
+When Anthropic releases a new model in any class, update this table and refresh the date.
+
 ## Subagent Type
 
 Project context (CLAUDE.md, memory index) inherits automatically. Don't hand-feed it.

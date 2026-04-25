@@ -28,6 +28,11 @@ Verdict mapping (markdown-hygiene → audit-reporting frontmatter): `CLEAN → P
 
 Report path is computed internally using the audit-reporting path shape.
 
+## Known Gotchas
+
+MD060 (no auto-fix): `|---|---|` → must be `| --- | --- |`. markdownlint CLI
+does not auto-fix this rule. Generated tables commonly produce the wrong form.
+
 ## Iteration Safety
 
 Do not re-audit unchanged files.
