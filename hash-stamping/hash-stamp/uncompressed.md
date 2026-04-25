@@ -1,5 +1,5 @@
 ---
-name: hash-stamp-stamp
+name: hash-stamp
 description: Dispatch skill. Writes or updates SHA-256 companion files alongside target files.
 ---
 
