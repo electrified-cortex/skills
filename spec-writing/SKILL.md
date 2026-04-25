@@ -3,8 +3,6 @@ name: spec-writing
 description: Write precise, testable, auditable specification documents with explicit scope, stable terminology, and enforceable requirements.
 ---
 
-# spec-writing
-
 Write specs: clear, complete, enforceable, internally consistent, externally auditable.
 
 Purpose: define intent precisely, testably, auditably.

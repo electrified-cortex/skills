@@ -3,8 +3,6 @@ name: gh-cli-setup
 description: Install, authenticate, and configure the GitHub CLI. Prerequisite for all other gh-cli skills.
 ---
 
-# GH CLI Setup
-
 Install, auth, configure `gh`. Prereq — all other gh-cli skills depend on this.
 
 Check install: `gh --version`. Not found → install:

@@ -5,8 +5,6 @@ description: >-
   write the discovery mandate, enforce demand loading, and verify keyword quality.
 ---
 
-# Skill Index Integration
-
 Wire the skill-index discovery system into an agent so it scans for relevant skills on every task and loads them on demand.
 
 ---

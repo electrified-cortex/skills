@@ -3,8 +3,6 @@ name: gh-cli
 description: GitHub CLI operations — routes to domain-specific sub-skills via dispatch.
 ---
 
-# GH CLI Router
-
 Routes GitHub CLI tasks to correct domain sub-skill. Doesn't run `gh` commands itself.
 
 When to Use:

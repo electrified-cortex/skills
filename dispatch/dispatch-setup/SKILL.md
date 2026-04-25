@@ -3,9 +3,8 @@ name: dispatch-setup
 description: Configure the dispatch skill agent file correctly in VS Code and Cursor.
 ---
 
-# Dispatch Setup — VS Code / Cursor
-
-Claude Code CLI has no known setup issues. This skill applies to VS Code (GitHub Copilot) and Cursor only.
+Claude Code CLI has no known setup issues.
+This skill applies to VS Code (GitHub Copilot) and Cursor only.
 
 ## Agent File Location
 

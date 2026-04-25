@@ -3,8 +3,6 @@ name: skill-index-building
 description: Dispatch skill. Creates or updates skill.index and skill.index.md at every indexed directory in a skill tree. Integrity stamp written by auditor after PASS.
 ---
 
-# Skill Index Building
-
 Dispatch skill. Creates or updates two index artifacts at every indexed dir in a skill tree: `skill.index` (raw index) and `skill.index.md` (metadata overlay). Integrity stamp (`skill.index.sha256`) written by auditor after PASS — not builder.
 
 Artifacts:

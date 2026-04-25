@@ -5,8 +5,6 @@ description: >-
   Bash as the agent runtime baseline. Spec first, build, audit, port, repeat until PASS.
 ---
 
-# Tool Writing
-
 Conventions for creating tool scripts.
 
 ## Language Tiers

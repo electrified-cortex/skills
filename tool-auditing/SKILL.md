@@ -5,8 +5,6 @@ description: >-
   Lightweight — fast-cheap model can run it.
 ---
 
-# Tool Auditing
-
 Verify tool scripts follow conventions. Dispatch with fast-cheap model.
 
 ## Checklist (per script)
