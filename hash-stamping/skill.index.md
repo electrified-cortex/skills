@@ -2,7 +2,7 @@
 
 Two sub-skills for SHA-256 integrity stamps. Match your situation to the entry below.
 
-## audit
+## hash-stamp-audit
 
 Verify stamps — check whether any stamped file has drifted from its recorded hash. Use when checking if a spec changed, triggering an audit, or running a pre-merge integrity check.
 

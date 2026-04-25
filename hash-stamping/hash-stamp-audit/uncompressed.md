@@ -1,6 +1,10 @@
 ---
 name: hash-stamp-audit
-description: Read-only skill. Verifies SHA-256 stamp integrity across a skill tree. Finds all .sha256 companion files and checks each against the current hash of its target.
+description: >-
+  Read-only skill. Verifies SHA-256 stamp integrity across a skill tree. Finds all .sha256
+  companion files and checks each against the current hash of its target.
+  Trigger: stamp verification, hash mismatch detection, companion file audit, stamp drift check,
+  integrity check, sha256 validation.
 ---
 
 # Stamp Auditing

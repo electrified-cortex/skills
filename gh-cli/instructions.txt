@@ -1,8 +1,8 @@
 GH CLI Router — routes GitHub CLI tasks to correct domain sub-skill; doesn't run `gh` commands itself.
 
-Use when: task domain unclear, or want auto-routing. Know domain → dispatch sub-skill directly.
+Use when: task domain unclear, or want auto-routing. Know domain → use the appropriate gh-cli-<domain> sub-skill directly.
 
-Flow: parse task → identify domain → if unclear, ask caller → load+invoke sub-skill → sub-skill executes+reports. Multi-domain: complete primary first, report remaining to caller.
+Flow: parse task → identify domain → if unclear, ask caller → read sub-skill SKILL.md → sub-skill executes+reports. Multi-domain: complete primary first, report remaining to caller.
 
 Domain Routing:
 | Domain | Sub-skill | Use for |
