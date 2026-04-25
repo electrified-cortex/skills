@@ -26,7 +26,6 @@ No domain-specific terms. Rule identifiers (MD001, MD022, etc.) are markdownlint
 ### Input
 
 - `file_path` (string, required): Absolute path to `.md` file to fix
-- `result_file` (string, required): Path to write the report
 
 ### Procedure
 
@@ -34,7 +33,7 @@ No domain-specific terms. Rule identifiers (MD001, MD022, etc.) are markdownlint
 2. Identify all markdownlint violations (all rules enabled)
 3. Fix every violation in-place
 4. Verify zero errors remain after fixes
-5. Write report to `result_file`
+5. Write report to the path computed via `audit-reporting` path shape (target-kind derived from the target file path)
 
 ### Rules to enforce (non-exhaustive, all markdownlint rules apply)
 

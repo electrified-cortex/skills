@@ -6,7 +6,6 @@ errors is the gate.
 ## Dispatch Parameters
 
 - `file_path` (required): Absolute path to the .md file to fix
-- `result_file` (required): Absolute path to write the report
 - `--source X --target Y` (optional): Read X, fix, write to Y. No git check. X untouched.
 
 ## Modes
@@ -50,7 +49,7 @@ no `--target` was given, create `<file>.fixed` alongside.
    - Fix all other markdownlint rules
 5. Write to target (in-place, `.fixed`, or `--target` path).
 6. Verify: re-run linter on output to confirm zero errors.
-7. Write report to `result_file`.
+7. Compute report path via `audit-reporting` path shape (target-kind from the target file path); write report there.
 
 ## Report Format
 

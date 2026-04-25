@@ -7,10 +7,9 @@ description: Fix all markdownlint violations in a .md file. Zero errors gate. Di
 
 Dispatch (Dispatch agent, zero context):
 "Read and follow `instructions.txt` (in this directory).
-Input: `file_path=<path> result_file=<path>`"
+Input: `file_path=<path>`"
 
 - `file_path` (required): Absolute path to .md file
-- `result_file` (required): Absolute path for report
 - `--source X --target Y` (optional): Read X, fix,
   write to Y. No git check.
 
@@ -30,7 +29,7 @@ Output follows the `audit-reporting` skill at `../audit-reporting/SKILL.md`. App
 
 Verdict mapping (markdown-hygiene → audit-reporting frontmatter): `CLEAN → PASS`, `FIXED → PASS_WITH_FINDINGS`, `PARTIAL → NEEDS_REVISION`.
 
-Caller must compute `result_file` using the audit-reporting path shape before dispatch.
+Report path is computed internally using the audit-reporting path shape.
 
 ## Iteration Safety
 

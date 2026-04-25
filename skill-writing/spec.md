@@ -233,6 +233,66 @@ preserving markdown correctness in the authored source.
   Agents should always know where to go next.
 - **No sensitive data**: No tokens, credentials, or secrets in skill files.
 
+### Frontmatter and artifact integrity
+
+R-FM-1 **Name matches folder.** The `name` field in frontmatter MUST equal
+the skill's folder name exactly (kebab-case). This applies to both
+`uncompressed.md` and `SKILL.md`. A mismatch makes the skill unreachable.
+
+R-FM-2 **Description appears once.** The `description` field in frontmatter
+is the sole location for the skill description. Authors MUST NOT restate
+it as body prose anywhere in `uncompressed.md`, `SKILL.md`,
+`instructions.uncompressed.md`, or `instructions.txt`.
+
+R-FM-3 **H1 per artifact.**
+- `spec.md` — MUST have an H1 (normal markdownlint rule MD041).
+- `uncompressed.md` — MUST have an H1 (normal markdownlint).
+- `SKILL.md` — MUST NOT have an H1. Frontmatter `name` carries the title.
+  This is the only sanctioned exception to MD041 for skill artifacts.
+- `instructions.uncompressed.md` — MUST have an H1 (same as
+  `uncompressed.md`; markdownlint must pass, then H1 is stripped on
+  compression to `instructions.txt`).
+- `instructions.txt` — MUST NOT have an H1 (same no-H1 convention as
+  `SKILL.md`).
+
+R-FM-4 **Lint wins.** If markdownlint flags a rule violation, fix it.
+The SKILL.md / instructions.txt no-H1 exception is the ONLY sanctioned
+deviation from markdownlint defaults.
+
+R-FM-5 **No exposition in runtime artifacts.** `SKILL.md`,
+`uncompressed.md`, `instructions.uncompressed.md`, and `instructions.txt`
+MUST contain instructions only. Authors MUST NOT include rationale, "why
+this exists," root-cause narrative, historical notes, or background prose.
+Rationale belongs in `spec.md`.
+
+R-FM-6 **No non-helpful tags.** Descriptor lines that carry no operational
+value (e.g., "inline apply directly no dispatch") MUST be removed from all
+artifacts.
+
+R-FM-7 **No empty sections.** Every heading in every artifact MUST have
+body content. A heading with no content beneath it (before the next heading
+or end of file) is a violation.
+
+R-FM-8 **Iteration-safety placement.** The Iteration Safety caller blurb
+MUST appear only in `spec.md`, `uncompressed.md`, and `SKILL.md`. It MUST
+NOT appear in `instructions.uncompressed.md` or `instructions.txt`. By the
+time the dispatch instructions are loaded the re-dispatch decision is
+already made — the guard is too late and constitutes dead instruction weight.
+The same guard appearing in both `SKILL.md` and `instructions.*` is a
+probable duplication violation and MUST be flagged.
+
+R-FM-9 **Rules A and B verbatim live only in iteration-safety.** Callers
+MUST use only the 2-line pointer block:
+
+```
+Do not re-audit unchanged files.
+See `<relative-path>/iteration-safety/SKILL.md`.
+```
+
+The relative path MUST match the caller's actual depth. Callers MUST NOT
+restate Rule A or Rule B verbatim. See `../iteration-safety/SKILL.md` for
+the canonical text.
+
 ### For dispatch skills specifically
 
 - Dispatch instruction file must be in the same directory or a known path
@@ -386,6 +446,16 @@ Use the Decision Tree section for detailed criteria.
 - Don't create skills that duplicate existing ones — check first
 - Never modify `SKILL.md` directly — it is a compiled artifact; changes
   flow through spec → uncompressed → compressed
+- Never restate the `description` frontmatter as body prose in any artifact (R-FM-2)
+- Never put an H1 in `SKILL.md` or `instructions.txt` (R-FM-3); all other `.md`
+  artifacts require H1 per markdownlint
+- Never put rationale, root-cause notes, or background prose in runtime artifacts
+  (`SKILL.md`, `uncompressed.md`, `instructions.uncompressed.md`,
+  `instructions.txt`) — spec is the only home for rationale (R-FM-5)
+- Never place the Iteration Safety blurb in `instructions.uncompressed.md` or
+  `instructions.txt` (R-FM-8)
+- Never restate iteration-safety Rules A or B verbatim in a caller skill — use the
+  2-line pointer block only (R-FM-9)
 
 ## Relationship to Other Skills
 

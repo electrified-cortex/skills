@@ -3,7 +3,6 @@
 ## Dispatch Parameters
 
 - `skill_path` (required): Absolute path to SKILL.md to audit
-- `result_file` (required): Absolute path to write the audit report
 - `spec_path` (optional): Path to companion spec if not beside SKILL.md
 - `--fix` (optional flag): Enable single-pass fix mode against the skill's
   authoritative source files (`uncompressed.md` and `instructions.uncompressed.md`,
@@ -27,7 +26,7 @@
    or complex inline → FAIL immediately.
 4. Run Phase 1 → Phase 2 → Phase 3 (stop on first failure)
 5. Assign verdict
-6. Write report to `result_file`
+6. Compute output path via `audit-reporting` path shape (target-kind: `skill`); write report there.
 7. If `--fix` is active **and** the verdict is exactly NEEDS_REVISION, enter the
    Fix Mode procedure below. PASS → nothing to fix; FAIL → fix mode is skipped
    and defects are reported for author action. Fix mode is single-pass; the
@@ -99,6 +98,12 @@ routing content.
 conditions, eligibility guards, git-clean checks, or path-escape rules, flag
 as NEEDS_REVISION. Finding text: `stop gates belong in instructions.txt, not
 the routing card`. Routing card = invocation signature + output format.
+
+**(A-IS-1) Input/output double-specification** — if the skill takes an INPUT
+parameter that duplicates an OUTPUT already determined by a referenced sub-skill
+(e.g. passing `result_file` when `audit-reporting` dictates the output path),
+flag as HIGH. The input surface must not override conventions dictated by
+referenced sub-skills.
 
 ### 4. Frontmatter
 
@@ -215,8 +220,7 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
 1. **Eligibility gate.** Enter fix mode only when verdict == NEEDS_REVISION.
    PASS → nothing to fix. FAIL (any phase) → fix mode is skipped; defects are
    reported for author action.
-2. **Preflight `result_file` writability.** If unwritable, STOP fix mode and
-   exit without modifying anything.
+2. **Preflight report path writability.** Compute report path via `audit-reporting` path shape. If unwritable, STOP fix mode and exit without modifying anything.
 3. **Identify writable candidates.** Only `uncompressed.md` and
    `instructions.uncompressed.md` co-located with `skill_path` are eligible.
    - Reject any candidate path that resolves outside the skill directory
@@ -230,7 +234,7 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
    - Skill not under git control → STOP `refusing to fix: skill is not under
      git control`.
    - The read-only audit report is still written in either case.
-5. **Write the read-only audit report** to `result_file` first; this is the
+5. **Write the read-only audit report** to the computed path first; this is the
    commit point. Any fix-pass failure after this leaves the report intact.
 6. **Apply fixes** to writable source files only, in severity order:
    1. Critical Phase 3 issues: coverage, contradictions, unauthorized
@@ -243,7 +247,7 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
 7. **Never auto-fix:** Phase 1 (spec) defects, defects whose root cause is in
    `spec.md` or `README.md` or a compiled artifact, defects requiring author
    judgment. Surface them as findings.
-8. **Append a Fix Mode Addendum** to `result_file`:
+8. **Append a Fix Mode Addendum** to the report:
    - `Files Modified` — absolute paths of every file the auditor wrote.
    - `Fixes Applied` — per file, what changed and which finding it resolves.
    - `Not Auto-Fixed` — defects deferred to the author.
@@ -280,6 +284,7 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
 | Classification | PASS/FAIL | |
 | Inline/dispatch consistency | PASS/FAIL | |
 | Structure | PASS/FAIL | |
+| Input/output double-spec (A-IS-1) | PASS/FAIL | |
 | Frontmatter | PASS/FAIL | |
 | No duplication | PASS/FAIL | |
 

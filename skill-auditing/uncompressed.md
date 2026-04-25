@@ -6,10 +6,9 @@ description: Audit a skill for quality, classification, cost, and compliance wit
 # Skill Auditing
 
 Without reading `instructions.txt` yourself, use a Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory).
-Input: `skill_path=<path> result_file=<path> [--fix]`"
+Input: `skill_path=<path> [--fix]`"
 
 - `skill_path` (required): Absolute path to SKILL.md
-- `result_file` (required): Absolute path for audit report
 - `spec_path` (optional): Companion spec if not co-located
 - `--fix` (optional): single-pass fix mode against authoritative source files.
   Never modifies `spec.md`, `README.md`, `SKILL.md`, `instructions.txt`.
@@ -27,6 +26,6 @@ See `../iteration-safety/SKILL.md`.
 
 ## Output
 
-Output follows the `audit-reporting` skill at `../audit-reporting/SKILL.md`. Apply its path shape (including target-kind), frontmatter requirements, and .gitignore check before writing any report. Targets are `skills/**` → target-kind is `skill`. Caller must set `result_file` to the audit-reporting path computed for the target (using audit-reporting's path shape including target-kind).
+Output follows the `audit-reporting` skill at `../audit-reporting/SKILL.md`. Apply its path shape (including target-kind), frontmatter requirements, and .gitignore check before writing any report. Targets are `skills/**` → target-kind is `skill`.
 
 Related: `skill-writing`, `spec-auditing`, `compression`

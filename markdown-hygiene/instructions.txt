@@ -2,7 +2,6 @@ Fix all markdownlint violations in a .md file. Zero errors is the gate.
 
 Params:
 `file_path` (required): absolute path to .md file to fix
-`result_file` (required): absolute path for report
 `--source X --target Y` (optional): read X, fix, write Y; X untouched, no git check
 
 Modes:
@@ -29,7 +28,7 @@ Procedure:
    all other markdownlint rules
 5. Write to target (in-place, `.fixed`, or `--target`).
 6. Verify: re-run linter on output, confirm zero errors.
-7. Write report to `result_file`.
+7. Compute report path via audit-reporting path shape (target-kind from target file path); write report there.
 
 Report Format:
 Clean: `CLEAN: <file_path> (0 errors)`
