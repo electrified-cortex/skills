@@ -32,6 +32,21 @@
    and defects are reported for author action. Fix mode is single-pass; the
    auditor does not re-audit or recompress.
 
+## When to audit which artifact
+
+**Default — audit the compressed runtime (`SKILL.md`, `instructions.txt`)
+against `spec.md`.** This is the regression / smoke check: does the shipped
+artifact match the spec? The compressed runtime is what actually runs.
+
+**Build / iteration mode — pass `--uncompressed`.** Audits the source
+artifacts (`uncompressed.md`, `instructions.uncompressed.md`) instead. Apply
+fixes to the source. Iterate until the source passes cleanly. Only then
+recompile and run a final default-mode pass on the compressed result.
+
+Pick the mode by intent: regression check → default. Building or revising →
+`--uncompressed` until source converges, then default for the final pass. The
+host agent chooses the mode based on what it is doing.
+
 ## Phase 1 — Spec Gate
 
 Verify the companion spec is structurally sound. Must pass before any skill-level checks.
@@ -108,6 +123,18 @@ referenced sub-skills.
 ### 4. Frontmatter
 
 `name` and `description` present and accurate.
+
+**(A-FM-1) Name matches folder** — `name` field MUST equal the skill's
+folder name exactly. Check both `uncompressed.md` and `SKILL.md`;
+mismatch in either → FAIL.
+
+**(A-FM-3) H1 per artifact** — `SKILL.md` MUST NOT contain an H1
+(`# ...` line). `uncompressed.md` MUST contain an H1.
+`instructions.uncompressed.md` (if present) MUST contain an H1.
+`instructions.txt` (if present) MUST NOT contain an H1. Violation in
+`SKILL.md` or `instructions.txt` → HIGH. Missing H1 in `uncompressed.md`
+or `instructions.uncompressed.md` → flagged by markdown-hygiene (Phase 3
+check 8).
 
 ### 5. No duplication
 
@@ -202,6 +229,57 @@ may reference the `spec.md` under audit — never their own companion
 spec. Remediation: delete the reference; if the information is genuinely
 needed at runtime, inline it.
 
+### 11. (A-FM-2) Description not restated
+
+Search every artifact (`uncompressed.md`, `SKILL.md`,
+`instructions.uncompressed.md`, `instructions.txt`) for body prose that
+duplicates the `description` frontmatter value. Any restatement → LOW
+(escalate to HIGH if verbatim duplication).
+
+### 12. (A-FM-4) Lint wins
+
+Run `markdown-hygiene` (covered by check 8) and confirm no violations are
+suppressed or dismissed without a sanctioned exception. The only sanctioned
+exception is the no-H1 rule for `SKILL.md` and `instructions.txt`. Any
+other suppressed violation → HIGH.
+
+### 13. (A-FM-5) No exposition in runtime artifacts
+
+Scan `SKILL.md`, `uncompressed.md`, `instructions.uncompressed.md`, and
+`instructions.txt` for rationale, "why this exists," root-cause narrative,
+historical notes, or background prose. Any found → HIGH. Rationale belongs
+exclusively in `spec.md`.
+
+### 14. (A-FM-6) No non-helpful tags
+
+Check all artifacts for descriptor lines that carry no operational value
+(e.g., "inline apply directly no dispatch," "dispatch skill," bare type
+labels not used as actionable instructions). Any found → LOW.
+
+### 15. (A-FM-7) No empty sections
+
+Verify every heading in every artifact has body content before the next
+heading or end of file. An empty section → HIGH.
+
+### 16. (A-FM-8) Iteration-safety placement
+
+Verify the Iteration Safety blurb is absent from
+`instructions.uncompressed.md` and `instructions.txt`. Presence in
+either → HIGH. Additionally, if the guard appears in both `SKILL.md` and
+`instructions.*`, flag as probable duplication → HIGH.
+
+### 17. (A-FM-9a) Iteration-safety pointer form
+
+If a caller skill references iteration-safety, verify it uses the exact
+2-line pointer block form (`Do not re-audit unchanged files.` + `See
+\`<path>/iteration-safety/SKILL.md\`.`) and that the relative path
+matches the caller's actual folder depth. Any deviation → HIGH.
+
+### 18. (A-FM-9b) No verbatim Rule A/B restatement
+
+Scan all artifacts for verbatim restatement of iteration-safety Rules A
+or B beyond the sanctioned 2-line pointer block. Any found → HIGH.
+
 ## Verdict Rules
 
 - **PASS**: All three phases pass.
@@ -286,6 +364,8 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
 | Structure | PASS/FAIL | |
 | Input/output double-spec (A-IS-1) | PASS/FAIL | |
 | Frontmatter | PASS/FAIL | |
+| Name matches folder (A-FM-1) | PASS/FAIL | |
+| H1 per artifact (A-FM-3) | PASS/FAIL | |
 | No duplication | PASS/FAIL | |
 
 ### Phase 3 — Spec Compliance
@@ -302,6 +382,14 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
 | Markdown hygiene | PASS/FAIL | |
 | No dispatch refs | PASS/FAIL/N/A | |
 | No spec breadcrumbs | PASS/FAIL | |
+| Description not restated (A-FM-2) | PASS/FAIL | |
+| Lint wins (A-FM-4) | PASS/FAIL | |
+| No exposition in runtime (A-FM-5) | PASS/FAIL | |
+| No non-helpful tags (A-FM-6) | PASS/FAIL | |
+| No empty sections (A-FM-7) | PASS/FAIL | |
+| Iteration-safety placement (A-FM-8) | PASS/FAIL/N/A | |
+| Iteration-safety pointer form (A-FM-9a) | PASS/FAIL/N/A | |
+| No verbatim Rule A/B (A-FM-9b) | PASS/FAIL/N/A | |
 
 ### Issues
 
