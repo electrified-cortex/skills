@@ -3,8 +3,6 @@ name: dispatch
 description: Decision tree for whether, how, and at what model tier to dispatch sub-agents.
 ---
 
-# Dispatch
-
 Read once. Terms (`fast-cheap`, `standard`, `deep`, foreground/background, F1–F5) assumed known by any caller. Inline skills don't reference this skill.
 
 ## Decision Tree
