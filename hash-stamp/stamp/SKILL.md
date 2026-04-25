@@ -3,8 +3,6 @@ name: hash-stamp-stamp
 description: Dispatch skill. Writes or updates SHA-256 companion files alongside target files.
 ---
 
-# Hash Stamp — Stamp
-
 Dispatch skill. Writes/updates `.sha256` companion files for one or more targets.
 
 Dispatch: "Read and follow `instructions.txt` (in this dir). Input: `<path|glob|--tree <root>> [--force]`"

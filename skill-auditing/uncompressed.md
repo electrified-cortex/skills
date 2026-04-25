@@ -19,6 +19,10 @@ Returns: verdict (PASS / NEEDS_REVISION / FAIL) and issues. Checklist
 covers 3 phases: Spec Gate (5 checks), Skill Smoke (5 checks), Spec
 Compliance (10 checks).
 
+## Which model class to dispatch
+
+The latest haiku-class model is sufficient for most audits.
+
 ## When to audit which artifact
 
 **Default — audit the compressed runtime (`SKILL.md`, `instructions.txt`)
@@ -35,6 +39,25 @@ result.
 Pick the mode by intent: regression check → default. Building or revising
 → `--uncompressed` until source converges, then default for the final
 pass.
+
+## False positive guards
+
+These patterns are CORRECT, never findings:
+
+- Absent H1 in `SKILL.md` and `instructions.txt` — sanctioned R-FM-3
+  / R-FM-4 exception. Frontmatter `name` carries the title. Do NOT
+  flag MD041 against these files.
+- Iteration-safety 2-line pointer in spec / uncompressed / SKILL.md
+  (the caller blurb) — required by R-FM-9.
+- Verbatim Rule B quote inside the iteration-safety skill itself —
+  that is its canonical home.
+- Trigger phrases in the frontmatter description — required by
+  R-FM-10.
+- Description ending with a tier-label suffix is a SEPARATE finding
+  (A-FM-6) — flag the suffix, but not the description itself.
+
+If a pattern matches one of the above, do not raise it as a finding.
+Saying nothing is correct.
 
 ## Iteration Safety
 

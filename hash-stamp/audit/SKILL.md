@@ -3,8 +3,6 @@ name: hash-stamp-audit
 description: Read-only skill. Verifies SHA-256 stamp integrity across a skill tree. Finds all .sha256 companion files and checks each against the current hash of its target.
 ---
 
-# Stamp Auditing
-
 Read-only. Verifies every `.sha256` companion in a tree matches current hash of its target.
 
 Dispatch: "Read and follow `instructions.txt` (in this dir). Input: `root=<path> [--git-only]`"
