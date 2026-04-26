@@ -3,15 +3,13 @@ name: copilot-cli-explain
 description: Explain operation via the standalone Copilot CLI binary. Returns an explanatory markdown description of a code region or file.
 ---
 
-Runs `copilot` to explain a code region or file. Dispatched by the `copilot-cli` router.
-
 ## Prerequisites
 
 ```bash
 copilot --version   # must resolve; fail-fast if not
 ```
 
-If this fails: surface the error to the caller and stop. Do NOT attempt installation.
+If this fails: return `Status: UNAVAILABLE`; surface stderr; stop. Do NOT attempt installation.
 
 ## Invocation
 
@@ -19,35 +17,39 @@ If this fails: surface the error to the caller and stop. Do NOT attempt installa
 copilot -p "<prompt>" -s --allow-all-tools
 ```
 
-### Threat Model — `--allow-all-tools`
-
-`--allow-all-tools` permits the Copilot CLI to read within the working directory. Set the working directory to the repo containing the target file. Never run in `/`, `~`, or any directory containing secrets.
+MAY add `--model <model>` only when the caller explicitly supplied a model name. Omit otherwise; do not pin a model inside the skill.
 
 ## Prompt Construction
 
 Frame the prompt to request an explanation:
 
-```
+```text
 Explain the following code. Describe what it does, why it works that way, and any
 non-obvious behavior. Be concise.
 
-<code region or file path>
+<inline code content>
 ```
 
-Replace `<code region or file path>` with the caller-supplied content (file path, function name, or pasted code block).
+Replace `<inline code content>` with the caller-supplied content serialized to a string. Do not pass file paths — Copilot CLI has no file-input flag; all content must be embedded inline.
 
 ## Output Parsing
 
 Return Copilot's response as a structured result:
 
-```
-Status: OK | ERROR
+```text
+Status: OK | ERROR | UNAVAILABLE
 Explanation: <Copilot's markdown explanation>
 ```
 
+| Status | Condition |
+| --- | --- |
+| `OK` | Copilot returned a response |
+| `ERROR` | Binary returned non-zero exit code |
+| `UNAVAILABLE` | `copilot --version` failed before invocation |
+
 ## Error Handling
 
-- `copilot --version` fails → surface "copilot not installed" and stop.
+- `copilot --version` fails → return `Status: UNAVAILABLE`; surface stderr; stop.
 - Model unavailable → surface "model not available" and stop.
 - Copilot exits non-zero → surface the stderr output as the error and stop.
 
@@ -55,3 +57,6 @@ Explanation: <Copilot's markdown explanation>
 
 - Return the explanation verbatim in the `Explanation` field — do not summarize or reinterpret.
 - One code region per invocation.
+- Constrain the working directory to the repo containing the target file — never run in `/`, `~`, or any directory containing secrets.
+
+Related: `copilot-cli` (router), `copilot-cli-review`, `copilot-cli-ask`

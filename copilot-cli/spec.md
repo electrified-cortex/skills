@@ -21,7 +21,7 @@ Out of scope:
 - **Sub-skill**: a skill that handles one operation's full surface, including flag assembly, prompt framing, CLI invocation, and output parsing.
 - **Router**: this skill; accepts any Copilot CLI task and dispatches to the correct operation sub-skill without executing commands itself.
 - **Headless invocation**: running `copilot` with `-p` (prompt), `-s` (single-turn), and `--allow-all-tools` for non-interactive output.
-- **Adversarial perspective**: a code review or analysis explicitly run via a non-Anthropic model to obtain a second opinion. The default model for adversarial review is `gpt-5.3-codex`; the model alias may evolve.
+- **Adversarial perspective**: a code review or analysis explicitly run via a non-Anthropic model to obtain a second opinion. The model for adversarial review is caller-supplied via `--model`; the skill does not pin a default.
 
 ## Intent
 
