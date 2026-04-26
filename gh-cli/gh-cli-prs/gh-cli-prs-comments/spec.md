@@ -28,7 +28,7 @@ The skill covers general PR comments via `gh pr comment`: adding a new comment, 
 
 ## Error Handling
 
-If an edit or delete operation is attempted without a comment ID, it will fail — the agent must obtain the comment ID (via `gh pr view --comments` or the API) before proceeding. If a comment ID does not exist on the target PR, `gh` returns an error — the agent must surface this to the caller.
+If an edit or delete operation is attempted without a comment ID, it will fail — the agent must obtain the comment ID via the paginated API (`gh api --paginate /repos/{owner}/{repo}/issues/{issue_number}/comments`) before proceeding. Do not use `gh pr view --comments` for this purpose — it truncates and may miss later pages. If a comment ID does not exist on the target PR, `gh` returns an error — the agent must surface this to the caller.
 
 ## Precedence Rules
 
@@ -37,4 +37,4 @@ N/A — add, edit, and delete are discrete non-overlapping operations; no resolu
 ## Constraints
 
 - Does not cover review-level comments (those with approve/request-changes verdicts).
-- Does not cover viewing comments — use `gh pr view --comments`.
+- `gh pr view --comments` truncates at one page — use `gh api --paginate` for exhaustive listing. See the Viewing Comments section.

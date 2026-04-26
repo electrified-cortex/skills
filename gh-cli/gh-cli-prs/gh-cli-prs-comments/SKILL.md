@@ -11,11 +11,28 @@ Add comment to PR:
 gh pr comment 123 --body "text"
 ```
 
+Viewing:
+`gh pr view --comments` truncates output and misses later pages. For a complete list of all review comments, use the paginated API:
+```bash
+# All inline/review comments (paginated — all pages)
+gh api --paginate /repos/{owner}/{repo}/pulls/{pull_number}/comments
+
+# All review-level submissions (paginated)
+gh api --paginate /repos/{owner}/{repo}/pulls/{pull_number}/reviews
+```
+
+For general PR (issue) comments, also paginate:
+```bash
+gh api --paginate /repos/{owner}/{repo}/issues/{pull_number}/comments
+```
+
+Use `gh pr view --comments` only for a quick human-readable glance — never for exhaustive comment checks.
+
 Editing:
 `gh pr comment` has no `--edit` flag. Use REST API — find comment ID, PATCH:
 ```bash
-# List comments to find the comment ID
-gh api /repos/{owner}/{repo}/issues/{issue_number}/comments
+# List ALL comments to find the comment ID (--paginate collects all pages)
+gh api --paginate /repos/{owner}/{repo}/issues/{issue_number}/comments
 
 # Edit the comment
 gh api --method PATCH /repos/{owner}/{repo}/issues/comments/{comment_id} \
@@ -26,11 +43,6 @@ Deleting:
 `gh pr comment` has no `--delete` flag. Use REST API:
 ```bash
 gh api --method DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}
-```
-
-Viewing:
-```bash
-gh pr view 123 --comments
 ```
 
 Resolving Review Threads:

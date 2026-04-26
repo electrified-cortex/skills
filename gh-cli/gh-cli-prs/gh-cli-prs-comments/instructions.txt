@@ -7,8 +7,8 @@ gh pr comment 123 --body "text"
 
 Edit — no `--edit` flag; use REST API directly: find comment ID → PATCH:
 ```bash
-# find comment ID
-gh api /repos/{owner}/{repo}/issues/{issue_number}/comments
+# find comment ID (--paginate collects all pages)
+gh api --paginate /repos/{owner}/{repo}/issues/{issue_number}/comments
 # edit
 gh api --method PATCH /repos/{owner}/{repo}/issues/comments/{comment_id} \
   --field body="updated text"
@@ -19,10 +19,16 @@ Delete — no `--delete` flag; use REST API directly:
 gh api --method DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}
 ```
 
-View existing comments:
+View all comments (paginated — `gh pr view --comments` truncates):
 ```bash
-gh pr view 123 --comments
+# inline/review comments
+gh api --paginate /repos/{owner}/{repo}/pulls/{pull_number}/comments
+# review-level submissions
+gh api --paginate /repos/{owner}/{repo}/pulls/{pull_number}/reviews
+# general PR (issue) comments
+gh api --paginate /repos/{owner}/{repo}/issues/{pull_number}/comments
 ```
+Use `gh pr view --comments` for quick human-readable glance only — not for exhaustive checks.
 
 Resolve review threads — no `gh pr` command; use GraphQL via `gh-cli-api`:
 ```bash
