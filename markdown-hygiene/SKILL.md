@@ -7,8 +7,6 @@ Dispatch (Dispatch agent, haiku-class, zero context):
 "Read and follow `instructions.txt` (in this directory).
 Input: `file_path=<path>`"
 
-Sonnet-class passes are equivalent or have diminishing returns.
-
 `file_path` (required): absolute path to .md file
 `--source X --target Y` (optional): read X, fix, write Y. No git check.
 `--ignore <RULE>[,<RULE>...]` (optional): suppress rule codes this run. Example: `--ignore MD041` for skill files with intentionally absent H1.

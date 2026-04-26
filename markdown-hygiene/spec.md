@@ -17,6 +17,11 @@ Markdown fixing is mechanical — the agent doesn't need caller context.
 It reads a file, applies lint rules, fixes violations, verifies zero
 errors remain. Self-contained input/output. Textbook dispatch pattern.
 
+## Model Tier Rationale
+
+Haiku-class is the designated tier for dispatch. Sonnet-class passes are
+equivalent or have diminishing returns for mechanical lint fixing.
+
 ## Definitions
 
 No domain-specific terms. Rule identifiers (MD001, MD022, etc.) are markdownlint rule codes — their meaning is defined by the markdownlint rule set, not by this spec.
