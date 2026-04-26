@@ -136,6 +136,12 @@ mismatch in either → FAIL.
 or `instructions.uncompressed.md` → flagged by markdown-hygiene (Phase 3
 check 8).
 
+False-positive guard: `SKILL.md` and `instructions.txt` intentionally
+have no H1 — this is the sanctioned R-FM-3 / R-FM-4 exception; the
+frontmatter `name` field carries the title. Do NOT flag MD041 (MD041 =
+first heading of file must be H1 — if the auditor sees a missing H1, it
+might wrongly flag it; suppress for these specific files).
+
 ### 5. No duplication
 
 Not duplicating existing capability. If similar exists, recommend merge or
@@ -280,6 +286,25 @@ matches the caller's actual folder depth. Any deviation → HIGH.
 Scan all artifacts for verbatim restatement of iteration-safety Rules A
 or B beyond the sanctioned 2-line pointer block. Any found → HIGH.
 
+### 19. (A-XR-1) Cross-reference anti-pattern
+
+Scan `SKILL.md`, `instructions.txt`, any sub-instructions (e.g. `eval.txt`),
+and `uncompressed.md` for any pointer — by file path or inline link — to
+ANOTHER skill's `uncompressed.md` or `spec.md`. Violations:
+
+- "See uncompressed.md for full version"
+- "See spec.md for requirements"
+- "Reference: &lt;some-skill&gt;/uncompressed.md"
+- Any href or inline link whose target ends in `.uncompressed.md` or `.spec.md`
+
+NOT violations:
+
+- Referencing a skill by SKILL NAME only (e.g. "see the `compression` skill")
+- Subject-matter mentions of these file types in skill-auditing's own artifacts
+  (this skill audits these files as targets, so it must name them)
+
+Any cross-file path pointer → HIGH.
+
 ## Verdict Rules
 
 - **PASS**: All three phases pass.
@@ -390,6 +415,7 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
 | Iteration-safety placement (A-FM-8) | PASS/FAIL/N/A | |
 | Iteration-safety pointer form (A-FM-9a) | PASS/FAIL/N/A | |
 | No verbatim Rule A/B (A-FM-9b) | PASS/FAIL/N/A | |
+| Cross-reference anti-pattern (A-XR-1) | PASS/FAIL | |
 
 ### Issues
 

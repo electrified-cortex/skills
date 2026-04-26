@@ -17,7 +17,7 @@ Input: `skill_path=<path> [--fix]`"
   runtime.
 Returns: verdict (PASS / NEEDS_REVISION / FAIL) and issues. Checklist
 covers 3 phases: Spec Gate (5 checks), Skill Smoke (5 checks), Spec
-Compliance (10 checks).
+Compliance (11 checks + 1 informational eval check).
 
 ## Which model class to dispatch
 
@@ -46,7 +46,9 @@ These patterns are CORRECT, never findings:
 
 - Absent H1 in `SKILL.md` and `instructions.txt` — sanctioned R-FM-3
   / R-FM-4 exception. Frontmatter `name` carries the title. Do NOT
-  flag MD041 against these files.
+  flag MD041 against these files. (MD041 = first heading of file must
+  be H1 — if the auditor sees a missing H1, it might wrongly flag it;
+  suppress for these specific files.)
 - Iteration-safety 2-line pointer in spec / uncompressed / SKILL.md
   (the caller blurb) — required by R-FM-9.
 - Verbatim Rule B quote inside the iteration-safety skill itself —
@@ -55,6 +57,10 @@ These patterns are CORRECT, never findings:
   R-FM-10.
 - Description ending with a tier-label suffix is a SEPARATE finding
   (A-FM-6) — flag the suffix, but not the description itself.
+- (A-XR-1) Subject-matter mentions of `uncompressed.md` / `spec.md`
+  file types within skill-auditing's own artifacts are NOT violations —
+  this skill audits these files as targets and must name them. Only
+  path-based cross-pointers to ANOTHER skill's files are violations.
 
 If a pattern matches one of the above, do not raise it as a finding.
 Saying nothing is correct.
@@ -63,6 +69,8 @@ Saying nothing is correct.
 
 Do not re-audit unchanged files.
 See `../iteration-safety/SKILL.md`.
+
+After Phase 3: read `eval.txt` for the eval-presence check (informational; does not affect verdict).
 
 ## Output
 

@@ -59,6 +59,7 @@ Deep verification SKILL.md faithfully represents spec.
 16. (A-FM-8) Iteration-safety placement — verify blurb absent from `instructions.uncompressed.md` and `instructions.txt`. Present → HIGH. Guard in both `SKILL.md` and `instructions.*` → probable duplication, flag HIGH.
 17. (A-FM-9a) Iteration-safety pointer form — if caller refs iteration-safety, verify 2-line pointer form (`Do not re-audit unchanged files.` + `See \`<path>/iteration-safety/SKILL.md\`.`); relative path matches caller depth. Deviation → HIGH.
 18. (A-FM-9b) No verbatim Rule A/B — scan for verbatim restatement of iteration-safety Rules A/B beyond 2-line pointer. Any → HIGH.
+19. (A-XR-1) Cross-reference anti-pattern — scan SKILL.md, instructions.txt, sub-instructions (e.g. eval.txt), and uncompressed.md for any path-based pointer to ANOTHER skill's uncompressed.md or spec.md (e.g. "See uncompressed.md for full version", href containing .uncompressed.md or .spec.md). NOT violations: skill referenced by name only; subject-matter mentions in skill-auditing's own files. Any cross-file path pointer → HIGH.
 
 Verdict Rules:
 
@@ -133,6 +134,7 @@ Phase 3 — Spec Compliance:
 | Iteration-safety placement (A-FM-8) | PASS/FAIL/N/A | |
 | Iteration-safety pointer form (A-FM-9a) | PASS/FAIL/N/A | |
 | No verbatim Rule A/B (A-FM-9b) | PASS/FAIL/N/A | |
+| Cross-reference anti-pattern (A-XR-1) | PASS/FAIL | |
 
 Issues:
 - <issue and fix>

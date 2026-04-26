@@ -56,6 +56,15 @@ and should run in an isolated agent via the Dispatch agent pattern.
 18. If no companion spec exists and the skill is dispatch or complex
     inline, the auditor **must** FAIL immediately without entering
     Phase 1.
+19. After all verdict-bearing Phase 3 checks, the auditor **must** perform
+    the eval-presence check via the co-located `eval.txt` sub-instructions.
+    This requirement specifies that the check exists, not its full procedure.
+    Absence of `eval.md` **must not** affect the verdict.
+20. The auditor **must** check all skill artifacts for cross-reference
+    anti-patterns (A-XR-1): any path-based pointer from a skill artifact to
+    another skill's `uncompressed.md` or `spec.md` **must** be flagged HIGH.
+    Referencing a skill by name only is permitted. Subject-matter mentions
+    in skill-auditing's own files are exempt.
 
 ## Constraints
 
@@ -236,6 +245,11 @@ This is the final quality gate.
     whose operation takes a spec as input (e.g. `spec-auditing`,
     `skill-auditing`) may reference `spec.md` files that are the subject
     of the operation — never the skill's own companion spec.
+10a. **Eval log presence (informational)** — perform the eval-presence
+    check by reading the co-located `eval.txt` sub-instructions. Full
+    procedure (four-option suggestion, honest-state principle,
+    verdict-gate rule) lives in `eval.txt` / `eval.uncompressed.md`.
+    Absence of `eval.md` MUST NOT affect the verdict.
 11. **(A-FM-2) Description not restated** — search every artifact
     (`uncompressed.md`, `SKILL.md`, `instructions.uncompressed.md`,
     `instructions.txt`) for body prose that duplicates the `description`
@@ -271,6 +285,17 @@ This is the final quality gate.
 18. **(A-FM-9b) No verbatim Rule A/B restatement** — scan all artifacts
     for verbatim restatement of iteration-safety Rules A or B beyond the
     sanctioned 2-line pointer block. Any found → HIGH.
+19. **(A-XR-1) Cross-reference anti-pattern** — scan `SKILL.md`,
+    `instructions.txt`, any sub-instructions (e.g. `eval.txt`), and
+    `uncompressed.md` for any pointer to ANOTHER skill's `uncompressed.md`
+    or `spec.md` by file path or inline link. Examples of violations: "See
+    uncompressed.md for full version", "See spec.md for requirements",
+    "Reference: <some-skill>/uncompressed.md", any href/link containing
+    `.uncompressed.md` or `.spec.md`. Referencing a skill by SKILL NAME only
+    (e.g. "see the `compression` skill") is NOT a violation. Subject-matter
+    mentions of these file types within skill-auditing itself (which audits
+    these files as targets) are NOT violations. Any other cross-file pointer
+    → HIGH.
 
 ## Verdict Rules
 
@@ -328,6 +353,7 @@ This is the final quality gate.
 | Markdown hygiene | PASS/FAIL | |
 | No dispatch refs | PASS/FAIL/N/A | |
 | No spec breadcrumbs | PASS/FAIL | |
+| Eval log (informational) | PRESENT/ABSENT | |
 | Lint wins (A-FM-4) | PASS/FAIL | |
 | Description not restated (A-FM-2) | PASS/FAIL | |
 | No exposition in runtime (A-FM-5) | PASS/FAIL | |
@@ -499,6 +525,9 @@ multi-file artifact pair where re-audit requires regenerating compiled runtime.
 - Do not suppress markdownlint violations without a sanctioned exception; the only
   sanctioned exception is the no-H1 rule for `SKILL.md` and `instructions.txt`
   (A-FM-4).
+- Do not pass A-XR-1 if any skill artifact (other than skill-auditing's own files
+  as subject-matter context) contains a path-based cross-reference to another
+  skill's `uncompressed.md` or `spec.md`.
 - Do not pass A-FM-8 if the Iteration Safety blurb appears in `instructions.uncompressed.md`
   or `instructions.txt`, even if it is also present in `SKILL.md`.
 - Do not rate A-FM-9a/9b as N/A unless the skill contains no iteration-safety reference
