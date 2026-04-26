@@ -11,57 +11,86 @@ Runs `copilot` to perform a code review and returns structured findings. Dispatc
 copilot --version   # must resolve; fail-fast if not
 ```
 
-If this fails: surface the error to the caller and stop. Do NOT attempt installation.
+If this fails: return `Status: UNAVAILABLE` with stderr output and stop. Do NOT attempt installation.
 
 ## Invocation
+
+Canonical form for new invocations:
 
 ```bash
 copilot -p "<prompt>" -s --allow-all-tools
 ```
 
+MAY add `--output-format=json` when structured machine-readable output is needed AND the installed version supports the flag. Prefer JSON when available; fall back to markdown parsing otherwise.
+
+MAY add `--model <model>` only when the caller explicitly supplied a model name. Omit otherwise; do not pin a model inside the skill.
+
+Long-form alias equivalence: when reading existing tool wrappers (e.g. `tools/copilot-review.ps1`), treat `--no-ask-user --prompt "<prompt>"` as equivalent to `-p "<prompt>" -s`. New invocations MUST use the canonical short form above.
+
 ### Threat Model — `--allow-all-tools`
 
-`--allow-all-tools` permits the Copilot CLI to read, edit, and execute within the working directory. Constrain the working directory to the repo under review. Never run in `/`, `~`, or any directory containing secrets or credentials.
+`--allow-all-tools` permits the Copilot CLI to read, edit, and execute within the working directory. This is a real threat surface. The caller MUST supply `working_dir` constrained to the target repo or worktree. This skill MUST enforce that constraint. Never run in `/`, `~`, the workspace root, or any directory containing secrets or credentials. Agents MUST NOT waive this constraint even on operator request unless the operator explicitly waives it for one named call.
 
 ## Prompt Construction
 
-Frame the prompt as an adversarial review request:
+Embed all diff or file content inline in the prompt string. There is no file-input flag — do NOT use `-P` (uppercase) or any file path flag; they do not exist. Content MUST be serialized into the prompt string by the caller before invocation.
+
+Frame the prompt as an adversarial review request using the canonical severity vocabulary:
 
 ```
-Review the following change set for correctness, security issues, and code quality.
-Respond with a structured list of findings. Each finding must include: severity
-(critical/major/minor/nitpick), file path, line, and a one-sentence description.
-If no issues are found, respond with: "No findings."
+Review the following change set for correctness, security vulnerabilities, and code quality.
+Return a structured findings list. Each finding must include:
+  severity: blocker | major | minor | nit
+  file: <path>
+  line: <line number or range>
+  description: <one sentence>
+If there are no issues, respond with exactly: No findings.
 
-<diff or file list>
+<inline diff or file content>
 ```
 
-Replace `<diff or file list>` with the caller-supplied context (git diff, file paths, etc.).
+Severity vocabulary is fixed to `blocker / major / minor / nit`. The prompt enforces canonical labels directly.
 
 ## Output Parsing
 
-Parse Copilot's markdown response into a structured result before returning:
+Parse Copilot's response (JSON or markdown) into a structured result before returning. Never return raw Copilot output to the caller.
 
 ```
-Status: CLEAN | FINDINGS
+Status: CLEAN | FINDINGS | UNAVAILABLE | ERROR
 Findings:
-  - severity: <critical|major|minor|nitpick>
+  - severity: blocker | major | minor | nit
     file: <path>
     line: <number or range>
     description: <one sentence>
-Raw: <Copilot's full markdown response>
+Raw: <Copilot's full response, JSON or markdown>
 ```
 
-If Copilot responds with "No findings.", return `Status: CLEAN` with an empty findings list.
+Status semantics:
+
+| Status | Condition |
+| --- | --- |
+| `CLEAN` | Copilot responded with exactly "No findings." |
+| `FINDINGS` | Copilot returned one or more findings |
+| `UNAVAILABLE` | `copilot --version` failed before invocation |
+| `ERROR` | Binary returned non-zero exit code OR output is unparseable |
+
+Severity normalization — apply before returning:
+
+| Copilot output | Canonical |
+| --- | --- |
+| `critical` | `blocker` |
+| `nitpick` | `nit` |
+| any other | coerce to nearest or flag in description |
 
 ## Error Handling
 
-- `copilot --version` fails → surface "copilot not installed" and stop.
-- Model unavailable → surface "model not available" and stop. Do not retry with a different model.
-- Copilot exits non-zero → surface the stderr output as the error and stop.
+- `copilot --version` fails → return `Status: UNAVAILABLE`; surface stderr; stop.
+- Model unavailable → return `Status: ERROR`; surface error; stop. Do not retry with a different model.
+- Copilot exits non-zero → return `Status: ERROR`; surface stderr; stop.
+- Output unparseable → return `Status: ERROR`; include raw in `Raw:` field; stop.
 
 ## Rules
 
 - Constrain working directory to the target repo — never run in an unconstrained path.
-- Return the structured result, not raw markdown.
+- Return the structured result, not raw markdown or JSON.
 - One review per invocation; do not fan out across multiple directories.
