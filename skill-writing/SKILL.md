@@ -72,7 +72,7 @@ Dispatch-time constraints caller must know before invocation go in routing card 
 Don't rely on repo-local fallback filenames — those belong in skill-specific auditors, not universal spec-auditing rules.
 
 Dispatch instruction file must be in same dir or known path.
-Compressed `instructions.txt`: only instructions — no title headers, no descriptions, no preamble. `instructions.uncompressed.md` MAY include H1 title for markdown-hygiene (MD041); strip after compression. When running markdown-hygiene on `SKILL.md` or `instructions.txt`, pass `--ignore MD041` (no H1 sanctioned per R-FM-3).
+Compressed `instructions.txt`: only instructions — no title headers, no descriptions, no preamble. `instructions.uncompressed.md` MAY include H1 title for markdown-hygiene (MD041); strip after compression. When running markdown-hygiene on `SKILL.md`, pass `--ignore MD041` (no H1 sanctioned per R-FM-3). `instructions.txt` is plain text — no MD041 suppression needed.
 
 Requirements:
 

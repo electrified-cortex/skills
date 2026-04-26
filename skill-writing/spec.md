@@ -169,9 +169,9 @@ an H1 title so that markdown-hygiene passes (markdownlint rule MD041
 requires a top-level heading). Strip the title after compression to
 `instructions.txt`. This keeps the compressed runtime minimal while
 preserving markdown correctness in the authored source. When invoking
-markdown-hygiene on `SKILL.md` or `instructions.txt`, pass `--ignore MD041`
-to suppress the absent-H1 finding — no inline guard text is needed in the
-skill body files.
+markdown-hygiene on `SKILL.md`, pass `--ignore MD041` to suppress the
+absent-H1 finding — no inline guard text is needed. `instructions.txt`
+is plain text, not markdown — no MD041 suppression needed there.
 
 ```markdown
 ## Dispatch Parameters

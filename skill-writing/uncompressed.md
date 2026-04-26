@@ -118,8 +118,8 @@ Compressed `instructions.txt` contains only instructions — no title
 headers, no descriptions, no preamble. The uncompressed baseline
 `instructions.uncompressed.md` MAY include an H1 title so markdown-hygiene
 passes (MD041); strip the title after compression. When invoking
-markdown-hygiene on `SKILL.md` or `instructions.txt`, pass `--ignore MD041`
-(no H1 in these files is sanctioned per R-FM-3).
+markdown-hygiene on `SKILL.md`, pass `--ignore MD041` (no H1 sanctioned
+per R-FM-3). `instructions.txt` is plain text — no MD041 suppression needed.
 
 ## Requirements
 
