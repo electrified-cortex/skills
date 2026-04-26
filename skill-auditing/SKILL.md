@@ -14,7 +14,8 @@ Returns: verdict (PASS / NEEDS_REVISION / FAIL) + issues. Checklist: Spec Gate (
 
 ## Which model class to dispatch
 
-The latest haiku-class model is sufficient for most audits.
+Haiku-class handles most audits.
+Sonnet-class may still catch edge cases haiku misses.
 
 ## When to audit which artifact
 

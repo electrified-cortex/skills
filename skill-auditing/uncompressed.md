@@ -22,7 +22,8 @@ Compliance (19 checks + 1 informational eval check).
 
 ## Which model class to dispatch
 
-The latest haiku-class model is sufficient for most audits.
+Haiku-class handles most audits.
+Sonnet-class may still catch edge cases haiku misses.
 
 ## When to audit which artifact
 
