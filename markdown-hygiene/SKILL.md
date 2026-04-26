@@ -3,9 +3,11 @@ name: markdown-hygiene
 description: Fix all markdownlint violations in a .md file. Zero errors gate. Dispatch skill.
 ---
 
-Dispatch (Dispatch agent, zero context):
+Dispatch (Dispatch agent, haiku-class, zero context):
 "Read and follow `instructions.txt` (in this directory).
 Input: `file_path=<path>`"
+
+Sonnet-class passes are equivalent or have diminishing returns.
 
 `file_path` (required): absolute path to .md file
 `--source X --target Y` (optional): read X, fix, write Y. No git check.

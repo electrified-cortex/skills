@@ -31,30 +31,34 @@ and no `--target` was given, create `<file>.fixed` alongside.
 2. Use any tools already available to you (built-in,
    MCP) to assist — do not install or invoke external
    packages.
-3. Fix every violation:
-   - Add/remove blank lines around headings and code blocks (MD022, MD031)
-   - Fix heading level increments (MD001)
-   - Normalize list markers and ordered list prefixes (MD004, MD029)
-   - Remove trailing spaces and hard tabs (MD009, MD010)
-   - Collapse multiple blank lines to one (MD012)
-   - Ensure file ends with single newline (MD047)
-   - Wrap bare URLs in angle brackets (MD034)
-   - Add language identifiers to fenced code blocks (MD040)
-   - Fix table pipe spacing for consistent style (MD060)
-   - Ensure blank lines around tables (MD058)
-   - Ensure equal column count across table rows (MD056)
-   - Ensure consistent table pipe style (MD055)
-   - No trailing punctuation in headings (MD026)
-   - No inline HTML where markdown works (MD033)
-   - Heading style consistency — atx vs setext, uniform across file (MD003)
-   - Headings start at line beginning, no leading whitespace (MD023)
-   - No duplicate headings among siblings (MD024)
-   - Single H1 per document (MD025)
-   - Blank lines around lists (MD032)
-   - Fix all other markdownlint rules
+3. Fix every violation. Format: `MD<NNN> — description`.
+   - MD001 — heading level increments
+   - MD003 — heading style consistency (atx vs setext, uniform across file)
+   - MD004 — list markers consistent
+   - MD009 — no trailing spaces
+   - MD010 — no hard tabs
+   - MD012 — collapse multiple blank lines to one
+   - MD022 — blank lines BEFORE and AFTER headings
+   - MD023 — headings start at line beginning, no leading whitespace
+   - MD024 — no duplicate headings among siblings
+   - MD025 — single H1 per document
+   - MD026 — no trailing punctuation in headings
+   - MD029 — ordered list prefixes consistent
+   - MD031 — blank lines BEFORE and AFTER fenced code blocks (text immediately before/after ` ``` ` triggers this; check every fence)
+   - MD032 — blank lines around lists
+   - MD033 — no inline HTML; HTML comments `<!-- ... -->` ARE inline HTML and trigger MD033; don't treat as metadata; exception: HTML inside fenced code blocks is not a violation
+   - MD034 — bare URLs in angle brackets
+   - MD040 — language identifiers on fenced code blocks
+   - MD047 — file ends with single newline
+   - MD055 — consistent table pipe style
+   - MD056 — equal column count across table rows
+   - MD058 — blank lines around tables
+   - MD060 — table pipe spacing
+   - all other markdownlint rules
 4. Write to target (in-place, `.fixed`, or `--target` path).
 5. Verify: re-run linter on output to confirm zero errors.
-6. Compute report path via `audit-reporting` path shape (target-kind from the target file path); write report there.
+6. Cross-check each reported finding by re-reading the cited line. Confirm the rule actually applies. Do NOT report a violation that you cannot point at on a specific line. Hallucinated findings are worse than missed findings — they erode trust in the skill.
+7. Compute report path via `audit-reporting` path shape (target-kind from the target file path); write report there.
 
 ## Report Format
 
