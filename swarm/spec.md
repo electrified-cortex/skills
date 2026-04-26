@@ -11,20 +11,20 @@ The `swarm` skill is a generic multi-personality review and analysis infrastruct
 
 ## Definitions
 
-| Term               | Meaning                                                                                                                                         |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| host               | The swarm orchestrator agent. Runs selection, dispatches personalities, receives arbitrator output, and produces the final synthesis in host voice. |
-| availability gate  | A per-personality probe that determines whether a personality's required backend or model class is reachable at dispatch time. Personalities that fail the probe are dropped, not error-stopped. |
-| arbitrator         | A dedicated sub-agent that receives raw personality outputs, identifies disagreements, consolidates findings, and returns a structured action list to the host. The arbitrator is never a personality and is never subject to selection or gating. |
+| Term | Meaning |
+| --- | --- |
+| host | The swarm orchestrator agent. Runs selection, dispatches personalities, receives arbitrator output, and produces the final synthesis in host voice. |
+| availability gate | A per-personality probe that determines whether a personality's required backend or model class is reachable at dispatch time. Personalities that fail the probe are dropped, not error-stopped. |
+| arbitrator | A dedicated sub-agent that receives raw personality outputs, identifies disagreements, consolidates findings, and returns a structured action list to the host. The arbitrator is never a personality and is never subject to selection or gating. |
 
 ## Inputs / Outputs
 
 ### Inputs
 
-| Input                                   | Required | Description                                                                                                                                                                        |
-| --------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `problem`                               | required | The artifact under review. May be a conversation excerpt, file path, diff, plan, document, or structured description.                                                             |
-| `additional_personalities`              | optional | Inclusion list of personality names or indices. Named personalities are dispatched regardless of trigger evaluation; triggers are bypassed for named entries. Not an exclusion gate. Code-domain personalities (e.g. Code Quality Critic, Architect) are supplied here by consumer skills such as `code-review`; they are not built-in. |
+| Input | Required | Description |
+| --- | --- | --- |
+| `problem` | required | The artifact under review. May be a conversation excerpt, file path, diff, plan, document, or structured description. |
+| `additional_personalities` | optional | Inclusion list of personality names or indices. Named personalities are dispatched regardless of trigger evaluation; triggers are bypassed for named entries. Not an exclusion gate. Code-domain personalities (e.g. Code Quality Critic, Architect) are supplied here by consumer skills such as `code-review`; they are not built-in. |
 | `disable_inline_personality_generation` | optional | When `true`, suppresses Custom Specialist on-the-fly generation. Swarm evaluates only registered built-ins and caller-supplied personalities. Default: `false` (generation is ON). |
 
 ### Output
@@ -144,12 +144,12 @@ DN20. Must not include code-domain personalities (Code Quality Critic, Test Revi
 
 Detail for each concern lives in the `specs/` directory. This spec references them normatively; their contents are not reproduced here.
 
-| Sub-spec                          | Covers                                                                          |
-| --------------------------------- | ------------------------------------------------------------------------------- |
-| `specs/registry-format.md`        | Index file format options, validation rules, body-file naming convention        |
-| `specs/personality-file.md`       | Body-file structure, frontmatter handling, system-prompt extraction rule        |
-| `specs/arbitrator.md`             | Arbitrator role, output structure, exclusions, confidence rating logic          |
-| `specs/dispatch-integration.md`   | How swarm uses the `electrified-cortex/dispatch` skill, model-class routing, parallelism |
+| Sub-spec | Covers |
+| --- | --- |
+| `specs/registry-format.md` | Index file format options, validation rules, body-file naming convention |
+| `specs/personality-file.md` | Body-file structure, frontmatter handling, system-prompt extraction rule |
+| `specs/arbitrator.md` | Arbitrator role, output structure, exclusions, confidence rating logic |
+| `specs/dispatch-integration.md` | How swarm uses the `electrified-cortex/dispatch` skill, model-class routing, parallelism |
 
 ## Recursive / Two-Level Use
 
