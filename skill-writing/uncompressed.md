@@ -190,5 +190,5 @@ If the companion spec has a `Footguns` section, mirror it in uncompressed.md/SKI
 
 - `spec-writing` — write the spec first (step 1 of workflow)
 - `compression` — compress uncompressed.md to SKILL.md (step 3)
-- `skill-auditing` — verify skill quality (step 4, dispatch)
+- `skill-auditing` — intermediate + final audits
 - `dispatch` — dispatch mechanics (decision tree, model tiers, prompt construction); read before writing any dispatch skill
