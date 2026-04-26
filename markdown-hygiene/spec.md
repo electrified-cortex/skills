@@ -121,6 +121,49 @@ Markdown hygiene should run:
 Do not re-audit unchanged files.
 See `../iteration-safety/SKILL.md`.
 
+## Tables
+
+### Canonical Separator Modes
+
+Two modes are acceptable. Choose one per table and never mix them within a single table.
+
+#### Mode A — minimum / default (RECOMMENDED)
+
+1-3 dashes per separator cell with pipe padding. Cell widths do not need to match header widths. This is the default; prefer it unless explicitly optimizing for human readability.
+
+```markdown
+| N | Header | Other Header |
+| - | --- | --- |
+| 1 | value | value |
+```
+
+#### Mode B — aligned (acceptable when human readability matters)
+
+Dashes match the header label width. Cells and separators are visually aligned.
+
+```markdown
+| Header | Other Header |
+| ------ | ------------ |
+| value  | value        |
+```
+
+### Prohibitions
+
+- **No unpadded pipes.** `|---|---|` violates MD060. Every separator cell must have
+  at least one space on each side of the dashes: `| --- |`.
+- **No extra whitespace in header labels.** `|  Header  |` must be `| Header |`.
+- **No inconsistent separator widths within a single table.**
+  All separator cells must follow the same mode (all Mode A or all Mode B).
+- **No mixed modes.** Do not combine Mode A separators in some columns with
+  Mode B in others.
+
+### Rationale
+
+MD055 (pipe style) and MD060 (table column style) are the primary markdownlint rules
+covering tables. Neither is auto-fixable by the CLI, so correct authorship is the only
+reliable gate. Codifying two explicit modes eliminates ambiguity about when width-matching
+is required.
+
 ## Known Gotchas
 
 - **MD060 — table separator, no auto-fix:** Table separator rows using `|---|---|`
