@@ -30,8 +30,7 @@ no `--target` was given, create `<file>.fixed` alongside.
 2. Use any tools already available to you (built-in,
    MCP) to assist — do not install or invoke external
    packages.
-3. Read the file.
-4. Fix every violation:
+3. Fix every violation:
    - Add/remove blank lines around headings and code blocks (MD022, MD031)
    - Fix heading level increments (MD001)
    - Normalize list markers and ordered list prefixes (MD004, MD029)
@@ -47,9 +46,9 @@ no `--target` was given, create `<file>.fixed` alongside.
    - No trailing punctuation in headings (MD026)
    - No inline HTML where markdown works (MD033)
    - Fix all other markdownlint rules
-5. Write to target (in-place, `.fixed`, or `--target` path).
-6. Verify: re-run linter on output to confirm zero errors.
-7. Compute report path via `audit-reporting` path shape (target-kind from the target file path); write report there.
+4. Write to target (in-place, `.fixed`, or `--target` path).
+5. Verify: re-run linter on output to confirm zero errors.
+6. Compute report path via `audit-reporting` path shape (target-kind from the target file path); write report there.
 
 ## Report Format
 
@@ -76,12 +75,46 @@ Remaining: M errors (manual fix required)
 - <rule>: <description> (line N)
 ```
 
-## Known Gotchas
+Verdict mapping for `audit-reporting` frontmatter: `CLEAN → PASS`, `FIXED → PASS_WITH_FINDINGS`, `PARTIAL → NEEDS_REVISION`.
 
-- **MD060 — no auto-fix:** Separator rows like `|---|---|` trigger MD060.
-  Canonical form: `| --- | --- |` (spaces around hyphens). markdownlint CLI
-  does not auto-fix this rule. Generated tables commonly produce the wrong form.
-  Report as PARTIAL if you cannot safely rewrite without changing meaning.
+## Iteration safety
+
+Do not re-audit unchanged files. Check git status or mtime before processing — a file already at zero errors with no recent edit should return early with `CLEAN`.
+
+## Tables
+
+Two canonical separator modes — pick one per table, never mix.
+
+### Mode A (default)
+
+1–3 dashes per cell, pipe-padded.
+Widths stay flexible.
+
+```markdown
+| N | Header | Other Header |
+| - | --- | --- |
+| 1 | value | value |
+```
+
+### Mode B (aligned)
+
+Dashes match header width.
+Use only when human readability matters.
+
+```markdown
+| Header | Other Header |
+| ------ | ------------ |
+| value  | value |
+```
+
+### Table prohibitions
+
+- No unpadded pipes: `|---|---|` violates MD060. Canonical: `| --- | --- |`.
+- No extra whitespace in header labels: `|  Header  |` must be `| Header |`.
+- No inconsistent separator widths within one table.
+- No mixed Mode A + Mode B in the same table.
+
+The unpadded-pipe case (`|---|---|`) is pattern-detectable and pattern-fixable: insert a space on each side of every dash run. Treat it as a normal violation, not a partial.
 
 ## Rules
 
