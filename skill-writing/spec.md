@@ -170,8 +170,7 @@ requires a top-level heading). Strip the title after compression to
 `instructions.txt`. This keeps the compressed runtime minimal while
 preserving markdown correctness in the authored source. When invoking
 markdown-hygiene on `SKILL.md`, pass `--ignore MD041` to suppress the
-absent-H1 finding — no inline guard text is needed. `instructions.txt`
-is plain text, not markdown — no MD041 suppression needed there.
+absent-H1 finding — no inline guard text is needed.
 
 ```markdown
 ## Dispatch Parameters
@@ -333,9 +332,11 @@ A skill passes audit if:
 ### Eval Readiness
 
 Skills are evaluated L1 (haiku-class) vs L2 (sonnet-class). Whether to
-invest in haiku-class executability depends on call frequency — the
-calculus is: token-savings-per-call × calls-per-period > optimization
-cost amortized over the skill's lifetime.
+invest in haiku-class executability depends on call frequency. The
+design rationale for the decision rule: token-savings-per-call ×
+calls-per-period > optimization cost amortized over the skill's
+lifetime. This formula is not exposed in runtime artifacts — only the
+High/Low decision rule is.
 
 **Decision rule:**
 
