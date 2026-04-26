@@ -20,8 +20,9 @@ second character is a space (staged only, working tree
 clean), fix directly.
 
 **Fallback:** If the second character is not a space
-(unstaged changes), or output shows `??` (untracked), and
-no `--target` was given, create `<file>.fixed` alongside.
+(unstaged changes), or output shows `??` (untracked), or
+output shows `MM` (staged AND additional unstaged changes),
+and no `--target` was given, create `<file>.fixed` alongside.
 
 ## Procedure
 
@@ -45,6 +46,11 @@ no `--target` was given, create `<file>.fixed` alongside.
    - Ensure consistent table pipe style (MD055)
    - No trailing punctuation in headings (MD026)
    - No inline HTML where markdown works (MD033)
+   - Heading style consistency — atx vs setext, uniform across file (MD003)
+   - Headings start at line beginning, no leading whitespace (MD023)
+   - No duplicate headings among siblings (MD024)
+   - Single H1 per document (MD025)
+   - Blank lines around lists (MD032)
    - Fix all other markdownlint rules
 4. Write to target (in-place, `.fixed`, or `--target` path).
 5. Verify: re-run linter on output to confirm zero errors.
@@ -77,7 +83,7 @@ Remaining: M errors (manual fix required)
 
 Verdict mapping for `audit-reporting` frontmatter: `CLEAN → PASS`, `FIXED → PASS_WITH_FINDINGS`, `PARTIAL → NEEDS_REVISION`.
 
-## Iteration safety
+## Iteration Safety
 
 Do not re-audit unchanged files. Check git status or mtime before processing — a file already at zero errors with no recent edit should return early with `CLEAN`.
 
@@ -126,3 +132,8 @@ The unpadded-pipe case (`|---|---|`) is pattern-detectable and pattern-fixable: 
 - One file per dispatch.
 - Use available tools and your own knowledge — do not
   install or invoke external packages.
+- **Intentional bad markdown (edge case):** If a violation appears
+  inside an inline code span (`` `...` ``) or is clearly content
+  (e.g., a tutorial demonstrating incorrect syntax marked as such),
+  preserve as-is and report PARTIAL with the line. Do not fix content
+  meant to demonstrate a violation.

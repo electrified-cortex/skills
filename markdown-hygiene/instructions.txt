@@ -7,7 +7,7 @@ Params:
 Modes:
 Source→Target: `--source X --target Y` → fix violations, write to Y. Source untouched.
 In-place (default): run `git status --porcelain -- <file>`. Empty or `M ` (staged only) → fix directly.
-Fallback: unstaged changes or `??`, no `--target` → create `<file>.fixed` alongside.
+Fallback: unstaged changes, `??` (untracked), or `MM` (staged + additional unstaged) — no `--target` → create `<file>.fixed` alongside.
 
 Procedure:
 1. Read file, scan for markdownlint violations using own knowledge.
@@ -24,6 +24,11 @@ Procedure:
    table pipe spacing (MD060); blank lines around tables (MD058); equal column count (MD056); consistent pipe style (MD055)
    no trailing punctuation in headings (MD026)
    no inline HTML where markdown works (MD033)
+   heading style consistency — atx vs setext, uniform across file (MD003)
+   headings at line beginning, no leading whitespace (MD023)
+   no duplicate headings among siblings (MD024)
+   single H1 per document (MD025)
+   blank lines around lists (MD032)
    all other markdownlint rules
 4. Write to target (in-place, `.fixed`, or `--target`).
 5. Verify: re-run linter on output, confirm zero errors.
@@ -66,3 +71,4 @@ Preserve code blocks, frontmatter, technical strings exactly.
 Fix would change meaning → report as unfixable.
 One file per dispatch.
 Use available tools + own knowledge — don't install external packages.
+Intentional bad markdown (edge case): violation inside inline code span (`...`) or clearly content (e.g. tutorial demonstrating wrong syntax marked as such) → preserve as-is, report PARTIAL with line. Don't fix content meant to demonstrate a violation.
