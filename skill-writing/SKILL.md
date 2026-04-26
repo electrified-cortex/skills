@@ -18,16 +18,15 @@ Workflow:
 New skill — follow order. Never skip steps.
 
 1. Spec first — write `spec.md` via `spec-writing`. Defines requirements, constraints, acceptance criteria.
-2. Write `uncompressed.md` from spec. Human-readable baseline.
-3. Markdown hygiene — run `markdown-hygiene` skill on `uncompressed.md`. Zero errors required before proceeding.
-4. Intermediate audit — dispatch `skill-auditing --uncompressed` on the skill. FAIL → fix → re-audit until PASS. Never compress a failing `uncompressed.md`.
-5. Compress via `compression` skill (`--source uncompressed.md --target SKILL.md`). SKILL.md = compressed runtime.
-6. Final audit via `skill-auditing` (standard mode) on `SKILL.md`. FAIL → fix source → recompress → re-audit until PASS.
+2. Write `uncompressed.md` from spec. Human-readable baseline. For dispatch skills: also write `instructions.uncompressed.md`.
+3. Markdown hygiene — run `markdown-hygiene` on every uncompressed source file (`uncompressed.md`, and `instructions.uncompressed.md` if present). Zero errors required before proceeding.
+4. Intermediate audit — `skill-auditing --uncompressed` on the skill. FAIL → fix source → re-audit. Repeat until PASS.
+5. Compress via `compression` skill (`--source uncompressed.md --target SKILL.md`; same for instructions if dispatch). SKILL.md = compressed runtime.
+6. Final audit — `skill-auditing` (default mode) on `SKILL.md`. FAIL → fix source → recompress → re-audit until PASS.
 
-Dispatch skills: also write companion instruction source file (see Dispatch Skill).
+Dispatch skills: companion instruction source file written in step 2; both compressed in step 5.
 
 Eval Readiness:
-Skills are evaluated L1 (haiku-class) vs L2 (sonnet-class). Haiku-class executability is frequency-dependent: token-savings-per-call × calls-per-period must exceed the optimization cost.
 High-frequency (many files/dispatches per session) → invest in haiku-class readiness; add specificity until haiku catches what sonnet catches; drop `eval.md` to log rounds.
 Low-frequency / one-off → sonnet-class is fine; `eval.md` not required.
 Examples: markdown-hygiene, code-review = high-frequency (haiku justified). compression = low-frequency (sonnet fine).
@@ -67,12 +66,10 @@ SKILL.md = minimal routing card. `instructions.txt` holds procedure.
 Dispatch via Dispatch agent: "Read and follow `instructions.txt`. Input: `<params>`"
 Parameters: types, required/optional, defaults. Output format specified.
 
-Dispatch-time constraints caller must know before invocation go in routing card (`uncompressed.md` / `SKILL.md`), not only `instructions.txt`. Examples: required model tier for `--fix`, required tool class, refusal conditions. `instructions.txt` may enforce defensively — secondary.
-
 Don't rely on repo-local fallback filenames — those belong in skill-specific auditors, not universal spec-auditing rules.
 
 Dispatch instruction file must be in same dir or known path.
-Compressed `instructions.txt`: only instructions — no title headers, no descriptions, no preamble. `instructions.uncompressed.md` MAY include H1 title for markdown-hygiene (MD041); strip after compression. When running markdown-hygiene on `SKILL.md`, pass `--ignore MD041` (no H1 sanctioned per R-FM-3). `instructions.txt` is plain text — no MD041 suppression needed.
+Compressed `instructions.txt`: only instructions — no title headers, no descriptions, no preamble. `instructions.uncompressed.md` MAY include H1 title for markdown-hygiene (MD041); strip after compression. When running markdown-hygiene on `SKILL.md`, pass `--ignore MD041` (no H1 sanctioned per R-FM-3).
 
 Requirements:
 
@@ -103,6 +100,7 @@ Canonical ref: `dispatch` skill.
 Related:
 
 `spec-writing` — write spec first (step 1)
-`compression` — compress `uncompressed.md` → SKILL.md (step 4)
-`skill-auditing` — verify quality (step 5, dispatch)
+`markdown-hygiene` — run on uncompressed sources (step 3)
+`skill-auditing` — intermediate (step 4) + final (step 6) audits
+`compression` — compress `uncompressed.md` → SKILL.md (step 5)
 `dispatch` — dispatch mechanics; read before writing any dispatch skill
