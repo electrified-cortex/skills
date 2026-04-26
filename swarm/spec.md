@@ -177,17 +177,17 @@ OQ3. Local-LLM discovery: the `local-llm` backend type is reserved; concrete ava
 
 ## Section Classification
 
-| Section                 | Type          | Required |
-| ----------------------- | ------------- | -------- |
-| Purpose                 | Descriptive   | Yes      |
-| Definitions             | Normative     | Yes      |
-| Inputs / Outputs        | Normative     | Yes      |
-| Behavior (B-rules)      | Normative     | Yes      |
-| Constraints (C-rules)   | Normative     | Yes      |
-| Don'ts (DN-rules)       | Normative     | Yes      |
-| Footguns                | Informational | No       |
-| Sub-Specs               | Structural    | Yes      |
-| Recursive / Two-Level   | Normative     | Yes      |
-| Precedence Rules        | Normative     | Yes      |
-| Open Questions          | Deferred      | No       |
-| Section Classification  | Structural    | Yes      |
+| Section | Type | Required |
+| --- | --- | --- |
+| Purpose | Descriptive | Yes |
+| Definitions | Normative | Yes |
+| Inputs / Outputs | Normative | Yes |
+| Behavior (B-rules) | Normative | Yes |
+| Constraints (C-rules) | Normative | Yes |
+| Don'ts (DN-rules) | Normative | Yes |
+| Footguns | Informational | No |
+| Sub-Specs | Structural | Yes |
+| Recursive / Two-Level | Normative | Yes |
+| Precedence Rules | Normative | Yes |
+| Open Questions | Deferred | No |
+| Section Classification | Structural | Yes |
