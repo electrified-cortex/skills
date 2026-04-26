@@ -9,7 +9,7 @@ Inputs: `problem` (required artifact), `additional_personalities` (inclusion lis
 
 S1. Build review packet from `problem`. Fields (omit if N/A): Goal, Approach, Key decisions, Artifacts (actual content — not references), Files affected, Blast radius, Conventions. Must be self-contained. Verify Goal evaluable + Artifacts contain real content; resolve gaps from context — don't ask caller.
 
-S2. Select personalities. Read index from `reviewers/` — ONE file. Build in-memory: name, trigger, required, suggested_models, suggested_backends, scope, vendor. Skip invalid entries; verify `reviewers/<name>.md` exists and non-empty; missing/empty → drop with warning. Append caller custom-menu entries. If `additional_personalities`: dispatch named only, triggers bypassed. Else: evaluate triggers against packet. `required: true` always included unless explicitly omitted. Devil's Advocate carries `required: true`. Selection inline.
+S2. Select personalities. Read index from `reviewers/` — ONE file. Build in-memory: name, trigger, required, suggested_models, suggested_backends, scope, vendor. Skip invalid entries; verify `reviewers/<name>.md` exists and non-empty; missing/empty → drop with warning. Append caller custom-menu entries. If `additional_personalities`: dispatch named only, triggers bypassed. Else: evaluate triggers against packet. `required: true` personalities are always dispatched regardless of `additional_personalities` content. Devil's Advocate carries `required: true`. Selection inline.
 
 S3. Availability gate. Non-`dispatch-*` backends: run probe. Pass → include. Fail → drop, note in synthesis, continue — don't fail-stop. `dispatch-*` backends: no probe needed.
 
@@ -25,7 +25,7 @@ S8. Synthesize. Host voice only — don't dump raw output. From arbitrator list 
 
 ## Behaviors
 
-B1. Empty/unresolvable `problem` → "No reviewable artifact found." No dispatch. B2. Empty swarm after gating → "Swarm empty after gating." No synthesis. B3. Single personality → proceed; note limited scope. B4. No findings or timeout → non-contributing; note in output. B5. All return no findings → "No findings from any reviewer"; Low confidence. B6. Devil's Advocate dispatched unless explicitly omitted by `additional_personalities` list. B7. Custom entries: "always" trigger = include (subject to gating). B8. Cross-vendor diversity best-effort; if unavailable, proceed + note monoculture. B9. Selection reads index only — not body files; body loaded S4 for selected only. B10. When no built-in or caller-supplied personality covers the domain and `disable_inline_personality_generation` isn't true, generate Custom Specialist inline: infer role from problem, author brief system-prompt, dispatch with same constraints. One-shot — not persisted.
+B1. Empty/unresolvable `problem` → "No reviewable artifact found." No dispatch. B2. Empty swarm after gating → "Swarm empty after gating." No synthesis. B3. Single personality → proceed; note limited scope. B4. No findings or timeout → non-contributing; note in output. B5. All return no findings → "No findings from any reviewer"; Low confidence. B6. Devil's Advocate is always dispatched. There is no exclusion path. B7. Custom entries: "always" trigger = include (subject to gating). B8. Cross-vendor diversity best-effort; if unavailable, proceed + note monoculture. B9. Selection reads index only — not body files; body loaded S4 for selected only. B10. When no built-in or caller-supplied personality covers the domain and `disable_inline_personality_generation` isn't true, generate Custom Specialist inline: infer role from problem, author brief system-prompt, dispatch with same constraints. One-shot — not persisted.
 
 ## Precedence
 
@@ -39,13 +39,13 @@ Don't load prompts before swarm finalized. Don't use fixed roster. Don't fail-st
 
 F1. Loading all prompts before selection → load post-S3 only. F2. Probe fail treated as fatal → drop, don't error. F3. Read-only phrase missing → include literal phrase every dispatch. F4. Sequential dispatch → single parallel batch. F5. Synthesis names reviewers → host voice only. F6. Host synthesizes from raw output → arbitrator list only at S8. F7. Monoculture → Devil's Advocate carries `vendor: openai`. F8. Informative table treated as normative → index file is truth. F9. Body files read at S2 → index only at S2; bodies at S4.
 
-Anti-pattern: `additional_personalities: ["Security Auditor"]` — bypasses triggers AND suppresses Devil's Advocate. Name Devil's Advocate explicitly if needed.
+Anti-pattern: `additional_personalities: ["Security Auditor"]` — bypasses triggers for the named entry only. Devil's Advocate is still dispatched along with Security Auditor (plus any other required personalities from the registry). The inclusion list does not suppress Devil's Advocate.
 
 ## Two-Level / Fractal Use
 
 - Single-level: caller → swarm → personalities → arbitrator → synthesis.
 - Two-level: swarm dispatched as sub-agent; returns rolled-up synthesis; outer host aggregates N syntheses.
 - Output contract identical in both modes.
-- Depth limit: two levels. Deeper nesting out of scope.
+- Depth: two levels supported (deeper nesting out of scope).
 
 Related: `dispatch` — agent-launching mechanics

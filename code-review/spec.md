@@ -5,8 +5,14 @@
 Define the procedure and output contract for tiered code review on a change
 set. Code review surfaces issues, risks, and improvement opportunities in
 executable/compilable code so the calling agent can act on them. This spec
-governs procedure, tier policy, inputs, outputs, and the boundary between
-reviewing and fixing.
+governs procedure, tier policy, inputs, outputs, caching, findings format,
+sign-off lifecycle, and the boundary between reviewing and fixing.
+
+Code review is a **consumer of `swarm`**. It calls into swarm with code-domain
+personalities and additional layers (caching, levels, conventional-comments
+format, permanent review files, Copilot ordering, fractal storage) that swarm
+does not provide. The multi-personality dispatch is swarm's job; code-review
+must not reinvent it.
 
 ## Scope
 
@@ -24,383 +30,328 @@ tier policy. The difference is normative.
 
 ## Definitions
 
-- **fast-cheap**: a cost-optimized model tier suitable for fast, surface-level passes (e.g. Haiku-class).
-- **standard**: a capable model tier used for thorough, authoritative passes (e.g. Sonnet-class).
-- **Calling agent**: the agent that invokes the code-reviewer skill. Owns
-  the change set, owns the decision about which findings to act on, owns
-  any subsequent edits.
-- **Change set**: the bounded set of code being reviewed. Must be
-  identifiable by file paths, refs, or other stable references.
-- **Smoke pass**: a fast, low-cost review pass intended to surface easy or
-  surface-level findings (style, naming, obvious bugs, missing error
-  handling, lint-grade defects). Run by a fast-cheap model.
-- **Substantive pass**: a deeper review pass intended to surface design,
-  correctness, security, and architectural findings. Run by a standard
-  model. Authoritative for sign-off.
-- **Finding**: a single reported issue with severity, location (file +
-  line range when applicable), description, and recommended action.
-- **Severity**: classification of a finding's importance. The vocabulary
-  is fixed: `blocker`, `major`, `minor`, `nit`.
-- **Audit**: structured review of non-code artifacts (specifications,
-  skill definitions, documentation, configuration policy). Audits are
-  governed by the spec-auditing and skill-auditing skills and use a
-  different tier policy (up to two fast-cheap iterations before standard
-  sign-off). NOT covered by this spec; named here only to fix the
-  boundary.
-- **Code review**: the activity of producing a structured report of
-  issues, risks, and improvement opportunities about a code change set
-  without modifying the code. Scoped to executable or compilable code
-  (source files, build scripts, CI configuration, infrastructure-as-code
-  manifests). Code reviews are governed by THIS spec and use the fixed
-  fast-cheap → standard two-tier procedure with no fast-cheap iteration.
-- **Audit trail**: the historical record of every finding produced by
-  every pass dispatched in a code review, preserved in the aggregated
-  result even when later passes contradict earlier findings.
-- **Sign-off**: the most recent standard pass in a code review. Its
-  aggregated findings report is the authoritative result. When only one
-  standard pass has been dispatched, that pass is the sign-off; when more
-  than one has been dispatched, the latest one is the sign-off and
-  earlier standard passes become historical context.
-- **Tier**: the model class (fast-cheap or standard) assigned to a
-  given pass at dispatch.
+- **fast-cheap** (L1): a cost-optimized model tier (haiku-class) used for L1 review passes.
+- **standard** (L2): a capable model tier (sonnet-class) used for L2 review passes.
+- **deep** (L3): a high-capability model tier (opus-class) used for L3 review passes. Rare — critical files only.
+- **swarm**: the `swarm` skill. Provides multi-personality parallel dispatch, arbitration, and synthesis. Code-review is a consumer.
+- **Calling agent**: the agent that invokes code-review. Owns the change set, owns the decision about which findings to act on, owns any subsequent edits.
+- **Change set**: the bounded set of code being reviewed. Must be identifiable by file paths, refs, or other stable references.
+- **L1 pass**: a fast-cheap review pass dispatched via `swarm`. Surfaces surface-level findings (style, naming, obvious bugs, missing error handling, lint-grade defects). Run by haiku-class model. Uses code-domain personalities.
+- **L2 pass**: a deeper review pass dispatched via `swarm`. Surfaces design, correctness, security, and architectural findings. Run by sonnet-class model. Uses code-domain personalities. Only for files flagged as L2-worthy after L1.
+- **L3 pass**: a rare, high-depth review dispatched via `swarm`. Run by opus-class model. Used only for critical files after L2 findings resolved. One-shot, stamped sign-off.
+- **Finding**: a single reported issue in conventional-comments format (see Conventional Comments Format).
+- **Severity / type**: the conventional-comments type label for a finding: `question`, `nit`, `issue`, `blocking`, `non-blocking`.
+- **Content hash**: SHA-256 of file content. The canonical cache key. For tracked+unmodified files, the git blob hash is recorded as provenance only; SHA-256 is always used as the cache key.
+- **Manifest hash**: SHA-256 computed over the sorted list of content hashes for all files in the review set. Uniquely identifies the composition of a review set.
+- **Cache hit**: a `.code-reviews/files/<hash>-L<n>.md` or `.code-reviews/manifests/<hash>.md` file already exists and contains a completed review at or above the requested level.
+- **Review file**: the permanent record for a single file review, keyed by `<hash-6>-L<n>.md`. Carries findings and their lifecycle status.
+- **Sign-off state**: the lifecycle state of a review file. Values: `OPEN` (findings outstanding), `SIGNED_OFF` (all findings resolved).
+- **Finding status**: per-finding lifecycle. Values: `OPEN`, `FIXED <commit-ref>`, `WONT_FIX <annotation>`, `WONTNEEDED`.
+- **Audit trail**: the historical record of every finding and annotation, preserved in the review file across iterations.
+- **Copilot Reviewer**: a code-domain personality supplied by code-review to swarm via `additional_personalities`. Only included when the Copilot CLI backend is available (availability-gated). Order: let Copilot run first on PRs, then code-review adds the swarm review.
 
 ## Requirements
 
-### Procedure
+### Minimum Personality Set
 
-A code review on a non-empty change set requires exactly one fast-cheap
-smoke pass followed by at least one standard substantive pass. A
-review on an empty change set requires zero passes.
+Code-review must always pass the following minimum personality set to swarm via
+`additional_personalities`:
 
-1. The calling agent must dispatch exactly one fast-cheap smoke pass
-   first, before any standard pass, for any code review where the change set
-   is non-empty.
-2. The smoke pass must produce a findings report only. It must not modify
-   any code.
-3. After the smoke pass, the calling agent decides which findings, if any,
-   to act on. Acting on findings is outside the code-reviewer skill; the
-   calling agent or another skill performs edits.
-4. After the smoke pass and any caller-driven fixes, the calling agent
-   must dispatch at least one standard substantive pass.
-5. The substantive pass must produce a findings report only. It must not
-   modify any code.
-6. The calling agent may dispatch additional standard passes after
-   the first substantive pass if findings warrant re-review of an
-   updated change set. (The smoke pass having already run, Constraint 4
-   forbids any further fast-cheap pass.)
-7. The final dispatched pass must be a standard pass. This pass is the
-   sign-off. Its report is the authoritative review result.
-8. Each pass must be dispatched as an isolated agent with no ambient
-   caller state beyond the enumerated bootstrap inputs (a Dispatch-style
-   agent or equivalent zero-context bootstrap). The complete list of
-   permitted inputs is defined under `Inputs` below. Prior-pass findings
-   are caller-produced but explicitly enumerated and therefore permitted;
-   no working-tree context, no agent memories, and no repository or
-   project context beyond the optional context pointer (Inputs item 5)
-   is permitted.
+**Absolute minimum (always included):**
+- Code Reviewer (sonnet-class) — generic code review personality. Always present
+  in `additional_personalities` for every code-review invocation. Caller-supplied.
+- Devil's Advocate is always dispatched by swarm (built-in registry, required: true
+  per swarm B6). Code-review does not add it; swarm guarantees it.
+
+**Preferred personality (best-effort, availability-gated):**
+- Copilot Reviewer (gpt-class via copilot-cli) — included in `additional_personalities`
+  when the Copilot CLI is available. Omitted silently when unavailable. Cross-model
+  diversity adds disagreement signal; absence is acceptable.
+
+**Conditional additions (per problem):**
+- Language presets appended by detected file extension (PowerShell-reviewer,
+  Bash-reviewer, TypeScript-reviewer).
+- Domain personalities (Security, Architect, etc.) when triggers match.
+
+### Swarm Consumer Contract
+
+Code-review calls the `swarm` skill for each review pass. The swarm call
+must supply:
+
+1. `problem`: the file or change set under review. Form: inline diff, absolute
+   file paths, or git ref/range the dispatched agent can resolve.
+2. `additional_personalities`: assembled per the Minimum Personality Set above.
+   Always includes Code Reviewer (sonnet-class). Includes Copilot Reviewer only
+   when the Copilot CLI availability probe passes. Language-specific presets
+   appended based on detected extensions. Core supplemental set: Code Quality
+   Critic, Test Reviewer, Architect, Operational Readiness, Performance Reviewer.
+   Code-review owns these personalities and supplies them; they are not built
+   into swarm's registry (per swarm DN20).
+3. `disable_inline_personality_generation`: optional. Default `false` (swarm's
+   inline Custom Specialist generation is on). Code-review may set `true` when
+   the personality set is fully determined by language presets and swarm
+   custom generation is not desired.
+
+Swarm returns a host-voice synthesis per pass. Code-review translates the
+synthesis into the conventional-comments findings format before persisting to
+the review file.
+
+### Hash-Based Caching
+
+Before dispatching any review, code-review must fingerprint the input:
+
+1. Compute a content hash for every file in the review set:
+   - If the file is tracked by git and unmodified: record the git blob hash
+     (`git ls-files -s` or `git hash-object`) as provenance. Still compute and
+     use SHA-256 as the cache key.
+   - If the file is untracked or modified: compute SHA-256.
+   - Hash source is metadata only. The cache key is always SHA-256.
+2. Build a manifest: `{ file_path, content_hash (SHA-256), hash_source (git-blob|sha256) }` per file.
+3. Compute the manifest hash: SHA-256 over the sorted list of content hashes.
+4. Cache lookup: check `.code-reviews/files/<hash-6>-L<n>.md` for each file
+   and each requested level. Check `.code-reviews/manifests/<manifest-hash>.md`
+   for composite reviews.
+5. On cache hit: reuse the existing review. Do not dispatch swarm for that file or set.
+6. On cache miss: dispatch swarm, produce a new review file, write to cache.
+
+A changed file (hash changed) is a cache miss at all levels. Only re-review
+the changed file; unchanged siblings reuse cache.
+
+### Levels
+
+Code-review runs in graduated levels. Level N must be fully resolved before
+promoting to Level N+1.
+
+| Level | Model class | Scope | Promotion gate |
+|---|---|---|---|
+| L1 | haiku-class | per-file (fast, distributed) + folder integration at L1 | All L1 findings `FIXED`, `WONT_FIX`, or `WONTNEEDED` |
+| L2 | sonnet-class | per-file (only files flagged L2-worthy after L1) + integration review | All L2 findings resolved |
+| L3 | opus-class | per-file (only critical files) — one-shot, stamped | Sign-off; no further levels |
+
+Level promotion decisions:
+
+- After L1: select files for L2 by heuristic (e.g., touched auth path, high
+  L1 finding density) or operator flag.
+- After L2: select files for L3 similarly. L3 is rare.
+- Most files stop at L1. Some go to L2. Very few reach L3.
+
+Swarm tier mapping: L1 → haiku-class personalities; L2 → sonnet-class; L3 → opus-class.
+
+### Conventional Comments Format
+
+Findings must use the conventional-comments format. Each finding is:
+
+- `question` — needs clarification; not necessarily wrong.
+- `nit` — minor preference; non-blocking.
+- `issue` — substantive concern; should be addressed.
+- `blocking` — must be fixed before merge / sign-off.
+- `non-blocking` — fix when possible; won't gate.
+
+Each finding must carry targeting metadata: file path + line or range + evidence snippet.
+
+Output shape per finding:
+
+```
+type: <question|nit|issue|blocking|non-blocking>
+file: <path>:<line-or-range>
+title: <short summary>
+body: <evidence + reasoning + suggested fix>
+status: OPEN
+```
+
+### Permanent Review Files and Sign-Off Lifecycle
+
+Reviews are permanent records. Review files persist in `.code-reviews/` and
+are updated, never discarded.
+
+Each review file contains:
+
+1. Review metadata: reviewer identity (model class + personalities used), level
+   applied, file-version hash (SHA-256, 6-char prefix used in filename).
+2. Findings list in conventional-comments format, each with current status.
+3. Sign-off state: `OPEN` (findings outstanding) or `SIGNED_OFF` (all findings resolved).
+4. Host-agent annotations: explanations of why a finding was deferred, accepted,
+   or marked `WONT_FIX`.
+
+Finding status lifecycle:
+
+- `OPEN` → `FIXED <commit-ref>` when addressed in a commit.
+- `OPEN` → `WONT_FIX <annotation>` when deliberately deferred with rationale.
+- `OPEN` or `FIXED` → `WONTNEEDED` when no longer applicable (e.g., code removed).
+
+When all findings in a review file are non-`OPEN`, the review file's sign-off
+state transitions to `SIGNED_OFF`. If the file's content hash changes, the
+review re-opens and a new review file is created for the new hash.
+
+### Fractal Review Tree (Storage)
+
+Reviews are stored in a fractal tree under `.code-reviews/`:
+
+```
+.code-reviews/
+├── files/<hash-6>-L<n>.md          # leaf — review of one file at one level
+├── groups/<hash>.md                # composite — review of N files as a group
+├── folders/<hash>.md               # composite — review of a folder/feature
+├── manifests/<manifest-hash>.md    # manifest-level composite (hash-of-hashes)
+├── repo/<repo-hash>.md             # top — review of the whole repo at a point in time
+└── log.md                          # chronological index: hash, scope, date, verdict, sign-off state
+```
+
+Composite-level review hash = SHA-256 of the sorted child content hashes. Same
+children → same hash → cache hit. Adding or changing a child changes the
+composite hash and invalidates the composite review only; child reviews
+with cache hits are reused.
+
+### Copilot Ordering
+
+On PRs: let Copilot run first. Code-review adds the swarm review on top.
+Code-review does not compete with Copilot; it augments.
+
+The Copilot Reviewer personality is included in `additional_personalities`
+only when the Copilot CLI backend passes its availability gate. If unavailable,
+it is silently excluded. This is swarm's availability-gate drop pattern.
+
+### Language-Specific Personality Presets
+
+Code-review detects languages from file extensions in the review set and appends
+matching personalities to `additional_personalities`:
+
+- `.ps1`, `.psm1`, `.psd1` → PowerShell-reviewer
+- `.sh`, `.bash` → Bash-reviewer
+- `.ts`, `.tsx` → TypeScript-reviewer
+
+Additional presets may be added by extending the personality library without
+modifying this spec.
 
 ### Inputs
 
-Each dispatched pass must receive at minimum:
+Each review invocation must receive:
 
-1. The change set, in one of these explicit forms:
-   - inline diff text (a unified diff embedded directly in the dispatch
-     payload), or
-   - a list of absolute file paths the dispatched agent can read with
-     general-purpose file-read tooling, or
-   - a git ref or ref range the dispatched agent can resolve with `git`
-     and shell tooling (the dispatched agent must have working-directory
-     access to the relevant repository for refs to be a valid form).
-   No other change-set form is permitted at bootstrap. The calling agent
-   must select a form the dispatched agent's tooling supports; if the
-   dispatched agent lacks shell access, refs are not a valid form and the
-   caller must materialize the diff inline or as file paths.
-2. The tier identifier so the agent knows which pass it is performing
-   (smoke or substantive). The tier governs the depth and breadth the
-   agent applies.
+1. The change set: inline diff text, list of absolute file paths, or git ref/range.
+2. The level to run (L1, L2, L3).
 
-A substantive pass must additionally receive:
-
-3. The findings from every prior pass on the same change set (the smoke
-   pass and any earlier substantive passes). The substantive pass must
-   verify resolution of each prior finding and must not re-surface what
-   has already been addressed. A smoke pass must not receive prior
-   findings; smoke passes are always first and have nothing to receive.
-
-Each dispatched pass may optionally receive:
-
-4. Focus areas (for example: security, performance, concurrency, public
-   API surface, test coverage). Focus-area depth-floor behavior is
-   defined normatively in Constraints item 11.
-5. A repository or project context pointer (CLAUDE.md, README, style
-   guide) the agent may read for local conventions.
-
-The items above are the complete enumeration of permitted bootstrap
-inputs referenced by Procedure item 8 and Constraints item 7. Nothing
-else may be passed in at bootstrap.
+Optional:
+3. Focus areas (e.g., `security,concurrency`). Reorder priority; do not reduce depth.
+4. A context pointer (CLAUDE.md, README, style guide) for local conventions.
+5. `disable_inline_personality_generation` flag (default `false`).
 
 ### Outputs
 
-Every pass must return a findings report containing:
+Per-pass output (before filing):
 
-1. A list of findings, each with: severity (from the fixed vocabulary),
-   location (file plus line range when applicable, or "general" if
-   not file-bound), description, recommended action.
-2. A pass verdict: one of `clean`, `findings`, or `error`. `clean`
-   means no findings were produced. `findings` means at least one
-   finding was produced. `error` means the pass failed to complete; an
-   `error` pass entry must conform to the failed-pass entry shape
-   defined normatively in Error Handling and must NOT contain a
-   findings list.
-3. The tier of the pass (smoke or substantive).
-4. The pass index within the review (smoke is always index 0; first
-   standard is index 1; subsequent standard passes increment).
+- Swarm synthesis translated to conventional-comments findings list.
+- Review file written to `.code-reviews/files/<hash-6>-L<n>.md`.
+- `log.md` entry appended.
 
-The aggregated review result returned to the calling agent must contain
-exactly these fields:
+Aggregated output returned to calling agent:
 
-1. `passes`: the report from every pass dispatched, in dispatch order.
-   Each entry is the per-pass report defined above.
-2. `sign_off_pass_index`: the index of the authoritative sign-off pass
-   (the most recent successful standard pass). When the change set is
-   empty and no passes were dispatched, this field must be `null`. When
-   only failed passes exist (no successful standard pass yet), this field
-   must also be `null` and the aggregated result is not a valid
-   sign-off — the calling agent must continue dispatching until a
-   successful standard pass produces a valid index.
-3. `severity_aggregate`: a count of findings by severity across the
-   sign-off pass only (not summed across all passes), with a key for
-   each severity value in the fixed vocabulary (`blocker`, `major`,
-   `minor`, `nit`). When a value has no findings, its count is zero.
-4. `verdict`: the overall review verdict. When `sign_off_pass_index` is
-   non-null, this is the sign-off pass's verdict (`clean` or
-   `findings`), propagated. When `sign_off_pass_index` is `null` because
-   the change set was empty, `verdict` must be `clean`. When
-   `sign_off_pass_index` is `null` because all dispatched passes have
-   failed and no successful standard pass exists yet, `verdict` must be
-   `error`. The aggregated `verdict` vocabulary is therefore `clean`,
-   `findings`, or `error`.
-5. `preserved_contradictions`: the list of smoke-pass findings the
-   sign-off pass contradicted, each paired with the contradicting
-   commentary from the substantive pass that produced the contradiction.
-   Empty list when no contradictions occurred.
+1. `files_reviewed`: list of `{ file_path, hash, level, verdict, cache_hit }`.
+2. `manifest_hash`: the manifest hash for this review set.
+3. `findings_by_file`: map of file hash → findings list in conventional-comments format.
+4. `sign_off_states`: map of file hash → sign-off state per level.
+5. `overall_verdict`: `clean`, `findings`, or `error`.
 
-When the change set is empty and no passes are dispatched, the
-aggregated result must be exactly: `passes` empty, `sign_off_pass_index`
-`null`, `severity_aggregate` zero in every bucket, `verdict` `clean`,
-`preserved_contradictions` empty.
+### Calling Agent Obligations
 
-When all dispatched passes have failed and no successful standard pass
-exists, the aggregated result must be: `passes` containing the failed
-entries (per Error Handling), `sign_off_pass_index` `null`,
-`severity_aggregate` zero in every bucket, `verdict` `error`,
-`preserved_contradictions` empty. This is not a valid sign-off; the
-calling agent must continue dispatching until a successful standard pass
-produces a valid index.
-
-When the substantive (sign-off) pass contradicts a smoke-pass finding,
-both the original finding and the contradicting commentary must appear
-in the aggregated result: the original finding stays in its `passes`
-entry, and the (finding, commentary) pair must additionally appear in
-`preserved_contradictions` so callers can see the dispute trail without
-walking the full pass list.
-
-### Severity vocabulary
-
-The severity values are fixed. Dispatched agents must use only these
-values. The vocabulary is:
-
-- `blocker`: must be addressed before the change set advances. Examples:
-  data loss risk, security hole, broken build, broken contract.
-- `major`: should be addressed before the change set advances unless the
-  calling agent explicitly defers. Examples: significant correctness risk,
-  missing error handling on an externally observable failure, regression
-  risk in unrelated code.
-- `minor`: improvement worth making but not blocking. Examples: clarity,
-  small refactor opportunity, redundant code.
-- `nit`: stylistic preference, naming polish, comment wording. Never
-  blocking.
-
-### Calling agent obligations
-
-1. The calling agent must not treat a smoke-pass-only review as
-   authoritative. Acting on a change set after only the smoke pass and
-   skipping the substantive pass is prohibited.
-2. The calling agent must not modify the change set during a pass. Edits
-   may only happen between passes.
-3. The calling agent must record the sign-off report (or a reference to
-   it) so downstream consumers can verify a review occurred and see what
-   was found.
-4. The calling agent may dispatch further substantive passes at its
-   discretion after the first sign-off. This spec imposes no maximum
-   pass count and no normative convergence criterion; the caller decides
-   when to stop.
-5. When forwarding prior-pass findings into a substantive pass (per
-   Inputs item 3), the calling agent must forward them unmodified,
-   exactly as the prior pass returned them. No annotations, metadata,
-   tags, dispute flags, or reordering may be added.
+1. Do not promote to the next level until all findings at the current level are resolved.
+2. Do not modify the change set during a pass. Edits happen between passes.
+3. Record or reference the review output so downstream consumers can verify the review occurred.
+4. When annotating a finding `WONT_FIX`, supply an explanation. Unannotated `WONT_FIX` is prohibited.
+5. Do not bypass the cache. Cache hits are valid reuse; forcing a re-review on an unchanged file wastes tokens.
 
 ## Constraints
 
-1. The smoke pass tier is fast-cheap. The substantive pass tier is
-   standard. Tier substitution is prohibited: the smoke pass must
-   not be standard, and the substantive pass must not be fast-cheap.
-2. Dispatched review agents must not commit, push, edit, stage, or
-   otherwise mutate the working tree or the repository state. They are
-   read-only.
-3. Dispatched review agents must not fix findings, even when the fix is
-   obvious. Reporting and fixing are separate concerns owned by separate
-   actors.
-4. The fast-cheap smoke pass runs at most once per code review. Repeated fast-cheap
-   passes within a single review are prohibited. (This contrasts with
-   audit procedures, which permit up to two fast-cheap iterations before
-   escalating to standard. The audit pattern lives in the spec-auditing and
-   skill-auditing skills and is intentionally different.)
-5. standard iteration after the first substantive pass is permitted and
-   expected when findings warrant re-review of an updated change set.
-   The final standard pass is always the sign-off.
-6. A code review with an empty change set must return a sign-off report
-   with an empty findings list and no passes dispatched.
-7. Dispatched agents must operate with zero caller context. The
-   permitted bootstrap inputs are enumerated under `Inputs` and that
-   enumeration is exhaustive. No caller working-tree state, no agent
-   memories, and no repository or project context beyond the optional
-   context pointer (Inputs item 5).
-8. The substantive pass must automatically re-examine every finding
-   produced by every prior pass on the same change set. This is enforced
-   by Inputs item 3 (the substantive pass receives prior findings as
-   bootstrap input).
-9. Caller disputes about smoke-pass findings must not be communicated to
-   the substantive pass. The substantive pass forms its own judgment
-   independently from the change set and the prior findings; injecting
-   the caller's view would compromise that independence.
-10. A pass's tier is fixed at dispatch and must not change during the
-    pass. (Reinforces Constraint 1's tier-substitution prohibition for
-    the per-pass duration.)
-11. Focus areas (Inputs item 4) reorder the dispatched agent's search
-    priority but must not reduce review depth on non-focus areas. The
-    dispatched agent must still surface every `blocker` and `major`
-    finding that exists outside the focus areas. `minor` and `nit`
-    findings outside the focus may be deprioritized.
+1. Code-review must call `swarm` for all personality dispatch. Code-review must not dispatch personalities directly or reinvent the multi-personality dispatch primitive.
+2. The model-class tier for each level is fixed: L1 = haiku-class, L2 = sonnet-class, L3 = opus-class. Tier substitution is prohibited.
+3. Review agents dispatched via swarm are read-only. They must not commit, push, edit, stage, or mutate any working tree or repository state.
+4. Review agents must not fix findings. Reporting and fixing are separate concerns.
+5. L3 is dispatched at most once per file per content hash. L3 is the final level; no further levels exist.
+6. The smoke → substantive two-pass internal swarm dispatch is swarm's internal concern. Code-review does not manage swarm's internal pass structure.
+7. Language-specific presets are selected by detected extension only. Manual override by the calling agent is permitted via `additional_personalities` augmentation.
+8. Content hash (SHA-256) is the canonical cache key. Git blob hash is provenance metadata only. Cache keys must not mix hash algorithms.
+9. Composite-level hashes are computed as SHA-256 of sorted child SHA-256 hashes. Sort is by file path lexicographically.
+10. Findings without evidence citations are prohibited. Every finding must cite a snippet, line reference, or direct quote (inherited from swarm's C4).
+11. No bare model names in any skill artifact. Use model class terms (haiku-class, sonnet-class, opus-class).
+12. Cross-file path references to sibling skill internals are prohibited (R-FM-11). Refer to `swarm` by skill name only; never reference `swarm/spec.md`, `swarm/uncompressed.md`, or any internal swarm file path.
 
 ## Behavior
 
-### Empty change set
+### Empty Change Set
 
-When the change set is empty (no files, no diff content, no refs
-resolving to changes), see Requirements > Outputs for the exact
-aggregated result shape. No tier policy applies; no pass is dispatched.
+When the change set is empty, return an empty aggregated result with `overall_verdict: clean` and no swarm invocations.
 
-### Single-file or trivially small change
+### Single File
 
-The two-pass requirement holds regardless of change-set size. A
-one-line change still receives a fast-cheap smoke pass and a standard
-substantive pass. Cost is bounded by the change-set size, so trivial
-changes are cheap; the policy does not change.
+The level-tiered procedure applies regardless of change-set size. A single changed line still goes through L1. Cost is bounded by content; the policy does not change.
 
-### Disagreement and disputes between passes
+### Cache Hit on All Files
 
-The normative rules governing re-examination and dispute handling live
-in Constraints items 8 and 9. This section describes the two outcomes
-the substantive pass may reach when re-examining a smoke-pass finding:
+When all files in the review set have cache hits at the requested level, return the cached results immediately without invoking swarm.
 
-1. The substantive pass agrees with the smoke-pass finding. The finding
-   carries through into the aggregated report with severity as judged by
-   the substantive pass (which may upgrade or downgrade the smoke pass's
-   severity).
-2. The substantive pass contradicts the smoke-pass finding (marks it a
-   false positive, or judges the issue out of scope). The substantive
-   pass governs. The smoke-pass finding is preserved in the aggregated
-   report with the substantive pass's contradicting commentary attached,
-   so the audit trail remains complete.
+### Partial Cache Hit
 
-If the calling agent disputes a smoke-pass finding between passes
-without acting on it, the substantive pass will independently reach
-case 1 or case 2 on its own judgment, since Constraints item 9
-prohibits passing the caller's dispute to the substantive pass.
+Re-review only cache-miss files. Reuse cache-hit file reviews. Recompute the manifest hash and composite reviews only if any child changed.
+
+### Level Promotion Decision
+
+After L1 resolves, the calling agent decides which files warrant L2. Decision criteria may include: touching sensitive paths, high L1 finding density, or operator flags. Files not promoted stop at L1 — this is the expected and efficient outcome.
+
+### Copilot Integration
+
+On PR workflows: invoke code-review after Copilot has run. Code-review's swarm result includes a Copilot Reviewer personality (when available) alongside code-domain personalities, giving a multi-perspective view on top of Copilot's output.
 
 ## Defaults and Assumptions
 
-- Smoke pass tier defaults to fast-cheap. No override permitted.
-- Substantive pass tier defaults to standard. No override permitted.
-- Focus areas: default none (full review). Behavior constraints defined
-  under Requirements > Inputs item 4.
-- See Calling agent obligations item 4 — no maximum pass count, no
-  normative convergence criterion.
-- Severity vocabulary defaults to the fixed four-value set defined under
-  Definitions. No project-local extension permitted.
+- Default level: L1.
+- `disable_inline_personality_generation`: `false` (swarm's inline Custom Specialist is on).
+- Personality set: core code-domain set + language-specific presets for detected extensions + Copilot Reviewer if available.
+- Focus areas: none (full review). Focus reorders priority; does not suppress depth.
+- Cache expiry: none (reviews are permanent). Cache entries are invalidated only by content hash change.
+- Manifest sort: by file path lexicographically.
+- Cache storage scope: per-repo `.code-reviews/`.
 
 ## Iteration Safety
 
-Do not re-audit unchanged files.
+Do not re-review unchanged files. Cache lookup is the gate; a content-hash match is a valid skip.
 See `../iteration-safety/SKILL.md`.
 
 ## Error Handling
 
-- If the change set cannot be resolved (file path missing, ref
-  unreachable, PR not found), the dispatched agent must return a
-  pass-level error, not a finding. The skill must propagate the error to
-  the calling agent without producing a sign-off.
-- If a dispatched pass times out or returns malformed output, the
-  calling agent must re-dispatch that pass. A failed pass does not count
-  against the smoke-pass-runs-once rule.
-- A failed pass must be recorded in the `passes` list as an error entry
-  containing: `tier` (smoke or substantive), `pass_index` (the
-  dispatch index it was assigned), `verdict` set to `error`, and a
-  `failure_reason` field describing the failure (timeout, malformed
-  output, or other). The error entry must NOT contain a findings list.
-  The re-dispatched replacement pass appends as a new entry at the next
-  index. The `sign_off_pass_index` always points to the most recent
-  successful standard pass and never to an error entry.
-- If the smoke pass produces a finding the calling agent disputes, the
-  caller may proceed to the substantive pass without acting on the
-  disputed finding. The substantive pass will re-examine it
-  independently per `Behavior > Disagreement and disputes between
-  passes` and will govern the final disposition.
+- Change set cannot be resolved → return `overall_verdict: error` with reason. No swarm invocations.
+- Swarm returns error for a file → record error in review file; do not produce findings for that file. Retry is caller's discretion.
+- Hash computation fails → treat as cache miss; proceed with review.
+- `.code-reviews/` directory missing → create it before writing.
+- Copilot availability probe fails → drop Copilot Reviewer from `additional_personalities` for this invocation; proceed without it.
 
 ## Precedence Rules
 
-- Substantive pass findings govern over smoke pass findings on
-  contradiction.
-- The most recent standard pass governs over earlier standard passes for
-  sign-off purposes.
-- Severity vocabulary defined in this spec governs over any
-  project-local severity convention.
-- This spec governs over any inline preference expressed by a calling
-  agent. The skill enforces the procedure; the caller cannot override
-  the tier policy or the two-pass minimum.
+- Swarm governs multi-personality dispatch. Code-review must not override or replicate swarm dispatch logic.
+- L3 governs over L2 findings; L2 governs over L1 findings when they conflict on the same point.
+- Content hash (SHA-256) governs over git blob hash for cache identity.
+- This spec governs over any inline preference expressed by a calling agent. The caller cannot override the tier policy, the cache architecture, or the findings format.
 
 ## Don'ts
 
-- Don't run only fast-cheap and treat the result as a complete review.
-- Don't run only standard and skip the smoke pass on routine reviews. The
-  smoke pass exists to absorb cheap findings before the expensive pass.
-  (Exception: an empty change set, per Behavior.)
-- Don't let dispatched agents fix code (see Constraints item 3).
-- Don't let dispatched agents commit, push, stage, or otherwise mutate
-  repository state.
-- Don't introduce a third tier (for example, a standard smoke pass
-  followed by an opus-class substantive pass). The two-tier model is
-  fixed by this spec.
-- Don't conflate the code review pattern with the audit pattern. Audits
-  permit fast-cheap iteration; code reviews do not. The two patterns are
-  intentionally different and live in different skills.
-- Don't dispatch review agents with caller context. Zero-context
-  isolation is a normative requirement, not an optimization.
-- Don't introduce additional severity values or rename the existing four.
+- Don't dispatch personalities directly — that's swarm's job.
+- Don't reinvent multi-personality dispatch or aggregation logic.
+- Don't promote to L2 until all L1 findings are resolved.
+- Don't use git blob hash as the primary cache key.
+- Don't let review agents fix code — reporting and fixing are separate.
+- Don't let review agents commit, push, stage, or mutate any state.
+- Don't produce findings without evidence citations.
+- Don't use bare model names — use haiku-class, sonnet-class, opus-class.
+- Don't reference swarm internal files (spec.md, uncompressed.md) — refer by skill name only (R-FM-11).
+- Don't expire or delete cache entries when content is unchanged — cache entries are permanent until the hash changes.
+- Don't run swarm when all files have cache hits at the requested level.
+- Don't include Copilot Reviewer when Copilot CLI is unavailable; let swarm's availability gate drop it.
+- Don't conflate code-review levels with swarm's internal pass structure (smoke/substantive). They are orthogonal.
 
 ## Relationship to Other Skills
 
-- **spec-writing**: defines the meta-rules this specification document
-  follows (normative language, structure, auditing).
-- **skill-writing**: governs the structure of the SKILL.md, uncompressed,
-  and dispatch instruction file derived from this spec.
-- **spec-auditing**: verifies this spec meets quality bar before the
-  derived skill is written. Uses the audit pattern (up to two fast-cheap
-  iterations, then standard final), which is deliberately different from
-  the code review pattern this spec defines.
-- **skill-auditing**: verifies the derived SKILL.md and dispatch
-  instruction file match this spec. Uses the same audit pattern as
-  spec-auditing.
-- **dispatch agent** (`dispatch.agent.md`): provides the zero-context
-  bootstrap that review passes require.
+- **swarm**: the dispatch infrastructure code-review delegates all personality dispatch to. Consumer relationship; code-review calls swarm.
+- **spec-writing**: defines the meta-rules this spec follows.
+- **skill-writing**: governs the structure of SKILL.md, uncompressed, and dispatch instruction file.
+- **spec-auditing**: verifies this spec before the derived skill is written.
+- **skill-auditing**: verifies SKILL.md and dispatch instruction file match this spec.
+- **dispatch**: provides the zero-context bootstrap that swarm uses for each personality. Code-review does not call dispatch directly; swarm does.
+- **iteration-safety**: governs the cache-hit skip behavior.
