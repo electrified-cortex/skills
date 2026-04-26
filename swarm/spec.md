@@ -60,6 +60,8 @@ B9. Selection reads only the personality registry index file — not body files.
 
 B10. When no built-in or caller-supplied personality covers the problem domain, and `disable_inline_personality_generation` is not `true`, swarm generates a Custom Specialist inline: (1) infers the appropriate role from the problem, (2) authors a brief system-prompt body for that role, (3) dispatches it with the same read-only and evidence-citation constraints as any registered personality. The generated personality is one-shot — not persisted to the registry.
 
+B11. Devil's Advocate model-class preference: for problems classified as "conceptual" (big overarching ideas, design decisions, architecture choices, plans), prefer running Devil's Advocate on `gpt-class` (via `copilot-cli` backend) when available. Falls back to the host's Anthropic model class if `gpt-class` is unavailable. For code/file-level problems, default model class applies. This rule is best-effort and availability-gated — it is not a hard requirement.
+
 ## Constraints (C-rules)
 
 C1. All dispatched sub-agents operate in read-only mode. Sub-agents must not edit files, run side-effecting commands, commit, or call any mutating tool. This constraint must be stated explicitly in every personality's dispatch prompt.
@@ -90,33 +92,31 @@ DN5. Must not merge with or replace the `code-review` skill.
 
 DN6. Must not dispatch personalities sequentially when parallel dispatch is available.
 
-DN7. Must not include bare model names anywhere; use model class terminology only.
+DN7. Must not perform CLI-as-dispatch until task 10-0845 lands and is referenced here.
 
-DN8. Must not perform CLI-as-dispatch until task 10-0845 lands and is referenced here.
+DN8. Must not allow custom menu entries to override or replace built-in registry entries; custom is additive only.
 
-DN9. Must not allow custom menu entries to override or replace built-in registry entries; custom is additive only.
+DN9. Must not treat `additional_personalities` as an exclusion list; it is an inclusion constraint. Omitting Devil's Advocate from `additional_personalities` does not exclude it — Devil's Advocate is always dispatched (see B6).
 
-DN10. Must not treat `additional_personalities` as an exclusion list; it is an inclusion constraint. Omitting Devil's Advocate from `additional_personalities` does not exclude it — Devil's Advocate is always dispatched (see B6).
+DN10. Must not have the host parse raw member output; that is the arbitrator's job.
 
-DN11. Must not have the host parse raw member output; that is the arbitrator's job.
+DN11. Must not add the arbitrator to the personality registry or subject it to selection, gating, or filtering.
 
-DN12. Must not add the arbitrator to the personality registry or subject it to selection, gating, or filtering.
+DN12. Must not implement `local-llm` backend routing in v1; the type is reserved only.
 
-DN13. Must not implement `local-llm` backend routing in v1; the type is reserved only.
+DN13. Must not embed a normative personality registry as a static table in this spec or in SKILL.md; the registry lives in `reviewers/index.md`.
 
-DN14. Must not embed a normative personality registry as a static table in this spec or in SKILL.md; the registry lives in `reviewers/index.md`.
+DN14. Must not fail the swarm if cross-vendor diversity cannot be achieved; diversity is best-effort.
 
-DN15. Must not fail the swarm if cross-vendor diversity cannot be achieved; diversity is best-effort.
+DN15. Must not dispatch a personality whose body file is missing or empty; drop with a warning.
 
-DN16. Must not dispatch a personality whose body file is missing or empty; drop with a warning.
+DN16. Must not read body files during selection; this defeats the lazy-load architecture.
 
-DN17. Must not read body files during selection; this defeats the lazy-load architecture.
+DN17. Must not add swarm scaffolding or exposition to a personality body file.
 
-DN18. Must not add swarm scaffolding or exposition to a personality body file.
+DN18. Must not expand the personality registry without a spec amendment and audit pass.
 
-DN19. Must not expand the personality registry without a spec amendment and audit pass.
-
-DN20. Must not include code-domain personalities (Code Quality Critic, Test Reviewer, Architect, Operational Readiness, Performance Reviewer, Copilot Reviewer) in the built-in registry. These are caller-supplied via `additional_personalities` by consumer skills such as `code-review`.
+DN19. Must not include code-domain personalities (Code Quality Critic, Test Reviewer, Architect, Operational Readiness, Performance Reviewer, Copilot Reviewer) in the built-in registry. These are caller-supplied via `additional_personalities` by consumer skills such as `code-review`.
 
 ## Footguns
 
@@ -132,13 +132,13 @@ DN20. Must not include code-domain personalities (Code Quality Critic, Test Revi
 
 **F6: Host bypasses arbitrator** — host synthesizes from raw member output, defeating arbitrator consolidation. Synthesis must receive only the arbitrator's structured action list.
 
-**F7: Monoculture swarm** — all personalities resolve to the same model family as the host. Devil's Advocate should carry a non-Anthropic vendor preference (see B8 and `specs/arbitrator.md`).
+**F7: Monoculture swarm** — all personalities resolve to the same model family as the host. Devil's Advocate should carry a non-Anthropic vendor preference (see B8, B11, and `specs/arbitrator.md`).
 
 **F8: Informative registry table treated as normative** — personality list derived from a table in the spec instead of reading the index at runtime. `reviewers/index.md` is the only source of truth.
 
 **F9: Reading body files at selection time** — loads all system prompts into context before selection, defeating lazy load. Read the index only at selection; load body files at dispatch time.
 
-**Anti-pattern:** `additional_personalities: ["Security Auditor"]` — caller expects trigger-conditional dispatch. The inclusion list bypasses triggers unconditionally. Devil's Advocate is always dispatched regardless (see B6/DN10); omitting it from this list has no effect.
+**Anti-pattern:** `additional_personalities: ["Security Auditor"]` — falsely assumes the inclusion list can suppress unwanted personalities or that omitting Devil's Advocate from this list excludes it. The inclusion list bypasses triggers unconditionally but does not exclude. Devil's Advocate is always dispatched regardless (see B6/DN10); omitting it from this list has no effect.
 
 ## Sub-Specs
 

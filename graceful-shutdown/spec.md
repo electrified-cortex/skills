@@ -19,6 +19,7 @@ Applies to all agent sessions managed by the Telegram MCP bridge. Covers the ord
 - *Session token* — the numeric token issued by `session/start` and stored in the agent's memory file. *Wipe* — overwrite the stored token value with an empty string so the agent loop does not attempt session/start on next startup.
 - *workspace-root* — the top-level directory containing the `.agents/` folder; resolved at runtime as the parent of the `.agents/` directory visible to the agent.
 - *Pipeline stages* — the ordered directory stages used by the task engine: `40-queued` (pending), `50-active` (claimed, in progress), `60-review` (ready for review), `70-done` (completed). Open tasks are those in any stage other than `70-done`.
+- *tmcp-root* — the Telegram MCP server repository directory, resolved at runtime as `<workspace-root>/Telegram MCP`.
 
 ## Roles
 
@@ -31,7 +32,7 @@ Applies to all agent sessions managed by the Telegram MCP bridge. Covers the ord
 - Curator session is active.
 - Overseer session is active.
 - At least one Worker session is active.
-- If no Workers are active at shutdown time, Steps 3–5 are no-ops; Overseer proceeds directly from Step 2 to Step 6 coordination.
+- If no Workers are active at shutdown time, Steps 3–5 are no-ops; Overseer calls `session/close` immediately after Step 2 and Curator proceeds from Step 6.
 - Curator has write access to `<workspace-root>/.agents/agents/curator/memory/`.
 
 ## Procedure (Normative)
@@ -56,7 +57,11 @@ Each Worker MUST reach a clean point (commit staged changes; seal if all accepta
 
 Each Worker's confirmation is a DM containing "CLOSED: session/close complete". Overseer MUST wait until it has received a confirmation DM from every Worker it signaled. If confirmation is not received within 300 s (see Step 3 for timer start condition), Overseer MUST notify Curator and proceed with `action(type: "session/close")` anyway. The timeout notification to Curator MUST include: list of Worker SIDs that did not confirm, the elapsed time, and the message "Proceeding with session/close despite missing confirmations." Once all Workers have confirmed (or the 300 s timeout elapses), Overseer calls `action(type: "session/close")`. No `force` needed (Curator still open).
 
-### Step 6 — Curator writes handoff document
+### Step 6 — Generate compaction metrics report (Curator)
+
+After all Workers and Overseer have closed, Curator runs `node "<tmcp-root>/scripts/event-report.mjs" --format text` and saves the output to `logs/session/<YYYYMM>/<DD>/<HHmmss (UTC)>/compaction-report.md`. Failure-tolerant: if the script fails or the directory cannot be created, write a one-line warning to `<session-log-dir>/compaction-report-error.txt` and note in the handoff. Shutdown is never blocked by a failing report.
+
+### Step 7 — Curator writes handoff document
 
 Curator MUST write `memory/handoff.md` — resolved as `<workspace-root>/.agents/agents/curator/memory/handoff.md` — with the following structure. If the file already exists, Curator MUST overwrite it; prior content is superseded by the current shutdown record.
 
@@ -64,14 +69,14 @@ Curator MUST write `memory/handoff.md` — resolved as `<workspace-root>/.agents
   - `date`: ISO 8601 format (e.g., `2026-04-26`)
   - `operator`: human operator's name or email — sourced from the operator's Telegram display name or from `memory/operator.md` if present. If neither source is available, write `operator: unknown`.
   - `reason`: free text describing why the shutdown was triggered
-- **`## State` section:** MUST include active branches, open task IDs, and open PRs.
+- **`## State` section:** MUST include active branches, open task IDs, open PRs, and the compaction-report path (or failure reason).
 - **`## Carryovers` section:** MUST include at least one bullet per open task. Empty is valid only if no tasks exist in pipeline stages `40-queued`, `50-active`, or `60-review`.
 
-### Step 7 — Curator calls shutdown
+### Step 8 — Curator calls shutdown
 
 Curator calls `action(type: "shutdown")`. If `shutdown` returns `{shutting_down: false, warning: "PENDING_MESSAGES"}`, Curator MUST call `shutdown` again with `force: true` to abandon pending messages and proceed.
 
-### Step 8 — Curator calls session/close with force: true
+### Step 9 — Curator calls session/close with force: true
 
 Curator calls `action(type: "session/close", force: true)`. `force: true` is required because Curator is the last session standing (the last-session guard requires it). Bridge auto-exits once all sessions are closed.
 
@@ -85,6 +90,7 @@ Summary of binding normative requirements (MUST/SHALL). Full procedure in [Proce
 - Overseer MUST track the count of Workers signaled and await one "CLOSED: session/close complete" DM per Worker.
 - Workers MUST reach a clean point (commit; seal if all acceptance criteria met) before closing.
 - Workers MUST wipe their stored session token (local file operation), DM Overseer "CLOSED: session/close complete", then call `action(type: "session/close")` — in that order.
+- Curator MUST generate the compaction metrics report (Step 6) before writing `handoff.md`.
 - Curator MUST write `handoff.md` before calling `shutdown`.
 - Curator MUST call `action(type: "shutdown")` before `session/close`. If it returns `{shutting_down: false, warning: "PENDING_MESSAGES"}`, retry with `force: true`.
 - Curator MUST call `action(type: "session/close", force: true)` as the final action.
@@ -96,7 +102,7 @@ Cross-cutting prohibitions. These apply throughout the procedure regardless of c
 - Workers MUST NOT call `session/close` with `force: true`. The ordered shutdown procedure guarantees at least Overseer and Curator remain open when Workers close.
 - Curator MUST NOT bypass Overseer when signaling Workers (feedback: `feedback_dont_supersede_overseer`).
 - Agents MUST NOT call `session/start` after closing their session during shutdown.
-- `shutdown` MUST NOT be called before `handoff.md` is written and all Workers and Overseer are confirmed closed.
+- `shutdown` MUST NOT be called before the compaction metrics report is attempted (Step 6), `handoff.md` is written (Step 7), and all Workers and Overseer are confirmed closed.
 
 ## Footguns
 

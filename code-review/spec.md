@@ -49,6 +49,7 @@ tier policy. The difference is normative.
 - **Finding status**: per-finding lifecycle. Values: `OPEN`, `FIXED <commit-ref>`, `WONT_FIX <annotation>`, `WONTNEEDED`.
 - **Audit trail**: the historical record of every finding and annotation, preserved in the review file across iterations.
 - **Copilot Reviewer**: a code-domain personality supplied by code-review to swarm via `additional_personalities`. Only included when the Copilot CLI backend is available (availability-gated). Order: let Copilot run first on PRs, then code-review adds the swarm review.
+- **Smoke pass**: a fast preliminary review pass that runs only a minimal personality set (typically Code Reviewer + Devil's Advocate) to catch obvious issues before a broader substantive dispatch. Used to reduce token spend and overhead on low-risk files.
 
 ## Requirements
 
@@ -124,7 +125,7 @@ promoting to Level N+1.
 
 | Level | Model class | Scope | Promotion gate |
 |---|---|---|---|
-| L1 | haiku-class | per-file (fast, distributed) + folder integration at L1 | All L1 findings `FIXED`, `WONT_FIX`, or `WONTNEEDED` |
+| L1 | haiku-class | per-file (fast, distributed) | All L1 findings `FIXED`, `WONT_FIX`, or `WONTNEEDED` |
 | L2 | sonnet-class | per-file (only files flagged L2-worthy after L1) + integration review | All L2 findings resolved |
 | L3 | opus-class | per-file (only critical files) — one-shot, stamped | Sign-off; no further levels |
 
@@ -135,7 +136,18 @@ Level promotion decisions:
 - After L2: select files for L3 similarly. L3 is rare.
 - Most files stop at L1. Some go to L2. Very few reach L3.
 
-Swarm tier mapping: L1 → haiku-class personalities; L2 → sonnet-class; L3 → opus-class.
+Swarm tier mapping (default for personalities without their own preference): L1 → haiku-class; L2 → sonnet-class; L3 → opus-class. Per-personality preferences override this default (see "Level vs Personality Model Class — Orthogonal Axes").
+
+### Level vs Personality Model Class — Orthogonal Axes
+
+Code-review levels (L1/L2/L3) set:
+
+- Default model class for personalities WITHOUT a specific preference.
+- Depth budget (how many optional personalities to add, how thorough each pass).
+
+Per-personality preferences (e.g. swarm's B11 for Devil's Advocate) WIN over the level default. A code-review at L1 may still dispatch Devil's Advocate at gpt-class if the problem is conceptual.
+
+The level is a hint about review effort, not a hard model-class lockstep.
 
 ### Conventional Comments Format
 
@@ -190,12 +202,14 @@ Reviews are stored in a fractal tree under `.code-reviews/`:
 ```
 .code-reviews/
 ├── files/<hash-6>-L<n>.md          # leaf — review of one file at one level
-├── groups/<hash>.md                # composite — review of N files as a group
-├── folders/<hash>.md               # composite — review of a folder/feature
+├── groups/<hash>.md                # composite — caller-named ad-hoc group of files (cross-folder, not path-bounded)
+├── folders/<hash>.md               # composite — review of a folder/feature (path-bounded set)
 ├── manifests/<manifest-hash>.md    # manifest-level composite (hash-of-hashes)
 ├── repo/<repo-hash>.md             # top — review of the whole repo at a point in time
 └── log.md                          # chronological index: hash, scope, date, verdict, sign-off state
 ```
+
+`groups/` holds composite reviews for arbitrary caller-named sets of files that cross folder boundaries or don't map to a single directory. `folders/` holds reviews for all files under a given path. Use `folders/` when the set is naturally bounded by a directory; use `groups/` for cross-folder or otherwise irregular sets.
 
 Composite-level review hash = SHA-256 of the sorted child content hashes. Same
 children → same hash → cache hit. Adding or changing a child changes the
@@ -262,7 +276,7 @@ Aggregated output returned to calling agent:
 ## Constraints
 
 1. Code-review must call `swarm` for all personality dispatch. Code-review must not dispatch personalities directly or reinvent the multi-personality dispatch primitive.
-2. The model-class tier for each level is fixed: L1 = haiku-class, L2 = sonnet-class, L3 = opus-class. Tier substitution is prohibited.
+2. The model-class tier for each level is the DEFAULT for personalities that do not declare their own preference: L1 = haiku-class, L2 = sonnet-class, L3 = opus-class. Per-personality preferences (e.g. swarm B11 for Devil's Advocate) override this default. See "Level vs Personality Model Class — Orthogonal Axes".
 3. Review agents dispatched via swarm are read-only. They must not commit, push, edit, stage, or mutate any working tree or repository state.
 4. Review agents must not fix findings. Reporting and fixing are separate concerns.
 5. L3 is dispatched at most once per file per content hash. L3 is the final level; no further levels exist.
@@ -272,7 +286,7 @@ Aggregated output returned to calling agent:
 9. Composite-level hashes are computed as SHA-256 of sorted child SHA-256 hashes. Sort is by file path lexicographically.
 10. Findings without evidence citations are prohibited. Every finding must cite a snippet, line reference, or direct quote (inherited from swarm's C4).
 11. No bare model names in any skill artifact. Use model class terms (haiku-class, sonnet-class, opus-class).
-12. Cross-file path references to sibling skill internals are prohibited (R-FM-11). Refer to `swarm` by skill name only; never reference `swarm/spec.md`, `swarm/uncompressed.md`, or any internal swarm file path.
+12. Cross-file path references to sibling skill internals are prohibited. Refer to `swarm` by skill name only; never reference `swarm/spec.md`, `swarm/uncompressed.md`, or any internal swarm file path.
 
 ## Behavior
 
@@ -332,15 +346,7 @@ See `../iteration-safety/SKILL.md`.
 
 ## Don'ts
 
-- Don't dispatch personalities directly — that's swarm's job.
-- Don't reinvent multi-personality dispatch or aggregation logic.
 - Don't promote to L2 until all L1 findings are resolved.
-- Don't use git blob hash as the primary cache key.
-- Don't let review agents fix code — reporting and fixing are separate.
-- Don't let review agents commit, push, stage, or mutate any state.
-- Don't produce findings without evidence citations.
-- Don't use bare model names — use haiku-class, sonnet-class, opus-class.
-- Don't reference swarm internal files (spec.md, uncompressed.md) — refer by skill name only (R-FM-11).
 - Don't expire or delete cache entries when content is unchanged — cache entries are permanent until the hash changes.
 - Don't run swarm when all files have cache hits at the requested level.
 - Don't include Copilot Reviewer when Copilot CLI is unavailable; let swarm's availability gate drop it.

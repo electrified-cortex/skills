@@ -11,18 +11,19 @@ Trigger Phrases: ordered shutdown, wrap up and close, session teardown, fleet te
 
 Pre-conditions:
 Curator, Overseer, and at least one Worker session active.
-If no Workers active at shutdown, Steps 3–5 are no-ops; Overseer skips to Step 6.
+If no Workers active at shutdown, Steps 3–5 are no-ops; Overseer calls session/close after Step 2; Curator proceeds from Step 6.
 Curator has write access to `<workspace-root>/.agents/agents/curator/memory/`.
 
 Key Terms:
 Clean point — task state from which another agent can resume without loss: commit exists minimum; if all acceptance criteria met, sealed required; else commit suffices.
 Sealed — task has `## Completion` added and committed in worktree. Overseer handles pipeline dir moves; Workers only write Completion section.
 Bridge — Telegram MCP server process; auto-exits when last session closes.
-Pending-messages guard — `shutdown` returns `{shutting_down: false, warning: "PENDING_MESSAGES"}` (not an error) when sess queues non-empty and `force` not set.
+Pending-messages guard — `shutdown` returns `{shutting_down: false, warning: "PENDING_MESSAGES"}` (not an error) when session queues non-empty and `force` not set.
 SID — numeric session ID assigned by Bridge.
 DM — targeted msg via `send(type: "dm", target: <SID>)`. Use `target` param (not `target_sid`, invalid).
 Session token — numeric token from `session/start`, stored in agent memory file. Wipe = overwrite stored value with empty string.
 workspace-root — top-level dir containing `.agents/`; resolved at runtime as parent of `.agents/`.
+tmcp-root — the Telegram MCP server repository directory, resolved at runtime as `<workspace-root>/Telegram MCP`.
 Pipeline stages — `40-queued` (pending), `50-active` (claimed), `60-review` (ready), `70-done` (completed). Open tasks = any stage except `70-done`.
 
 Full Procedure:
@@ -81,6 +82,8 @@ c. DM Overseer "CLOSED"
 send(type: "dm", target: <Overseer-SID>, message: "CLOSED: session/close complete", token: <token>)
 ```
 
+Note: sent while session still active — last outbound message before Step 4d. "session/close complete" signals Worker is about to close, not that it has already closed.
+
 d. Call session/close
 
 ```text
@@ -103,7 +106,27 @@ action(type: "session/close", token: <token>)
 
 No `force: true` needed.
 
-Step 6 — Curator writes handoff document
+Step 6 — Generate compaction metrics report (Curator)
+
+After Overseer confirms all Workers closed, Curator generates a session-scope compaction metrics report from the bridge event log. Runs before handoff so report path can be referenced in handoff.
+
+Determine session log dir (ISO timestamp at shutdown time): `logs/session/<YYYYMM>/<DD>/<HHmmss (UTC)>/`. Create if missing.
+
+Run from `<tmcp-root>`:
+
+```text
+node "<tmcp-root>/scripts/event-report.mjs" --format text
+```
+
+Note: `--format text` produces human-readable plain text; the `.md` extension is used for consistency with other session log files.
+
+Save output to `compaction-report.md` in the session log dir.
+
+Failure tolerance (required): if `scripts/event-report.mjs` missing, exits non-zero, or event log empty — write a one-line warning to `<session-log-dir>/compaction-report-error.txt` and continue. Shutdown MUST NOT be blocked by a failing report. Note missing/failed report in handoff with brief reason. If the session log directory cannot be created, discard the report output and note the reason in the handoff document.
+
+Include report path in handoff `## State` section (Step 7).
+
+Step 7 — Curator writes handoff document
 
 Curator MUST write `memory/handoff.md` at:
 
@@ -111,7 +134,7 @@ Curator MUST write `memory/handoff.md` at:
 <workspace-root>/.agents/agents/curator/memory/handoff.md
 ```
 
-If file exists, overwrite — prior content superseded. MUST be written before Step 7.
+If file exists, overwrite — prior content superseded. MUST be written before Step 8.
 
 Required structure:
 
@@ -126,6 +149,8 @@ reason: <free text describing why shutdown was triggered>
 
 <Active branches, open task IDs, and open PRs>
 
+- compaction-report: `logs/session/YYYYMM/DD/HHmmss/compaction-report.md` (or `failed: <reason>` if Step 6 failed)
+
 ## Carryovers
 
 - <one bullet per open task in 40-queued, 50-active, or 60-review>
@@ -134,22 +159,22 @@ reason: <free text describing why shutdown was triggered>
 `operator` from Telegram display name or `memory/operator.md` if present; else `operator: unknown`.
 `## Carryovers` MUST have one bullet per open task (40-queued, 50-active, 60-review). Empty valid only if no tasks in those stages.
 
-Step 7 — Curator calls shutdown
+Step 8 — Curator calls shutdown
 
 ```text
 action(type: "shutdown", token: <token>)
 ```
 
-`{shutting_down: true}` — proceed to Step 8.
+`{shutting_down: true}` — proceed to Step 9.
 `{shutting_down: false, warning: "PENDING_MESSAGES"}` — not an error; retry with `force: true`:
 
 ```text
 action(type: "shutdown", token: <token>, force: true)
 ```
 
-Then Step 8. Don't treat `{shutting_down: false}` as completed shutdown. `shutting_down` field is authoritative.
+Then Step 9. Don't treat `{shutting_down: false}` as completed shutdown. `shutting_down` field is authoritative.
 
-Step 8 — Curator closes session
+Step 9 — Curator closes session
 
 ```text
 action(type: "session/close", token: <token>, force: true)
@@ -162,7 +187,7 @@ Sequence Diagram:
 ```text
 Curator         Overseer        Worker(s)       Bridge
   |                  |               |               |
-  |--shutdown/warn-→ | (broadcast)   |               |
+  |--shutdown/warn---------------------------→        | (broadcast)
   |                  |               |               |
   |--DM: initiate--→ |               |               |
   |                  |--DM: close-→  |               |
@@ -172,9 +197,10 @@ Curator         Overseer        Worker(s)       Bridge
   |                  |←-DM: CLOSED--|               |
   |                  |←--CLOSED DM---|               |
   |                  |               |--session/close→ (session removed)
-  |                  |--DM: all done-→               |
+  |←--DM: all done--|               |               |
   |←--confirmed------|               |               |
   |                  |--session/close-------------→  | (session removed)
+  |--metrics-report  |               |               |
   |--handoff.md      |               |               |
   |--shutdown--------------------------------→        | (bridge signals SHUTDOWN)
   |--session/close (force:true)-------→              | (last session → bridge exits)

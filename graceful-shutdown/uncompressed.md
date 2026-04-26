@@ -18,7 +18,7 @@ ordered shutdown, wrap up and close, session teardown, fleet teardown, closing a
 - Curator session is active.
 - Overseer session is active.
 - At least one Worker session is active.
-- If no Workers are active at shutdown time, Steps 3–5 are no-ops; Overseer proceeds directly from Step 2 to Step 6 coordination.
+- If no Workers are active at shutdown time, Steps 3–5 are no-ops; Overseer calls `session/close` immediately after Step 2 and Curator proceeds from Step 6.
 - Curator has write access to `<workspace-root>/.agents/agents/curator/memory/`.
 
 ## Key Terms
@@ -31,6 +31,7 @@ ordered shutdown, wrap up and close, session teardown, fleet teardown, closing a
 - **DM** — Direct Message: a targeted message sent directly to a specific session's queue via `send(type: "dm", target: <SID>)` where `target` accepts a numeric session ID. Use the `target` parameter (not `target_sid`, which is invalid).
 - **Session token** — the numeric token issued by `session/start` and stored in the agent's memory file. **Wipe** — overwrite the stored token value with an empty string.
 - **workspace-root** — the top-level directory containing the `.agents/` folder; resolved at runtime as the parent of the `.agents/` directory visible to the agent.
+- **tmcp-root** — the Telegram MCP server repository directory, resolved at runtime as `<workspace-root>/Telegram MCP`.
 - **Pipeline stages** — the ordered directory stages used by the task engine: `40-queued` (pending), `50-active` (claimed, in progress), `60-review` (ready for review), `70-done` (completed). Open tasks are those in any stage other than `70-done`.
 
 ## Full Procedure
@@ -105,6 +106,8 @@ Send the confirmation DM to Overseer using the SID Overseer included in the Step
 send(type: "dm", target: <Overseer-SID>, message: "CLOSED: session/close complete", token: <token>)
 ```
 
+Note: this DM is sent while the session is still active — it is the last outbound message before `session/close` is called in Step 4d. The wording "session/close complete" is Overseer's signal that the Worker has reached clean point and is about to close; it is not sent after the fact.
+
 #### d. Call session/close
 
 ```text
@@ -134,7 +137,31 @@ action(type: "session/close", token: <token>)
 
 No `force: true` needed.
 
-### Step 6 — Curator writes handoff document
+### Step 6 — Generate compaction metrics report (Curator)
+
+After Overseer confirms all Workers have closed, Curator generates a session-scope compaction metrics report from the bridge event log. This step runs before writing the handoff document so the report path can be referenced in the handoff.
+
+Determine the session log directory (ISO timestamp at shutdown time):
+
+```text
+logs/session/<YYYYMM>/<DD>/<HHmmss (UTC)>/
+```
+
+Create the directory if it does not exist. Then run from `<tmcp-root>`:
+
+```text
+node "<tmcp-root>/scripts/event-report.mjs" --format text
+```
+
+Note: `--format text` produces human-readable plain text; the `.md` extension is used for consistency with other session log files.
+
+Save the output to `compaction-report.md` in the session log directory.
+
+**Failure tolerance (required):** if `scripts/event-report.mjs` is missing, exits non-zero, or the event log is empty, write a one-line warning to `<session-log-dir>/compaction-report-error.txt` and continue. Shutdown MUST NOT be blocked by a failing report. A missing or failed report is noted in the handoff document with a brief reason. If the session log directory cannot be created, discard the report output and note the reason in the handoff document.
+
+Include the report path in the handoff document's `## State` section (Step 7).
+
+### Step 7 — Curator writes handoff document
 
 Curator MUST write `memory/handoff.md`, resolved as:
 
@@ -157,6 +184,8 @@ reason: <free text describing why shutdown was triggered>
 
 <Active branches, open task IDs, and open PRs>
 
+- compaction-report: `logs/session/YYYYMM/DD/HHmmss/compaction-report.md` (or `failed: <reason>` if Step 6 failed)
+
 ## Carryovers
 
 - <one bullet per open task in 40-queued, 50-active, or 60-review>
@@ -166,9 +195,9 @@ Notes:
 
 - `operator` is sourced from the operator's Telegram display name or from `memory/operator.md` if present. If neither source is available, write `operator: unknown`.
 - The `## Carryovers` section MUST contain at least one bullet per open task (tasks in `40-queued`, `50-active`, or `60-review`). Empty Carryovers is valid only if no tasks exist in those stages.
-- This file MUST be written before calling `shutdown` in Step 7.
+- This file MUST be written before calling `shutdown` in Step 8.
 
-### Step 7 — Curator calls shutdown
+### Step 8 — Curator calls shutdown
 
 Curator calls:
 
@@ -178,18 +207,18 @@ action(type: "shutdown", token: <token>)
 
 Check the response:
 
-- `{shutting_down: true}` — proceed to Step 8.
+- `{shutting_down: true}` — proceed to Step 9.
 - `{shutting_down: false, warning: "PENDING_MESSAGES"}` — this is not an error; call `shutdown` again with `force: true`:
 
   ```text
   action(type: "shutdown", token: <token>, force: true)
   ```
 
-  Then proceed to Step 8.
+  Then proceed to Step 9.
 
 Do NOT treat `{shutting_down: false}` as a completed shutdown. The `shutting_down` field is authoritative.
 
-### Step 8 — Curator closes session
+### Step 9 — Curator closes session
 
 Curator calls:
 
@@ -204,7 +233,7 @@ action(type: "session/close", token: <token>, force: true)
 ```text
 Curator         Overseer        Worker(s)       Bridge
   |                  |               |               |
-  |--shutdown/warn-→ | (broadcast)   |               |
+  |--shutdown/warn---------------------------→        | (broadcast)
   |                  |               |               |
   |--DM: initiate--→ |               |               |
   |                  |--DM: close-→  |               |
@@ -214,9 +243,10 @@ Curator         Overseer        Worker(s)       Bridge
   |                  |←-DM: CLOSED--|               |
   |                  |←--CLOSED DM---|               |
   |                  |               |--session/close→ (session removed)
-  |                  |--DM: all done-→               |
+  |←--DM: all done--|               |               |
   |←--confirmed------|               |               |
   |                  |--session/close-------------→  | (session removed)
+  |--metrics-report  |               |               |
   |--handoff.md      |               |               |
   |--shutdown--------------------------------→        | (bridge signals SHUTDOWN)
   |--session/close (force:true)-------→              | (last session → bridge exits)
