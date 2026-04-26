@@ -23,27 +23,19 @@ Default: inline. Dispatch is the exception.
 
 ## Model Tier
 
-| Tier | Use for | Risk |
-| --- | --- | --- |
-| `fast-cheap` | Shallow/mechanical, true zero-context work | Shallow output → re-dispatch higher |
-| `standard` | Moderate reasoning. Most common explicit override | — |
-| `deep` | Critical-path, max reasoning | Rarely correct as override; consider inline |
+Default tier: host's own. Other skills use class names only; this skill is the canonical source of concrete model names.
 
-Default tier: host's own.
+| Tier | Used for | Class description | Minimum model |
+| --- | --- | --- | --- |
+| `fast-cheap` | Shallow/mechanical, true zero-context work | haiku-class — cost-optimized, no chained reasoning | Claude Haiku 4.5 |
+| `standard` | Moderate reasoning. Most common explicit override | sonnet-class — capable default | Claude Sonnet 4.6 |
+| `deep` | Critical-path, max reasoning. Rarely correct as override; consider inline | opus-class — highest reasoning | Claude Opus 4.6 |
 
 `fast-cheap` pre-pass: appropriate only when work is genuinely zero-scope (mechanical pattern match, format check, extraction). Not appropriate when sub-agent needs judgment, prior context, or chained reasoning.
 
-### Model class mapping (as of 2026-04-24)
+Standard non-Anthropic alternatives: GPT 5.3 codex (great for code review and refactoring, code-heavy work); GPT 5.4 (great for general language, words, prose, English-heavy reasoning). Apply to `gpt-class` workloads; not minimums.
 
-Use class names in all skill artifacts. Resolve to a concrete model ID only at dispatch time.
-
-| Class | Concrete model ID |
-| --- | --- |
-| `fast-cheap` / haiku-class | `claude-haiku-4-5-20251001` |
-| `standard` / sonnet-class | `claude-sonnet-4-6` |
-| `deep` / opus-class | `claude-opus-4-6`+ |
-
-When Anthropic releases a new model in any class, update this table and refresh the date.
+Update this table and bump `uncompressed.md` date when Anthropic releases a new model in any class.
 
 ## Subagent Type
 
