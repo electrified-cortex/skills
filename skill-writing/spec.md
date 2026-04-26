@@ -22,20 +22,35 @@ order. No step may be skipped.
    the skill's folder. The spec defines purpose, scope, requirements,
    constraints, and acceptance criteria. The spec is the source of truth
    for everything that follows.
-2. **Write uncompressed skill** — derive `uncompressed.md` from the spec.
-   This is the human-readable baseline that contains all runtime
+2. **Write uncompressed sources** — derive `uncompressed.md` from the
+   spec. For dispatch skills, also write `instructions.uncompressed.md`.
+   These are the human-readable baselines that contain all runtime
    instructions. Every normative requirement in the spec must be
    represented. No new requirements may be introduced that are not in
    the spec.
-3. **Compress** — use the `compression` skill in source→target mode
-   (`--source uncompressed.md --target SKILL.md`) to produce the
-   compressed runtime file. SKILL.md is what agents load at runtime.
-4. **Audit** — use the `skill-auditing` skill to verify the SKILL.md
-   against the spec. The audit flags any markdown issues. Fix findings,
-   recompress, re-audit until the audit returns PASS.
+3. **Markdown hygiene (MANDATORY GATE)** — run the `markdown-hygiene`
+   skill on every uncompressed source produced in step 2
+   (`uncompressed.md`, and `instructions.uncompressed.md` if present).
+   Compression **must not** run until every uncompressed source returns
+   `CLEAN`. Skipping this gate causes the audit in step 6 to flag
+   markdown defects that hygiene catches cheaply at haiku-class — a
+   token-waste regression. Hygiene is the cheapest gate in the workflow.
+4. **Intermediate audit** — run `skill-auditing --uncompressed` against
+   the skill's uncompressed sources. FAIL → fix sources → re-audit.
+   Repeat until PASS. The intermediate audit catches structural and
+   compliance issues before the (more expensive) compression and final
+   audit.
+5. **Compress** — use the `compression` skill in source→target mode
+   (`--source uncompressed.md --target SKILL.md`; same for
+   `instructions.uncompressed.md` → `instructions.txt` for dispatch
+   skills). SKILL.md is what agents load at runtime.
+6. **Final audit** — run `skill-auditing` (default mode) against
+   `SKILL.md`. FAIL → fix sources → recompress (step 5) → re-audit.
+   Repeat until PASS.
 
-For dispatch skills, the companion agent file must also be written
-(step 2) and verified as reachable (step 4).
+For dispatch skills, the companion instruction source file is written
+in step 2, hygiene-checked in step 3, audited in step 4, compressed in
+step 5, and verified in step 6 alongside the routing card.
 
 ### Revision workflow
 
@@ -44,12 +59,18 @@ When modifying an existing skill:
 1. Always update the spec first. The only exception is changes limited
    to non-normative content (README, examples, typo fixes in
    informational sections). In that case skip to step 2.
-2. Update uncompressed.md to reflect the spec change.
-3. Recompress to SKILL.md.
-4. Re-audit.
+2. Update `uncompressed.md` (and `instructions.uncompressed.md` if
+   dispatch) to reflect the spec change.
+3. Run `markdown-hygiene` on the modified uncompressed sources. CLEAN
+   required before step 4. Same gate as the creation workflow.
+4. Run `skill-auditing --uncompressed`. PASS required.
+5. Recompress to `SKILL.md` (and `instructions.txt` if dispatch).
+6. Run `skill-auditing` (default mode). PASS required before declaring
+   the revision complete.
 
-Never modify SKILL.md directly — it is a compiled artifact. Changes
-flow: spec → uncompressed → compressed.
+Never modify SKILL.md or instructions.txt directly — they are compiled
+artifacts. Changes flow: spec → uncompressed → hygiene → audit →
+compressed → audit.
 
 ## Definitions
 

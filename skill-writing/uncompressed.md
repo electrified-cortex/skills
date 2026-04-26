@@ -34,9 +34,7 @@ Dispatch Skill section).
 
 ### Eval Readiness
 
-Skills are evaluated L1 (haiku-class) vs L2 (sonnet-class). Whether to
-invest in haiku-class executability depends on call frequency:
-token-savings-per-call × calls-per-period must exceed the optimization cost.
+Skills are evaluated L1 (haiku-class) vs L2 (sonnet-class).
 
 - **High-frequency** (many files per run or many dispatches per session):
   invest in haiku-class readiness.
@@ -119,7 +117,7 @@ headers, no descriptions, no preamble. The uncompressed baseline
 `instructions.uncompressed.md` MAY include an H1 title so markdown-hygiene
 passes (MD041); strip the title after compression. When invoking
 markdown-hygiene on `SKILL.md`, pass `--ignore MD041` (no H1 sanctioned
-per R-FM-3). `instructions.txt` is plain text — no MD041 suppression needed.
+per R-FM-3).
 
 ## Requirements
 
