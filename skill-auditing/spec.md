@@ -256,8 +256,7 @@ This is the final quality gate.
     frontmatter value. Any restatement → LOW (escalate to HIGH if
     verbatim duplication).
 12. **(A-FM-4) Lint wins** — run `markdown-hygiene` with `--ignore MD041`
-    on `SKILL.md` (R-FM-3 sanctioned no-H1 exception; `instructions.txt`
-    is plain text, not markdown — no MD041 suppression needed there).
+    on `SKILL.md` (R-FM-3 sanctioned no-H1 exception).
     `--ignore MD041` is the correct mechanism — no inline guard text in
     skill body files. Confirm no other violations are suppressed. Any
     other suppressed violation → HIGH.
