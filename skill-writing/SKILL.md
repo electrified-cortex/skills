@@ -26,6 +26,12 @@ New skill — follow order. Never skip steps.
 
 Dispatch skills: also write companion instruction source file (see Dispatch Skill).
 
+Eval Readiness:
+Skills are evaluated L1 (haiku-class) vs L2 (sonnet-class). Haiku-class executability is frequency-dependent: token-savings-per-call × calls-per-period must exceed the optimization cost.
+High-frequency (many files/dispatches per session) → invest in haiku-class readiness; add specificity until haiku catches what sonnet catches; drop `eval.md` to log rounds.
+Low-frequency / one-off → sonnet-class is fine; `eval.md` not required.
+Examples: markdown-hygiene, code-review = high-frequency (haiku justified). compression = low-frequency (sonnet fine).
+
 Completion Gate:
 NOT done until both audits return PASS. Intermediate gate (step 4): PASS required before compression. Final gate (step 6): PASS required before declaring complete. No exceptions. Receiving FAIL and stopping is a workflow violation.
 
@@ -66,7 +72,7 @@ Dispatch-time constraints caller must know before invocation go in routing card 
 Don't rely on repo-local fallback filenames — those belong in skill-specific auditors, not universal spec-auditing rules.
 
 Dispatch instruction file must be in same dir or known path.
-Compressed `instructions.txt`: only instructions — no title headers, no descriptions, no preamble. `instructions.uncompressed.md` MAY include H1 title for markdown-hygiene (MD041); strip after compression.
+Compressed `instructions.txt`: only instructions — no title headers, no descriptions, no preamble. `instructions.uncompressed.md` MAY include H1 title for markdown-hygiene (MD041); strip after compression. When running markdown-hygiene on `SKILL.md` or `instructions.txt`, pass `--ignore MD041` (no H1 sanctioned per R-FM-3).
 
 Requirements:
 
@@ -84,6 +90,7 @@ Concise: agent-facing, every line earns place
 Token-efficient: no prose, no rationale, no redundancy
 Breadcrumbs: end with related skills (verified, not stale)
 No secrets
+No cross-file-path refs to sibling skill internals (R-FM-11): FORBIDDEN: `../other-skill/uncompressed.md` or `../other-skill/spec.md` in any skill artifact. ALLOWED: own `instructions.txt`; sibling by skill name ("see the `compression` skill").
 
 Verify with `skill-auditing`. Flags markdown issues.
 

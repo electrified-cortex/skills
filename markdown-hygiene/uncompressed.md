@@ -14,6 +14,9 @@ Sonnet-class passes are equivalent or have diminishing returns.
 - `file_path` (required): Absolute path to .md file
 - `--source X --target Y` (optional): Read X, fix,
   write to Y. No git check.
+- `--ignore <RULE>[,<RULE>...]` (optional): Suppress these rule codes
+  for this run — not flagged, not fixed. Example: `--ignore MD041`
+  for skill files where an H1 is intentionally absent.
 
 Modes: `--source/--target` → source untouched;
 default → in-place if tracked+clean;

@@ -28,7 +28,6 @@ Pick the mode by intent: regression check → default. Building or revising → 
 
 These patterns are CORRECT, never findings:
 
-- Absent H1 in `SKILL.md` and `instructions.txt` — sanctioned R-FM-3 / R-FM-4 exception. Frontmatter `name` carries the title. Do NOT flag MD041 against these files. (MD041 = first heading of file must be H1 — if the auditor sees a missing H1, it might wrongly flag it; suppress for these specific files.)
 - Iteration-safety 2-line pointer in spec / uncompressed / SKILL.md (caller blurb) — required by R-FM-9.
 - Verbatim Rule B quote inside the iteration-safety skill itself — that is its canonical home.
 - Trigger phrases in the description frontmatter — required by R-FM-10.

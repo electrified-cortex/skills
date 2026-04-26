@@ -44,11 +44,6 @@ pass.
 
 These patterns are CORRECT, never findings:
 
-- Absent H1 in `SKILL.md` and `instructions.txt` — sanctioned R-FM-3
-  / R-FM-4 exception. Frontmatter `name` carries the title. Do NOT
-  flag MD041 against these files. (MD041 = first heading of file must
-  be H1 — if the auditor sees a missing H1, it might wrongly flag it;
-  suppress for these specific files.)
 - Iteration-safety 2-line pointer in spec / uncompressed / SKILL.md
   (the caller blurb) — required by R-FM-9.
 - Verbatim Rule B quote inside the iteration-safety skill itself —

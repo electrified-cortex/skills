@@ -26,6 +26,11 @@ No domain-specific terms. Rule identifiers (MD001, MD022, etc.) are markdownlint
 ### Input
 
 - `file_path` (string, required): Absolute path to `.md` file to fix
+- `--ignore <RULE>[,<RULE>...]` (string, optional): Comma-separated list of
+  markdownlint rule codes to suppress from the violation set. Suppressed rules
+  are not flagged and not fixed. Example: `--ignore MD041` suppresses the
+  top-level-heading rule for files where its absence is intentional (e.g.,
+  skill instruction files). Does not affect other rules.
 
 ### Procedure
 
@@ -99,7 +104,7 @@ Remaining: M errors (manual fix required)
   (e.g. an active IDE markdown extension, a CLI linter already installed),
   using that directly is preferred over dispatching — it saves tokens
   and avoids LLM-based parsing. `tooling.md` (co-located) lists options.
-- Never suppress rules — fix them
+- Never suppress rules unless the caller explicitly passes `--ignore`; suppressed rules are excluded from the violation set for this run only
 - Never modify content meaning — only formatting
 - Never introduce new violations while fixing others (e.g.,
   adding blank lines while reflowing causes MD012)

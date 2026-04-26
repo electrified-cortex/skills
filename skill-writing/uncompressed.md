@@ -32,6 +32,22 @@ When creating a new skill, follow this order. Never skip steps.
 For dispatch skills, also write the companion instruction source file (see
 Dispatch Skill section).
 
+### Eval Readiness
+
+Skills are evaluated L1 (haiku-class) vs L2 (sonnet-class). Whether to
+invest in haiku-class executability depends on call frequency:
+token-savings-per-call × calls-per-period must exceed the optimization cost.
+
+- **High-frequency** (many files per run or many dispatches per session):
+  invest in haiku-class readiness.
+  Add specificity until haiku catches what sonnet catches.
+  Drop `eval.md` to log L1/L2 round results.
+- **Low-frequency / one-off** (once per skill, once per file, infrequent):
+  sonnet-class is fine. `eval.md` not required.
+
+Examples: markdown-hygiene and code-review are high-frequency — haiku-readiness
+justified. compression is low-frequency — sonnet fine.
+
 ### Completion Gate
 
 > **The skill is NOT done until both audits return PASS.**
@@ -101,7 +117,9 @@ Dispatch instruction file must be in the same directory or a known path.
 Compressed `instructions.txt` contains only instructions — no title
 headers, no descriptions, no preamble. The uncompressed baseline
 `instructions.uncompressed.md` MAY include an H1 title so markdown-hygiene
-passes (MD041); strip the title after compression.
+passes (MD041); strip the title after compression. When invoking
+markdown-hygiene on `SKILL.md` or `instructions.txt`, pass `--ignore MD041`
+(no H1 in these files is sanctioned per R-FM-3).
 
 ## Requirements
 
@@ -133,6 +151,32 @@ passes (MD041); strip the title after compression.
 - Decision trees not prose: conditional logic uses tables or decision trees, not paragraphs
 - Breadcrumbs: end with related skills (verified, not stale)
 - No secrets
+- No cross-file-path references to sibling skill internals (R-FM-11)
+
+### R-FM-11 — No Cross-File-Path References to Sibling Skill Internals
+
+Skill files MUST NOT reference another skill's `uncompressed.md` or `spec.md`
+by file path. Every such pointer is a load invitation — even
+uncompressed-to-uncompressed references compound bloat.
+
+Allowed:
+
+- Own `instructions.txt`, sub-instructions, `tooling.md` in the same folder
+- Sibling skill by name: `"see the compression skill"`
+
+Forbidden:
+
+```text
+See `../compression/uncompressed.md` for details.
+Consult `../spec-writing/spec.md` for the format.
+```
+
+Allowed:
+
+```text
+Read and follow `instructions.txt` (in this directory).
+For dispatch mechanics, read the `dispatch` skill.
+```
 
 Verify completed skills with `skill-auditing`. The audit flags any
 markdown issues.

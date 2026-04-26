@@ -255,11 +255,12 @@ This is the final quality gate.
     `instructions.txt`) for body prose that duplicates the `description`
     frontmatter value. Any restatement → LOW (escalate to HIGH if
     verbatim duplication).
-12. **(A-FM-4) Lint wins** — run `markdown-hygiene` (already covered by
-    check 8) and confirm no violations are suppressed or dismissed without
-    a sanctioned exception. The only sanctioned exception is the no-H1
-    rule for `SKILL.md` and `instructions.txt`. Any other suppressed
-    violation → HIGH.
+12. **(A-FM-4) Lint wins** — run `markdown-hygiene` with `--ignore MD041`
+    on `SKILL.md` (R-FM-3 sanctioned no-H1 exception; `instructions.txt`
+    is plain text, not markdown — no MD041 suppression needed there).
+    `--ignore MD041` is the correct mechanism — no inline guard text in
+    skill body files. Confirm no other violations are suppressed. Any
+    other suppressed violation → HIGH.
 13. **(A-FM-5) No exposition in runtime artifacts** — scan `SKILL.md`,
     `uncompressed.md`, `instructions.uncompressed.md`, and
     `instructions.txt` for rationale, "why this exists," root-cause
@@ -523,8 +524,8 @@ multi-file artifact pair where re-audit requires regenerating compiled runtime.
 - Do not include dispatch instructions (e.g., "run this skill") in instructions.txt.
 - Do not reference skills by inlining their content — use pointers only.
 - Do not suppress markdownlint violations without a sanctioned exception; the only
-  sanctioned exception is the no-H1 rule for `SKILL.md` and `instructions.txt`
-  (A-FM-4).
+  sanctioned no-H1 exception is handled via `--ignore MD041` when invoking
+  markdown-hygiene on `SKILL.md` (A-FM-4).
 - Do not pass A-XR-1 if any skill artifact (other than skill-auditing's own files
   as subject-matter context) contains a path-based cross-reference to another
   skill's `uncompressed.md` or `spec.md`.

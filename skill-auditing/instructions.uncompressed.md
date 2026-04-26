@@ -136,11 +136,7 @@ mismatch in either → FAIL.
 or `instructions.uncompressed.md` → flagged by markdown-hygiene (Phase 3
 check 8).
 
-False-positive guard: `SKILL.md` and `instructions.txt` intentionally
-have no H1 — this is the sanctioned R-FM-3 / R-FM-4 exception; the
-frontmatter `name` field carries the title. Do NOT flag MD041 (MD041 =
-first heading of file must be H1 — if the auditor sees a missing H1, it
-might wrongly flag it; suppress for these specific files).
+When running markdown-hygiene on `SKILL.md`, pass `--ignore MD041` — SKILL.md intentionally has no H1 per R-FM-3.
 
 ### 5. No duplication
 
@@ -244,10 +240,9 @@ duplicates the `description` frontmatter value. Any restatement → LOW
 
 ### 12. (A-FM-4) Lint wins
 
-Run `markdown-hygiene` (covered by check 8) and confirm no violations are
-suppressed or dismissed without a sanctioned exception. The only sanctioned
-exception is the no-H1 rule for `SKILL.md` and `instructions.txt`. Any
-other suppressed violation → HIGH.
+Run `markdown-hygiene` (covered by check 8) with `--ignore MD041` on
+`SKILL.md` and `instructions.txt`. Confirm no other violations are
+suppressed or dismissed. Any other suppressed violation → HIGH.
 
 ### 13. (A-FM-5) No exposition in runtime artifacts
 

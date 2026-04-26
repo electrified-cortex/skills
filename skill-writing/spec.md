@@ -168,7 +168,10 @@ The uncompressed baseline (`instructions.uncompressed.md`) MAY include
 an H1 title so that markdown-hygiene passes (markdownlint rule MD041
 requires a top-level heading). Strip the title after compression to
 `instructions.txt`. This keeps the compressed runtime minimal while
-preserving markdown correctness in the authored source.
+preserving markdown correctness in the authored source. When invoking
+markdown-hygiene on `SKILL.md` or `instructions.txt`, pass `--ignore MD041`
+to suppress the absent-H1 finding — no inline guard text is needed in the
+skill body files.
 
 ```markdown
 ## Dispatch Parameters
@@ -327,6 +330,35 @@ A skill passes audit if:
 7. **Tested** (dispatch only) — agent can be dispatched and returns
    expected output format
 
+### Eval Readiness
+
+Skills are evaluated L1 (haiku-class) vs L2 (sonnet-class). Whether to
+invest in haiku-class executability depends on call frequency — the
+calculus is: token-savings-per-call × calls-per-period > optimization
+cost amortized over the skill's lifetime.
+
+**Decision rule:**
+
+- **High-frequency** (many files per run, or many dispatches per session) —
+  invest in haiku-class readiness. If haiku misses something sonnet catches,
+  add specificity to the source until haiku catches it too. Drop an `eval.md`
+  alongside the skill to log L1/L2 round results and fold-back actions.
+- **Low-frequency / one-off** (runs once per skill, once per file, or
+  infrequently triggered) — sonnet-class is fine. Haiku-class optimization
+  does not pay off; `eval.md` is not required.
+
+**Examples:**
+
+| Skill | Frequency | Recommendation |
+|---|---|---|
+| markdown-hygiene | High (before every commit, many files) | Haiku-readiness justified |
+| code-review | High (every PR, many files) | Haiku-readiness justified |
+| skill-auditing | Medium | Haiku-readiness recommended |
+| compression | Low (once per skill/file, infrequent) | Sonnet fine |
+
+`eval.md` presence is a positive quality signal for high-frequency skills.
+For low-frequency skills its absence is not a finding.
+
 ## Compiling Spec to SKILL.md
 
 The SKILL.md is a compiled form of the spec — executable byte-code for
@@ -468,6 +500,43 @@ Use the Decision Tree section for detailed criteria.
   `instructions.txt` (R-FM-8)
 - Never restate iteration-safety Rules A or B verbatim in a caller skill — use the
   2-line pointer block only (R-FM-9)
+- **Never cross-reference another skill's `uncompressed.md` or `spec.md` by file
+  path in any skill artifact** (R-FM-11 — see below)
+
+## R-FM-11 — No Cross-File-Path References to Sibling Skill Internals
+
+Skill files (`SKILL.md`, `instructions.txt`, sub-instructions,
+`uncompressed.md`) MUST NOT reference another skill's `uncompressed.md`
+or `spec.md` by file path. Every cross-pointer to an uncompressed or
+spec file is a load invitation — even uncompressed-to-uncompressed
+references compound bloat. Honest authoring routes by skill name; the
+agent decides what to load.
+
+### Allowed
+
+- References to own `instructions.txt`, sub-instructions, or
+  `tooling.md` within the same skill folder
+- References to a sibling skill by name: `"see the compression skill"`
+
+### Forbidden (examples)
+
+```text
+# FORBIDDEN — path to sibling's uncompressed
+See `../compression/uncompressed.md` for details.
+
+# FORBIDDEN — path to sibling's spec
+Consult `../spec-writing/spec.md` for the format.
+```
+
+### Allowed examples
+
+```text
+# ALLOWED — own sub-file
+Read and follow `instructions.txt` (in this directory).
+
+# ALLOWED — sibling by skill name
+For dispatch mechanics, read the `dispatch` skill.
+```
 
 ## Relationship to Other Skills
 

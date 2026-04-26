@@ -7,6 +7,7 @@ errors is the gate.
 
 - `file_path` (required): Absolute path to the .md file to fix
 - `--source X --target Y` (optional): Read X, fix, write to Y. No git check. X untouched.
+- `--ignore <RULE>[,<RULE>...]` (optional): Comma-separated rule codes to skip — not scanned, not flagged, not fixed. Example: `--ignore MD041`.
 
 ## Modes
 
@@ -27,7 +28,7 @@ and no `--target` was given, create `<file>.fixed` alongside.
 ## Procedure
 
 1. Read the file and scan for markdownlint violations
-   using your own knowledge of markdown rules.
+   using your own knowledge of markdown rules. Skip any rule code in `--ignore`.
 2. Use any tools already available to you (built-in,
    MCP) to assist — do not install or invoke external
    packages.
@@ -128,7 +129,7 @@ The unpadded-pipe case (`|---|---|`) is pattern-detectable and pattern-fixable: 
 
 ## Rules
 
-- Fix every violation. Never suppress a rule.
+- Fix every violation. Never suppress a rule unless it appears in the `--ignore` list.
 - Never change content meaning — only formatting.
 - Never introduce new violations while fixing others.
 - Preserve code blocks, frontmatter, and technical strings exactly.

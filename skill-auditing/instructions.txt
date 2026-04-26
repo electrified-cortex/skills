@@ -52,7 +52,7 @@ Deep verification SKILL.md faithfully represents spec.
 9. No dispatch refs in instructions — `instructions.txt` mustn't tell agent to dispatch. Subagents can't dispatch (host only). "Related" context refs OK; "run this"/"dispatch this" → FAIL. Fix: move to SKILL.md.
 10. No spec breadcrumbs in runtime — SKILL.md and `instructions.txt` mustn't reference skill's own `spec.md`. Runtime self-contained. Exception: skills taking spec as input may reference spec under audit, never own. Fix: delete ref; inline if genuinely needed.
 11. (A-FM-2) Description not restated — scan all artifacts for body prose duplicating `description` frontmatter. Any → LOW (HIGH if verbatim).
-12. (A-FM-4) Lint wins — run markdown-hygiene; no suppressed violations except no-H1 rule. Other suppressed → HIGH.
+12. (A-FM-4) Lint wins — run markdown-hygiene with `--ignore MD041` on `SKILL.md` and `instructions.txt`; no other suppressed violations. Any other suppressed → HIGH.
 13. (A-FM-5) No exposition in runtime — scan for rationale, "why", root-cause narrative, history, background. Any found → HIGH. Rationale belongs in `spec.md`.
 14. (A-FM-6) No non-helpful tags — scan for descriptor lines w/ no operational value (e.g., "inline apply directly", "dispatch skill", bare type labels). Any → LOW.
 15. (A-FM-7) No empty sections — every heading has body content before next heading/EOF. Empty → HIGH.
