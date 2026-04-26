@@ -1,7 +1,7 @@
 Fix all markdownlint violations in a .md file. Zero errors is the gate.
 
 Params:
-`file_path` (required): absolute path to .md file to fix
+`file_path` (required): absolute path to .md file
 `--source X --target Y` (optional): read X, fix, write Y; X untouched, no git check
 
 Modes:
@@ -12,8 +12,7 @@ Fallback: unstaged changes or `??`, no `--target` → create `<file>.fixed` alon
 Procedure:
 1. Read file, scan for markdownlint violations using own knowledge.
 2. Use available tools (built-in, MCP) — don't install external packages.
-3. Read file.
-4. Fix every violation:
+3. Fix every violation:
    blank lines around headings + code blocks (MD022, MD031)
    heading level increments (MD001)
    list markers + ordered list prefixes (MD004, MD029)
@@ -22,13 +21,13 @@ Procedure:
    file ends with single newline (MD047)
    bare URLs → angle brackets (MD034)
    language IDs on fenced code blocks (MD040)
-   table pipe spacing (MD060), blank lines around tables (MD058), equal column count (MD056), consistent pipe style (MD055)
+   table pipe spacing (MD060); blank lines around tables (MD058); equal column count (MD056); consistent pipe style (MD055)
    no trailing punctuation in headings (MD026)
    no inline HTML where markdown works (MD033)
    all other markdownlint rules
-5. Write to target (in-place, `.fixed`, or `--target`).
-6. Verify: re-run linter on output, confirm zero errors.
-7. Compute report path via audit-reporting path shape (target-kind from target file path); write report there.
+4. Write to target (in-place, `.fixed`, or `--target`).
+5. Verify: re-run linter on output, confirm zero errors.
+6. Compute report path via audit-reporting path shape (target-kind from target file path); write report there.
 
 Report Format:
 Clean: `CLEAN: <file_path> (0 errors)`
@@ -46,9 +45,18 @@ Remaining: M errors (manual fix required)
 - <rule>: <description> (line N)
 ```
 
-Gotcha — MD060 (no auto-fix): separator `|---|---|` → must be `| --- | --- |`.
-markdownlint CLI does not auto-fix MD060. Generated tables commonly produce wrong form.
-Report PARTIAL if rewrite would change meaning.
+Verdict mapping for audit-reporting: CLEAN → PASS; FIXED → PASS_WITH_FINDINGS; PARTIAL → NEEDS_REVISION.
+
+Iteration safety: don't re-audit unchanged files. Check git status or mtime; clean+unchanged → return CLEAN early.
+
+Tables — two canonical separator modes, never mix per table:
+Mode A (default): 1–3 dashes per cell, pipe-padded. Widths flexible. e.g. `| - | --- | --- |`
+Mode B (aligned): dashes match header width. Use only when human readability matters.
+Prohibitions:
+- no unpadded pipes (`|---|---|`) — insert space on each side of every dash run; pattern-detectable + pattern-fixable; treat as normal violation, not partial
+- no extra whitespace in header labels: `|  Header  |` → `| Header |`
+- no inconsistent separator widths within one table
+- no mixed Mode A + Mode B in same table
 
 Rules:
 Fix every violation. Never suppress a rule.
