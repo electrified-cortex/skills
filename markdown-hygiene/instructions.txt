@@ -2,7 +2,7 @@ Detect, fix markdownlint violations. Zero errors gates execution.
 
 Params:
 `file_path` (required): absolute path to .md file
-`--model-id <id>` (required): model identifier for record filename; lowercase-hyphenated (claude-haiku-4-5, claude-sonnet-4-6); use VERBATIM — no inference, suffix, date. Missing → `ERROR: --model-id required`, stop.
+`--model-id <id>` (required): model identifier for record filename; lowercase-hyphenated vendor-class only (claude-haiku, claude-sonnet, claude-opus, gpt-codex); use VERBATIM — no inference, suffix, date, sub-version. Missing → `ERROR: --model-id required`, stop.
 `--fix` (optional): apply fixes after detect; without, detect-only — file untouched.
 `--source X --target Y` (optional): read X, fix, write Y; X untouched, no git check; implies `--fix`.
 `--ignore <RULE>[,<RULE>...]` (optional): skip rules — not scanned, flagged, fixed.
@@ -55,7 +55,7 @@ Pass 1 — Detect:
    — MD060: table separators spaced (`| --- |` not `|---|`).
 5. Write detect record at `<detect_cache_dir>/<model-id>.md`:
    — Filename: `<model-id>.md` (value from `--model-id`, VERBATIM; append nothing). Caller controls filename; executor uses supplied value as-is. Missing → stop with `ERROR: --model-id required`.
-     Correct: `.hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5.md`
+     Correct: `.hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku.md`
      Incorrect: appended date/qualifiers/inferred model.
    — `mkdir -p <detect_cache_dir>` (Bash).
    — Frontmatter: `hash: <hash>`, `file_path: <repo-relative>` (via `git ls-files --full-name` or strip `git rev-parse --show-toplevel`; e.g. `markdown-hygiene/instructions.uncompressed.md`), `operation_kind: markdown-hygiene`, `model: <model-id>`, `result: pass|findings`.

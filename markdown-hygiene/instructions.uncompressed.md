@@ -5,7 +5,7 @@ Detect and optionally fix markdownlint violations. Zero errors after the fix pas
 ## Dispatch Parameters
 
 - `file_path` (required): Absolute path to the .md file to scan (and optionally fix)
-- `--model-id <id>` (required): The exact model identifier string the caller wants used as the record filename. Lowercase-hyphenated. Examples: `claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-opus-4-7`, `gpt-5-3-codex`. The executor MUST use this string verbatim as the record filename — no inference, no appending date/year/timestamp/qualifier. If `--model-id` is not passed, output `ERROR: --model-id required` and stop.
+- `--model-id <id>` (required): The exact model identifier string the caller wants used as the record filename. Lowercase-hyphenated, vendor-class only (NO sub-version). Examples: `claude-haiku`, `claude-sonnet`, `claude-opus`, `gpt-codex`. The executor MUST use this string verbatim as the record filename — no inference, no appending date/year/timestamp/qualifier/sub-version. If `--model-id` is not passed, output `ERROR: --model-id required` and stop.
 - `--fix` (optional): Apply fixes after detecting violations. Without this flag, the file is never modified — detection only.
 - `--source X --target Y` (optional): Read X, fix, write to Y. X untouched. No git check. Implies `--fix`.
 - `--ignore <RULE>[,<RULE>...]` (optional): Comma-separated rule codes to skip — not scanned, not flagged, not fixed. Example: `--ignore MD041`.
@@ -64,13 +64,13 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
      The caller controls the filename. The executor's job is to use the supplied value as-is. If `--model-id` was not passed, stop with `ERROR: --model-id required` before writing any record.
 
      ```text
-     Correct:   .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5.md
-     Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5-20251001.md
-     Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/skill-auditing-sonnet-claude-sonnet-4-6.md
-     Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-sonnet-4-6-2026-04-27T19-17-52Z.md
+     Correct:   .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku.md
+     Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5.md
+     Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/skill-auditing-sonnet-claude-sonnet.md
+     Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-sonnet-2026-04-27T19-17-52Z.md
      ```
 
-     In the Correct example, `claude-haiku-4-5` is whatever the caller passed as `--model-id`, not what the executor inferred. In the Incorrect examples the executor appended extra tokens or used caller context instead of the explicit argument.
+     In the Correct example, `claude-haiku` is whatever the caller passed as `--model-id`, not what the executor inferred. In the Incorrect examples the executor appended extra tokens or used caller context instead of the explicit argument.
 
    - `mkdir -p <detect_cache_dir>` (Bash tool).
    - Frontmatter (open `---`, close `---`):
