@@ -57,10 +57,16 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
    - MD058 — tables must be preceded AND followed by a blank line
    - MD060 — table cell separators must have a space on each side of the dash run (`| --- |` not `|---|`)
 5. **Write detect record** at `<detect_cache_dir>/<model>.md`:
+   - **Filename format:** `<model-id>.md` ONLY. The `<model-id>` is the agent's own canonical model identifier in lowercase-hyphenated form — `claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-opus-4-7`, `gpt-5-3-codex`, etc. **Do NOT include**: caller skill name, caller model id, timestamp/date, sub-version qualifiers (e.g. no `-2025` suffix, no `-sonnet-` qualifier from caller context). The filename is determined SOLELY by the agent's own model id, and must be deterministic — running the same agent on the same content produces the same filename, every time, byte-for-byte.
+     ```text
+     Correct:   .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5.md
+     Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/skill-auditing-sonnet-claude-sonnet-4-6.md
+     Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-sonnet-4-6-2026-04-27T19-17-52Z.md
+     ```
    - `mkdir -p <detect_cache_dir>` (Bash tool).
    - Frontmatter (open `---`, close `---`):
      - `hash: <hash>`
-     - `file_path: <git-relative path>`
+     - `file_path: <repo-relative path>` — MUST be a single repo-relative path string relative to the git root containing `.hash-record/`. Compute via `git ls-files --full-name <file>` from inside the file's repo, or strip `git rev-parse --show-toplevel` from the absolute path. Example: `markdown-hygiene/instructions.uncompressed.md`. NOT an absolute path, NOT a directory-only path.
      - `operation_kind: markdown-hygiene`
      - `model: <your-model-id>`
      - `result: pass` (no violations) or `result: findings` (violations exist)
@@ -77,7 +83,7 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
    - `mkdir -p <fix_cache_dir>` (Bash tool).
    - Frontmatter:
      - `hash: <fix_hash>`
-     - `file_path: <git-relative path>`
+     - `file_path: <repo-relative path>` — same rule as step 5: repo-relative, not absolute, not directory-only.
      - `operation_kind: markdown-hygiene`
      - `model: <your-model-id>`
      - `result: pass` (all Fix instructions applied) or `result: findings` (some not applicable / remain)

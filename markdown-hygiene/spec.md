@@ -115,6 +115,30 @@ Two-pass model: detect first, fix second (only if `--fix` is present). The detec
 `result`. The `model` field is the model identifier, orthogonal
 to `operation_kind`.
 
+`file_path` MUST be a single repo-relative path string — relative to the git root
+that contains the `.hash-record/` directory being written to. Compute via
+`git ls-files --full-name <file>` from inside the file's repo, or strip the
+`git rev-parse --show-toplevel` prefix from the absolute path.
+
+```yaml
+# Correct:
+file_path: markdown-hygiene/instructions.uncompressed.md
+
+# WRONG (absolute path):
+file_path: /abs/path/to/markdown-hygiene/uncompressed.md
+
+# WRONG (directory only, no filename):
+file_path: markdown-hygiene/
+```
+
+**Filename format:** `<model-id>.md` ONLY. The `<model-id>` is the agent's own canonical model identifier in lowercase-hyphenated form — `claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-opus-4-7`, `gpt-5-3-codex`, etc. **Do NOT include**: caller skill name, caller model id, timestamp/date, sub-version qualifiers (e.g. no `-2025` suffix, no `-sonnet-` qualifier from caller context). The filename is determined SOLELY by the agent's own model id, and must be deterministic — running the same agent on the same content produces the same filename, every time, byte-for-byte.
+
+```text
+Correct:   .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5.md
+Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/skill-auditing-sonnet-claude-sonnet-4-6.md
+Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-sonnet-4-6-2026-04-27T19-17-52Z.md
+```
+
 **Body format** — minimum information not already in frontmatter. No `file_path`
 duplication in body. Body always opens with `# Result` H1.
 

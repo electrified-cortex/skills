@@ -52,8 +52,12 @@ Pass 1 — Detect:
    - MD058: tables must be preceded AND followed by blank line
    - MD060: table cell separators must have space on each side of dash run (`| --- |` not `|---|`)
 5. Write detect record at `<detect_cache_dir>/<model>.md`:
+   - Filename: `<model-id>.md` ONLY — agent's own model id, lowercase-hyphenated (e.g. `claude-haiku-4-5`, `claude-sonnet-4-6`). NO caller skill name, NO caller model id, NO timestamp, NO sub-version qualifier. Same agent + same content = same filename, every run.
+     Correct: `.hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5.md`
+     Incorrect: `.hash-record/<sh>/<hash>/markdown-hygiene/skill-auditing-sonnet-claude-sonnet-4-6.md`
+     Incorrect: `.hash-record/<sh>/<hash>/markdown-hygiene/claude-sonnet-4-6-2026-04-27T19-17-52Z.md`
    - Run: `mkdir -p <detect_cache_dir>` (Bash tool).
-   - Frontmatter: `hash`, `file_path`, `operation_kind: markdown-hygiene`, `model: <your-model-id>`, `result: pass` (no violations) or `result: findings` (violations exist).
+   - Frontmatter: `hash`, `file_path: <repo-relative path>` (MUST be repo-relative, not absolute, not dir-only; compute via `git ls-files --full-name <file>` or strip `git rev-parse --show-toplevel` prefix; e.g. `markdown-hygiene/instructions.uncompressed.md`), `operation_kind: markdown-hygiene`, `model: <your-model-id>`, `result: pass` (no violations) or `result: findings` (violations exist).
    - Body: `# Result\n\nCLEAN` or `# Result\n\nFINDINGS\n\n- <list>`. FINDINGS: each entry = two lines: `MD0XX line N: <description>` then indented `Fix: <imperative>`. `Fix:` MUST be complete standalone instruction — Pass 2 applies literally without rule knowledge.
    - No violations (CLEAN): output `CLEAN`, stop.
    - Violations + `--fix` not passed: output `findings: <detect_cache_dir>/<model>.md`, stop.
@@ -65,7 +69,7 @@ Pass 2 — Fix (only when `--fix` present and violations exist):
 8. Compute new hash: `git hash-object <fixed-file-path>`. Save as `<fix_hash>`. Set `<fix_cache_dir>` = `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene` (no trailing slash).
 9. Write fix record at `<fix_cache_dir>/<model>.md`:
    - Run: `mkdir -p <fix_cache_dir>` (Bash tool).
-   - Frontmatter: `hash: <fix_hash>`, `file_path`, `operation_kind: markdown-hygiene`, `model: <your-model-id>`, `result: pass` (all fixed) or `result: findings` (some remain).
+   - Frontmatter: `hash: <fix_hash>`, `file_path: <repo-relative path>` (same rule: repo-relative, not absolute, not dir-only), `operation_kind: markdown-hygiene`, `model: <your-model-id>`, `result: pass` (all fixed) or `result: findings` (some remain).
    - Body: `# Result\n\nFIXED\n\n- <list>` or `# Result\n\nPARTIAL\n\n...`.
    - All fixed (FIXED): output `CLEAN`, stop. Some remain (PARTIAL): output `findings: <fix_cache_dir>/<model>.md`, stop.
 

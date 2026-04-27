@@ -17,20 +17,48 @@
 
 ## Procedure
 
-1. Read the skill at `skill_path`
-2. Determine type: inline or dispatch
-3. Locate companion spec — check in order:
-   a. `spec_path` if provided
-   b. `spec.md` in the same directory as `skill_path`
-   If not found: simple inline skills (<30 lines) may skip Phase 1; dispatch
-   or complex inline → FAIL immediately.
-4. Run Phase 1 → Phase 2 → Phase 3 (stop on first failure)
-5. Assign verdict
-6. Compute output path via `audit-reporting` path shape (target-kind: `skill`); write report there.
-7. If `--fix` is active **and** the verdict is exactly NEEDS_REVISION, enter the
-   Fix Mode procedure below. PASS → nothing to fix; FAIL → fix mode is skipped
-   and defects are reported for author action. Fix mode is single-pass; the
-   auditor does not re-audit or recompress.
+1. **Read** the target skill directory listing (Glob or ls on the skill dir containing `skill_path`).
+2. **Identify source files** — typically `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` if present. Skip `SKILL.md` and `instructions.txt` — those are compressed artifacts derived from the source.
+3. **Run** `git hash-object <file>` on each source file. Collect `(filename, blob-hash)` pairs.
+4. **Build manifest:** sort pairs lexically by filename. Write one `<filename> <hash>` line per pair to a temp string. Run `git hash-object --stdin` on that text. Save the 40-char result as `<manifest_hash>`.
+5. **Cache check:** `test -f <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/<model>.md` (use the Bash tool). `<model>` is the model-id string only (e.g. `claude-sonnet-4-6`) — no skill-name prefix, no timestamp, no extra qualifiers. If the file exists (cache HIT): output `PATH: <abs-path-to-that-file>` and stop — do not re-run the audit. If the file does not exist (cache MISS): save `<repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/` as `<audit_cache_dir>` and continue.
+
+   The `v1.0` segment is mandatory for skill-auditing records. The version is declared in `spec.md` and MUST match the version embedded in this instructions file. If they ever drift, that's a defect — surface and stop.
+
+   **Filename format:** `<model-id>.md` ONLY. The `<model-id>` is the agent's own canonical model identifier in lowercase-hyphenated form — `claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-opus-4-7`, `gpt-5-3-codex`, etc. **Do NOT include**: caller skill name, caller model id, timestamp/date, sub-version qualifiers (e.g. no `-2025` suffix, no `-sonnet-` qualifier from caller context). The filename is determined SOLELY by the agent's own model id, and must be deterministic — running the same agent on the same content produces the same filename, every time, byte-for-byte.
+
+   ```text
+   Correct:   .hash-record/<sh>/<hash>/skill-auditing/v1.0/claude-haiku-4-5.md
+   Incorrect: .hash-record/<sh>/<hash>/skill-auditing/skill-auditing-sonnet-claude-sonnet-4-6.md
+   Incorrect: .hash-record/<sh>/<hash>/skill-auditing/claude-sonnet-4-6-2026-04-27T19-17-52Z.md
+   ```
+6. **Hygiene per file:** dispatch `markdown-hygiene` on each `.md` file in the skill directory (including `SKILL.md`, `instructions.txt` if present). Each call returns one of three states: `CLEAN` (no violations — no path emitted), `findings: <abs-path>` (unresolved violations — collect the path), or `ERROR: <reason>` (pre-write failure — flag as sub-dispatch failure). Only `findings:` paths are collected; `CLEAN` files contribute no entry. These are independently cached at per-file blob hashes and do not affect the manifest hash.
+7. **Read the skill** at `skill_path`. Determine type: inline or dispatch. Locate companion spec — check `spec_path` if provided, otherwise `spec.md` co-located with `skill_path`. If not found: simple inline skills (<30 lines) may skip Phase 1; dispatch or complex inline → record an error verdict, write the record, output `PATH:`, and stop.
+8. **Run Phase 1 → Phase 2 → Phase 3** (stop on first failure). Assign verdict. Map to `result` field: PASS → `pass`; PASS_WITH_FINDINGS / NEEDS_REVISION / FAIL → `findings`; error → `error`.
+9. **Write audit record** at `<audit_cache_dir><model>.md` — filename is `<model-id>.md` exactly (e.g. `claude-sonnet-4-6.md`), no skill-name prefix, no timestamp, no extra qualifiers. `mkdir -p <audit_cache_dir>` first. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list of repo-relative paths>` (one entry per source file from step 3, sorted lexically; each path is relative to the git root containing `.hash-record/` — compute via `git ls-files --full-name <file>` or strip `git rev-parse --show-toplevel` from each absolute path), `operation_kind: skill-auditing`, `model: <model-id>`, `result: <mapped value>`.
+
+   ```yaml
+   # Correct:
+   file_paths:
+     - skill-auditing/instructions.uncompressed.md
+     - skill-auditing/SKILL.md
+     - skill-auditing/spec.md
+     - skill-auditing/uncompressed.md
+
+   # WRONG (directory only):
+   file_path: skill-auditing/
+
+   # WRONG (absolute paths):
+   file_paths:
+     - /abs/path/to/skill-auditing/SKILL.md
+
+   # WRONG (singular file_path in multi-file context):
+   file_path: skill-auditing/SKILL.md
+   ```
+
+   Body: open with `# Result` H1, state verdict, list findings (with phase and check references), then a **References** subsection listing only the `findings:` paths collected in step 6 (files that returned `CLEAN` are omitted; `ERROR` responses are noted separately as sub-dispatch failures).
+10. **Output** `PATH: <audit_cache_dir><model>.md` and stop.
+11. If `--fix` is active **and** the verdict is exactly NEEDS_REVISION, enter the Fix Mode procedure below. PASS → nothing to fix; FAIL → fix mode is skipped and defects are reported for author action. Fix mode is single-pass; the auditor does not re-audit or recompress.
 
 ## When to audit which artifact
 
@@ -116,9 +144,9 @@ the routing card`. Routing card = invocation signature + output format.
 
 **(A-IS-1) Input/output double-specification** — if the skill takes an INPUT
 parameter that duplicates an OUTPUT already determined by a referenced sub-skill
-(e.g. passing `result_file` when `audit-reporting` dictates the output path),
-flag as HIGH. The input surface must not override conventions dictated by
-referenced sub-skills.
+(e.g. passing `result_file` when the sub-skill dictates the output path via its
+own hash-record write), flag as HIGH. The input surface must not override
+conventions dictated by referenced sub-skills.
 
 ### 4. Frontmatter
 
@@ -211,7 +239,11 @@ turn when possible.
 
 ### 8. Markdown hygiene
 
-Report no errors on every `.md` file in the skill.
+For each `.md` file, `markdown-hygiene` returns `CLEAN`, `findings: <abs-path>`, or `ERROR: <reason>`.
+
+- All files return `CLEAN` → check PASSES; no References entries added.
+- Any file returns `findings:` → add the path to References; mark check FINDINGS (not PASS).
+- Any file returns `ERROR:` → flag as sub-dispatch failure; treat as check failure for that file.
 
 ### 9. No dispatch references in instructions
 
@@ -240,9 +272,11 @@ duplicates the `description` frontmatter value. Any restatement → LOW
 
 ### 12. (A-FM-4) Lint wins
 
-Run `markdown-hygiene` (covered by check 8) with `--ignore MD041` on
-`SKILL.md` and `instructions.txt`. Confirm no other violations are
-suppressed or dismissed. Any other suppressed violation → HIGH.
+Run `markdown-hygiene` with `--ignore MD041` on `SKILL.md` (covered by check 8;
+R-FM-3 sanctioned no-H1 exception). Expect `CLEAN` | `findings: <abs>` |
+`ERROR: <reason>`. `CLEAN` → PASS. `findings:` → record path under References
+and flag FINDINGS. `ERROR:` → flag as sub-dispatch failure. Confirm no other
+violations are suppressed or dismissed. Any other suppressed violation → HIGH.
 
 ### 13. (A-FM-5) No exposition in runtime artifacts
 
@@ -300,6 +334,31 @@ NOT violations:
 
 Any cross-file path pointer → HIGH.
 
+### 20. (A-FM-10) Launch-script form on dispatch skills
+
+Applies to dispatch skills only (N/A for inline skills).
+
+Verify `uncompressed.md` contains ONLY:
+
+- Frontmatter (`name`, `description`)
+- Optional H1
+- Dispatch invocation + input signature (parameter list)
+- Return contract (`Returns:` line)
+- Optional 2-line iteration-safety pointer
+
+Any of the following → HIGH:
+
+- Executor procedure steps or phase descriptions
+- Modes tables or "When to audit which artifact" tables
+- Examples or sample invocations beyond the input signature
+- Rationale, "why this exists," or background prose
+- Related breadcrumbs or "Related:" sections
+- Behavior sections or Output format descriptions
+- Model-class guidance (e.g., "Haiku-class handles most audits")
+- False-positive guard lists
+
+Content must go in `instructions.uncompressed.md` (executor procedure) or `spec.md` (rationale/behavior).
+
 ## Verdict Rules
 
 - **PASS**: All three phases pass.
@@ -318,7 +377,7 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
 1. **Eligibility gate.** Enter fix mode only when verdict == NEEDS_REVISION.
    PASS → nothing to fix. FAIL (any phase) → fix mode is skipped; defects are
    reported for author action.
-2. **Preflight report path writability.** Compute report path via `audit-reporting` path shape. If unwritable, STOP fix mode and exit without modifying anything.
+2. **Preflight report path writability.** Compute report path via the hash-record manifest path (`<audit_cache_dir><model>.md`). If unwritable, STOP fix mode and exit without modifying anything.
 3. **Identify writable candidates.** Only `uncompressed.md` and
    `instructions.uncompressed.md` co-located with `skill_path` are eligible.
    - Reject any candidate path that resolves outside the skill directory
@@ -356,7 +415,30 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
 
 ## Report Format
 
+Frontmatter (required):
+
+```yaml
+---
+hash: <manifest-hash>
+file_paths:
+  - <repo-relative path to first source file>
+  - <repo-relative path to second source file>
+  ...
+operation_kind: skill-auditing
+model: <model-id>
+result: pass | findings | error | skipped
+---
+```
+
+`file_paths` MUST be a YAML list of repo-relative path strings — one per source file from the manifest, sorted lexically. Repo-relative = relative to the git root containing `.hash-record/`. NOT absolute paths, NOT a directory-only string, NOT a singular `file_path` key.
+
+Body (required):
+
 ```markdown
+# Result
+
+PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
+
 ## Skill Audit: <skill-name>
 
 **Verdict:** PASS | NEEDS_REVISION | FAIL
@@ -411,6 +493,7 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
 | Iteration-safety pointer form (A-FM-9a) | PASS/FAIL/N/A | |
 | No verbatim Rule A/B (A-FM-9b) | PASS/FAIL/N/A | |
 | Cross-reference anti-pattern (A-XR-1) | PASS/FAIL | |
+| Launch-script form (A-FM-10) | PASS/FAIL/N/A | |
 
 ### Issues
 
@@ -419,6 +502,11 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
 ### Recommendation
 
 <one line>
+
+### References
+
+- <findings: path from markdown-hygiene — only for files with unresolved violations; CLEAN files omitted>
+- <ERROR entries noted here if any sub-dispatch failed>
 ```
 
 ## Rules

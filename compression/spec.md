@@ -47,6 +47,9 @@ Targets `.md` files loaded into agent context: agent definition files, skill fil
 - Fallback mode must write `<filename>.compressed` alongside the original without modifying it.
 - Compressed output must preserve the semantic meaning of the input; when compression introduces ambiguity, the original wording must be retained.
 - When the target is a `.md` file, the skill must run a markdown-hygiene pass on the compressed result after step 5 verification. Any lint issues introduced by compression must be fixed before writing. Remaining unfixable issues are reported as warnings — they do not cause rejection. The output must always state the hygiene outcome (`clean`, `fixed N issue(s)`, or `N warning(s)`) so callers know a hygiene pass has already been performed and need not repeat it.
+- When the target is a `.md` file, the skill must preserve blank lines surrounding fenced code blocks (` ``` ... ``` `) — MD031 compliance must hold across the compression transform, not solely via the post-compression hygiene pass.
+- The skill must not introduce content not present in the source. The compression transform is read-and-reduce; merging or carrying forward content from the prior on-disk target is forbidden. The dispatched compression agent must compose its output solely from the source bytes.
+- When the target file is `SKILL.md` AND the source contains an H1 that matches the frontmatter `name:` field (case-normalized, e.g. `# Markdown Hygiene` matches `name: markdown-hygiene`), the H1 must be stripped from the target. SKILL.md must not contain H1 (per `skill-auditing` rule A-FM-3); `uncompressed.md` is the source and must contain it. The H1-strip is conditional on this match — never strip H1 from non-SKILL.md targets, and never strip H1 that does not match the frontmatter name.
 
 ## Constraints
 
