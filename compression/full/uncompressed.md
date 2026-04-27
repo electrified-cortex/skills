@@ -17,6 +17,7 @@ Full-tier compression sits between Lite (human-readable, articles preserved) and
 ### Remove List
 
 All of the following must be explicitly covered:
+
 - Articles: `a`, `an`, `the`
 - Filler phrases: `in order to`, `it is worth noting`, `it should be noted`, `please note`, `as mentioned`
 - Hedging: `arguably`, `somewhat`, `in some cases`, `it could be said`
@@ -32,13 +33,15 @@ All of the following must be explicitly covered:
 ### Keep List
 
 Full preserves where Ultra does not:
+
 - Full punctuation (periods, commas, colons, semicolons) where they aid clarity
 - Sentence structure when the logical relationship between clauses would be lost without it
 - Connectives that carry logical meaning (`but`, `because`, `unless`, `however`)
 
-### Preserve List (Never Modify)
+### Preserve List Never Modify
 
 The following must never be altered regardless of compression tier:
+
 - Code blocks and inline code
 - URLs, file paths, commands
 - Technical terms and proper nouns
@@ -56,6 +59,7 @@ If compression of any phrase would introduce ambiguity or change meaning, keep t
 ### Pass Order
 
 Compression must follow this sequence:
+
 1. Preserve scan — identify all protected content; mark as untouchable
 2. Remove — strip articles, filler, hedging, pleasantries, verbose phrasing
 3. Transform — apply synonyms, fragment where safe, merge redundant bullets
@@ -76,6 +80,7 @@ The `rules.txt` itself must be Full-compressed (applying the rules it describes)
 ## Audit Checklist
 
 Verifying rules.txt against spec:
+
 - [ ] Self-contained — agent needs only rules.txt to apply Full
 - [ ] Remove section covers articles, filler, hedging, pleasantries, verbose phrasing
 - [ ] Transform section covers synonyms, fragments, bullet merging
