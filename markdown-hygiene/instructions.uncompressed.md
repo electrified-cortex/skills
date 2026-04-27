@@ -92,6 +92,7 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
 ## Report Format
 
 **Dispatch return** (one line, always):
+
 - Success: `PATH: <absolute-path-to-record.md>`
 - Pre-write failure: `ERROR: <reason>`
 
@@ -142,6 +143,7 @@ Remaining (manual):
 ```
 
 Verdict mapping for `result` frontmatter:
+
 - CLEAN -> `pass`
 - FIXED -> `pass` (file is now clean)
 - FINDINGS -> `findings`
