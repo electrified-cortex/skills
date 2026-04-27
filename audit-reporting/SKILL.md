@@ -5,31 +5,33 @@ description: >-
   Inline — apply directly. No dispatch.
 ---
 
-Root fallback chain:
+# Audit Reporting
 
-1. Walk up from target file until dir containing `.git/` found → repo-root
-2. No `.git/` → implicit-root: immediate parent of target file
+Output convention for agents writing audit report files. Apply for `skill-auditing`, `spec-auditing`, `tool-auditing`, or any audit skill.
+
+Output Path:
+Resolve `repo-root`: walk up from target file until dir containing `.git/` found. If not found, stop — report failure, write nothing.
 
 Write all report files to:
 
-```path
-{root}/.audit-reports/{target-kind}/YYYYMMDD/HHmm/
+```
+{repo-root}/.audit-reports/YYYYMMDD/HHmm/
 ```
 
-`target-kind` = classifier supplied by caller. `YYYYMMDD`/`HHmm` = UTC at run start. All files in one run share one `audit-dir`.
+`YYYYMMDD` and `HHmm` must be UTC at audit run start. All files in one run share one `audit-dir`.
 
-Create `audit-dir` (including intermediate dirs) before writing.
+If dir already exists (same-minute re-run), append `-2`, `-3`, etc. to `HHmm` (e.g. `0718-2/`).
+
+Create `audit-dir` (including intermediate dirs) before writing any file.
 
 Filename:
-
-Collect all `(stem, ext)` pairs across targets before naming.
+Collect all `(stem, ext)` pairs across targets before naming any file.
 
 No collision → `{stem}{ext}.audit.md` (e.g. `spec.md.audit.md`)
 Collision (same stem+ext in different dirs) → `{parent-dir}-{stem}{ext}.audit.md` (e.g. `code-review-spec.md.audit.md`)
 
 Frontmatter:
-
-Every report opens with this YAML block (no content before it):
+Every report file must open with this YAML block (no content before it):
 
 ```yaml
 ---
@@ -46,15 +48,23 @@ verdict: <PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL>
 `model` — runtime model string. Never omit; use `"unknown"` if unavailable.
 `verdict` — exactly one of four values above.
 
+Batch Run (2+ targets):
+Also write `audit.md` in same `audit-dir`:
+
+```
+{audit-dir}/audit.md
+```
+
+`audit.md` contains: target paths, verdicts, relative paths to individual reports. No prose — overview only.
+
 .gitignore Check:
-
-root = repo-root: verify `.audit-reports/` in `{repo-root}/.gitignore` before writing. If missing, add it. Top-level entry covers all subdirectories — do not add subpath entries.
-root = implicit-root (no git): skip.
-
-Error: if audit-dir creation fails, stop and report — no partial output.
+Before writing any file, verify `.audit-reports/` is in `{repo-root}/.gitignore`. If missing, add it.
 
 Constraints:
-
 Never write outside `.audit-reports/`.
-Never overwrite or modify prior run's files.
+Never overwrite or modify a prior run's files.
 Use UTC only — not local wall-clock time.
+`audit.md` in batch runs always written — can't be suppressed.
+
+Related:
+`skill-auditing`, `spec-auditing`, `tool-auditing`

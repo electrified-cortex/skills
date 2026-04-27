@@ -6,7 +6,7 @@ Sub-spec of `swarm/spec.md`. Covers: arbitrator role, dispatch conditions, requi
 
 The arbitrator is a single sub-agent dispatched after all swarm member outputs are collected. Its sole job is to consolidate the raw member outputs into a structured action list. It is not a reviewer. It does not form opinions about the artifact. It distills, deduplicates, and classifies findings.
 
-The arbitrator is structurally separate from the personality registry. It must not appear in the registry, must not be subject to personality selection, availability gating, or `additional_personalities`. It is always dispatched as part of the standard step sequence; it cannot be disabled.
+The arbitrator is structurally separate from the personality registry. It must not appear in the registry, must not be subject to personality selection, availability gating, or `personality_filter`. It is always dispatched as part of the standard step sequence; it cannot be disabled.
 
 ## Dispatch
 

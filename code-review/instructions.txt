@@ -1,82 +1,65 @@
+﻿# Code Review Pass
+
+Read change set, produce findings report. Read-only — never edit, commit, push, stage. Reporting and fixing are separate concerns.
+
 Params:
-`change_set` (required): inline diff, absolute file paths, or git ref/range.
-`level` (required): `L1`, `L2`, or `L3`. Default L1.
-`focus` (optional): comma-separated focus areas. Pass through to swarm.
-`context_pointer` (optional): CLAUDE.md/README/style guide path. Pass through.
-`disable_inline_personality_generation` (optional, default false): pass through to swarm.
+`change_set` (required): inline diff text, absolute file paths, or git ref/range. Resolve form received.
+`tier` (required): `smoke` or `substantive`. Governs depth.
+`prior_findings` (substantive only, required): findings from every prior pass on same change set. Required for substantive; smoke mustn't receive this.
+`focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth.
+`context_pointer` (optional): path to CLAUDE.md/README/style guide for local conventions. Read for conventions only.
 
 Gates:
-1. Resolve `change_set`. Unresolvable → STOP: `overall_verdict: error`, `failure_reason`.
-2. Empty `change_set` → return `overall_verdict: clean`, skip swarm.
-3. Can't read all files → STOP: `overall_verdict: error`, `failure_reason: "incomplete change set read"`.
+1. Resolve `change_set`. Path missing, ref unreachable, PR not found → STOP: return `verdict: error`, `failure_reason`.
+2. `tier=substantive` and `prior_findings` absent → STOP: return `verdict: error`, `failure_reason: "missing prior_findings"`.
+3. `change_set` is empty (no files, no diff content, no refs resolving to changes) → return `verdict: clean`, `findings: []`, no `prior_findings_disposition`.
+4. Read all files in change set fully before judging. Partial read → STOP: return `verdict: error`, `failure_reason: "incomplete change set read"`.
 
-Step 1 — Hash files:
-SHA-256 every file from raw content (cache key). If tracked+unmodified, record git blob hash as `hash_source: git-blob` metadata only — SHA-256 is still the key.
-Manifest = `[{ file_path, content_hash (SHA-256), hash_source }]` sorted by path.
-Manifest hash = SHA-256 of sorted content hashes joined by newline.
+Procedure:
+1. `tier=smoke`: review for surface-level findings — style, naming, obvious bugs, missing error handling on observable failures, lint-grade defects. Bound depth to fast pass. Skip design and architecture critique.
+2. `tier=substantive`: review for design, correctness, security, concurrency, architectural risk, test adequacy, public API surface. Read every file touched by change set, not just diff hunks.
+3. Substantive pass MUST re-examine each `prior_findings` entry. Per finding: agree (carry forward, severity may change) or contradict (mark false-positive or out-of-scope). Contradictions go in output so calling agent can preserve them.
+4. Apply focus areas if provided: examine first and most thoroughly. Still surface every `blocker` and `major` finding outside focus. `minor`/`nit` outside focus may be deprioritized.
+5. Read `context_pointer` if provided, for local conventions only. Doesn't replace your judgment.
 
-Step 2 — Cache lookup:
-Check `.code-reviews/files/<hash-6>-L<n>.md` per file (hash-6 = first 6 chars SHA-256, n = level number).
-Check `.code-reviews/manifests/<manifest-hash>.md` for composite.
-All hits → skip to Step 6.
-Mark each file cache_hit: true/false.
+Severity (use only these):
+`blocker`: must fix before advancing — data loss, security hole, broken build, broken contract.
+`major`: should fix unless caller defers — significant correctness risk, missing error handling on observable failure, regression risk.
+`minor`: improvement worth making, not blocking.
+`nit`: stylistic preference, naming polish, comment wording.
 
-Step 3 — Personality set:
-Minimum (always): Code Reviewer (sonnet-class). Devil's Advocate is swarm built-in (B6) — don't add it.
-Preferred (availability-gated): probe Copilot CLI. Available → append Copilot Reviewer (gpt-class). Unavailable → omit.
-Core supplemental: Code Quality Critic, Test Reviewer, Architect, Operational Readiness, Performance Reviewer.
-Append by extension: .ps1/.psm1/.psd1 → PowerShell-reviewer; .sh/.bash → Bash-reviewer; .ts/.tsx → TypeScript-reviewer.
-
-Step 4 — Call swarm (cache-miss files only):
-Call `swarm` skill:
-  problem: <file content or diff>
-  additional_personalities: <assembled set from Step 3>
-  disable_inline_personality_generation: <pass-through; default false>
-Wait for synthesis.
-
-Step 5 — Translate findings:
-Convert swarm synthesis → conventional-comments format per finding:
-  type: <question|nit|issue|blocking|non-blocking>
-  file: <path>:<line-or-range>
-  title: <short summary>
-  body: <evidence + reasoning + suggested fix>
-  status: OPEN
-Mapping: data-loss/security/build-break → blocking; correctness/regression risk → issue; improvement → non-blocking; style/naming → nit; clarification → question.
-Discard any finding without evidence cite.
-
-Step 6 — Write review files:
-Create `.code-reviews/files/` if missing.
-Write `.code-reviews/files/<hash-6>-L<n>.md`:
-  # Review: <file_path>
-  hash: <full SHA-256>
-  hash_source: <git-blob|sha256>
-  level: L<n>
-  model_class: <haiku-class|sonnet-class|opus-class>
-  personalities: <comma-list>
-  date: <ISO date>
-  sign_off_state: OPEN
-  ## Findings
-  <conventional-comments findings>
-  ## Annotations
-  <empty or host annotations>
-Append to `.code-reviews/log.md`: `<ISO date> | <file_path> | <hash-6> | L<n> | <verdict>`
-
-Step 7 — Return:
+Output (JSON-shaped, returned as your final response):
+```json
 {
-  "files_reviewed": [{ "file_path", "hash", "level", "verdict", "cache_hit" }],
-  "manifest_hash": "<sha256>",
-  "findings_by_file": { "<hash>": [<findings>] },
-  "sign_off_states": { "<hash>": { "level", "state": "OPEN|SIGNED_OFF" } },
-  "overall_verdict": "clean|findings|error"
+  "tier": "smoke" | "substantive",
+  "pass_index": <integer assigned by caller; echo if provided, else 0>,
+  "verdict": "clean" | "findings" | "error",
+  "findings": [
+    {
+      "severity": "blocker" | "major" | "minor" | "nit",
+      "location": "<file:line-range>" or "general",
+      "description": "<what the issue is>",
+      "recommended_action": "<what should be done>"
+    }
+  ],
+  "prior_findings_disposition": [   // substantive only; omit for smoke
+    {
+      "prior_severity": "...",
+      "prior_location": "...",
+      "decision": "agree" | "contradict",
+      "new_severity": "..." or null,
+      "commentary": "<why agree, or why contradicted>"
+    }
+  ],
+  "failure_reason": "<string>"      // present only when verdict = "error"
 }
-overall_verdict: findings if any file has findings; error if any errored; clean if all clean.
+```
 
 Rules:
-Read-only. Don't edit, stage, commit, push, or mutate state.
-Don't dispatch personalities directly — call swarm.
-Don't fix findings. Report only.
-Every finding needs evidence. Discard without it.
-Single level per invocation. Don't chain levels internally.
-Don't re-review cache-hit files.
-SHA-256 always as cache key. Never git blob hash.
-Don't use bare model names — use haiku-class, sonnet-class, opus-class.
+Read-only. Don't edit, stage, commit, push, or run scripts that mutate state.
+Don't fix findings, even when fix is one line. Report only.
+Use only severity vocabulary above. Don't invent severities.
+Smoke pass mustn't receive `prior_findings`. If it arrives anyway, ignore and proceed.
+Single pass per dispatch. Don't chain or self-iterate.
+Don't consult agent memories, working-tree state, or repo history beyond what `change_set` and `context_pointer` give you. Zero-context isolation is normative.
+Caller disputes about prior findings won't be passed to you. Form own judgment.

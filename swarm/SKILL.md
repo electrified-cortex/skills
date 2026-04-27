@@ -1,51 +1,77 @@
 ---
 name: swarm
-description: Multi-personality review infrastructure. Selects reviewer personalities from a runtime registry, gates availability, dispatches in parallel via the dispatch skill, arbitrates, synthesizes verdict with confidence rating. Model selection is automatic. Infrastructure only — consumer skills (e.g. code-review) call in; swarm doesn't review itself.
+description: Multi-personality review infrastructure. Crawls reviewers/ registry, gates availability, dispatches in parallel, arbitrates, synthesizes verdict with confidence rating. Infrastructure only — consumer skills (e.g. code-review) call in; swarm doesn't review itself.
 ---
 
-Inputs: `problem` (required artifact), `additional_personalities` (inclusion list of personality names or indices, bypasses triggers — not exclusion gate; code-domain personalities like Code Quality Critic/Architect/Test Reviewer/Operational Readiness/Performance Reviewer/Copilot Reviewer are caller-supplied here, not built-in), `disable_inline_personality_generation` (optional bool, default false — set true for strict registry-only, no on-the-fly Custom Specialist). Model selection is automatic — no caller override. Key terms/glossary: `specs/glossary.md`. Sub-specs: `specs/registry-format.md`, `specs/personality-file.md`, `specs/arbitrator.md`, `specs/dispatch-integration.md`.
+Inputs: `problem` (required artifact), `personality_filter` (inclusion list, bypasses triggers), `model_overrides` (model class only, not backend).
 
 ## Step Sequence
 
-S1. Build review packet from `problem`. Fields (omit if N/A): Goal, Approach, Key decisions, Artifacts (actual content — not references), Files affected, Blast radius, Conventions. Must be self-contained. Verify Goal evaluable + Artifacts contain real content; resolve gaps from context — don't ask caller.
+S1. Build review packet from `problem`. Fields (omit if N/A): Goal, Approach, Key decisions, Artifacts (actual content — not references), Files affected, Blast radius, Conventions. Packet must be self-contained. Verify Goal is evaluable + Artifacts contain real content; resolve gaps from context — don't ask caller.
 
-S2. Select personalities. Read index from `reviewers/` — ONE file. Build in-memory: name, trigger, required, suggested_models, suggested_backends, scope, vendor. Skip invalid entries; verify `reviewers/<name>.md` exists and non-empty; missing/empty → drop with warning. Append caller custom-menu entries. If `additional_personalities`: dispatch named only, triggers bypassed. Else: evaluate triggers against packet. `required: true` personalities are always dispatched regardless of `additional_personalities` content. Devil's Advocate carries `required: true`. Selection inline.
+S2. Select personalities. Crawl `reviewers/` at runtime (metadata-validation gate: skip files with invalid/missing frontmatter). Append caller custom-menu entries. If `personality_filter` supplied: dispatch named only, triggers bypassed. If no filter: evaluate trigger conditions against packet traits; exclude non-matching. `required: true` personalities always included unless explicitly omitted by filter. Devil's Advocate carries `required: true`. Selection is inline — no separate dispatch. Revisit if registry exceeds ~20 entries.
 
-S3. Availability gate. Non-`dispatch-*` backends: run probe. Pass → include. Fail → drop, note in synthesis, continue — don't fail-stop. `dispatch-*` backends: no probe needed.
+S3. Availability gate. For each selected personality with non-`dispatch-*` backend (e.g. `copilot-cli`): run availability probe. Pass → include. Fail → drop, note in synthesis, continue. Don't fail-stop. `dispatch-*` backends: no probe needed.
 
-S4. Load reviewer prompts — ONLY after swarm finalized (post-S3). Load `reviewers/<kebab-name>.md` for dispatched personalities only. Strip YAML frontmatter if present. Body IS the system prompt verbatim — no scaffolding. Don't load non-dispatched files.
+S4. Load reviewer prompts. Only after swarm finalized (post-S3). Load `reviewers/<kebab-name>.md` for dispatched personalities only. Don't load files for non-dispatched personalities.
 
-S5. Dispatch. Single parallel batch via `electrified-cortex/dispatch`. Never sequential. Each dispatch receives: review packet + personality prompt + read-only phrase ("read-only review — analyze and report only, no file edits, no commits, no shell commands") + evidence rule ("cite specific evidence (snippet/line/scenario) per finding, or retract"). Model: `suggested_models` first available → `sonnet-class`. Apply B8 diversity after all selections.
+S5. Dispatch. Issue all swarm personalities as single parallel batch via `dispatch` skill. Never sequential. Each dispatch receives: review packet + personality prompt + read-only constraint ("read-only review — analyze and report only, no file edits, no commits, no shell commands"). Model selection: `model_overrides` first → first available from `suggested_models` → fallback `sonnet-class`. Apply diversity rule B8 after selection.
 
-S6. Arbitrator. After all outputs collected, dispatch single sonnet-class arbitrator (not in registry; not gated). Input: non-empty/non-timeout member outputs + review packet. Output: structured action list — (1) Obvious actions: 2+ members agreed or self-evident; description + source indices + evidence. (2) Critical actions: blocks shipping or requires arch change; description + source indices + evidence + severity rationale. No speculative/low-confidence/duplicate items. Empty → "No actionable findings".
+S6. Arbitrator. After all member outputs collected, dispatch single sonnet-class arbitrator (not in registry, not subject to filter/gating). Input: all non-empty/non-timeout member outputs + review packet. Output: structured action list only — two sections:
+- Obvious actions: 2+ members flagged same concern, or self-evident from artifact. Each: description + source personality indices + evidence cite.
+- Critical actions: would block shipping or require arch change regardless of agreement count. Each: description + source personality indices + evidence cite + severity rationale.
+No speculative, low-confidence, or duplicate items. If empty: state "No actionable findings".
 
-S7. Aggregate. Collect from arbitrator's action list. Record per item: personality indices, summary, evidence. Identify disagree set: contradictory conclusions from different members on same point.
+S7. Aggregate. Collect findings from arbitrator's action list. Record per item: personality indices, summary, evidence. Identify disagree set: items where arbitrator flagged contradictory conclusions from different members on same point.
 
-S8. Synthesize. Host voice only — don't dump raw output. From arbitrator list only. Required: Summary, Disagreements (tension + judgment), Dropped personalities (reason), Confidence (High/Medium/Low + rationale; if Low, state what raises it). Cap 2000 words; truncate — disagreements → high → medium → low; note truncation.
+S8. Synthesize. Speak as host only — don't dump raw member or arbitrator output. Synthesize from arbitrator's action list only. Required output: Summary (host voice), Disagreements (state tension + apply judgment), Dropped personalities (with reason), Confidence rating (High/Medium/Low + rationale; if Low, state what would raise it). Cap: 2000 words. If over: truncate — disagreements first, then high-severity, then medium, then low; note truncation.
+
+## Confidence Rating
+
+Default Medium. High: all personalities agree + all findings cite evidence. Low: disagree set has high-severity point, or any personality returned no findings.
 
 ## Behaviors
 
-B1. Empty/unresolvable `problem` → "No reviewable artifact found." No dispatch. B2. Empty swarm after gating → "Swarm empty after gating." No synthesis. B3. Single personality → proceed; note limited scope. B4. No findings or timeout → non-contributing; note in output. B5. All return no findings → "No findings from any reviewer"; Low confidence. B6. Devil's Advocate is always dispatched. There is no exclusion path. B7. Custom entries: "always" trigger = include (subject to gating). B8. Cross-vendor diversity best-effort; if unavailable, proceed + note monoculture. B9. Selection reads index only — not body files; body loaded S4 for selected only. B10. When no built-in or caller-supplied personality covers the domain and `disable_inline_personality_generation` isn't true, generate Custom Specialist inline: infer role from problem, author brief system-prompt, dispatch with same constraints. One-shot — not persisted.
+B1. `problem` empty or no resolvable artifact → return "No reviewable artifact found." Don't dispatch.
+B2. Swarm empty after gating → return "Swarm empty after gating — no personalities available." Don't synthesize.
+B3. Only Devil's Advocate in swarm → proceed, note "adversarial review only" in synthesis.
+B4. Personality returns no findings or times out → non-contributing; exclude from synthesis; note in output.
+B5. All personalities return no findings → state "No findings from any reviewer"; confidence Low.
+B6. Devil's Advocate dispatched unless explicitly omitted by named `personality_filter`.
+B7. Custom menu entries evaluated against caller-supplied trigger; "always" = include (subject to gating if external backend).
+B8. Cross-vendor diversity best-effort: prefer at least one personality on different model family/vendor than host. If unavailable, proceed + note monoculture. Devil's Advocate is natural diversity carrier (`vendor: openai` in frontmatter, non-Anthropic `suggested_models` preference).
 
 ## Precedence
 
-P1. `additional_personalities` overrides triggers. P2. Availability gate overrides selection. P3. Read-only constraint overrides personality instruction. P4. 2000-word cap overrides completeness.
+P1. `personality_filter` overrides trigger evaluation.
+P2. `model_overrides` override registry defaults.
+P3. Availability gate overrides selection (fail probe → drop).
+P4. Read-only constraint (C1) overrides any personality instruction.
+P5. 2000-word cap overrides completeness.
 
 ## Don'ts
 
-Don't load prompts before swarm finalized. Don't use fixed roster. Don't fail-stop on unavailable personality. Don't dump raw output. Don't merge with/replace code-review. Don't dispatch sequentially. Don't use bare model names. Don't CLI-as-dispatch until 10-0845 lands. Don't let custom entries replace built-ins. Don't treat `additional_personalities` as exclusion list. Don't have host parse raw member output. Don't add arbitrator to registry. Don't implement `local-llm` in v1. Don't embed normative registry as static table. Don't fail swarm on monoculture. Don't dispatch personality with missing/empty body. Don't read body files at S2. Don't add scaffolding to body files. Don't expand registry without spec amendment + audit. Don't include code-domain personalities in the built-in registry — Code Quality Critic, Test Reviewer, Architect, Operational Readiness, Performance Reviewer, Copilot Reviewer are caller-supplied via `additional_personalities`.
+Don't load prompts before swarm finalized. Don't use fixed roster. Don't fail-stop on unavailable personality. Don't dump raw output. Don't merge with/replace code-review. Don't dispatch sequentially. Don't use bare model names. Don't use CLI-as-dispatch until task 10-0845 lands. Don't expand registry without spec amendment + audit pass. Don't allow `model_overrides` to change backend. Don't allow custom entries to replace built-in entries. Don't treat `personality_filter` as exclusion list. Don't have host parse raw member output — arbitrator's job. Don't add arbitrator to registry. Don't implement `local-llm` in v1. Don't embed normative registry as static table — registry is `reviewers/` dir. Don't fail swarm on monoculture — best-effort only. Don't register `reviewers/*.md` files with invalid frontmatter.
 
 ## Footguns
 
-F1. Loading all prompts before selection → load post-S3 only. F2. Probe fail treated as fatal → drop, don't error. F3. Read-only phrase missing → include literal phrase every dispatch. F4. Sequential dispatch → single parallel batch. F5. Synthesis names reviewers → host voice only. F6. Host synthesizes from raw output → arbitrator list only at S8. F7. Monoculture → Devil's Advocate carries `vendor: openai`. F8. Informative table treated as normative → index file is truth. F9. Body files read at S2 → index only at S2; bodies at S4.
+F1. Loading all prompts before selection → bloats every invocation. Load only post-S3.
+F2. Probe fail treated as fatal error → drop personality, don't error.
+F3. Read-only phrase missing from dispatch prompt → include literal C2 phrase in every dispatch.
+F4. Sequential dispatch → single parallel batch, S5.
+F5. Synthesis names reviewers → host voice only; strip attribution.
+F6. Host synthesizes from raw member output, bypassing arbitrator → S8 receives arbitrator list only.
+F7. Monoculture swarm → Devil's Advocate carries `vendor: openai`; check synthesis for monoculture notice.
+F8. Informative registry table treated as normative → runtime crawl is the only source of truth.
 
-Anti-pattern: `additional_personalities: ["Security Auditor"]` — bypasses triggers for the named entry only. Devil's Advocate is still dispatched along with Security Auditor (plus any other required personalities from the registry). The inclusion list does not suppress Devil's Advocate.
+Anti-pattern: `personality_filter: ["Security Auditor"]` expects trigger-conditional dispatch. It doesn't — filter bypasses triggers AND suppresses Devil's Advocate. Filter is an inclusion list; name Devil's Advocate explicitly if needed.
 
-## Two-Level / Fractal Use
+## Personality Metadata Schema
 
-- Single-level: caller → swarm → personalities → arbitrator → synthesis.
-- Two-level: swarm dispatched as sub-agent; returns rolled-up synthesis; outer host aggregates N syntheses.
-- Output contract identical in both modes.
-- Depth: two levels supported (deeper nesting out of scope).
+Frontmatter required fields: `name` (unique), `trigger` ("always" or condition string), `required` (bool), `suggested_models` (preference-ordered model-class list), `suggested_backends` (preference-ordered backend list), `scope` (review limiter). Optional: `vendor` (diversity signal for B8). Missing/malformed → silently skipped.
 
-Related: `dispatch` — agent-launching mechanics
+Valid backends: `dispatch-sonnet`, `dispatch-haiku`, `dispatch-opus`, `copilot-cli`, `local-llm` (reserved), `varies` (custom only). No bare model names anywhere in skill, reviewer files, or synthesis output.
+
+## Scope
+
+Applies to any agent/skill needing multi-perspective review of any artifact. Does NOT cover: consumer skill internals, reviewer prompt authoring, non-review dispatch, side-effecting personality operations, CLI-as-dispatch (pending 10-0845), local-llm v1.

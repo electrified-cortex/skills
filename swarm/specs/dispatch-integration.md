@@ -21,12 +21,13 @@ If the dispatched swarm's runtime does not support parallel sub-agent dispatch (
 
 ## Model-Class Routing
 
-Model selection at dispatch time is fully automatic — callers don't specify model assignments:
+Model selection at dispatch time:
 
-1. Use the first available entry from the personality's `suggested_models` list (from the registry index).
-2. If no `suggested_models` entry is available, fall back to `sonnet-class`.
+1. If a caller `model_overrides` entry exists for the personality, use it.
+2. Otherwise, use the first available entry from the personality's `suggested_models` list (from the registry index).
+3. If no `suggested_models` entry is available and no override applies, fall back to `sonnet-class`.
 
-After selection across all personalities, apply the diversity rule (B8): prefer at least one personality on a different vendor or model family than the host. See the Diversity Rule section below.
+`model_overrides` affect model class only. They must not be used to change the backend type for a personality.
 
 ## Dispatch Tier Mapping
 
@@ -66,4 +67,4 @@ Diversity is best-effort. If no diverse option is available after gating, the sw
 
 ## Selection Is Inline
 
-Personality selection (Step 2 of the swarm execution) is performed inline within the skill. A separate dispatch for personality selection is not used. Revisit if the registry grows beyond approximately 20 entries.
+Personality selection (Step 2 of the swarm execution) is performed inline within the skill. A separate dispatch for personality selection is not used. Rationale: the token cost of a selection dispatch exceeds the cost of inline evaluation for registries of the current scale (under 12 entries). This decision should be revisited if the registry grows beyond approximately 20 entries.
