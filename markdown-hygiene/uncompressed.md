@@ -6,13 +6,11 @@ description: Fix markdownlint violations in a .md file. Triggers — fix markdow
 # Markdown Hygiene
 
 Without reading `instructions.txt` yourself, use a Dispatch agent (zero context, haiku-class): "Read and follow `instructions.txt` (in this directory).
-Input: `<file_path> --model-id <id> [--fix] [--source <src> --target <dst>] [--ignore <RULE>[,<RULE>...]] [--force]`"
+Input: `<file_path> --model-id claude-haiku-4-5 [--fix] [--source <src> --target <dst>] [--ignore <RULE>[,<RULE>...]] [--force]`"
 
 Returns: `CLEAN` | `findings: <abs-path-to-record.md>` | `ERROR: <reason>`.
 
-## Model-id reference
-
-Pass the exact string verbatim via `--model-id` based on which model class the dispatch will run on. The executor consumes the value without inference.
+If running on a different model class, replace `claude-haiku-4-5` in the input — the value also lands in the record filename and frontmatter `model:` field.
 
 | Model class | `--model-id` value |
 | --- | --- |
