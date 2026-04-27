@@ -29,6 +29,7 @@ No domain-specific terms. Rule identifiers (MD001, MD022, etc.) are markdownlint
 ### Input
 
 - `file_path` (string, required): Absolute path to `.md` file to scan (and optionally fix)
+- `--model-id <id>` (string, required): The exact model identifier string the caller wants used as the record filename. Lowercase-hyphenated. Examples: `claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-opus-4-7`, `gpt-5-3-codex`. The executor MUST use this string verbatim as the record filename — no inference, no appending date/year/timestamp/qualifier. If `--model-id` is not passed, output `ERROR: --model-id required` and stop.
 - `--fix` (flag, optional): Apply fixes to the file after detecting violations. Without this flag, the file is never modified — detection only.
 - `--source X --target Y` (string pair, optional): Read X, fix, write to Y.
   X is untouched. No git tracking check. Implies `--fix`.
@@ -111,9 +112,8 @@ Two-pass model: detect first, fix second (only if `--fix` is present). The detec
 - Failure before write: `ERROR: <reason>`
 
 **Record frontmatter** — required fields (schema per `hash-record/SKILL.md`):
-`hash`, `file_path`, `operation_kind: markdown-hygiene`, `model: haiku-4-5`,
-`result`. The `model` field is the model identifier, orthogonal
-to `operation_kind`.
+`hash`, `file_path`, `operation_kind: markdown-hygiene`, `model: <model-id>`,
+`result`. The `model` field is set to the value passed via `--model-id` — caller-controlled, executor never modifies it.
 
 `file_path` MUST be a single repo-relative path string — relative to the git root
 that contains the `.hash-record/` directory being written to. Compute via
@@ -131,13 +131,18 @@ file_path: /abs/path/to/markdown-hygiene/uncompressed.md
 file_path: markdown-hygiene/
 ```
 
-**Filename format:** `<model-id>.md` ONLY. The `<model-id>` is the agent's own canonical model identifier in lowercase-hyphenated form — `claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-opus-4-7`, `gpt-5-3-codex`, etc. **Do NOT include**: caller skill name, caller model id, timestamp/date, sub-version qualifiers (e.g. no `-2025` suffix, no `-sonnet-` qualifier from caller context). The filename is determined SOLELY by the agent's own model id, and must be deterministic — running the same agent on the same content produces the same filename, every time, byte-for-byte.
+**Filename:** `<model-id>.md` where `<model-id>` is the value passed via the `--model-id` argument. Use it VERBATIM. Append nothing. Do NOT compute or infer your model id from your own knowledge — use only what the caller passed.
+
+The caller controls the filename. The executor's job is to use the supplied value as-is and write the record. If `--model-id` was not passed, stop with `ERROR: --model-id required` before writing any record.
 
 ```text
 Correct:   .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5.md
+Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5-20251001.md
 Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/skill-auditing-sonnet-claude-sonnet-4-6.md
 Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-sonnet-4-6-2026-04-27T19-17-52Z.md
 ```
+
+In the Correct example above, `claude-haiku-4-5` is whatever the caller passed as `--model-id`, not what the executor inferred. In the Incorrect examples the executor appended extra tokens or used caller context instead of the explicit argument.
 
 **Body format** — minimum information not already in frontmatter. No `file_path`
 duplication in body. Body always opens with `# Result` H1.
@@ -209,6 +214,7 @@ Zero errors after fixing. If any error cannot be auto-fixed, the verdict is PART
 
 ## Constraints
 
+- The skill MUST NOT infer or compute its model id from internal knowledge. The model id is determined SOLELY by the `--model-id` argument. If `--model-id` is absent, halt with `ERROR: --model-id required`.
 - The dispatch agent must not invoke, recommend, or install any specific
   external tool. It uses built-in tools and agent intelligence only.
   "markdownlint" here refers to the rule set, not any CLI package.
