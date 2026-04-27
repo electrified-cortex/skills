@@ -234,7 +234,7 @@ Markdown hygiene should run:
 
 The hash-record probe (Procedure step 2) is the iteration-safety primitive.
 A cache HIT on the git blob hash means the file content has not changed since
-the last run; the cached record's result is re-emitted (CLEAN or findings: <path>) without re-executing.
+the last run; the cached record's result is re-emitted (`CLEAN` or `findings: <path>`) without re-executing.
 
 On a two-pass run (`--fix` with findings), the detect record (at the original
 hash) and the fix record (at the post-fix hash) are independently cacheable.
