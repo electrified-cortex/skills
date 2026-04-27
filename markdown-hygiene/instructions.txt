@@ -17,17 +17,15 @@ Procedure:
 
 Executor, not planner. Run each step's tool calls. Don't summarize, don't produce "fixed version" inline. Don't stop early. Dispatch incomplete unless record file written and absolute path output.
 
-Hard rule: Pass 1 (Detect) MUST NOT call Edit, Write, or any tool modifying target. Target hash MUST be unchanged after Pass 1. Violations reported as FINDINGS, never FIXED. FIXED is Pass 2 only, gated on `--fix`. `--fix` not passed + violations found -> output `result: findings` as FINDINGS, never apply edits.
-
 Two passes: detect first (always), fix second (only if `--fix` or `--source/--target` passed).
 
-Pass 1 — Detect (READ-ONLY — never modify target):
+Pass 1 — Detect:
 
 1. Read target (Read tool). Guard: unreadable or not `.md` -> `ERROR: <reason>`, stop. Adaptive MD041: first non-blank line `---` -> add MD041 to suppressed set.
 2. Run: `git hash-object <file_path>` (Bash tool). Save 40-char result as `<hash>`.
 3. Cache check: `test -f <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md` (Bash). Skip if `--force` passed.
-   - Exists -> cache HIT -> output `PATH: <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md`, stop.
-   - Missing -> cache MISS. Save `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene` as `<detect_cache_dir>` (no trailing slash). Continue.
+   - Exists: read its `result:` frontmatter field -> if `pass` output `CLEAN`; if `findings` output `findings: <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md` — stop (cache HIT).
+   - Missing: cache MISS. Save `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene` as `<detect_cache_dir>` (no trailing slash). Continue.
 4. Scan for markdownlint violations. Prefer `markdownlint` CLI (see co-located `tooling.md`); else use rule knowledge. Skip rules in `--ignore` or adaptive suppressed set. Cross-check each finding against actual line before recording — drop any finding not pointable to specific verified line.
    Per-rule anchors:
    - MD001: heading levels must increment by one (H1->H3 = violation)
@@ -57,22 +55,23 @@ Pass 1 — Detect (READ-ONLY — never modify target):
    - Run: `mkdir -p <detect_cache_dir>` (Bash tool).
    - Frontmatter: `hash`, `file_path`, `operation_kind: markdown-hygiene`, `model: <your-model-id>`, `result: pass` (no violations) or `result: findings` (violations exist).
    - Body: `# Result\n\nCLEAN` or `# Result\n\nFINDINGS\n\n- <list>`. FINDINGS: each entry = two lines: `MD0XX line N: <description>` then indented `Fix: <imperative>`. `Fix:` MUST be complete standalone instruction — Pass 2 applies literally without rule knowledge.
-   - No violations (CLEAN) -> output `PATH: <detect_cache_dir>/<model>.md`, stop.
-   - Violations + `--fix` not passed -> output `PATH: <detect_cache_dir>/<model>.md`, stop.
+   - No violations (CLEAN): output `CLEAN`, stop.
+   - Violations + `--fix` not passed: output `findings: <detect_cache_dir>/<model>.md`, stop.
 
 Pass 2 — Fix (only when `--fix` present and violations exist):
 
-6. All violations unfixable (manual-only, e.g. MD040 no language to infer) -> output `PATH: <detect_record_path>` (no second record), stop.
+6. All violations unfixable (manual-only, e.g. MD040 no language to infer) -> output `findings: <detect_record_path>` (no second record), stop.
 7. Read detect record (Read tool). Extract every `Fix:` line from FINDINGS body. Apply each literally to target (Edit/Write tool). No re-scan, no rule knowledge required. File on disk MUST contain all applied fixes after this step.
 8. Compute new hash: `git hash-object <fixed-file-path>`. Save as `<fix_hash>`. Set `<fix_cache_dir>` = `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene` (no trailing slash).
 9. Write fix record at `<fix_cache_dir>/<model>.md`:
    - Run: `mkdir -p <fix_cache_dir>` (Bash tool).
    - Frontmatter: `hash: <fix_hash>`, `file_path`, `operation_kind: markdown-hygiene`, `model: <your-model-id>`, `result: pass` (all fixed) or `result: findings` (some remain).
    - Body: `# Result\n\nFIXED\n\n- <list>` or `# Result\n\nPARTIAL\n\n...`.
-   - Output: `PATH: <fix_cache_dir>/<model>.md`, stop.
+   - All fixed (FIXED): output `CLEAN`, stop. Some remain (PARTIAL): output `findings: <fix_cache_dir>/<model>.md`, stop.
 
 Dispatch return (one line, always):
-Success: `PATH: <absolute-path-to-record.md>`
+Clean (no violations OR all fixed): `CLEAN`
+Findings (violations remain — detect-only or PARTIAL): `findings: <absolute-path-to-record.md>`
 Pre-write failure: `ERROR: <reason>`
 
 Report body — minimum info not in frontmatter. Frontmatter holds `file_path`, `result`, `hash`, `model`. Never duplicate `file_path` in body. Body always opens with `# Result` H1.
