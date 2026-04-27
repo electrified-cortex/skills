@@ -57,9 +57,17 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
    - MD058 — tables must be preceded AND followed by a blank line
    - MD060 — table cell separators must have a space on each side of the dash run (`| --- |` not `|---|`)
 5. **Write detect record** at `<detect_cache_dir>/<model>.md`:
-   - **Filename format:** `<model-id>.md` ONLY. The `<model-id>` is the agent's own canonical model identifier in lowercase-hyphenated form — `claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-opus-4-7`, `gpt-5-3-codex`, etc. **Do NOT include**: caller skill name, caller model id, timestamp/date, sub-version qualifiers (e.g. no `-2025` suffix, no `-sonnet-` qualifier from caller context). The filename is determined SOLELY by the agent's own model id, and must be deterministic — running the same agent on the same content produces the same filename, every time, byte-for-byte.
+   - **Filename format:** `<model-id>.md` ONLY. **Pick the EXACT string from this table by your model class. Use it verbatim. Append nothing.**
+     - You are Claude Haiku 4.5 -> filename is `claude-haiku-4-5.md`
+     - You are Claude Sonnet 4.6 -> filename is `claude-sonnet-4-6.md`
+     - You are Claude Opus 4.7 -> filename is `claude-opus-4-7.md`
+     - You are GPT 5.3 codex -> filename is `gpt-5-3-codex.md`
+
+     **Do NOT append**: caller skill name, caller model id, training-cutoff date, year (e.g. `-2025`, `-20251001`), ISO timestamp (`-2026-04-27T19-17-52Z`), sub-version qualifier, or any other suffix. If you are tempted to add ANYTHING after the model id from the table — STOP. The filename is the table value plus `.md` literally. Same agent on same content produces the same filename every run.
+
      ```text
      Correct:   .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5.md
+     Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5-20251001.md
      Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/skill-auditing-sonnet-claude-sonnet-4-6.md
      Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-sonnet-4-6-2026-04-27T19-17-52Z.md
      ```

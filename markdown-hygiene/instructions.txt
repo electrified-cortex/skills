@@ -52,8 +52,14 @@ Pass 1 — Detect:
    - MD058: tables must be preceded AND followed by blank line
    - MD060: table cell separators must have space on each side of dash run (`| --- |` not `|---|`)
 5. Write detect record at `<detect_cache_dir>/<model>.md`:
-   - Filename: `<model-id>.md` ONLY — agent's own model id, lowercase-hyphenated (e.g. `claude-haiku-4-5`, `claude-sonnet-4-6`). NO caller skill name, NO caller model id, NO timestamp, NO sub-version qualifier. Same agent + same content = same filename, every run.
+   - **Your `<model>` value — pick the EXACT string from this table by what model class you are. DO NOT add anything to it. DO NOT append a date, year, training-cutoff, or any qualifier. Use the string verbatim:**
+     - You are Claude Haiku 4.5 -> `claude-haiku-4-5` (filename: `claude-haiku-4-5.md`)
+     - You are Claude Sonnet 4.6 -> `claude-sonnet-4-6`
+     - You are Claude Opus 4.7 -> `claude-opus-4-7`
+     - You are GPT 5.3 codex -> `gpt-5-3-codex`
+     If you are tempted to add `-20251001`, `-2026`, `-T19-17-52Z`, your caller skill name, or any other qualifier — STOP. The filename is the table value verbatim plus `.md`. Nothing else. Same agent on same content produces the same filename every run.
      Correct: `.hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5.md`
+     Incorrect: `.hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5-20251001.md`
      Incorrect: `.hash-record/<sh>/<hash>/markdown-hygiene/skill-auditing-sonnet-claude-sonnet-4-6.md`
      Incorrect: `.hash-record/<sh>/<hash>/markdown-hygiene/claude-sonnet-4-6-2026-04-27T19-17-52Z.md`
    - Run: `mkdir -p <detect_cache_dir>` (Bash tool).
