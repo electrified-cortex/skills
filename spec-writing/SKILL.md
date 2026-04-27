@@ -91,6 +91,7 @@ Correctness and enforceability over readability. Normative content governs behav
 
 Derivation Workflow:
 Before writing any artifact derived from spec (skill, agent, or tool), spec must pass full audit.
+
 1. Write spec.
 2. Dispatch `markdown-hygiene` on spec; ensure zero lint errors.
 3. Dispatch spec-auditor: fast-cheap iterations first, standard for final pass.

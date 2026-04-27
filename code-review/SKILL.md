@@ -10,12 +10,13 @@ Input: `change_set=<form> tier=<smoke|substantive> [prior_findings=<json>] [focu
 
 Do NOT run code review inline. Inline execution: shallow/inconsistent results, caller context bleeds into judgment.
 
-Tier vocabulary:
+## Tier vocabulary
+
 `fast-cheap` — cost-optimized (e.g. Haiku-class), use for `tier=smoke`.
 `standard` — capable (e.g. Sonnet-class), use for `tier=substantive`.
 Tier substitution is prohibited.
 
-Parameters:
+## Parameters
 `change_set` (required): inline unified diff, absolute file path list, or git ref/range (refs require shell access in dispatched agent).
 `tier` (required): `smoke` or `substantive`.
 `prior_findings` (substantive only, required): all prior-pass findings forwarded unmodified.
@@ -26,7 +27,9 @@ Returns (per pass): `{tier, pass_index, verdict, findings[]}`. Verdict: `clean`,
 
 One skill per invocation. Each pass is separate dispatch. Smoke always runs before substantive. Two-pass policy applies regardless of change-set size — no size threshold permits single-pass review.
 
-Procedure (calling agent orchestrates):
+## Procedure
+
+Calling agent orchestrates:
 1. Smoke pass — dispatch fast-cheap agent with `tier=smoke`.
 2. Caller acts (optional) — read smoke findings; act on any; edits are caller's, not review agent's.
 3. Substantive pass — dispatch standard agent with `tier=substantive` and all prior-pass findings unmodified.
@@ -35,7 +38,7 @@ Procedure (calling agent orchestrates):
 
 Empty change set: skip all passes; return empty-result aggregate.
 
-Aggregated Result:
+## Aggregated Result
 Calling agent assembles after all passes:
 `passes`: per-pass reports in dispatch order.
 `sign_off_pass_index`: index of most recent successful standard pass; `null` when empty change set or only failed passes exist.
@@ -43,14 +46,14 @@ Calling agent assembles after all passes:
 `verdict`: `clean`, `findings`, or `error`.
 `preserved_contradictions`: smoke findings sign-off contradicted, each paired with contradicting commentary.
 
-Calling Agent Rules:
+## Calling Agent Rules
 Never treat smoke-only as authoritative. Skipping substantive pass is prohibited.
 Forward prior-pass findings unmodified — no annotations, dispute flags, or reordering.
 Don't communicate caller disputes about smoke findings to substantive pass.
 Don't modify change set during a pass. Edits happen between passes only.
 Record sign-off so downstream consumers can verify review occurred.
 
-When to Use:
+## When to Use
 Reviewing change set of executable or compilable code: source files, build scripts, CI config, IaC manifests.
 For non-code artifacts (specs, skills, docs), use `spec-auditing` or `skill-auditing` — different tier policy.
 

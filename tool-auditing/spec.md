@@ -55,7 +55,7 @@ For each tool script found:
 #### Report Normative
 
 ```txt
-# Tool Audit: <script-name>
+## Tool Audit: <script-name>
 
 - Status: PASS | FAIL | WARN
 - Companion spec: YES/NO
