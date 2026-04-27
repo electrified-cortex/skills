@@ -5,6 +5,7 @@ Detect and optionally fix markdownlint violations. Zero errors after the fix pas
 ## Dispatch Parameters
 
 - `file_path` (required): Absolute path to the .md file to scan (and optionally fix)
+- `--model-id <id>` (required): The exact model identifier string the caller wants used as the record filename. Lowercase-hyphenated. Examples: `claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-opus-4-7`, `gpt-5-3-codex`. The executor MUST use this string verbatim as the record filename — no inference, no appending date/year/timestamp/qualifier. If `--model-id` is not passed, output `ERROR: --model-id required` and stop.
 - `--fix` (optional): Apply fixes after detecting violations. Without this flag, the file is never modified — detection only.
 - `--source X --target Y` (optional): Read X, fix, write to Y. X untouched. No git check. Implies `--fix`.
 - `--ignore <RULE>[,<RULE>...]` (optional): Comma-separated rule codes to skip — not scanned, not flagged, not fixed. Example: `--ignore MD041`.
@@ -27,10 +28,11 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
 
 ### Pass 1 — Detect
 
+0. **Guard:** If `--model-id` was not passed, output `ERROR: --model-id required` and stop immediately.
 1. **Read** the target file (use the Read tool). Guard: if the file is unreadable or not a `.md` file, output `ERROR: <reason>` and stop. Check adaptive MD041: if the first non-blank line is `---`, add MD041 to the suppressed set for this run.
 2. **Run:** `git hash-object <file_path>` (use the Bash tool). Save the 40-char result as `<hash>`.
-3. **Cache check:** `test -f <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md` (use the Bash tool). Skip if `--force` was passed.
-   - File exists: read its `result:` frontmatter field — if `pass` output `CLEAN`; if `findings` output `findings: <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md` — and stop (cache HIT).
+3. **Cache check:** `test -f <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model-id>.md` (use the Bash tool) where `<model-id>` is the value from `--model-id`. Skip if `--force` was passed.
+   - File exists: read its `result:` frontmatter field — if `pass` output `CLEAN`; if `findings` output `findings: <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model-id>.md` — and stop (cache HIT).
    - File does not exist: cache MISS. Save `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene` as `<detect_cache_dir>` (no trailing slash). Continue.
 4. **Scan** for markdownlint violations. Prefer the `markdownlint` CLI or VS Code extension if available (see co-located `tooling.md`); otherwise use your knowledge of markdown rules. Skip any rule in `--ignore` or the adaptive suppressed set. **Cross-check** each finding against the actual line before recording — drop any finding you cannot point at on a specific verified line. Per-rule detection anchors:
    - MD001 — heading levels must increment by one (H1->H3 is a violation)
@@ -56,14 +58,10 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
    - MD056 — all rows in a table must have the same number of cells
    - MD058 — tables must be preceded AND followed by a blank line
    - MD060 — table cell separators must have a space on each side of the dash run (`| --- |` not `|---|`)
-5. **Write detect record** at `<detect_cache_dir>/<model>.md`:
-   - **Filename format:** `<model-id>.md` ONLY. **Pick the EXACT string from this table by your model class. Use it verbatim. Append nothing.**
-     - You are Claude Haiku 4.5 -> filename is `claude-haiku-4-5.md`
-     - You are Claude Sonnet 4.6 -> filename is `claude-sonnet-4-6.md`
-     - You are Claude Opus 4.7 -> filename is `claude-opus-4-7.md`
-     - You are GPT 5.3 codex -> filename is `gpt-5-3-codex.md`
+5. **Write detect record** at `<detect_cache_dir>/<model-id>.md`:
+   - **Filename:** `<model-id>.md` where `<model-id>` is the value passed via the `--model-id` argument. Use it VERBATIM. Append nothing. Do NOT compute or infer your model id from your own knowledge — use only what the caller passed.
 
-     **Do NOT append**: caller skill name, caller model id, training-cutoff date, year (e.g. `-2025`, `-20251001`), ISO timestamp (`-2026-04-27T19-17-52Z`), sub-version qualifier, or any other suffix. If you are tempted to add ANYTHING after the model id from the table — STOP. The filename is the table value plus `.md` literally. Same agent on same content produces the same filename every run.
+     The caller controls the filename. The executor's job is to use the supplied value as-is. If `--model-id` was not passed, stop with `ERROR: --model-id required` before writing any record.
 
      ```text
      Correct:   .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5.md
@@ -71,32 +69,35 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
      Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/skill-auditing-sonnet-claude-sonnet-4-6.md
      Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-sonnet-4-6-2026-04-27T19-17-52Z.md
      ```
+
+     In the Correct example, `claude-haiku-4-5` is whatever the caller passed as `--model-id`, not what the executor inferred. In the Incorrect examples the executor appended extra tokens or used caller context instead of the explicit argument.
+
    - `mkdir -p <detect_cache_dir>` (Bash tool).
    - Frontmatter (open `---`, close `---`):
      - `hash: <hash>`
      - `file_path: <repo-relative path>` — MUST be a single repo-relative path string relative to the git root containing `.hash-record/`. Compute via `git ls-files --full-name <file>` from inside the file's repo, or strip `git rev-parse --show-toplevel` from the absolute path. Example: `markdown-hygiene/instructions.uncompressed.md`. NOT an absolute path, NOT a directory-only path.
      - `operation_kind: markdown-hygiene`
-     - `model: <your-model-id>`
+     - `model: <model-id>` — set to the value passed via `--model-id`; caller-controlled, executor never modifies
      - `result: pass` (no violations) or `result: findings` (violations exist)
    - Body per Report Format: `# Result\n\nCLEAN` (no violations) or `# Result\n\nFINDINGS\n\n- <list>` (violations). For FINDINGS each entry is two lines: the finding line (`MD0XX line N: <description>`) followed immediately by an indented `Fix: <imperative instruction>` line. The `Fix:` line must be a complete, standalone instruction — the fix pass will apply it literally without any markdown-rule knowledge.
    - If no violations (CLEAN): output `CLEAN` and stop.
-   - If violations and `--fix` not passed: output `findings: <detect_cache_dir>/<model>.md` and stop.
+   - If violations and `--fix` not passed: output `findings: <detect_cache_dir>/<model-id>.md` and stop.
 
 ### Pass 2 — Fix (only when `--fix` present and violations exist)
 
 6. If ALL violations are unfixable (manual-only rules like MD040 with no language to infer): output `findings: <detect_record_path>` (no second record) and stop.
 7. **Read the detect record** written in step 5 (use the Read tool). Extract every `Fix:` line from the FINDINGS body. Each `Fix:` line is a standalone imperative instruction — apply it literally to the target file using the Edit or Write tool. No re-scan. No markdown-rule knowledge required. For each `Fix:` line: either apply it successfully or mark it as not applicable (unfixable). The file on disk MUST contain all applied fixes after this step.
 8. **Compute new hash:** `git hash-object <fixed-file-path>`. Save as `<fix_hash>`. Set `<fix_cache_dir>` = `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene` (no trailing slash).
-9. **Write fix record** at `<fix_cache_dir>/<model>.md`:
+9. **Write fix record** at `<fix_cache_dir>/<model-id>.md`:
    - `mkdir -p <fix_cache_dir>` (Bash tool).
    - Frontmatter:
      - `hash: <fix_hash>`
      - `file_path: <repo-relative path>` — same rule as step 5: repo-relative, not absolute, not directory-only.
      - `operation_kind: markdown-hygiene`
-     - `model: <your-model-id>`
+     - `model: <model-id>` — set to the value passed via `--model-id`; caller-controlled, executor never modifies
      - `result: pass` (all Fix instructions applied) or `result: findings` (some not applicable / remain)
    - Body per Report Format: `# Result\n\nFIXED\n\n- <list>` (all applied) or `# Result\n\nPARTIAL\n\n...` (some remain).
-   - If all fixed (FIXED): output `CLEAN` and stop. If some remain (PARTIAL): output `findings: <fix_cache_dir>/<model>.md` and stop.
+   - If all fixed (FIXED): output `CLEAN` and stop. If some remain (PARTIAL): output `findings: <fix_cache_dir>/<model-id>.md` and stop.
 
 ## Report Format
 
