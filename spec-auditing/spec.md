@@ -120,6 +120,7 @@ The auditor expects:
 - optional audit context, including an explicit request for spec-only mode when the caller wants to audit a spec in isolation
 - optional repository or project conventions
 - optional severity thresholds
+- optional audit kind flag (`--kind meta` or `--kind domain`) to control how Unauthorized Additions (§ Unauthorized Additions) are evaluated in pair-audit mode; see § Audit Kind.
 
 If the spec file is missing, the audit must fail with a clear explanation.
 A missing companion file triggers companion auto-detect and possibly spec-only
@@ -158,6 +159,18 @@ Callers chain multiple subjects as separate runs.
 ### Dispatch Requirement
 
 This skill must be invoked via a dispatch agent with zero inherited context. Inline invocation is prohibited — it produces shallow, inconsistent audits and burns tokens on content only the dispatched auditor needs.
+
+### Audit Kind
+
+The auditor supports two audit kind values, selectable via `--kind meta|domain` or auto-detected:
+
+**Meta mode** (`--kind meta`): Applies full pair-audit with all 13 checks unchanged. Use when pairing a companion against a meta-spec (e.g., `spec-writing/spec.md`). This is the mode produced by the 13-check pair-audit procedure as defined in §Required Audit Dimensions.
+
+**Domain mode** (`--kind domain`): Applies pair-audit with § Unauthorized Additions modified. Use when auditing a domain spec against a domain authority, or when no authority is declared. Domain-specific requirements in the companion must not be flagged as unauthorized simply because they do not appear in a meta-spec.
+
+**Auto-detection** (when `--kind` is not provided): if the spec path contains `spec-writing`, the auditor infers meta mode and reports the inference. Otherwise, the auditor infers domain mode and reports the inference. If neither signal is present, the auditor must stop and require an explicit `--kind` flag.
+
+Audit kind applies to pair-audit mode only. Spec-only mode is unaffected.
 
 ---
 
@@ -297,6 +310,10 @@ Each addition must be classified as one of:
 
 - **Unauthorized Addition**  
   No support in the spec. This is a defect.
+
+**Domain mode behavior:** When audit kind is domain:
+- If a domain authority spec is provided via `--spec`, apply the three-way classification against that authority.
+- If no domain authority spec is provided, skip this check and report as Informational: "domain mode, no authority declared — Unauthorized Additions check skipped."
 
 The auditor must not assume additions are acceptable unless the spec explicitly allows extension.
 

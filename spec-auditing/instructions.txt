@@ -1,6 +1,6 @@
 Disposition: strict, skeptical, evidence-based, non-creative during audit.
 
-Input: `<target-path> [--spec <spec-path>] [--fix]`
+Input: `<target-path> [--spec <spec-path>] [--fix] [--kind meta|domain]`
 Default: audit (read-only). One spec or spec/target pair per invocation.
 Optional: explicit spec-only request, repo/project conventions, custom severity thresholds.
 
@@ -15,11 +15,16 @@ Gates:
       Folder-level spec.md: no universal fallback.
       No companion → spec-only; report "no companion present — auditing spec alone."
    c. --spec absent + target doesn't end in spec.md → resolve spec.md in same directory. Missing → STOP: spec file missing.
-3. Read all resolved files fully before judging. Partial → STOP: incomplete input.
-4. Precedence: instructions > spec (domain) > companion. Report every conflict; never normalize.
-5. --fix requires target git-tracked and clean. Untracked/modified/deleted/conflicted → STOP: target must be tracked and clean.
-6. Approve/stamp requests → STOP: approve mode not supported.
-7. Spec-only: gate 3 reads spec only; skip gate 5 (no writes); gate 6 unchanged. --fix in spec-only → report unsupported, proceed audit-only.
+3. Audit kind (pair-audit only; skip in spec-only):
+   a. --kind meta → meta mode. b. --kind domain → domain mode.
+   c. Neither → auto-detect: spec path contains spec-writing → meta mode (report "auto-detected: meta mode"); else → domain mode (report "auto-detected: domain mode").
+   d. Ambiguous (no signal) → STOP: supply --kind meta or --kind domain explicitly.
+   Meta mode: all 13 checks unmodified. Domain mode: Unauthorized Additions check modified — see Audit section.
+4. Read all resolved files fully before judging. Partial → STOP: incomplete input.
+5. Precedence: instructions > spec (domain) > companion. Report every conflict; never normalize.
+6. --fix requires target git-tracked and clean. Untracked/modified/deleted/conflicted → STOP: target must be tracked and clean.
+7. Approve/stamp requests → STOP: approve mode not supported.
+8. Spec-only: gate 4 reads spec only; skip gate 6 (no writes); gate 7 unchanged. --fix in spec-only → report unsupported, proceed audit-only.
 
 Fix mode:
 1. Run full audit first (read-only).
@@ -52,12 +57,15 @@ Audit (pair-audit mode):
 8. Structural Integrity: logical order, stable headings, duplicate rules, hidden reqs, normative-language consistency; spec files must not contain YAML frontmatter (flag any leading `---` block as structural defect — frontmatter belongs in runtime artifacts only).
 9. Terminology: stable defined terms, undefined critical terms, synonym drift, renamed concept mapping.
 10. Change Drift Risk: duplicated text, loose paraphrases, isolated assumptions, missing cross-refs, future divergence hotspots.
-11. Unauthorized Additions: classify target-only additions as Valid Extension, Derived but Unstated, or Unauthorized Addition.
+11. Unauthorized Additions:
+   - Meta mode: classify target-only additions as Valid Extension, Derived but Unstated, or Unauthorized Addition.
+   - Domain mode, authority supplied: apply same three-way classification against the domain spec provided via --spec.
+   - Domain mode, no authority supplied: skip. Report Informational: "domain mode, no authority declared — Unauthorized Additions check skipped."
 12. Economy: removal test on duplicated rules, unnecessary scaffolding, removable prose. Confirm effect before reporting waste. Consolidation = Informational; escalate to Low/Medium if waste creates drift risk.
 13. Compression fidelity: flag loss, gain, bloat. Loss/gain = governance failures (High+); bloat = quality issue (Medium).
 
 Audit (spec-only mode — apply instead of pair-audit when no companion):
-Six checks only. Numbered to match pair-audit; skip steps 2–5, 10–11, 13 (require companion).
+Six checks only. Numbered to match pair-audit; skip steps 2–5, 10–11, and 13 (require companion).
 Apply steps 1, 6, 7, 8, 9, 12 as defined in pair-audit above.
 Additionally: Internal Consistency — no contradictions within spec.
 (No Semantic Alignment, Requirement Coverage, Contradiction Detection, Change Drift Risk, Unauthorized Additions, Compression Fidelity — all require companion.)

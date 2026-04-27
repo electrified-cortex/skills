@@ -2,7 +2,7 @@
 
 Disposition: strict, skeptical, evidence-based, non-creative during audit.
 
-Input: `<target-path> [--spec <spec-path>] [--fix]`
+Input: `<target-path> [--spec <spec-path>] [--fix] [--kind meta|domain]`
 Default: audit (read-only). Audit one spec or one spec/target pair per
 invocation.
 Optional audit context: explicit spec-only request, repository or project
@@ -23,11 +23,20 @@ Gates:
    - No companion → spec-only mode; report "no companion present — auditing spec alone."
    c. `--spec` not provided AND target does NOT end in `spec.md`:
       - Resolve spec from sibling `<basename>.spec.md`. Missing → STOP: spec file missing.
-3. Read all resolved files fully before judging. Partial → STOP: incomplete input.
-4. Precedence: this instruction file controls audit procedure; the audited spec controls domain content; the companion target is subordinate. Report every conflict; never normalize.
-5. `--fix` requires target git-tracked and clean. Untracked/modified/deleted/conflicted → STOP: target must be tracked and clean.
-6. Reject approve/stamp requests → STOP: approve mode not supported.
-7. Spec-only mode: skip companion-dependent gates (gate 3 reads spec only; skip gate 5 — no writes will occur; gate 6 unchanged). `--fix` in spec-only → report unsupported, proceed audit-only.
+3. Audit kind (pair-audit mode only; skip in spec-only mode):
+   a. `--kind meta` explicitly provided → meta mode.
+   b. `--kind domain` explicitly provided → domain mode.
+   c. Neither provided → auto-detect:
+      - Spec path contains `spec-writing` → meta mode; report "auto-detected: meta mode."
+      - Spec path does not contain `spec-writing` → domain mode; report "auto-detected: domain mode."
+   d. Auto-detect is ambiguous (neither signal) → STOP: cannot determine audit kind — supply `--kind meta` or `--kind domain` explicitly.
+   Meta mode: run pair-audit with all 13 checks unmodified (current default behavior).
+   Domain mode: run pair-audit with Unauthorized Additions check modified — see Audit section.
+4. Read all resolved files fully before judging. Partial → STOP: incomplete input.
+5. Precedence: this instruction file controls audit procedure; the audited spec controls domain content; the companion target is subordinate. Report every conflict; never normalize.
+6. `--fix` requires target git-tracked and clean. Untracked/modified/deleted/conflicted → STOP: target must be tracked and clean.
+7. Reject approve/stamp requests → STOP: approve mode not supported.
+8. Spec-only mode: skip companion-dependent gates (gate 4 reads spec only; skip gate 6 — no writes will occur; gate 7 unchanged). `--fix` in spec-only → report unsupported, proceed audit-only.
 
 Fix mode:
 
@@ -63,7 +72,10 @@ Audit (pair-audit mode):
 8. Structural Integrity: logical order, stable headings, duplicate rules, hidden requirements, normative-language consistency; spec files must not contain YAML frontmatter (flag any leading `---` block as a structural defect — frontmatter belongs in runtime artifacts only).
 9. Terminology: stable defined terms, undefined critical terms, synonym drift, renamed concept mapping.
 10. Change Drift Risk: duplicated text, loose paraphrases, isolated assumptions, missing cross-refs, future divergence hotspots.
-11. Unauthorized Additions: classify target-only additions as `Valid Extension`, `Derived but Unstated`, or `Unauthorized Addition`.
+11. Unauthorized Additions:
+   - **Meta mode**: classify target-only additions as `Valid Extension`, `Derived but Unstated`, or `Unauthorized Addition`.
+   - **Domain mode, authority supplied**: authority spec is the domain spec provided via `--spec`. Apply the same three-way classification against that authority.
+   - **Domain mode, no authority supplied**: skip this check. Report as Informational: "domain mode, no authority declared — Unauthorized Additions check skipped."
 12. Economy: apply the removal test to duplicated rules, unnecessary scaffolding, and prose that can be removed without changing effect. Confirm the effect before reporting waste. Consolidation opportunities = Informational; escalate to Low/Medium where waste creates drift risk.
 13. Compression fidelity: flag loss, gain, bloat. Loss/gain = governance failures (High+); bloat = quality issue (Medium).
 
