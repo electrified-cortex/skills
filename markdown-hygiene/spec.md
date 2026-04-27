@@ -131,18 +131,7 @@ file_path: /abs/path/to/markdown-hygiene/uncompressed.md
 file_path: markdown-hygiene/
 ```
 
-**Filename:** `<filename>.md` where `<filename>` is the value passed via the `--filename` argument. Use it VERBATIM. Append nothing. Do NOT compute or infer your filename from your own knowledge — use only what the caller passed.
-
-The caller controls the filename. The executor's job is to use the supplied value as-is and write the record. If `--filename` was not passed, stop with `ERROR: --filename required` before writing any record.
-
-```text
-Correct:   .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku.md
-Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-20251001.md
-Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/skill-auditing-sonnet-claude-sonnet.md
-Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-sonnet-2026-04-27T19-17-52Z.md
-```
-
-In the Correct example above, `claude-haiku` is whatever the caller passed as `--filename`, not what the executor inferred. In the Incorrect examples the executor appended extra tokens or used caller context instead of the explicit argument.
+**Filename:** `<filename>.md` — the value passed via `--filename`, verbatim. Missing `--filename` -> `ERROR: --filename required`.
 
 **Body format** — minimum information not already in frontmatter. No `file_path`
 duplication in body. Body always opens with `# Result` H1.

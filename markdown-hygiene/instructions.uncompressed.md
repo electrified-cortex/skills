@@ -59,14 +59,6 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
    - MD058 — tables must be preceded AND followed by a blank line
    - MD060 — table cell separators must have a space on each side of the dash run (`| --- |` not `|---|`)
 5. **Write detect record** at `<detect_cache_dir>/<filename>.md`:
-   - **Filename:** `<filename>.md` where `<filename>` is the value passed via the `--filename` argument. Use it VERBATIM. Append nothing. Do NOT compute or infer from your own knowledge — use only what the caller passed.
-
-     ```text
-     Correct:   .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku.md
-     Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku.md
-     Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/skill-auditing-sonnet-claude-sonnet.md
-     Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-sonnet-2026-04-27T19-17-52Z.md
-     ```
 
    - `mkdir -p <detect_cache_dir>` (Bash tool).
    - Frontmatter (open `---`, close `---`):
