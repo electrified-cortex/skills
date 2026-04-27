@@ -1,7 +1,6 @@
 # Markdown Hygiene
 
-Fix all markdownlint violations in a markdown file. Zero
-errors is the gate.
+Detect and optionally fix markdownlint violations. Zero errors after the fix pass is the gate.
 
 ## Dispatch Parameters
 
@@ -31,7 +30,7 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
 1. **Read** the target file (use the Read tool). Guard: if the file is unreadable or not a `.md` file, output `ERROR: <reason>` and stop. Check adaptive MD041: if the first non-blank line is `---`, add MD041 to the suppressed set for this run.
 2. **Run:** `git hash-object <file_path>` (use the Bash tool). Save the 40-char result as `<hash>`.
 3. **Cache check:** `test -f <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md` (use the Bash tool). Skip if `--force` was passed.
-   - File exists: output `PATH: <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md` and stop (cache HIT).
+   - File exists: read its `result:` frontmatter field — if `pass` output `CLEAN`; if `findings` output `findings: <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md` — and stop (cache HIT).
    - File does not exist: cache MISS. Save `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene` as `<detect_cache_dir>` (no trailing slash). Continue.
 4. **Scan** for markdownlint violations. Prefer the `markdownlint` CLI or VS Code extension if available (see co-located `tooling.md`); otherwise use your knowledge of markdown rules. Skip any rule in `--ignore` or the adaptive suppressed set. **Cross-check** each finding against the actual line before recording — drop any finding you cannot point at on a specific verified line. Per-rule detection anchors:
    - MD001 — heading levels must increment by one (H1->H3 is a violation)
@@ -66,12 +65,12 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
      - `model: <your-model-id>`
      - `result: pass` (no violations) or `result: findings` (violations exist)
    - Body per Report Format: `# Result\n\nCLEAN` (no violations) or `# Result\n\nFINDINGS\n\n- <list>` (violations). For FINDINGS each entry is two lines: the finding line (`MD0XX line N: <description>`) followed immediately by an indented `Fix: <imperative instruction>` line. The `Fix:` line must be a complete, standalone instruction — the fix pass will apply it literally without any markdown-rule knowledge.
-   - If no violations (CLEAN): output `PATH: <detect_cache_dir>/<model>.md` and stop.
-   - If violations and `--fix` not passed: output `PATH: <detect_cache_dir>/<model>.md` and stop.
+   - If no violations (CLEAN): output `CLEAN` and stop.
+   - If violations and `--fix` not passed: output `findings: <detect_cache_dir>/<model>.md` and stop.
 
 ### Pass 2 — Fix (only when `--fix` present and violations exist)
 
-6. If ALL violations are unfixable (manual-only rules like MD040 with no language to infer): output `PATH: <detect_record_path>` (no second record) and stop.
+6. If ALL violations are unfixable (manual-only rules like MD040 with no language to infer): output `findings: <detect_record_path>` (no second record) and stop.
 7. **Read the detect record** written in step 5 (use the Read tool). Extract every `Fix:` line from the FINDINGS body. Each `Fix:` line is a standalone imperative instruction — apply it literally to the target file using the Edit or Write tool. No re-scan. No markdown-rule knowledge required. For each `Fix:` line: either apply it successfully or mark it as not applicable (unfixable). The file on disk MUST contain all applied fixes after this step.
 8. **Compute new hash:** `git hash-object <fixed-file-path>`. Save as `<fix_hash>`. Set `<fix_cache_dir>` = `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene` (no trailing slash).
 9. **Write fix record** at `<fix_cache_dir>/<model>.md`:
@@ -83,13 +82,14 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
      - `model: <your-model-id>`
      - `result: pass` (all Fix instructions applied) or `result: findings` (some not applicable / remain)
    - Body per Report Format: `# Result\n\nFIXED\n\n- <list>` (all applied) or `# Result\n\nPARTIAL\n\n...` (some remain).
-   - Output `PATH: <fix_cache_dir>/<model>.md` and stop.
+   - If all fixed (FIXED): output `CLEAN` and stop. If some remain (PARTIAL): output `findings: <fix_cache_dir>/<model>.md` and stop.
 
 ## Report Format
 
 **Dispatch return** (one line, always):
 
-- Success: `PATH: <absolute-path-to-record.md>`
+- Clean (no violations OR all violations fixed): `CLEAN`
+- Findings (violations remain — detect-only or PARTIAL): `findings: <absolute-path-to-record.md>`
 - Pre-write failure: `ERROR: <reason>`
 
 **Record body** — minimum info not already in frontmatter. Frontmatter holds `file_path`, `result`, `hash`, `model`. Never duplicate `file_path` in the body. Body always opens with `# Result` H1.
@@ -147,15 +147,6 @@ Verdict mapping for `result` frontmatter:
 - FINDINGS -> `findings`
 - PARTIAL -> `findings`
 - Unrecoverable error -> `error`
-
-## Iteration Safety
-
-Cache HIT (Pass 1, step 3) is the iteration-safety primitive. A HIT on the git blob
-hash means file content is unchanged — `test -f` finds the model-named file and the
-stored PATH is returned immediately.
-On a two-pass run, the detect record (original hash) and fix record (post-fix hash)
-are independently cacheable. A subsequent detect-only call on the fixed file hits the
-second record. `--force` bypasses the HIT check when a fresh run is required.
 
 ## Tables
 

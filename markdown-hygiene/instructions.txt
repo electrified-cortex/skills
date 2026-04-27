@@ -1,4 +1,4 @@
-Fix all markdownlint violations in a .md file. Zero errors is the gate.
+Detect and optionally fix markdownlint violations. Zero errors is the gate.
 
 Params:
 `file_path` (required): absolute path to .md file
@@ -15,21 +15,21 @@ Source->Target: `--source X --target Y` -> read X, fix, write Y; source untouche
 
 Procedure:
 
-You are the executor, not a planner. Run each step's tool calls. Don't summarize, don't produce "fixed version" inline. Don't stop early. Dispatch incomplete unless record file written and absolute path output.
+Executor, not planner. Run each step's tool calls. Don't summarize, don't produce "fixed version" inline. Don't stop early. Dispatch incomplete unless record file written and absolute path output.
 
-Hard rule: in Pass 1 (Detect), MUST NOT call Edit, Write, or any tool modifying target. Target hash MUST be unchanged after Pass 1. Violations reported as FINDINGS, never FIXED. FIXED is Pass 2 only, gated on `--fix`. If `--fix` not passed and violations found -> output `result: findings` as FINDINGS, never apply edits.
+Hard rule: Pass 1 (Detect) MUST NOT call Edit, Write, or any tool modifying target. Target hash MUST be unchanged after Pass 1. Violations reported as FINDINGS, never FIXED. FIXED is Pass 2 only, gated on `--fix`. `--fix` not passed + violations found -> output `result: findings` as FINDINGS, never apply edits.
 
 Two passes: detect first (always), fix second (only if `--fix` or `--source/--target` passed).
 
-Pass 1 — Detect (READ-ONLY — never modify target in this pass):
+Pass 1 — Detect (READ-ONLY — never modify target):
 
-1. Read target file (Read tool). Guard: unreadable or not `.md` -> `ERROR: <reason>`, stop. Adaptive MD041: first non-blank line `---` -> add MD041 to suppressed set.
+1. Read target (Read tool). Guard: unreadable or not `.md` -> `ERROR: <reason>`, stop. Adaptive MD041: first non-blank line `---` -> add MD041 to suppressed set.
 2. Run: `git hash-object <file_path>` (Bash tool). Save 40-char result as `<hash>`.
-3. Cache check: `test -f <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md` (Bash tool). Skip if `--force` passed.
+3. Cache check: `test -f <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md` (Bash). Skip if `--force` passed.
    - Exists -> cache HIT -> output `PATH: <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md`, stop.
    - Missing -> cache MISS. Save `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene` as `<detect_cache_dir>` (no trailing slash). Continue.
-4. Scan for markdownlint violations. Prefer `markdownlint` CLI (see co-located `tooling.md`); else use markdown rule knowledge. Skip rules in `--ignore` or adaptive suppressed set. Cross-check each finding against actual line before recording — drop any finding not pointable to a specific verified line.
-   Per-rule detection anchors:
+4. Scan for markdownlint violations. Prefer `markdownlint` CLI (see co-located `tooling.md`); else use rule knowledge. Skip rules in `--ignore` or adaptive suppressed set. Cross-check each finding against actual line before recording — drop any finding not pointable to specific verified line.
+   Per-rule anchors:
    - MD001: heading levels must increment by one (H1->H3 = violation)
    - MD003: heading style must be consistent (atx `#` vs setext `===`/`---`); flag any heading differing from first
    - MD004: list markers must be consistent (`-`, `*`, `+`); flag any item using different marker than first in its list
@@ -117,8 +117,6 @@ Remaining (manual):
 ```
 
 Verdict mapping: CLEAN -> pass; FIXED -> pass; FINDINGS -> findings; PARTIAL -> findings; unrecoverable -> error.
-
-Iteration safety: cache HIT on git blob hash = content unchanged -> return stored PATH immediately. Two-pass run: detect record (original hash) + fix record (post-fix hash) independently cacheable. `--force` bypasses HIT.
 
 Tables — two canonical separator modes, never mix per table:
 Mode A (default): 1-3 dashes per cell, pipe-padded; widths flexible. e.g. `| - | --- | --- |`

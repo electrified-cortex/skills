@@ -53,28 +53,29 @@ Two-pass model: detect first, fix second (only if `--fix` is present). The detec
    output `ERROR: <reason>` and stop.
 2. Compute the git blob hash (`git hash-object <file>`). Check for a cached
    record at `.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md`
-   (`test -f <path>`). If the file exists and `--force` was not passed, output
-   `PATH: <record-path>` and stop (cache HIT). Otherwise save the parent directory
-   as `<cache_dir>` for step 4.
+   (`test -f <path>`). If the file exists and `--force` was not passed, read its
+   `result:` frontmatter field — if `pass` output `CLEAN`, if `findings` output
+   `findings: <record-path>` — and stop (cache HIT). Otherwise save the parent
+   directory as `<cache_dir>` for step 4.
 3. Identify all markdownlint violations (all rules enabled, minus `--ignore`
    list and adaptive suppressions). Cross-check each finding against the actual
    line before recording. Hallucinated findings are worse than missed findings.
 4. Persist a detect record at `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md` with:
    - `result: pass` if no violations found; `result: findings` if violations exist.
    - Body per the Body Format section (CLEAN or FINDINGS).
-   - If no violations (CLEAN): output `PATH: <record-path>` and stop.
-   - If violations and `--fix` not passed: output `PATH: <record-path>` and stop.
+   - If no violations (CLEAN): output `CLEAN` and stop.
+   - If violations and `--fix` not passed: output `findings: <record-path>` and stop.
 
 **Pass 2 — Fix (only when `--fix` is present and violations were found):**
 
-5. If ALL violations are unfixable: output `PATH: <detect-record-path>` (only 1 record total) and stop.
+5. If ALL violations are unfixable: output `findings: <detect-record-path>` (only 1 record total) and stop.
 6. Read the cached detect record. Extract every `Fix:` line from the FINDINGS body. Apply each instruction in-place to the target file (use Edit/Write tools). No re-scan, no markdown-rule knowledge required — pattern-match and execute.
 7. If any `Fix:` instruction is not applicable (e.g., the violation is manual-only), skip it and note it as remaining.
 8. Compute the new git blob hash of the modified file. Write a second record
    at `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene/<model>.md` with:
    - `result: pass` if all Fix instructions applied; `result: findings` if some remain.
    - Body per the Body Format section (FIXED or PARTIAL).
-   - Output `PATH: <second-record-path>` and stop.
+   - If all fixed (FIXED): output `CLEAN` and stop. If some remain (PARTIAL): output `findings: <second-record-path>` and stop.
 
 ### Rules to enforce (non-exhaustive, all markdownlint rules apply)
 
@@ -105,7 +106,8 @@ Two-pass model: detect first, fix second (only if `--fix` is present). The detec
 
 **Dispatch return** (one line only):
 
-- Success (cache HIT or freshly written): `PATH: <absolute-path-to-record.md>`
+- Clean (no violations OR all violations fixed): `CLEAN`
+- Findings (violations remain — detect-only or PARTIAL): `findings: <absolute-path-to-record.md>`
 - Failure before write: `ERROR: <reason>`
 
 **Record frontmatter** — required fields (schema per `hash-record/SKILL.md`):
@@ -213,7 +215,7 @@ Markdown hygiene should run:
 
 The hash-record probe (Procedure step 2) is the iteration-safety primitive.
 A cache HIT on the git blob hash means the file content has not changed since
-the last run; the stored PATH is returned immediately without re-executing.
+the last run; the cached record's result is re-emitted (CLEAN or findings: <path>) without re-executing.
 
 On a two-pass run (`--fix` with findings), the detect record (at the original
 hash) and the fix record (at the post-fix hash) are independently cacheable.
