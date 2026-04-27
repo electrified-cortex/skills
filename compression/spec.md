@@ -171,7 +171,7 @@ These rules apply at all tiers — even Lite must preserve logic words and actor
   weight in English — "you cannot do this" is a prohibition/command, while "can't" reads
   as a softer capability statement. In normative contexts (constraints, rules, skill
   directives), "cannot" is semantically more precise.
-  
+
   **Normative strength hierarchy:** "must not" / "mustn't" is the strongest prohibition —
   spec-like, expressing a hard requirement ("this must not break"). "Cannot" is a strong
   imperative command. "Can't" / "shouldn't" are softer, conveying capability or suggestion.

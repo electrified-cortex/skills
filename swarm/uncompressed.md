@@ -35,7 +35,7 @@ The registry is external to the skill. Built-in personality definitions live as 
 **Built-in personalities (informative — not normative)**:
 
 | # | Personality | Trigger | Suggested model class | Backend | Scope |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | 1 | Devil's Advocate | always | sonnet-class | dispatch-sonnet | Challenge assumptions; no constructive suggestions |
 | 2 | Security Auditor | auth, user input, API endpoints, data access, secrets, network calls | sonnet-class | dispatch-sonnet | Find vulnerabilities only; no design advice |
 | 3 | Code Quality Critic | code (new or modified) | sonnet-class | dispatch-sonnet | Code conventions, readability, duplication; no security or arch |
@@ -84,7 +84,7 @@ Callers may supply additional personalities for a single invocation. Each entry 
 ## Inputs
 
 | Input | Required | Description |
-|---|---|---|
+| --- | --- | --- |
 | `problem` | required | The content under review. |
 | `personality_filter` | optional | List of personality names or indices. Named personalities dispatched regardless of trigger evaluation; triggers bypassed for named entries. Inclusion list only — not an exclusion gate. |
 | `model_overrides` | optional | Map of personality name to model class. Overrides affect model class only, not backend type. |

@@ -9,6 +9,7 @@ Inputs: `problem` (required artifact), `personality_filter` (inclusion list, byp
 
 S1. Build review packet from `problem`. Fields (omit if N/A): Goal, Approach, Key decisions, Artifacts (actual content — not references), Files affected, Blast radius, Conventions. Packet must be self-contained. Verify Goal is evaluable + Artifacts contain real content; resolve gaps from context — don't ask caller.
 
+
 S2. Select personalities. Crawl `reviewers/` at runtime (metadata-validation gate: skip files with invalid/missing frontmatter). Append caller custom-menu entries. If `personality_filter` supplied: dispatch named only, triggers bypassed. If no filter: evaluate trigger conditions against packet traits; exclude non-matching. `required: true` personalities always included unless explicitly omitted by filter. Devil's Advocate carries `required: true`. Selection is inline — no separate dispatch. Revisit if registry exceeds ~20 entries.
 
 S3. Availability gate. For each selected personality with non-`dispatch-*` backend (e.g. `copilot-cli`): run availability probe. Pass → include. Fail → drop, note in synthesis, continue. Don't fail-stop. `dispatch-*` backends: no probe needed.
@@ -30,9 +31,11 @@ S8. Synthesize. Speak as host only — don't dump raw member or arbitrator outpu
 
 Default Medium. High: all personalities agree + all findings cite evidence. Low: disagree set has high-severity point, or any personality returned no findings.
 
+
 ## Behaviors
 
 B1. `problem` empty or no resolvable artifact → return "No reviewable artifact found." Don't dispatch.
+
 B2. Swarm empty after gating → return "Swarm empty after gating — no personalities available." Don't synthesize.
 B3. Only Devil's Advocate in swarm → proceed, note "adversarial review only" in synthesis.
 B4. Personality returns no findings or times out → non-contributing; exclude from synthesis; note in output.
@@ -44,6 +47,7 @@ B8. Cross-vendor diversity best-effort: prefer at least one personality on diffe
 ## Precedence
 
 P1. `personality_filter` overrides trigger evaluation.
+
 P2. `model_overrides` override registry defaults.
 P3. Availability gate overrides selection (fail probe → drop).
 P4. Read-only constraint (C1) overrides any personality instruction.
@@ -53,9 +57,11 @@ P5. 2000-word cap overrides completeness.
 
 Don't load prompts before swarm finalized. Don't use fixed roster. Don't fail-stop on unavailable personality. Don't dump raw output. Don't merge with/replace code-review. Don't dispatch sequentially. Don't use bare model names. Don't use CLI-as-dispatch until task 10-0845 lands. Don't expand registry without spec amendment + audit pass. Don't allow `model_overrides` to change backend. Don't allow custom entries to replace built-in entries. Don't treat `personality_filter` as exclusion list. Don't have host parse raw member output — arbitrator's job. Don't add arbitrator to registry. Don't implement `local-llm` in v1. Don't embed normative registry as static table — registry is `reviewers/` dir. Don't fail swarm on monoculture — best-effort only. Don't register `reviewers/*.md` files with invalid frontmatter.
 
+
 ## Footguns
 
 F1. Loading all prompts before selection → bloats every invocation. Load only post-S3.
+
 F2. Probe fail treated as fatal error → drop personality, don't error.
 F3. Read-only phrase missing from dispatch prompt → include literal C2 phrase in every dispatch.
 F4. Sequential dispatch → single parallel batch, S5.
@@ -70,8 +76,10 @@ Anti-pattern: `personality_filter: ["Security Auditor"]` expects trigger-conditi
 
 Frontmatter required fields: `name` (unique), `trigger` ("always" or condition string), `required` (bool), `suggested_models` (preference-ordered model-class list), `suggested_backends` (preference-ordered backend list), `scope` (review limiter). Optional: `vendor` (diversity signal for B8). Missing/malformed → silently skipped.
 
+
 Valid backends: `dispatch-sonnet`, `dispatch-haiku`, `dispatch-opus`, `copilot-cli`, `local-llm` (reserved), `varies` (custom only). No bare model names anywhere in skill, reviewer files, or synthesis output.
 
 ## Scope
 
 Applies to any agent/skill needing multi-perspective review of any artifact. Does NOT cover: consumer skill internals, reviewer prompt authoring, non-review dispatch, side-effecting personality operations, CLI-as-dispatch (pending 10-0845), local-llm v1.
+
