@@ -52,13 +52,14 @@ Two-pass model: detect first, fix second (only if `--fix` is present). The detec
 1. Read the target file. Guard: if file is unreadable or not a `.md` file,
    output `ERROR: <reason>` and stop.
 2. Compute the git blob hash (`git hash-object <file>`). Check for a cached
-   record under `.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>/`.
-   If a record is found and `--force` was not passed, output `PATH: <record-path>`
-   and stop (cache HIT). Otherwise save `<cache_dir>` for step 4.
+   record at `.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md`
+   (`test -f <path>`). If the file exists and `--force` was not passed, output
+   `PATH: <record-path>` and stop (cache HIT). Otherwise save the parent directory
+   as `<cache_dir>` for step 4.
 3. Identify all markdownlint violations (all rules enabled, minus `--ignore`
    list and adaptive suppressions). Cross-check each finding against the actual
    line before recording. Hallucinated findings are worse than missed findings.
-4. Persist a detect record at `<cache_dir>/<timestamp>.md` with:
+4. Persist a detect record at `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md` with:
    - `result: pass` if no violations found; `result: findings` if violations exist.
    - Body per the Body Format section (CLEAN or FINDINGS).
    - If no violations (CLEAN): output `PATH: <record-path>` and stop.
@@ -67,11 +68,11 @@ Two-pass model: detect first, fix second (only if `--fix` is present). The detec
 **Pass 2 — Fix (only when `--fix` is present and violations were found):**
 
 5. If ALL violations are unfixable: output `PATH: <detect-record-path>` (only 1 record total) and stop.
-6. Apply all auto-fixable violations in-place (or to `--target` if supplied).
-7. Verify zero errors remain. Remaining errors = unfixable.
+6. Read the cached detect record. Extract every `Fix:` line from the FINDINGS body. Apply each instruction in-place to the target file (use Edit/Write tools). No re-scan, no markdown-rule knowledge required — pattern-match and execute.
+7. If any `Fix:` instruction is not applicable (e.g., the violation is manual-only), skip it and note it as remaining.
 8. Compute the new git blob hash of the modified file. Write a second record
-   at the new hash's `<cache_dir>/<timestamp>.md` with:
-   - `result: pass` if all violations fixed; `result: findings` if some remain.
+   at `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene/<model>.md` with:
+   - `result: pass` if all Fix instructions applied; `result: findings` if some remain.
    - Body per the Body Format section (FIXED or PARTIAL).
    - Output `PATH: <second-record-path>` and stop.
 
@@ -109,7 +110,7 @@ Two-pass model: detect first, fix second (only if `--fix` is present). The detec
 
 **Record frontmatter** — required fields (schema per `hash-record/SKILL.md`):
 `hash`, `file_path`, `operation_kind: markdown-hygiene`, `model: haiku-4-5`,
-`timestamp`, `result`. The `model` field is the model identifier, orthogonal
+`result`. The `model` field is the model identifier, orthogonal
 to `operation_kind`.
 
 **Body format** — minimum information not already in frontmatter. No `file_path`
@@ -130,9 +131,16 @@ FINDINGS (detect pass, violations exist, no `--fix`):
 
 FINDINGS
 
-- MD022 line 7: blank line missing
-- MD047: trailing newline missing
+- MD022 line 7: blank line missing before heading "Configuration"
+  Fix: insert blank line before line 7
+- MD047: file lacks trailing newline
+  Fix: append a single newline at end of file
 ```
+
+Each finding has two lines:
+
+1. Rule code + line number + violation description (what's wrong).
+2. Indented `Fix:` line — imperative actionable instruction (what to do).
 
 FIXED (fix pass, all violations resolved):
 

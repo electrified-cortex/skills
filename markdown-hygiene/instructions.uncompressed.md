@@ -30,64 +30,60 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
 
 1. **Read** the target file (use the Read tool). Guard: if the file is unreadable or not a `.md` file, output `ERROR: <reason>` and stop. Check adaptive MD041: if the first non-blank line is `---`, add MD041 to the suppressed set for this run.
 2. **Run:** `git hash-object <file_path>` (use the Bash tool). Save the 40-char result as `<hash>`.
-3. **Cache check:** `ls <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>/` (use the Bash tool). Skip if `--force` was passed.
-   - Any `*.md` file found: output `PATH: <abs-path-to-latest>` and stop (cache HIT).
-   - Directory missing or empty: cache MISS. Save `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>/` as `<detect_cache_dir>`. Continue.
-4. **Scan** for markdownlint violations. Prefer the `markdownlint` CLI or VS Code extension if available (see co-located `tooling.md`); otherwise use your knowledge of markdown rules. Skip any rule in `--ignore` or the adaptive suppressed set. **Cross-check** each finding against the actual line before recording — drop any finding you cannot point at on a specific verified line.
-5. **Write detect record** at `<detect_cache_dir>/<timestamp>.md`:
+3. **Cache check:** `test -f <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md` (use the Bash tool). Skip if `--force` was passed.
+   - File exists: output `PATH: <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md` and stop (cache HIT).
+   - File does not exist: cache MISS. Save `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene` as `<detect_cache_dir>` (no trailing slash). Continue.
+4. **Scan** for markdownlint violations. Prefer the `markdownlint` CLI or VS Code extension if available (see co-located `tooling.md`); otherwise use your knowledge of markdown rules. Skip any rule in `--ignore` or the adaptive suppressed set. **Cross-check** each finding against the actual line before recording — drop any finding you cannot point at on a specific verified line. Per-rule detection anchors:
+   - MD001 — heading levels must increment by one (H1->H3 is a violation)
+   - MD003 — heading style must be consistent (atx `#` vs setext `===`/`---`): flag any heading that differs from the first heading's style
+   - MD004 — list markers must be consistent (`-`, `*`, `+`): flag any list item using a different marker than the first in its list
+   - MD009 — trailing spaces: flag any line ending with one or more spaces (except two-space line-break if the file uses them)
+   - MD010 — hard tabs: flag any literal tab character in non-code-block content
+   - MD012 — multiple consecutive blank lines: flag runs of 2+ blank lines
+   - MD022 — headings must be preceded AND followed by a blank line (except at file start/end)
+   - MD023 — headings must not have leading whitespace (line must begin with `#`)
+   - MD024 — duplicate heading text among siblings: flag if two headings at the same level and same parent share identical text
+   - MD025 — only one H1 per file: flag every H1 after the first
+   - MD026 — headings must not end with punctuation (`.`, `!`, `?`, `:`, `,`, `;`)
+   - MD029 — ordered list prefixes must be consistent: either all `1.` or strictly incrementing
+   - MD031 — fenced code blocks must be preceded AND followed by a blank line
+   - MD032 — lists must be preceded AND followed by a blank line
+   - MD033 — no inline HTML: flag `<tag>`, `</tag>`, and `<!-- comment -->` outside fenced code blocks
+   - MD034 — bare URLs: flag any `http://` or `https://` not inside angle brackets, backticks, or a link
+   - MD040 — fenced code blocks must have a language identifier (` ```python `, not bare ` ``` `)
+   - MD041 — first non-blank line must be an H1 (suppressed when frontmatter detected or `--ignore MD041`)
+   - MD047 — file must end with exactly one newline character
+   - MD055 — table pipe style must be consistent across all rows in a table
+   - MD056 — all rows in a table must have the same number of cells
+   - MD058 — tables must be preceded AND followed by a blank line
+   - MD060 — table cell separators must have a space on each side of the dash run (`| --- |` not `|---|`)
+5. **Write detect record** at `<detect_cache_dir>/<model>.md`:
    - `mkdir -p <detect_cache_dir>` (Bash tool).
    - Frontmatter (open `---`, close `---`):
      - `hash: <hash>`
      - `file_path: <git-relative path>`
      - `operation_kind: markdown-hygiene`
      - `model: <your-model-id>`
-     - `timestamp: <YYYY-MM-DDTHH-MM-SS-mmmZ>`
      - `result: pass` (no violations) or `result: findings` (violations exist)
-   - Body per Report Format: `# Result\n\nCLEAN` or `# Result\n\nFINDINGS\n\n- <list>`.
-   - If no violations (CLEAN): output `PATH: <detect_cache_dir>/<timestamp>.md` and stop.
-   - If violations and `--fix` not passed: output `PATH: <detect_cache_dir>/<timestamp>.md` and stop.
+   - Body per Report Format: `# Result\n\nCLEAN` (no violations) or `# Result\n\nFINDINGS\n\n- <list>` (violations). For FINDINGS each entry is two lines: the finding line (`MD0XX line N: <description>`) followed immediately by an indented `Fix: <imperative instruction>` line. The `Fix:` line must be a complete, standalone instruction — the fix pass will apply it literally without any markdown-rule knowledge.
+   - If no violations (CLEAN): output `PATH: <detect_cache_dir>/<model>.md` and stop.
+   - If violations and `--fix` not passed: output `PATH: <detect_cache_dir>/<model>.md` and stop.
 
 ### Pass 2 — Fix (only when `--fix` present and violations exist)
 
 6. If ALL violations are unfixable (manual-only rules like MD040 with no language to infer): output `PATH: <detect_record_path>` (no second record) and stop.
-7. **Fix every auto-fixable violation** (use the Edit or Write tool — actually modify the file on disk). Rule list:
-   - MD001 — heading level increments
-   - MD003 — heading style consistency (atx vs setext, uniform across file)
-   - MD004 — list markers consistent
-   - MD009 — no trailing spaces
-   - MD010 — no hard tabs
-   - MD012 — collapse multiple blank lines to one
-   - MD022 — blank lines BEFORE and AFTER headings
-   - MD023 — headings start at line beginning, no leading whitespace
-   - MD024 — no duplicate headings among siblings
-   - MD025 — single H1 per document
-   - MD026 — no trailing punctuation in headings
-   - MD029 — ordered list prefixes consistent
-   - MD031 — blank lines BEFORE and AFTER fenced code blocks
-   - MD032 — blank lines around lists
-   - MD033 — no inline HTML; HTML comments `<!-- ... -->` are inline HTML; exception: HTML inside fenced code blocks is not a violation
-   - MD034 — bare URLs in angle brackets
-   - MD040 — language identifiers on fenced code blocks (fixable when language is determinable)
-   - MD047 — file ends with single newline
-   - MD055 — consistent table pipe style
-   - MD056 — equal column count across table rows
-   - MD058 — blank lines around tables
-   - MD060 — table pipe spacing
-   - all other markdownlint rules
-8. **Write** the fixed content to the target path (in-place, `.fixed`, or `--target` path per the Modes section). The file on disk MUST contain the fixes after this step.
-9. **Verify:** re-scan the output to confirm zero remaining errors. Remaining errors are unfixable.
-10. **Compute new hash:** `git hash-object <fixed-file-path>`. Save as `<fix_hash>`. Set `<fix_cache_dir>` = `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene/<model>/`.
-11. **Write fix record** at `<fix_cache_dir>/<timestamp>.md`:
-    - `mkdir -p <fix_cache_dir>` (Bash tool).
-    - Frontmatter:
-      - `hash: <fix_hash>`
-      - `file_path: <git-relative path>`
-      - `operation_kind: markdown-hygiene`
-      - `model: <your-model-id>`
-      - `timestamp: <YYYY-MM-DDTHH-MM-SS-mmmZ>`
-      - `result: pass` (all fixed) or `result: findings` (some remain)
-    - Body per Report Format: `# Result\n\nFIXED\n\n- <list>` or `# Result\n\nPARTIAL\n\n...`.
-    - Output `PATH: <fix_cache_dir>/<timestamp>.md` and stop.
+7. **Read the detect record** written in step 5 (use the Read tool). Extract every `Fix:` line from the FINDINGS body. Each `Fix:` line is a standalone imperative instruction — apply it literally to the target file using the Edit or Write tool. No re-scan. No markdown-rule knowledge required. For each `Fix:` line: either apply it successfully or mark it as not applicable (unfixable). The file on disk MUST contain all applied fixes after this step.
+8. **Compute new hash:** `git hash-object <fixed-file-path>`. Save as `<fix_hash>`. Set `<fix_cache_dir>` = `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene` (no trailing slash).
+9. **Write fix record** at `<fix_cache_dir>/<model>.md`:
+   - `mkdir -p <fix_cache_dir>` (Bash tool).
+   - Frontmatter:
+     - `hash: <fix_hash>`
+     - `file_path: <git-relative path>`
+     - `operation_kind: markdown-hygiene`
+     - `model: <your-model-id>`
+     - `result: pass` (all Fix instructions applied) or `result: findings` (some not applicable / remain)
+   - Body per Report Format: `# Result\n\nFIXED\n\n- <list>` (all applied) or `# Result\n\nPARTIAL\n\n...` (some remain).
+   - Output `PATH: <fix_cache_dir>/<model>.md` and stop.
 
 ## Report Format
 
@@ -96,7 +92,7 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
 - Success: `PATH: <absolute-path-to-record.md>`
 - Pre-write failure: `ERROR: <reason>`
 
-**Record body** — minimum info not already in frontmatter. Frontmatter holds `file_path`, `result`, `hash`, `timestamp`, `model`. Never duplicate `file_path` in the body. Body always opens with `# Result` H1.
+**Record body** — minimum info not already in frontmatter. Frontmatter holds `file_path`, `result`, `hash`, `model`. Never duplicate `file_path` in the body. Body always opens with `# Result` H1.
 
 CLEAN (no violations found):
 
@@ -113,8 +109,10 @@ FINDINGS (violations found, no `--fix`):
 
 FINDINGS
 
-- MD022 line 7: blank line missing
-- MD047: trailing newline missing
+- MD022 line 7: blank line missing before heading "Configuration"
+  Fix: insert blank line before line 7
+- MD047: file lacks trailing newline
+  Fix: append a single newline at end of file
 ```
 
 FIXED (all violations resolved):
@@ -153,7 +151,8 @@ Verdict mapping for `result` frontmatter:
 ## Iteration Safety
 
 Cache HIT (Pass 1, step 3) is the iteration-safety primitive. A HIT on the git blob
-hash means file content is unchanged — return stored PATH immediately.
+hash means file content is unchanged — `test -f` finds the model-named file and the
+stored PATH is returned immediately.
 On a two-pass run, the detect record (original hash) and fix record (post-fix hash)
 are independently cacheable. A subsequent detect-only call on the fixed file hits the
 second record. `--force` bypasses the HIT check when a fresh run is required.
