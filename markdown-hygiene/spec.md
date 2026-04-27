@@ -29,7 +29,7 @@ No domain-specific terms. Rule identifiers (MD001, MD022, etc.) are markdownlint
 ### Input
 
 - `file_path` (string, required): Absolute path to `.md` file to scan (and optionally fix)
-- `--model-id <id>` (string, required): The exact model identifier string the caller wants used as the record filename. Lowercase-hyphenated. Examples: `claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-opus-4-7`, `gpt-5-3-codex`. The executor MUST use this string verbatim as the record filename — no inference, no appending date/year/timestamp/qualifier. If `--model-id` is not passed, output `ERROR: --model-id required` and stop.
+- `--filename <name>` (string, required): The exact filename string the caller wants used as the record filename. Lowercase-hyphenated. Examples: `claude-haiku`, `claude-sonnet`, `claude-opus`, `gpt-codex`. The executor MUST use this string verbatim as the record filename — no inference, no appending date/year/timestamp/qualifier. If `--filename` is not passed, output `ERROR: --filename required` and stop.
 - `--fix` (flag, optional): Apply fixes to the file after detecting violations. Without this flag, the file is never modified — detection only.
 - `--source X --target Y` (string pair, optional): Read X, fix, write to Y.
   X is untouched. No git tracking check. Implies `--fix`.
@@ -53,7 +53,7 @@ Two-pass model: detect first, fix second (only if `--fix` is present). The detec
 1. Read the target file. Guard: if file is unreadable or not a `.md` file,
    output `ERROR: <reason>` and stop.
 2. Compute the git blob hash (`git hash-object <file>`). Check for a cached
-   record at `.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md`
+   record at `.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<filename>.md`
    (`test -f <path>`). If the file exists and `--force` was not passed, read its
    `result:` frontmatter field — if `pass` output `CLEAN`, if `findings` output
    `findings: <record-path>` — and stop (cache HIT). Otherwise save the parent
@@ -61,7 +61,7 @@ Two-pass model: detect first, fix second (only if `--fix` is present). The detec
 3. Identify all markdownlint violations (all rules enabled, minus `--ignore`
    list and adaptive suppressions). Cross-check each finding against the actual
    line before recording. Hallucinated findings are worse than missed findings.
-4. Persist a detect record at `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>.md` with:
+4. Persist a detect record at `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<filename>.md` with:
    - `result: pass` if no violations found; `result: findings` if violations exist.
    - Body per the Body Format section (CLEAN or FINDINGS).
    - If no violations (CLEAN): output `CLEAN` and stop.
@@ -73,7 +73,7 @@ Two-pass model: detect first, fix second (only if `--fix` is present). The detec
 6. Read the cached detect record. Extract every `Fix:` line from the FINDINGS body. Apply each instruction in-place to the target file (use Edit/Write tools). No re-scan, no markdown-rule knowledge required — pattern-match and execute.
 7. If any `Fix:` instruction is not applicable (e.g., the violation is manual-only), skip it and note it as remaining.
 8. Compute the new git blob hash of the modified file. Write a second record
-   at `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene/<model>.md` with:
+   at `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene/<filename>.md` with:
    - `result: pass` if all Fix instructions applied; `result: findings` if some remain.
    - Body per the Body Format section (FIXED or PARTIAL).
    - If all fixed (FIXED): output `CLEAN` and stop. If some remain (PARTIAL): output `findings: <second-record-path>` and stop.
@@ -112,8 +112,8 @@ Two-pass model: detect first, fix second (only if `--fix` is present). The detec
 - Failure before write: `ERROR: <reason>`
 
 **Record frontmatter** — required fields (schema per `hash-record/SKILL.md`):
-`hash`, `file_path`, `operation_kind: markdown-hygiene`, `model: <model-id>`,
-`result`. The `model` field is set to the value passed via `--model-id` — caller-controlled, executor never modifies it.
+`hash`, `file_path`, `operation_kind: markdown-hygiene`,
+`result`. The `model` field is set to the value passed via `--filename` — caller-controlled, executor never modifies it.
 
 `file_path` MUST be a single repo-relative path string — relative to the git root
 that contains the `.hash-record/` directory being written to. Compute via
@@ -131,18 +131,18 @@ file_path: /abs/path/to/markdown-hygiene/uncompressed.md
 file_path: markdown-hygiene/
 ```
 
-**Filename:** `<model-id>.md` where `<model-id>` is the value passed via the `--model-id` argument. Use it VERBATIM. Append nothing. Do NOT compute or infer your model id from your own knowledge — use only what the caller passed.
+**Filename:** `<filename>.md` where `<filename>` is the value passed via the `--filename` argument. Use it VERBATIM. Append nothing. Do NOT compute or infer your filename from your own knowledge — use only what the caller passed.
 
-The caller controls the filename. The executor's job is to use the supplied value as-is and write the record. If `--model-id` was not passed, stop with `ERROR: --model-id required` before writing any record.
+The caller controls the filename. The executor's job is to use the supplied value as-is and write the record. If `--filename` was not passed, stop with `ERROR: --filename required` before writing any record.
 
 ```text
-Correct:   .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5.md
-Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-4-5-20251001.md
-Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/skill-auditing-sonnet-claude-sonnet-4-6.md
-Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-sonnet-4-6-2026-04-27T19-17-52Z.md
+Correct:   .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku.md
+Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku-20251001.md
+Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/skill-auditing-sonnet-claude-sonnet.md
+Incorrect: .hash-record/<sh>/<hash>/markdown-hygiene/claude-sonnet-2026-04-27T19-17-52Z.md
 ```
 
-In the Correct example above, `claude-haiku-4-5` is whatever the caller passed as `--model-id`, not what the executor inferred. In the Incorrect examples the executor appended extra tokens or used caller context instead of the explicit argument.
+In the Correct example above, `claude-haiku` is whatever the caller passed as `--filename`, not what the executor inferred. In the Incorrect examples the executor appended extra tokens or used caller context instead of the explicit argument.
 
 **Body format** — minimum information not already in frontmatter. No `file_path`
 duplication in body. Body always opens with `# Result` H1.
@@ -214,7 +214,7 @@ Zero errors after fixing. If any error cannot be auto-fixed, the verdict is PART
 
 ## Constraints
 
-- The skill MUST NOT infer or compute its model id from internal knowledge. The model id is determined SOLELY by the `--model-id` argument. If `--model-id` is absent, halt with `ERROR: --model-id required`.
+- The skill MUST NOT infer or compute its filename from internal knowledge. The filename is determined SOLELY by the `--filename` argument. If `--filename` is absent, halt with `ERROR: --filename required`.
 - The dispatch agent must not invoke, recommend, or install any specific
   external tool. It uses built-in tools and agent intelligence only.
   "markdownlint" here refers to the rule set, not any CLI package.

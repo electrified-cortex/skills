@@ -1,26 +1,28 @@
 Dispatch Params:
 
 `skill_path` (req): Absolute path to SKILL.md.
+`--filename <id>` (req): exact filenameentifier for record filename and frontmatter `model:` field; lowercase-hyphenated vendor-class only (e.g. `claude-sonnet`, `claude-opus`); use VERBATIM, no inference, no sub-version. Missing → `ERROR: --filename required`, stop.
 `spec_path` (opt): Companion spec if not beside SKILL.md.
 `--fix` (opt): Single-pass fix mode against sources (`uncompressed.md`, `instructions.uncompressed.md` siblings). Runs only on NEEDS_REVISION verdict. Refused on pending git changes (untracked, unstaged, staged, merge-conflicted) or paths escaping skill dir. Never modifies `spec.md`, `README.md`, `SKILL.md`, `instructions.txt`.
 `--uncompressed` (opt): Audit sources instead of runtime (`SKILL.md`, `instructions.txt`).
 
 Procedure:
 
+0. Guard: if `--filename` not passed, output `ERROR: --filename required` and stop immediately.
 1. Read skill dir listing. Identify source files: `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` if present. Skip `SKILL.md`, `instructions.txt` (derived).
 2. `git hash-object <file>` on each source. Collect `(filename, blob-hash)` pairs.
 3. Build manifest: sort pairs lexically; one `<filename> <hash>` line each; `git hash-object --stdin` → `<manifest_hash>` (40-char).
-4. Cache check: `test -f <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/<model>.md`. `<model>` = model-id only (e.g. `claude-sonnet-4-6`) — no skill-name prefix, no timestamp, no qualifiers. Hit → output `PATH: <abs-path>`, stop. Miss → save `<repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/` as `<audit_cache_dir>`, continue.
+4. Cache check: `test -f <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/<filename>.md`. `<filename>` = value from `--filename`, verbatim — no skill-name prefix, no timestamp, no qualifiers. Hit → output `PATH: <abs-path>`, stop. Miss → save `<repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/` as `<audit_cache_dir>`, continue.
    `v1.0` segment mandatory. Declared in `spec.md`; must match this file. Drift = defect — surface and stop.
-   Filename: `<model-id>.md` ONLY — agent's own model id, lowercase-hyphenated (e.g. `claude-haiku-4-5`, `claude-sonnet-4-6`). NO caller skill name, NO caller model id, NO timestamp, NO sub-version qualifier. Same agent + same content = same filename, every run.
-   Correct: `.hash-record/<sh>/<hash>/skill-auditing/v1.0/claude-haiku-4-5.md`
-   Incorrect: `.hash-record/<sh>/<hash>/skill-auditing/skill-auditing-sonnet-claude-sonnet-4-6.md`
-   Incorrect: `.hash-record/<sh>/<hash>/skill-auditing/claude-sonnet-4-6-2026-04-27T19-17-52Z.md`
+   Filename: `<filename>.md` ONLY — verbatim from `--filename`, vendor-class only (e.g. `claude-haiku`, `claude-sonnet`). See `../models.md` for canonical values. NO skill name, NO timestamp, NO sub-version qualifier.
+   Correct: `.hash-record/<sh>/<hash>/skill-auditing/v1.0/claude-sonnet.md`
+   Incorrect: `.hash-record/<sh>/<hash>/skill-auditing/skill-auditing-sonnet-claude-sonnet.md`
+   Incorrect: `.hash-record/<sh>/<hash>/skill-auditing/claude-sonnet-2026-04-27T19-17-52Z.md`
 5. Hygiene per file: dispatch `markdown-hygiene` on each `.md` in skill dir. Each returns `CLEAN` (no violations), `findings: <abs-path>` (violations — collect path), or `ERROR: <reason>` (flag as sub-dispatch failure). Collect only `findings:` paths; CLEAN files contribute nothing.
 6. Read skill at `skill_path`. Determine type: inline or dispatch. Locate spec (`spec_path` if provided → `spec.md` co-located). Not found: simple inline (<30 lines) → skip Phase 1; dispatch/complex → error verdict, write record, output `PATH:`, stop.
 7. Run Phase 1 → Phase 2 → Phase 3 (stop on first failure). Assign verdict. Map: PASS → `pass`; PASS_WITH_FINDINGS/NEEDS_REVISION/FAIL → `findings`; error → `error`.
-8. `mkdir -p <audit_cache_dir>`. Write audit record at `<audit_cache_dir><model>.md` — filename is `<model-id>.md` exactly (e.g. `claude-sonnet-4-6.md`), no skill-name prefix, no timestamp, no qualifiers. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list of repo-relative paths>` (one per source file from step 2, sorted lexically; each path repo-relative to git root containing `.hash-record/`; compute via `git ls-files --full-name <file>` or strip `git rev-parse --show-toplevel` prefix — NOT absolute paths, NOT dir-only, NOT singular `file_path`), `operation_kind: skill-auditing`, `model: <model-id>`, `result: <mapped>`. Body: `# Result` H1, verdict, findings (phase+check refs), References subsection listing only `findings:` paths from step 5 (CLEAN omitted; ERROR noted separately).
-9. Output `PATH: <audit_cache_dir><model>.md`, stop.
+8. `mkdir -p <audit_cache_dir>`. Write audit record at `<audit_cache_dir><filename>.md` — filename is verbatim from `--filename` (e.g. `claude-sonnet.md`), no skill-name prefix, no timestamp, no qualifiers. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list of repo-relative paths>` (one per source file from step 2, sorted lexically; each path repo-relative to git root containing `.hash-record/`; compute via `git ls-files --full-name <file>` or strip `git rev-parse --show-toplevel` prefix — NOT absolute paths, NOT dir-only, NOT singular `file_path`), `operation_kind: skill-auditing` (verbatim from `--filename`), `result: <mapped>`. Body: `# Result` H1, verdict, findings (phase+check refs), References subsection listing only `findings:` paths from step 5 (CLEAN omitted; ERROR noted separately).
+9. Output `PATH: <audit_cache_dir><filename>.md`, stop.
 10. If `--fix` active AND verdict == NEEDS_REVISION: Fix Mode. PASS → exit; FAIL → skip, report defects.
 
 Audit modes: Default — audit compiled runtime against `spec.md` (regression check). Build (`--uncompressed`) — audit sources; iterate until source passes, then final default-mode pass on compiled result.

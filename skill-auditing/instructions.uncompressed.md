@@ -3,6 +3,7 @@
 ## Dispatch Parameters
 
 - `skill_path` (required): Absolute path to SKILL.md to audit
+- `--filename <name>` (required): exact filename string for the record file and frontmatter `model:` field; lowercase-hyphenated vendor-class only (e.g. `claude-sonnet`, `claude-opus`); use VERBATIM, no inference, no sub-version. Missing -> `ERROR: --filename required`, stop.
 - `spec_path` (optional): Path to companion spec if not beside SKILL.md
 - `--fix` (optional flag): Enable single-pass fix mode against the skill's
   authoritative source files (`uncompressed.md` and `instructions.uncompressed.md`,
@@ -17,25 +18,26 @@
 
 ## Procedure
 
+0. **Guard:** If `--filename` was not passed, output `ERROR: --filename required` and stop immediately.
 1. **Read** the target skill directory listing (Glob or ls on the skill dir containing `skill_path`).
 2. **Identify source files** — typically `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` if present. Skip `SKILL.md` and `instructions.txt` — those are compressed artifacts derived from the source.
 3. **Run** `git hash-object <file>` on each source file. Collect `(filename, blob-hash)` pairs.
 4. **Build manifest:** sort pairs lexically by filename. Write one `<filename> <hash>` line per pair to a temp string. Run `git hash-object --stdin` on that text. Save the 40-char result as `<manifest_hash>`.
-5. **Cache check:** `test -f <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/<model>.md` (use the Bash tool). `<model>` is the model-id string only (e.g. `claude-sonnet-4-6`) — no skill-name prefix, no timestamp, no extra qualifiers. If the file exists (cache HIT): output `PATH: <abs-path-to-that-file>` and stop — do not re-run the audit. If the file does not exist (cache MISS): save `<repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/` as `<audit_cache_dir>` and continue.
+5. **Cache check:** `test -f <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/<filename>.md` (use the Bash tool). `<filename>` is the value from `--filename`, used verbatim — no skill-name prefix, no timestamp, no extra qualifiers. If the file exists (cache HIT): output `PATH: <abs-path-to-that-file>` and stop — do not re-run the audit. If the file does not exist (cache MISS): save `<repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/` as `<audit_cache_dir>` and continue.
 
    The `v1.0` segment is mandatory for skill-auditing records. The version is declared in `spec.md` and MUST match the version embedded in this instructions file. If they ever drift, that's a defect — surface and stop.
 
-   **Filename format:** `<model-id>.md` ONLY. The `<model-id>` is the agent's own canonical model identifier in lowercase-hyphenated form — `claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-opus-4-7`, `gpt-5-3-codex`, etc. **Do NOT include**: caller skill name, caller model id, timestamp/date, sub-version qualifiers (e.g. no `-2025` suffix, no `-sonnet-` qualifier from caller context). The filename is determined SOLELY by the agent's own model id, and must be deterministic — running the same agent on the same content produces the same filename, every time, byte-for-byte.
+   **Filename format:** `<filename>.md` ONLY. The `<filename>` is the value passed via `--filename` — used VERBATIM, no inference. Lowercase-hyphenated, vendor-class only (e.g. `claude-haiku`, `claude-sonnet`, `claude-opus`). **Do NOT include**: caller skill name, timestamp/date, sub-version qualifiers. See `../hash-record/filenames.md` for canonical values.
 
    ```text
-   Correct:   .hash-record/<sh>/<hash>/skill-auditing/v1.0/claude-haiku-4-5.md
-   Incorrect: .hash-record/<sh>/<hash>/skill-auditing/skill-auditing-sonnet-claude-sonnet-4-6.md
-   Incorrect: .hash-record/<sh>/<hash>/skill-auditing/claude-sonnet-4-6-2026-04-27T19-17-52Z.md
+   Correct:   .hash-record/<sh>/<hash>/skill-auditing/v1.0/claude-sonnet.md
+   Incorrect: .hash-record/<sh>/<hash>/skill-auditing/skill-auditing-sonnet-claude-sonnet.md
+   Incorrect: .hash-record/<sh>/<hash>/skill-auditing/claude-sonnet-2026-04-27T19-17-52Z.md
    ```
 6. **Hygiene per file:** dispatch `markdown-hygiene` on each `.md` file in the skill directory (including `SKILL.md`, `instructions.txt` if present). Each call returns one of three states: `CLEAN` (no violations — no path emitted), `findings: <abs-path>` (unresolved violations — collect the path), or `ERROR: <reason>` (pre-write failure — flag as sub-dispatch failure). Only `findings:` paths are collected; `CLEAN` files contribute no entry. These are independently cached at per-file blob hashes and do not affect the manifest hash.
 7. **Read the skill** at `skill_path`. Determine type: inline or dispatch. Locate companion spec — check `spec_path` if provided, otherwise `spec.md` co-located with `skill_path`. If not found: simple inline skills (<30 lines) may skip Phase 1; dispatch or complex inline → record an error verdict, write the record, output `PATH:`, and stop.
 8. **Run Phase 1 → Phase 2 → Phase 3** (stop on first failure). Assign verdict. Map to `result` field: PASS → `pass`; PASS_WITH_FINDINGS / NEEDS_REVISION / FAIL → `findings`; error → `error`.
-9. **Write audit record** at `<audit_cache_dir><model>.md` — filename is `<model-id>.md` exactly (e.g. `claude-sonnet-4-6.md`), no skill-name prefix, no timestamp, no extra qualifiers. `mkdir -p <audit_cache_dir>` first. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list of repo-relative paths>` (one entry per source file from step 3, sorted lexically; each path is relative to the git root containing `.hash-record/` — compute via `git ls-files --full-name <file>` or strip `git rev-parse --show-toplevel` from each absolute path), `operation_kind: skill-auditing`, `model: <model-id>`, `result: <mapped value>`.
+9. **Write audit record** at `<audit_cache_dir><filename>.md` — filename is the `--filename` value verbatim (e.g. `claude-sonnet.md`), no skill-name prefix, no timestamp, no extra qualifiers. `mkdir -p <audit_cache_dir>` first. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list of repo-relative paths>` (one entry per source file from step 3, sorted lexically; each path is relative to the git root containing `.hash-record/` — compute via `git ls-files --full-name <file>` or strip `git rev-parse --show-toplevel` from each absolute path), `operation_kind: skill-auditing` (verbatim from `--filename`), `result: <mapped value>`.
 
    ```yaml
    # Correct:
@@ -57,7 +59,7 @@
    ```
 
    Body: open with `# Result` H1, state verdict, list findings (with phase and check references), then a **References** subsection listing only the `findings:` paths collected in step 6 (files that returned `CLEAN` are omitted; `ERROR` responses are noted separately as sub-dispatch failures).
-10. **Output** `PATH: <audit_cache_dir><model>.md` and stop.
+10. **Output** `PATH: <audit_cache_dir><filename>.md` and stop.
 11. If `--fix` is active **and** the verdict is exactly NEEDS_REVISION, enter the Fix Mode procedure below. PASS → nothing to fix; FAIL → fix mode is skipped and defects are reported for author action. Fix mode is single-pass; the auditor does not re-audit or recompress.
 
 ## When to audit which artifact
@@ -377,7 +379,7 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
 1. **Eligibility gate.** Enter fix mode only when verdict == NEEDS_REVISION.
    PASS → nothing to fix. FAIL (any phase) → fix mode is skipped; defects are
    reported for author action.
-2. **Preflight report path writability.** Compute report path via the hash-record manifest path (`<audit_cache_dir><model>.md`). If unwritable, STOP fix mode and exit without modifying anything.
+2. **Preflight report path writability.** Compute report path via the hash-record manifest path (`<audit_cache_dir><filename>.md`). If unwritable, STOP fix mode and exit without modifying anything.
 3. **Identify writable candidates.** Only `uncompressed.md` and
    `instructions.uncompressed.md` co-located with `skill_path` are eligible.
    - Reject any candidate path that resolves outside the skill directory
@@ -425,7 +427,7 @@ file_paths:
   - <repo-relative path to second source file>
   ...
 operation_kind: skill-auditing
-model: <model-id>
+model: <filename>
 result: pass | findings | error | skipped
 ---
 ```

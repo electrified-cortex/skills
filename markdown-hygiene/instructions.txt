@@ -2,7 +2,7 @@ Detect, fix markdownlint violations. Zero errors gates execution.
 
 Params:
 `file_path` (required): absolute path to .md file
-`--model-id <id>` (required): model identifier for record filename; lowercase-hyphenated vendor-class only (claude-haiku, claude-sonnet, claude-opus, gpt-codex); use VERBATIM — no inference, suffix, date, sub-version. Missing → `ERROR: --model-id required`, stop.
+`--filename <name>` (required): filename for record; lowercase-hyphenated; use VERBATIM — no inference, suffix, date, sub-version. Missing → `ERROR: --filename required`, stop.
 `--fix` (optional): apply fixes after detect; without, detect-only — file untouched.
 `--source X --target Y` (optional): read X, fix, write Y; X untouched, no git check; implies `--fix`.
 `--ignore <RULE>[,<RULE>...]` (optional): skip rules — not scanned, flagged, fixed.
@@ -22,10 +22,10 @@ Two passes: detect (always), fix (only if `--fix` or `--source`/`--target`).
 
 Pass 1 — Detect:
 
-0. Guard: missing `--model-id` → `ERROR: --model-id required`, stop immediately.
+0. Guard: missing `--filename` → `ERROR: --filename required`, stop immediately.
 1. Read target (Read tool). Guard: unreadable or non-.md → `ERROR: <reason>`, stop. Adaptive MD041: first non-blank `---` → add MD041 to suppressed set.
 2. `git hash-object <file_path>` (Bash). Save 40-char as `<hash>`.
-3. Cache check: `test -f <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model-id>.md` (Bash) where `<model-id>` = `--model-id` value. Skip if `--force`.
+3. Cache check: `test -f <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<filename>.md` (Bash) where `<filename>` = `--filename` value. Skip if `--force`.
    — Exists: read `result:` frontmatter — if `pass` output `CLEAN`; if `findings` output `findings: <path>` — stop (HIT).
    — Missing: MISS. Save `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene` as `<detect_cache_dir>` (no /). Continue.
 4. Scan markdownlint violations. Prefer `markdownlint` CLI (see tooling.md); else use knowledge. Skip rules in `--ignore` or adaptive suppressed set. Cross-check findings vs actual lines — drop unreferenced.
@@ -53,26 +53,26 @@ Pass 1 — Detect:
    — MD056: all table rows same cell count.
    — MD058: tables need blank before + after.
    — MD060: table separators spaced (`| --- |` not `|---|`).
-5. Write detect record at `<detect_cache_dir>/<model-id>.md`:
-   — Filename: `<model-id>.md` (value from `--model-id`, VERBATIM; append nothing). Caller controls filename; executor uses supplied value as-is. Missing → stop with `ERROR: --model-id required`.
+5. Write detect record at `<detect_cache_dir>/<filename>.md`:
+   — Filename: `<filename>.md` (value from `--filename`, VERBATIM; append nothing). Caller controls filename; executor uses supplied value as-is. Missing → stop with `ERROR: --filename required`.
      Correct: `.hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku.md`
      Incorrect: appended date/qualifiers/inferred model.
    — `mkdir -p <detect_cache_dir>` (Bash).
-   — Frontmatter: `hash: <hash>`, `file_path: <repo-relative>` (via `git ls-files --full-name` or strip `git rev-parse --show-toplevel`; e.g. `markdown-hygiene/instructions.uncompressed.md`), `operation_kind: markdown-hygiene`, `model: <model-id>`, `result: pass|findings`.
+   — Frontmatter: `hash: <hash>`, `file_path: <repo-relative>` (via `git ls-files --full-name` or strip `git rev-parse --show-toplevel`; e.g. `markdown-hygiene/instructions.uncompressed.md`), `operation_kind: markdown-hygiene`, `result: pass|findings`.
    — Body: Report Format. No violations: `# Result\n\nCLEAN`. Violations: `# Result\n\nFINDINGS\n\n- <list>`. Each entry: `MD0XX line N: <desc>` + indented `Fix: <imperative>`. Fix: standalone, literal.
    — No violations: output `CLEAN`, stop.
-   — Violations, no `--fix`: output `findings: <detect_cache_dir>/<model-id>.md`, stop.
+   — Violations, no `--fix`: output `findings: <detect_cache_dir>/<filename>.md`, stop.
 
 Pass 2 — Fix (only when `--fix` + violations):
 
 6. ALL violations unfixable (manual-only, e.g., MD040 no-language) → output `findings: <detect_record_path>`, stop (no second record).
 7. Read detect record (Read tool). Extract `Fix:` lines from FINDINGS body. Apply literally via Edit/Write. No re-scan, no knowledge. File MUST contain all applied fixes.
 8. Compute new hash: `git hash-object <fixed-file>`. Save as `<fix_hash>`. Set `<fix_cache_dir>` = `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene` (no /).
-9. Write fix record at `<fix_cache_dir>/<model-id>.md`:
+9. Write fix record at `<fix_cache_dir>/<filename>.md`:
    — `mkdir -p <fix_cache_dir>` (Bash).
-   — Frontmatter: `hash: <fix_hash>`, `file_path: <repo-relative>`, `operation_kind: markdown-hygiene`, `model: <model-id>`, `result: pass|findings`.
+   — Frontmatter: `hash: <fix_hash>`, `file_path: <repo-relative>`, `operation_kind: markdown-hygiene`, `result: pass|findings`.
    — Body: Report Format. All applied: `# Result\n\nFIXED\n\n- <list>`. Some remain: `# Result\n\nPARTIAL\n\n...`.
-   — All fixed: output `CLEAN`, stop. Some remain: output `findings: <fix_cache_dir>/<model-id>.md`, stop.
+   — All fixed: output `CLEAN`, stop. Some remain: output `findings: <fix_cache_dir>/<filename>.md`, stop.
 
 Dispatch return (one line):
 Clean (no violations OR all fixed): `CLEAN`

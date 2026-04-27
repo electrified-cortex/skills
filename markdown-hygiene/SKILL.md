@@ -4,8 +4,8 @@ description: Fix markdownlint violations in a .md file. Triggers — fix markdow
 ---
 
 Don't read `instructions.txt` yourself. Dispatch (zero context, haiku-class): "Read and follow `instructions.txt` (in this directory).
-Input: `<file_path> --model-id claude-haiku [--fix] [--source <src> --target <dst>] [--ignore <RULE>[,<RULE>...]] [--force]`"
+Input: `<file_path> --filename claude-haiku [--fix] [--source <src> --target <dst>] [--ignore <RULE>[,<RULE>...]] [--force]`"
 
 Returns: `CLEAN` | `findings: <abs-path-to-record.md>` | `ERROR: <reason>`.
 
-For non-haiku dispatch, see `../models.md` for the canonical `--model-id` value.
+For non-haiku dispatch, see `../hash-record/filenames.md` for the canonical `--filename` value.
