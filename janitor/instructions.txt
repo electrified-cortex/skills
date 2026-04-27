@@ -1,0 +1,99 @@
+Inputs:
+
+| Input | Type | Required | Default |
+| --- | --- | --- | --- |
+| `mode` | string | no | `dry-run` |
+| `target_root` | string | no | workspace root (dir containing `.agents/`) |
+| `keep_session_logs` | integer | no | `5` |
+| `keep_telegram_logs` | integer | no | `5` |
+| `audit_reports_age_days` | integer | no | `14` |
+| `keep_handoffs` | integer | no | `3` |
+| `pattern` | string | no | _(all patterns processed)_ |
+
+Valid `pattern` values: `logs/session`, `logs/telegram`, `audit-reports`, `handoffs`.
+
+Scope:
+
+Whitelist of dirs the janitor may touch. Nothing outside this list is accessed or deleted.
+
+| Pattern | Path shape |
+| --- | --- |
+| Session logs | `<target_root>/logs/session/YYYYMM/DD/HHmmss/` |
+| Telegram logs | `<target_root>/logs/telegram/YYYYMM/DD/HHmmss/` |
+| Audit reports | `<target_root>/.audit-reports/<target-kind>/YYYYMMDD/HHmm/` |
+| Handoff files | `<target_root>/memory/handoff*.md` |
+
+Never touched: `.git/`, source code, specs, skill files, `tasks/` dirs, `memory/feedback_*`, `memory/project_*`, `memory/reference_*`, any path not listed above.
+
+Pruning Rules:
+
+Session logs (`logs/session/YYYYMM/DD/HHmmss/`):
+
+1. Enumerate all leaf dirs matching `YYYYMM/DD/HHmmss` under `logs/session/`.
+2. Sort by date-time encoded in path, descending (newest first).
+3. Keep first `keep_session_logs` dirs.
+4. For each remaining (older) dir: run `git log --oneline -- <path>`. If at least one commit references path → candidate for deletion. If zero commits → preserve (not yet committed — skip).
+5. Candidates reported in `pruned[].candidates`. In commit mode, delete each candidate dir tree sequentially.
+
+Telegram logs (`logs/telegram/YYYYMM/DD/HHmmss/`):
+
+Same algorithm as session logs. Uses `keep_telegram_logs` as keep count.
+
+Audit reports (`.audit-reports/<target-kind>/YYYYMMDD/HHmm/`):
+
+1. Enumerate all leaf dirs matching `YYYYMMDD/HHmm` under `.audit-reports/<any-target-kind>/`.
+2. Compute age in days from `YYYYMMDD/HHmm` path components to current date/time.
+3. Dirs older than `audit_reports_age_days` are candidates.
+4. No git-history check required.
+5. Candidates reported and deleted (in commit mode) regardless of git status.
+
+Handoff files (`memory/handoff*.md`):
+
+1. Enumerate all files matching `handoff*.md` under `memory/`.
+2. Sort by file mtime descending (newest first).
+3. Keep first `keep_handoffs` files.
+4. For each remaining (older) file: run `git log --oneline -- <path>`. If at least one commit references file → candidate. If zero commits → preserve.
+5. Candidates reported in `pruned[].candidates`. In commit mode, delete each candidate file sequentially.
+
+Safety Constraints:
+
+1. Never delete file or dir outside Scope whitelist. Walk only listed dirs.
+2. Never run automatically. Operator-invoked only; no scheduling, no startup hook, no cron.
+3. Default mode is `dry-run`. Commit mode requires explicit `mode: commit` input.
+4. In commit mode, deletes are sequential. On first delete failure, stop immediately; report what was deleted before failure; set `overall: error`.
+5. Skill mustn't create, modify, or commit any file. Read-only on everything except scope targets it prunes.
+6. No mutating git commands: no `git rm`, no `git commit`, no `git add`. Use `git log --oneline -- <path>` (read-only) for history check. Filesystem deletes only.
+
+Behavior:
+
+1. Resolve `target_root`. If not provided, default to dir containing `.agents/`. If resolved dir doesn't contain `.agents/`, emit `overall: error` and halt.
+2. Determine patterns to process: all four if `pattern` omitted; only matching pattern if `pattern` set.
+3. For each pattern in scope, compute candidates per per-pattern rules above.
+4. Dry-run mode: build report. Set `deleted: []` for all pruned entries. Set `overall: dry-run`. Don't perform any deletes.
+5. Commit mode: for each candidate across all patterns, delete sequentially (filesystem delete). On any failure: stop, set `overall: error`, include failed path in report.
+6. On success in commit mode, set `overall: committed`.
+7. Return structured report.
+
+Output Format:
+
+```yaml
+overall: dry-run | committed | error
+pruned:
+  - pattern: <one of: logs/session, logs/telegram, audit-reports, handoffs>
+    candidates:
+      - <path>         # matched age + pattern criterion
+    deleted:
+      - <path>         # actually removed (empty list in dry-run)
+preserved:
+  - pattern: <same pattern values>
+    paths:
+      - <path>         # kept, not a candidate
+    reason: >-
+      "newest N kept"          # within the keep count
+      | "younger than threshold" # audit-reports: age < audit_reports_age_days
+      | "matched protected list" # not in git history (session/telegram/handoffs)
+```
+
+In dry-run: `deleted` is always `[]`; `overall` is `dry-run`.
+In commit with no errors: `deleted` lists all removed paths; `overall` is `committed`.
+In commit with failure: `overall` is `error`; `deleted` lists paths removed before failure.

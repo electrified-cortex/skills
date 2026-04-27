@@ -34,7 +34,7 @@ Does NOT touch:
 
 | Input | Required | Description |
 | --- | --- | --- |
-| `mode` | required | `dry-run` (default) or `commit`. Dry-run reports what would be deleted; commit performs the deletes. |
+| `mode` | no | `dry-run` (default) or `commit`. Dry-run reports what would be deleted; commit performs the deletes. |
 | `target_root` | optional | Root to scan from. Default: workspace root (the directory containing `.agents/`). |
 | `keep_session_logs` | optional | Number of newest session-log directories to keep. Default: 5. |
 | `keep_telegram_logs` | optional | Number of newest telegram-log directories to keep. Default: 5. |
