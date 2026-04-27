@@ -1,45 +1,19 @@
 ---
 name: markdown-hygiene
-description: Fix all markdownlint violations in a .md file. Zero errors gate. Dispatch skill.
+description: Fix markdownlint violations in a .md file. Triggers — fix markdown, lint markdown, normalize formatting, clean up .md, MD violations, markdownlint pass.
 ---
 
 # Markdown Hygiene
 
-Dispatch (Dispatch agent, haiku-class, zero context):
-"Read and follow `instructions.txt` (in this directory).
-Input: `file_path=<path>`"
+Without reading `instructions.txt` yourself, use a Dispatch agent (zero context, haiku-class): "Read and follow `instructions.txt` (in this directory).
+Input: `<file_path> [--fix] [--source <src> --target <dst>] [--ignore <RULE>[,<RULE>...]] [--force]`"
 
-Sonnet-class passes are equivalent or have diminishing returns.
+Default (no `--fix`): detect violations only, write one record, return PATH. File not modified — no git-state check needed.
+`--fix`: detect then apply fixes. Requires tracked+clean target (or `--source/--target`). Two records if violations found: one at the original hash (FINDINGS), one at the post-fix hash (FIXED or PARTIAL).
+`--source/--target` → source untouched; implies `--fix`. No git-state check.
 
-- `file_path` (required): Absolute path to .md file
-- `--source X --target Y` (optional): Read X, fix,
-  write to Y. No git check.
-- `--ignore <RULE>[,<RULE>...]` (optional): Suppress these rule codes
-  for this run — not flagged, not fixed. Example: `--ignore MD041`
-  for skill files where an H1 is intentionally absent.
+Returns: `PATH: <abs-path-to-record.md>` on success, `ERROR: <reason>` on pre-write failure. `--force` bypasses cache.
 
-Modes: `--source/--target` → source untouched;
-default → in-place if tracked+clean;
-fallback → `.fixed` alongside.
+Record frontmatter uses `model: <model-id>` (not `actor`).
 
-Returns: CLEAN (0 errors), FIXED (errors→0), or PARTIAL (unfixable remain).
-
-Run after compression, before stamping, before committing .md files.
-
-If `markdownlint` CLI or VS Code extension is available, use it directly instead of dispatching. See `tooling.md` (co-located).
-
-## Output
-
-Output follows the `audit-reporting` skill at `../audit-reporting/SKILL.md`. Apply its path shape (including target-kind), frontmatter requirements, and .gitignore check before writing any report. Target-kind is derived at runtime from the actual target file path.
-
-Verdict mapping (markdown-hygiene → audit-reporting frontmatter): `CLEAN → PASS`, `FIXED → PASS_WITH_FINDINGS`, `PARTIAL → NEEDS_REVISION`.
-
-Report path is computed internally using the audit-reporting path shape.
-
-## Iteration Safety
-
-Do not re-audit unchanged files.
-See `../iteration-safety/SKILL.md`.
-
-Related: `compression` (run hygiene after compressing),
-`skill-auditing` (includes hygiene check), `spec-writing`
+Related: `compression`, `skill-auditing`, `spec-writing`, `hash-record`

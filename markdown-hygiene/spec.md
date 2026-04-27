@@ -2,9 +2,7 @@
 
 ## Purpose
 
-Enforce zero markdownlint errors in markdown files. This is a dispatch
-skill — the agent reads the file, fixes all linting issues, and reports
-what it changed. Zero errors is the gate, not "fewer" or "minimize."
+Detect markdownlint violations in markdown files and optionally fix them. Default invocation detects only — the file is not modified. Pass `--fix` to apply fixes. Zero errors after fixing is the gate for the fix pass.
 
 ## Scope
 
@@ -30,20 +28,52 @@ No domain-specific terms. Rule identifiers (MD001, MD022, etc.) are markdownlint
 
 ### Input
 
-- `file_path` (string, required): Absolute path to `.md` file to fix
+- `file_path` (string, required): Absolute path to `.md` file to scan (and optionally fix)
+- `--fix` (flag, optional): Apply fixes to the file after detecting violations. Without this flag, the file is never modified — detection only.
+- `--source X --target Y` (string pair, optional): Read X, fix, write to Y.
+  X is untouched. No git tracking check. Implies `--fix`.
 - `--ignore <RULE>[,<RULE>...]` (string, optional): Comma-separated list of
   markdownlint rule codes to suppress from the violation set. Suppressed rules
   are not flagged and not fixed. Example: `--ignore MD041` suppresses the
   top-level-heading rule for files where its absence is intentional (e.g.,
   skill instruction files). Does not affect other rules.
+- `--force` (flag, optional): Re-execute even if a current cached record
+  exists for the file's hash. Bypasses the cache-hit early return.
+- Adaptive MD041 suppression: if the first non-blank line of the target file
+  is `---` (YAML frontmatter), MD041 is automatically suppressed for the run.
+  No `--ignore MD041` flag is required.
 
 ### Procedure
 
-1. Read the target file
-2. Identify all markdownlint violations (all rules enabled)
-3. Fix every violation in-place
-4. Verify zero errors remain after fixes
-5. Write report to the path computed via `audit-reporting` path shape (target-kind derived from the target file path)
+Two-pass model: detect first, fix second (only if `--fix` is present). The detect pass runs regardless of `--fix`. This splits cognitive load — first pass is read-only analysis, second pass is edit-only.
+
+**Pass 1 — Detect:**
+
+1. Read the target file. Guard: if file is unreadable or not a `.md` file,
+   output `ERROR: <reason>` and stop.
+2. Compute the git blob hash (`git hash-object <file>`). Check for a cached
+   record under `.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>/`.
+   If a record is found and `--force` was not passed, output `PATH: <record-path>`
+   and stop (cache HIT). Otherwise save `<cache_dir>` for step 4.
+3. Identify all markdownlint violations (all rules enabled, minus `--ignore`
+   list and adaptive suppressions). Cross-check each finding against the actual
+   line before recording. Hallucinated findings are worse than missed findings.
+4. Persist a detect record at `<cache_dir>/<timestamp>.md` with:
+   - `result: pass` if no violations found; `result: findings` if violations exist.
+   - Body per the Body Format section (CLEAN or FINDINGS).
+   - If no violations (CLEAN): output `PATH: <record-path>` and stop.
+   - If violations and `--fix` not passed: output `PATH: <record-path>` and stop.
+
+**Pass 2 — Fix (only when `--fix` is present and violations were found):**
+
+5. If ALL violations are unfixable: output `PATH: <detect-record-path>` (only 1 record total) and stop.
+6. Apply all auto-fixable violations in-place (or to `--target` if supplied).
+7. Verify zero errors remain. Remaining errors = unfixable.
+8. Compute the new git blob hash of the modified file. Write a second record
+   at the new hash's `<cache_dir>/<timestamp>.md` with:
+   - `result: pass` if all violations fixed; `result: findings` if some remain.
+   - Body per the Body Format section (FIXED or PARTIAL).
+   - Output `PATH: <second-record-path>` and stop.
 
 ### Rules to enforce (non-exhaustive, all markdownlint rules apply)
 
@@ -72,31 +102,76 @@ No domain-specific terms. Rule identifiers (MD001, MD022, etc.) are markdownlint
 
 ### Output
 
-Report format:
+**Dispatch return** (one line only):
+
+- Success (cache HIT or freshly written): `PATH: <absolute-path-to-record.md>`
+- Failure before write: `ERROR: <reason>`
+
+**Record frontmatter** — required fields (schema per `hash-record/SKILL.md`):
+`hash`, `file_path`, `operation_kind: markdown-hygiene`, `model: haiku-4-5`,
+`timestamp`, `result`. The `model` field is the model identifier, orthogonal
+to `operation_kind`.
+
+**Body format** — minimum information not already in frontmatter. No `file_path`
+duplication in body. Body always opens with `# Result` H1.
+
+CLEAN (detect pass, no violations):
 
 ```text
-CLEAN: <file_path> (0 errors)
+# Result
+
+CLEAN
 ```
 
-or
+FINDINGS (detect pass, violations exist, no `--fix`):
 
 ```text
-FIXED: <file_path>
-- <rule>: <description of fix> (N occurrences)
-- <rule>: <description of fix> (N occurrences)
-Errors: <before> → 0
+# Result
+
+FINDINGS
+
+- MD022 line 7: blank line missing
+- MD047: trailing newline missing
 ```
+
+FIXED (fix pass, all violations resolved):
+
+```text
+# Result
+
+FIXED
+
+- MD022: blank lines around heading (1)
+- MD047: trailing newline (1)
+```
+
+PARTIAL (fix pass, some violations remain unfixable):
+
+```text
+# Result
+
+PARTIAL
+
+Fixed:
+- MD022 (1)
+
+Remaining (manual):
+- MD040 line 14: missing language ID
+```
+
+### Verdict Mapping
+
+Frontmatter `result` field values:
+
+- CLEAN -> `pass`
+- FIXED -> `pass` (file is now clean)
+- FINDINGS -> `findings` (detect-only, no fixes attempted)
+- PARTIAL -> `findings` (some fixes applied, some remain)
+- Unrecoverable error -> `error`
 
 ### Gate
 
-Zero errors after fixing. If any error cannot be auto-fixed:
-
-```text
-PARTIAL: <file_path>
-Fixed: N errors
-Remaining: M errors (manual fix required)
-- <rule>: <description> (line N)
-```
+Zero errors after fixing. If any error cannot be auto-fixed, the verdict is PARTIAL.
 
 ## Constraints
 
@@ -128,8 +203,14 @@ Markdown hygiene should run:
 
 ## Iteration Safety
 
-Do not re-audit unchanged files.
-See `../iteration-safety/SKILL.md`.
+The hash-record probe (Procedure step 2) is the iteration-safety primitive.
+A cache HIT on the git blob hash means the file content has not changed since
+the last run; the stored PATH is returned immediately without re-executing.
+
+On a two-pass run (`--fix` with findings), the detect record (at the original
+hash) and the fix record (at the post-fix hash) are independently cacheable.
+A subsequent detect-only call on the fixed file will hit the second record.
+`--force` bypasses the cache-hit check when a fresh run is required.
 
 ## Tables
 

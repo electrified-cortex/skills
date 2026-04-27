@@ -2,18 +2,42 @@ Fix all markdownlint violations in a .md file. Zero errors is the gate.
 
 Params:
 `file_path` (required): absolute path to .md file
-`--source X --target Y` (optional): read X, fix, write Y; X untouched, no git check
-`--ignore <RULE>[,<RULE>...]` (optional): skip these rule codes — not scanned, not flagged, not fixed. e.g. `--ignore MD041,MD033`.
+`--fix` (optional): apply fixes after detecting violations; without this flag, detect only — file never modified
+`--source X --target Y` (optional): read X, fix, write Y; X untouched, no git check; implies `--fix`
+`--ignore <RULE>[,<RULE>...]` (optional): skip rule codes — not scanned, not flagged, not fixed
+`--force` (optional): bypass cache HIT, re-execute even if cached record exists
+Adaptive MD041: first non-blank line is `---` (YAML frontmatter) -> auto-suppress MD041, no flag needed
 
 Modes:
-Source→Target: `--source X --target Y` → fix violations, write to Y. Source untouched.
-In-place (default): run `git status --porcelain -- <file>`. Empty or `M ` (staged only) → fix directly.
-Fallback: unstaged changes, `??` (untracked), or `MM` (staged + additional unstaged) — no `--target` → create `<file>.fixed` alongside.
+Detect (default, no `--fix`): read-only, no git-state check; runs regardless of tracked/untracked/staged/dirty; produces one detect record.
+Fix (with `--fix`): `git status --porcelain -- <file>` -> proceed only if output empty or first char `M` second char space; else `ERROR: target_dirty: stage changes and re-run with --fix; cached detect record carries forward (no rescan)`, stop. Writes second record at post-fix hash.
+Source->Target: `--source X --target Y` -> read X, fix, write Y; source untouched; implies `--fix`
 
 Procedure:
-1. Read file, scan for markdownlint violations using own knowledge. Skip any rule code in `--ignore`.
-2. Use available tools (built-in, MCP) — don't install external packages.
-3. Fix every violation. Format: `MD<NNN> — description`.
+
+You are the executor, not a planner. Run each step's tool calls. Do not summarize, do not produce a "fixed version" inline. Do not stop early. The dispatch is incomplete unless a record file was written and you output its absolute path.
+
+Two passes: detect first (always), fix second (only if `--fix` or `--source/--target` passed).
+
+Pass 1 — Detect:
+
+1. **Read** the target file (use the Read tool). Guard: unreadable or not `.md` -> `ERROR: <reason>`, stop. Check adaptive MD041: first non-blank line is `---` -> add MD041 to suppressed set.
+2. **Run:** `git hash-object <file_path>` (use the Bash tool). Save 40-char result as `<hash>`.
+3. **Cache check:** `ls <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>/` (use the Bash tool). Skip if `--force` passed.
+   - Any `*.md` file found -> cache HIT -> output `PATH: <abs-path-to-latest>`, stop.
+   - Dir missing or empty -> cache MISS. Save `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<model>/` as `<detect_cache_dir>`. Continue.
+4. **Scan** for markdownlint violations. Prefer `markdownlint` CLI if available; otherwise use knowledge of markdown rules. Skip rules in `--ignore` or adaptive suppressed set. **Cross-check** each finding against actual line before recording — drop any finding you can't point at on a specific verified line.
+5. **Write detect record** at `<detect_cache_dir>/<timestamp>.md`:
+   - **Run:** `mkdir -p <detect_cache_dir>` (Bash tool).
+   - Frontmatter: `hash`, `file_path`, `operation_kind: markdown-hygiene`, `model: <your-model-id>`, `timestamp: <YYYY-MM-DDTHH-MM-SS-mmmZ>`, `result: pass` (no violations) or `result: findings` (violations exist).
+   - Body: `# Result\n\nCLEAN` or `# Result\n\nFINDINGS\n\n- <list>`.
+   - If no violations (CLEAN) -> output `PATH: <detect_cache_dir>/<timestamp>.md`, stop.
+   - If violations and `--fix` not passed -> output `PATH: <detect_cache_dir>/<timestamp>.md`, stop.
+
+Pass 2 — Fix (only when `--fix` present and violations exist):
+
+6. If ALL violations are unfixable (manual-only rules like MD040 with no language to infer) -> output `PATH: <detect_record_path>` (no second record), stop.
+7. **Fix every auto-fixable violation** (use the Edit or Write tool — actually modify the file on disk):
    MD001 — heading level increments
    MD003 — heading style consistency (atx vs setext, uniform across file)
    MD004 — list markers consistent
@@ -26,57 +50,84 @@ Procedure:
    MD025 — single H1 per document
    MD026 — no trailing punctuation in headings
    MD029 — ordered list prefixes consistent
-   MD031 — blank lines BEFORE and AFTER fenced code blocks (text immediately before/after ``` triggers this; check every fence)
+   MD031 — blank lines BEFORE and AFTER fenced code blocks
    MD032 — blank lines around lists
-   MD033 — no inline HTML; HTML comments `<!-- ... -->` ARE inline HTML and trigger MD033; don't treat as metadata; exception: HTML inside fenced code blocks is not a violation
+   MD033 — no inline HTML; HTML comments `<!-- ... -->` are inline HTML; exception: HTML inside fenced code blocks is not a violation
    MD034 — bare URLs in angle brackets
-   MD040 — language IDs on fenced code blocks
+   MD040 — language IDs on fenced code blocks (fixable when language is determinable)
    MD047 — file ends with single newline
    MD055 — consistent table pipe style
    MD056 — equal column count across table rows
    MD058 — blank lines around tables
    MD060 — table pipe spacing
    all other markdownlint rules
-4. Write to target (in-place, `.fixed`, or `--target`).
-5. Verify: re-run linter on output, confirm zero errors.
-6. Cross-check each reported finding by re-reading the cited line. Confirm the rule applies. Do NOT report a violation you cannot point to on a specific line. Hallucinated findings are worse than missed ones.
-7. Compute report path via audit-reporting path shape (target-kind from target file path); write report there.
+8. **Write** fixed content to target path (in-place, `.fixed`, or `--target` per Modes). File on disk MUST contain fixes after this step.
+9. **Verify:** re-scan output, confirm zero remaining errors. Remaining errors are unfixable.
+10. Compute new hash: `git hash-object <fixed-file-path>`. Save as `<fix_hash>`. Set `<fix_cache_dir>` = `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene/<model>/`.
+11. **Write fix record** at `<fix_cache_dir>/<timestamp>.md`:
+    - **Run:** `mkdir -p <fix_cache_dir>` (Bash tool).
+    - Frontmatter: `hash: <fix_hash>`, `file_path`, `operation_kind: markdown-hygiene`, `model: <your-model-id>`, `timestamp`, `result: pass` (all fixed) or `result: findings` (some remain).
+    - Body: `# Result\n\nFIXED\n\n- <list>` or `# Result\n\nPARTIAL\n\n...`.
+    - **Output:** `PATH: <fix_cache_dir>/<timestamp>.md`, stop.
 
-Report Format:
-Clean: `CLEAN: <file_path> (0 errors)`
+Dispatch return (one line, always):
+Success: `PATH: <absolute-path-to-record.md>`
+Pre-write failure: `ERROR: <reason>`
+
+Report body — minimum info not in frontmatter. Frontmatter holds `file_path`, `result`, `hash`, `timestamp`, `model`. Never duplicate `file_path` in body. Body always opens with `# Result` H1.
+
+CLEAN:
+```text
+# Result
+
+CLEAN
+```
+FINDINGS (violations found, no `--fix`):
+```text
+# Result
+
+FINDINGS
+
+- MD022 line 7: blank line missing
+- MD047: trailing newline missing
+```
+FIXED (all resolved):
+```text
+# Result
+
+FIXED
+
+- MD022: blank lines around heading (1)
+- MD047: trailing newline (1)
+```
+PARTIAL (some remain unfixable):
+```text
+# Result
+
+PARTIAL
+
 Fixed:
-```text
-FIXED: <file_path>
-- <rule>: <description> (N occurrences)
-Errors: <before> → 0
-```
-Partial:
-```text
-PARTIAL: <file_path>
-Fixed: N errors
-Remaining: M errors (manual fix required)
-- <rule>: <description> (line N)
+- MD022 (1)
+
+Remaining (manual):
+- MD040 line 14: missing language ID
 ```
 
-Verdict mapping for audit-reporting: CLEAN → PASS; FIXED → PASS_WITH_FINDINGS; PARTIAL → NEEDS_REVISION.
+Verdict mapping: CLEAN -> pass; FIXED -> pass; FINDINGS -> findings; PARTIAL -> findings; unrecoverable -> error.
 
-Iteration safety: don't re-audit unchanged files. Check git status or mtime; clean+unchanged → return CLEAN early.
+Iteration safety: cache HIT on git blob hash = content unchanged -> return stored PATH immediately. Two-pass run: detect record (original hash) + fix record (post-fix hash) independently cacheable. `--force` bypasses HIT check.
 
 Tables — two canonical separator modes, never mix per table:
-Mode A (default): 1–3 dashes per cell, pipe-padded. Widths flexible. e.g. `| - | --- | --- |`
-Mode B (aligned): dashes match header width. Use only when human readability matters.
-Prohibitions:
-- no unpadded pipes (`|---|---|`) — insert space on each side of every dash run; pattern-detectable + pattern-fixable; treat as normal violation, not partial
-- no extra whitespace in header labels: `|  Header  |` → `| Header |`
-- no inconsistent separator widths within one table
-- no mixed Mode A + Mode B in same table
+Mode A (default): 1-3 dashes per cell, pipe-padded; widths flexible. e.g. `| - | --- | --- |`
+Mode B (aligned): dashes match header width; use only when human readability matters.
+Prohibitions: no unpadded pipes (`|---|---|`) — pattern-detectable + pattern-fixable, treat as normal violation; no extra whitespace in header labels (`|  Header  |` -> `| Header |`); no inconsistent separator widths within one table; no mixed Mode A + Mode B in same table.
 
 Rules:
-Fix every violation. Never suppress a rule unless it appears in the `--ignore` list.
+Fix every violation. Never suppress unless in `--ignore`.
 Never change content meaning — only formatting.
-Never introduce new violations while fixing others.
+Never introduce new violations while fixing.
 Preserve code blocks, frontmatter, technical strings exactly.
-Fix would change meaning → report as unfixable.
+Fix would change meaning -> report as unfixable.
 One file per dispatch.
-Use available tools + own knowledge — don't install external packages.
-Intentional bad markdown (edge case): violation inside inline code span (`...`) or clearly content (e.g. tutorial demonstrating wrong syntax marked as such) → preserve as-is, report PARTIAL with line. Don't fix content meant to demonstrate a violation.
+Use available tools + own knowledge — don't install or invoke external packages.
+Intentional bad markdown: violation inside inline code span or clearly demonstrating wrong syntax -> preserve as-is, report PARTIAL with line. Don't fix content meant to demonstrate a violation.
