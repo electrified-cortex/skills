@@ -15,7 +15,3 @@ desktop.ini
 # Log files
 logs/
 *.log
-
-audit-reports/
-.audit-reports/
-.audit-report*
