@@ -27,7 +27,7 @@ The spec (this file) preserves the human-readable version.
 
 ## Scope
 
-Targets `.md` files loaded into agent context: agent definition files, skill files, and instruction files. These are the highest-volume, highest-frequency reads in the workspace. Does not apply to code files (already dense by necessity), binary files, or human-facing prose documents (READMEs, operator messages) where Lite compression is the convention.
+Targets `.md` and plaintext files (`.txt`, agent instruction files, skill files) loaded into agent context. These are the highest-volume, highest-frequency reads in the workspace. Does not apply to code files (already dense by necessity), binary files, or human-facing prose documents (READMEs, operator messages) where Lite compression is the convention. The markdown-hygiene Phase 0 pre-pass applies only when the source is a `.md` file; `.txt` and other plaintext files skip Phase 0.
 
 ## Definitions
 
@@ -59,13 +59,15 @@ Targets `.md` files loaded into agent context: agent definition files, skill fil
 - The skill must not compress code files, binary files, or any file not in the target scope.
 - Abbreviations must be introduced at most once per concept per file; abbreviations that could collide with other terms must not be used.
 
-## Why Markdown Only
+## Why Markdown and Plaintext
 
-The skill targets `.md` files that are loaded into agent context: agent files,
-skills, instructions. These are the highest-volume, highest-frequency files in
-the workspace. Code files have their own density — they're already compressed
-by necessity. General text files (READMEs, docs) are human-facing and use Lite
-compression by convention, not this skill.
+The skill targets `.md` and plaintext files (`.txt`, agent instruction files,
+skill files) loaded into agent context. These are the highest-volume,
+highest-frequency files in the workspace. Code files have their own density —
+they're already compressed by necessity. The markdown-hygiene Phase 0 pre-pass
+applies to `.md` sources only; `.txt` and other plaintext files skip it.
+Human-facing prose (READMEs, operator messages) uses Lite compression by
+convention.
 
 ## Skill vs Agent Separation
 
