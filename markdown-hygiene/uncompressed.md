@@ -5,8 +5,13 @@ description: Fix markdownlint violations in a .md file. Triggers — fix markdow
 
 # Markdown Hygiene
 
-Without reading `instructions.txt` yourself, use a Dispatch agent (zero context, haiku-class): "Read and follow `instructions.txt` (in this directory).
-Input: `<file_path> --filename claude-haiku [--fix] [--source <src> --target <dst>] [--ignore <RULE>[,<RULE>...]] [--force]`"
+Spawn a zero-context, haiku-class sub-agent in the background:
+
+**Claude Code:** `Agent` tool. Pass: `"Read and follow instructions.txt here. Input: <file_path> --filename claude-haiku [--fix] [--source <src> --target <dst>] [--ignore <RULE>[,<RULE>...]] [--force]"`
+
+**VS Code / Copilot:** `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow instructions.txt in <skill_dir>. Input: <file_path> --filename claude-haiku [--fix] [--source <src> --target <dst>] [--ignore <RULE>[,<RULE>...]] [--force]")`
+
+Don't read `instructions.txt` yourself.
 
 Returns: `CLEAN` | `findings: <abs-path-to-record.md>` | `ERROR: <reason>`.
 

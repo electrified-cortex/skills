@@ -52,3 +52,5 @@ Delete project: `gh project delete PROJECT_NUM --owner owner`
 
 Scope:
 Covers `gh project` only. Doesn't cover: Projects v1 (classic boards), automation rules. Item-add is the link mechanism.
+
+Related: `gh-cli-issues`, `gh-cli-api`

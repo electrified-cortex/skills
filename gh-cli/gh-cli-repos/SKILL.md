@@ -47,3 +47,5 @@ Set default for current dir so subsequent commands don't need `--repo`:
 
 Scope:
 Covers `gh repo` only. Doesn't manage repo content (files, branches, commits — git ops), secrets, deploy keys, GitHub Apps, webhooks, or integrations.
+
+Related: `gh-cli-actions`, `gh-cli-api`

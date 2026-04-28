@@ -45,6 +45,14 @@ Watch a run in real time until it completes:
 gh run watch "$RUN_ID"
 ```
 
+Check overall run health via statusCheckRollup:
+
+```bash
+gh run view "$RUN_ID" --json statusCheckRollup --jq '.statusCheckRollup[] | {name, status, conclusion}'
+```
+
+`conclusion`: `SUCCESS` = healthy; `FAILURE`/`CANCELLED` = unhealthy; `null` = still in progress. If `statusCheckRollup` returns an unexpected shape, do not assume success.
+
 ## Viewing Logs
 
 View logs for failed steps in a run:

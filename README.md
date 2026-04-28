@@ -8,7 +8,6 @@ not just generated, but iterated, reviewed, externally validated, and audited
 against companion specs until the drift count hits zero. The git history tells
 the full story.
 
-
 | Skill | Description |
 | --- | --- |
 | [code-reviewer](code-reviewer/) | Two-tier code review — fast-cheap smoke pass, standard substantive sign-off; reviews only, never modifies |
@@ -23,7 +22,6 @@ the full story.
 | [spec-writing](spec-writing/) | Write behavioral specs (`.spec.md` files) for any file, feature, or system — plus specialized sub-skills for compiling specs into agent and skill files |
 | [tool-auditing](tool-auditing/) | Audit tool scripts for companion spec, conventions, and error handling — lightweight, fast-cheap |
 | [tool-writing](tool-writing/) | Write tool scripts with companion specs — Bash default, PowerShell supported, spec-first discipline |
-
 
 | **Agent** | **Description** |
 | --- | --- |
