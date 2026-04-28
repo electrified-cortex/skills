@@ -7,26 +7,29 @@ the source of truth for skill quality. Skill writers conform to the
 auditor's rules. The auditor can verify its own skill for compliance
 (dogfooding).
 
-## Design Goal — Haiku-Executable Skills
+## Design Goal — Haiku Wins the Eval Game
 
-The point of auditing is to push every skill toward the haiku-class
-executability bar. A well-written skill is one a haiku-class agent can
-execute reliably, almost like reading a program — small, concise,
-unambiguous instructions with explicit decision branches and minimal
-prose. Cheap to run, reliable in outcome.
+Sonnet-class is the baseline — table stakes. A working skill must run
+correctly under sonnet. Haiku-class is the **winning bar**: a skill that
+also runs reliably under haiku has won the eval game. Cheap, deterministic,
+predictable across runs.
 
-Sonnet-class is a legitimate fallback when the work genuinely demands
-deeper reasoning (architectural redesign, ambiguous specs, novel
-synthesis). But "the haiku failed, escalate to sonnet" is a smell —
-usually it means the skill's instructions left too much interpretive
-slack. The fix is to tighten the instructions, not to upgrade the
-model. Audit findings that point at vague directives, missing decision
-trees, or implied behavior all serve this goal: shrink the interpretive
-gap until haiku can execute by following along.
+The audit's job is to push every skill toward the haiku bar. A
+haiku-executable skill is one a haiku-class agent can run almost like
+reading a program — small, concise, unambiguous instructions, explicit
+decision branches, minimal prose, and zero interpretive slack.
+
+When a skill needs sonnet to "make sense of" the instructions, the fix
+is rarely "use a stronger model." It's almost always tighten the
+instructions: replace prose conditionals with decision trees, replace
+ambiguous directives with explicit step lists, replace implied behavior
+with normative statements. Audit findings that close interpretive slack
+take priority — they're the moves that get a skill from "works on
+sonnet" to "wins on haiku."
 
 Token cost compounds across calls. A skill invoked 100 times saves real
-money when its haiku runs hold up. Audit verdicts are weighted toward
-findings that move a skill closer to reliable haiku execution.
+money when its haiku runs hold up. Verdicts are weighted toward findings
+that move a skill closer to reliable haiku execution.
 
 ## Scope
 

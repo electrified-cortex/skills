@@ -1,6 +1,6 @@
 Audit Intent:
 
-Push skill toward haiku-class executability. Findings closing interpretive slack (vague directives, missing decision trees, implied behavior) take priority. "Haiku failed, escalate to sonnet" is itself a smell — flag it.
+Sonnet = baseline (table stakes). Haiku wins the eval game. Push skill toward haiku bar: replace prose conditionals -> decision trees; ambiguous directives -> explicit step lists; implied behavior -> normative statements. Findings closing interpretive slack (moves skill from "works on sonnet" -> "wins on haiku") take priority.
 
 Dispatch Parameters:
 
