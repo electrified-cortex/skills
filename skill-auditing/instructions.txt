@@ -88,12 +88,12 @@ Deep verify SKILL.md faithfully represents spec.
 10. (A-FM-2) Description not restated: Search all artifacts (`uncompressed.md`, `SKILL.md`, `instructions.uncompressed.md`, `instructions.txt`) for body prose duplicating `description` frontmatter. Any restatement → LOW (verbatim → escalate HIGH).
 11. (A-FM-5) No exposition in runtime: Scan SKILL.md, `uncompressed.md`, `instructions.uncompressed.md`, `instructions.txt` for rationale, "why exists," root-cause, historical notes, background prose. Any → HIGH. Rationale → `spec.md` only.
 12. (A-FM-6) No non-helpful tags: Check all artifacts for descriptor lines carrying no operational value (e.g., "inline apply directly no dispatch," "dispatch skill," bare type labels). Any → LOW.
-15. (A-FM-7) No empty sections: Every heading has body before next heading or EOF. Empty section → HIGH.
-16. (A-FM-8) Iteration-safety placement: Iteration Safety blurb absent from `instructions.uncompressed.md` & `instructions.txt`. Presence → HIGH. Guard in both SKILL.md & instructions.* → probable duplication → HIGH.
-17. (A-FM-9a) Iteration-safety pointer form: Caller skill refs iteration-safety → verify exact 2-line pointer block (`Do not re-audit unchanged files.` + `See \`<path>/iteration-safety/SKILL.md\`.`); relative path matches caller depth. Deviation → HIGH.
-18. (A-FM-9b) No verbatim Rule A/B: Scan all artifacts for verbatim iteration-safety Rules A/B beyond 2-line pointer block. Any → HIGH.
-19. (A-XR-1) Cross-reference anti-pattern: Scan SKILL.md, `instructions.txt`, sub-instructions, `uncompressed.md` for pointer (file path/inline link) to ANOTHER skill's `uncompressed.md` or `spec.md`. Violations: "See uncompressed.md," "See spec.md," "Reference: <skill>/uncompressed.md," links ending `.uncompressed.md`/`.spec.md`. NOT violations: skill NAME only (e.g., "see `compression` skill"); subject-matter mentions in skill-auditing's own artifacts (audits these files, must name). Any cross-file pointer → HIGH.
-20. (A-FM-10) Launch-script form (dispatch only; N/A inline): Verify `uncompressed.md` ONLY has: frontmatter (`name`, `description`); optional H1; dispatch invocation + input signature; return contract; optional 2-line iteration-safety pointer. Any of: executor steps/phases, modes tables, examples beyond signature, rationale/"why exists," breadcrumbs/Related, behavior/output descriptions, model-class guidance, false-positive guards → HIGH. Content → `instructions.uncompressed.md` or `spec.md`.
+13. (A-FM-7) No empty sections: Every heading has body before next heading or EOF. Empty section → HIGH.
+14. (A-FM-8) Iteration-safety placement: Iteration Safety blurb absent from `instructions.uncompressed.md` & `instructions.txt`. Presence → HIGH. Guard in both SKILL.md & instructions.* → probable duplication → HIGH.
+15. (A-FM-9a) Iteration-safety pointer form: Caller skill refs iteration-safety → verify exact 2-line pointer block (`Do not re-audit unchanged files.` + `See \`<path>/iteration-safety/SKILL.md\`.`); relative path matches caller depth. Deviation → HIGH.
+16. (A-FM-9b) No verbatim Rule A/B: Scan all artifacts for verbatim iteration-safety Rules A/B beyond 2-line pointer block. Any → HIGH.
+17. (A-XR-1) Cross-reference anti-pattern: Scan SKILL.md, `instructions.txt`, sub-instructions, `uncompressed.md` for pointer (file path/inline link) to ANOTHER skill's `uncompressed.md` or `spec.md`. Violations: "See uncompressed.md," "See spec.md," "Reference: <skill>/uncompressed.md," links ending `.uncompressed.md`/`.spec.md`. NOT violations: skill NAME only (e.g., "see `compression` skill"); subject-matter mentions in skill-auditing's own artifacts (audits these files, must name). Any cross-file pointer → HIGH.
+18. (A-FM-10) Launch-script form (dispatch only; N/A inline): Verify `uncompressed.md` ONLY has: frontmatter (`name`, `description`); optional H1; dispatch invocation + input signature; return contract; optional 2-line iteration-safety pointer. Any of: executor steps/phases, modes tables, examples beyond signature, rationale/"why exists," breadcrumbs/Related, behavior/output descriptions, model-class guidance, false-positive guards → HIGH. Content → `instructions.uncompressed.md` or `spec.md`.
 
 Verdict Rules:
 
@@ -119,7 +119,6 @@ Fix mode targets skill's authoritative source files — not compiled runtime. Co
 6. Apply fixes to writable source only, severity order:
    a. Critical Phase 3: coverage, contradictions, unauthorized additions.
    b. Non-critical Phase 3: conciseness, breadcrumbs, cost analysis, dispatch refs, spec breadcrumbs.
-   c. Hygiene fixes scoped writable candidates only. Defects in `spec.md`, `README.md`, compiled artifacts surfaced as findings, not auto-fixed.
 7. Never auto-fix: Phase 1 (spec) defects; root-cause in spec/README/compiled; defects needing author judgment. Surface as findings.
 8. Append Fix Mode Addendum to report:
    - Files Modified: absolute paths auditor wrote
@@ -189,11 +188,9 @@ Phase 3 — Spec Compliance
 | Completeness | PASS/FAIL | |
 | Breadcrumbs | PASS/FAIL | |
 | Cost analysis | PASS/FAIL/N/A | |
-| Markdown hygiene | PASS/FAIL | |
 | No dispatch refs | PASS/FAIL/N/A | |
 | No spec breadcrumbs | PASS/FAIL | |
 | Description not restated (A-FM-2) | PASS/FAIL | |
-| Lint wins (A-FM-4) | PASS/FAIL | |
 | No exposition in runtime (A-FM-5) | PASS/FAIL | |
 | No non-helpful tags (A-FM-6) | PASS/FAIL | |
 | No empty sections (A-FM-7) | PASS/FAIL | |
@@ -209,9 +206,6 @@ Issues:
 Recommendation:
 <one line>
 
-References:
-- <findings: path from hygiene cache record; only unresolved violations; CLEAN omitted>
-- <ERROR or "hygiene unverified" entries if cache records were missing or failed>
 ```
 
 Rules:
