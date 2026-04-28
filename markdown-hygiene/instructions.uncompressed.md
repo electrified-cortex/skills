@@ -19,33 +19,23 @@ Hash record filename is fixed: `report.md`.
 
 You are the executor, not a planner. Run each step's tool calls. Produce a record file and output its absolute path.
 
+**Hard prohibition:** do NOT author scripts (`.ps1`, `.sh`, `.py`, etc.), helper files, workspace artifacts, or "fix" files outside the single cache-record write in step 5. The only file this skill creates is `<cache_dir>/report.md`. If you find yourself reaching for Write or Edit tools to produce ANY other file, stop — you are off-script. Use Read/Bash/Grep only for inspection. The target file is read-only.
+
 Cache-first ordering: hash and cache-check before reading the file. A cache HIT short-circuits with no Read tool call.
 
-1. **Resolve repo root.** Pick the form your runtime supports.
+1. **Cache check.** Invoke the `hash-record-check` skill with `<markdown_file_path> markdown-hygiene report.md`. See `hash-record/hash-record-check/SKILL.md` for invocation.
 
-   ```bash
-   target_dir=$(dirname "<markdown_file_path>")
-   repo_root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null)
-   [ -z "$repo_root" ] && repo_root="$target_dir"
-   ```
+   Branch on the tool's one-line stdout:
+   - `HIT: <abs-path>` -> read the file. Frontmatter `result: pass` -> output `CLEAN`, stop. Otherwise -> output `findings: <abs-path>`, stop.
+   - `MISS: <abs-path>` -> save as `<record_path>`, continue to step 2. (This is the path you write to in step 5.)
+   - `ERROR: <reason>` -> output `ERROR: <reason>`, stop.
 
-   ```powershell
-   $target_dir = Split-Path -Parent "<markdown_file_path>"
-   $repo_root = (& git -C $target_dir rev-parse --show-toplevel 2>$null)
-   if (-not $repo_root) { $repo_root = $target_dir }
-   ```
-
-   Save `<repo_root>`.
-2. **Hash** the target: `git hash-object <markdown_file_path>`. Save 40-char result as `<hash>`. If `git hash-object` fails (file missing, unreadable) -> `ERROR: <reason>`, stop.
-3. **Cache check:** `test -f <repo_root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/report.md`.
-   - HIT: read `result:` frontmatter from the record file. `pass` -> output `CLEAN`, stop. `findings` -> output `findings: <abs-path>`, stop. (No need to read `<markdown_file_path>` itself.)
-   - MISS: save `<repo_root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene` as `<cache_dir>`. Continue.
-4. **Scan** `<markdown_file_path>` for residual violations. Order of preference:
+2. **Scan** `<markdown_file_path>` for residual violations. Order of preference:
    1. Available markdown linter — `markdownlint` CLI, the VS Code/Cursor markdown extension, or any equivalent your runtime exposes. Read its output to build the findings list.
-   2. If no linter is available: read the file (Read tool) and apply rule-knowledge from the reference list (step 6) directly. Cross-check each suspected finding against the actual line — drop any finding you cannot point at on a specific verified line.
-   Skip rules in `--ignore`. The verification covers EVERY rule in step 6, including all four table rules (MD055/MD056/MD058/MD060) — tables are high-frequency residual violators after auto-fix passes.
-5. **Adaptive MD041:** read the first non-blank line of `<markdown_file_path>` (small Bash slice, e.g. `head -n 5`). If it is `---` (YAML frontmatter), drop any MD041 finding from the list and record `adaptive: MD041 suppressed`.
-6. **Reference rule list** (the universe of rules this skill verifies; use to compose `Fix:` imperatives):
+   2. If no linter is available: read the file (Read tool) and apply rule-knowledge from the reference list (step 4) directly. Cross-check each suspected finding against the actual line — drop any finding you cannot point at on a specific verified line.
+   Skip rules in `--ignore`. The verification covers EVERY rule in step 4, including all four table rules (MD055/MD056/MD058/MD060) — tables are high-frequency residual violators after auto-fix passes.
+3. **Adaptive MD041:** read the first non-blank line of `<markdown_file_path>` (small Bash slice, e.g. `head -n 5`). If it is `---` (YAML frontmatter), drop any MD041 finding from the list and record `adaptive: MD041 suppressed`.
+4. **Reference rule list** (the universe of rules this skill verifies; use to compose `Fix:` imperatives):
 
    - MD001 — heading levels increment by one (H1 to H3 violates).
    - MD003 — heading style consistent (atx `#` vs setext `===`/`---`); flag headings differing from the first.
@@ -70,7 +60,7 @@ Cache-first ordering: hash and cache-check before reading the file. A cache HIT 
    - MD056 — all rows in a table same number of cells.
    - MD058 — tables need blanks before AND after.
    - MD060 — table cell separators need a space on each side of the dash run.
-7. **Write record** at `<cache_dir>/report.md`:
+5. **Write record** at `<cache_dir>/report.md`:
    - `mkdir -p <cache_dir>` (Bash).
    - Frontmatter (open `---`, close `---`):
      - `hash: <hash>`
