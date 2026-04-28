@@ -428,7 +428,7 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
  `spec.md` or `README.md` or a compiled artifact, defects requiring author
  judgment. Surface them as findings.
 8. Append a Fix Mode Addendum to the report:
- - `Files Modified` — absolute paths of every file the auditor wrote.
+ - `Files Modified` — relative paths of every file the auditor wrote.
  - `Fixes Applied` — per file, what changed and which finding it resolves.
  - `Not Auto-Fixed` — defects deferred to the author.
  - `Next Steps` — re-audit until PASS.
