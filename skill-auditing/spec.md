@@ -7,6 +7,27 @@ the source of truth for skill quality. Skill writers conform to the
 auditor's rules. The auditor can verify its own skill for compliance
 (dogfooding).
 
+## Design Goal — Haiku-Executable Skills
+
+The point of auditing is to push every skill toward the haiku-class
+executability bar. A well-written skill is one a haiku-class agent can
+execute reliably, almost like reading a program — small, concise,
+unambiguous instructions with explicit decision branches and minimal
+prose. Cheap to run, reliable in outcome.
+
+Sonnet-class is a legitimate fallback when the work genuinely demands
+deeper reasoning (architectural redesign, ambiguous specs, novel
+synthesis). But "the haiku failed, escalate to sonnet" is a smell —
+usually it means the skill's instructions left too much interpretive
+slack. The fix is to tighten the instructions, not to upgrade the
+model. Audit findings that point at vague directives, missing decision
+trees, or implied behavior all serve this goal: shrink the interpretive
+gap until haiku can execute by following along.
+
+Token cost compounds across calls. A skill invoked 100 times saves real
+money when its haiku runs hold up. Audit verdicts are weighted toward
+findings that move a skill closer to reliable haiku execution.
+
 ## Scope
 
 Applies when auditing an existing skill for quality, compliance, or
@@ -363,13 +384,44 @@ Applies to dispatch skills only. Auditor runs these checks against `uncompressed
      "Iteration-safe via hash-record", "Zero errors gate") — these waste trigger-phrase
      budget and must be removed.
 
-4. **Inline dispatch guard (DS-4)** — the dispatch instruction MUST fold a
-   "do not execute inline" guard into the call. Required form:
-   `Without reading \``<instructions-file>`\` yourself, use a Dispatch agent
-   (zero context, `<model-class>`): "Read and follow \``<instructions-file>`\`..."`.
-   The "Without reading X yourself" prefix is required. Standalone bold warnings
-   ("**Do not execute this skill inline.**") separated from the dispatch line → HIGH
-   (fold into the dispatch line, do not keep as a separate banner).
+4. **Inline dispatch guard (DS-4)** — the dispatch instruction MUST follow the
+   canonical cross-platform dispatch pattern:
+
+   ```text
+   Without reading `<instructions-file>` yourself, spawn a zero-context, haiku-class sub-agent in the background:
+
+   **Claude Code:** `Agent` tool. Pass: `"Read and follow <instructions-file> here. Input: <args>"`
+
+   **VS Code / Copilot:** `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow <instructions-file> in <skill_dir>. Input: <args>")`
+
+   Don't read `<instructions-file>` yourself.
+
+   Returns: `<return contract>`
+
+   NEVER READ OR INTERPRET `<instructions-file>` YOURSELF. Let the sub-agent do the work.
+   ```
+
+   Three reinforcements are required:
+   - **Opening prefix:** `Without reading <instructions-file> yourself, spawn...` —
+     primes the agent before reading the bullets.
+   - **Mid-block warning:** `Don't read <instructions-file> yourself.` — repeated
+     after the cross-platform bullets so the directive lands twice.
+   - **Closing reinforcement:** `NEVER READ OR INTERPRET <instructions-file>
+     YOURSELF. Let the sub-agent do the work.` — uppercase reinforcement at the
+     end of the SKILL.md/uncompressed.md body. Empirically, the closing
+     uppercase form is what makes VS Code Copilot reliably dispatch instead
+     of inlining.
+
+   Violations:
+   - Standalone bold warnings (`**Do not execute this skill inline.**`)
+     separated from the dispatch line → HIGH (fold into the pattern, don't
+     keep as a banner).
+   - Missing the opening "Without reading" prefix → HIGH.
+   - Missing the closing uppercase reinforcement → MEDIUM (some runtimes
+     reliably dispatch without it; VS Code Copilot needs it).
+   - Cross-platform bullets reduced to a single platform → HIGH (the dual
+     Claude Code / VS Code form is the cross-platform contract).
+   - VS Code line missing `model: "Claude Haiku 4.5"` literal → HIGH.
 
 5. **No substrate duplication in consumers (DS-5)** — consumer skills that produce
    records (audit reports, hygiene reports, review reports) MUST NOT inline the
