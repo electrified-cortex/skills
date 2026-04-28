@@ -23,7 +23,7 @@ Run every step with the named tool. Do not summarize or plan.
 
 3. **Build the valid-hash set.** Two strategies — prefer manifest when available:
 
-   - **Manifest-preferred:** For each hash directory, check whether `<repo_root>/.hash-record/<shard>/<full-hash>/.manifest.yaml` exists (Bash `test -f`). If it exists, read it with the Read tool. Extract the `file_paths` list. For each path in `file_paths`, run `git hash-object "<repo_root>/<file_path>"` (Bash). Accumulate the resulting hashes into the valid-hash set for this directory.
+   - **Manifest-preferred:** For each hash directory, check whether `<repo_root>/.hash-record/<shard>/<full-hash>/manifest.yaml` exists (Bash `test -f`). If it exists, read it with the Read tool. Extract the `file_paths` list. For each path in `file_paths`, run `git hash-object "<repo_root>/<file_path>"` (Bash). Accumulate the resulting hashes into the valid-hash set for this directory.
    - **Full-workspace fallback:** Build once for all hash directories whose manifest is absent. Use the Bash tool:
 
      ```bash

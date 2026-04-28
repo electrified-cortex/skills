@@ -16,7 +16,7 @@ find "<repo_root>/.hash-record" -mindepth 2 -maxdepth 2 -type d \
 Form: `<repo_root>/.hash-record/<shard>/<full-hash>`. Extract `<full-hash>` (basename). None → `CLEAN`, stop.
 
 3. Build valid-hash set — prefer manifest:
-Manifest-preferred: per hash dir, check `<repo_root>/.hash-record/<shard>/<full-hash>/.manifest.yaml` (Bash `test -f`). Exists → Read tool, extract `file_paths`; per path: Bash `git hash-object "<repo_root>/<file_path>"`. Accumulate into valid-hash set for this dir.
+Manifest-preferred: per hash dir, check `<repo_root>/.hash-record/<shard>/<full-hash>/manifest.yaml` (Bash `test -f`). Exists → Read tool, extract `file_paths`; per path: Bash `git hash-object "<repo_root>/<file_path>"`. Accumulate into valid-hash set for this dir.
 Full-workspace fallback: once for all dirs lacking manifest. Bash:
 ```bash
 cd "<repo_root>" && git ls-files --cached --others --exclude-standard

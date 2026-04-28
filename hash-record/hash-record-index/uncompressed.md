@@ -1,6 +1,6 @@
 ---
 name: hash-record-index
-description: Build and refresh .manifest.yaml index files inside each hash directory under .hash-record/. Triggers — index hash records, refresh hash-record manifest, build manifest.yaml, hash-record-index, accelerate prune.
+description: Build and refresh manifest.yaml index files inside each hash directory under .hash-record/. Triggers — index hash records, refresh hash-record manifest, build manifest.yaml, hash-record-index, accelerate prune.
 ---
 
 # Hash Record Index

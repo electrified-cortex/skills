@@ -32,8 +32,8 @@ Does NOT delete records whose hash currently matches a workspace file. Does NOT 
 
 1. Resolve `repo_root` and verify `<repo_root>/.hash-record/` exists. If absent, output `CLEAN` and stop — nothing to prune.
 2. Build the **valid-hash set** using one of two strategies, chosen per hash directory:
-   - **Manifest-preferred** (when `<repo_root>/.hash-record/<shard>/<full-hash>/.manifest.yaml` exists, produced by `hash-record-index`): read `file_paths` from the manifest, run `git hash-object` on each listed path, accumulate those hashes. This is faster and avoids a full workspace walk.
-   - **Full-workspace fallback** (when `.manifest.yaml` is absent): enumerate every file in the working tree using `git ls-files --cached --others --exclude-standard`, compute `git hash-object <file>` for each, accumulate hashes into a set.
+   - **Manifest-preferred** (when `<repo_root>/.hash-record/<shard>/<full-hash>/manifest.yaml` exists, produced by `hash-record-index`): read `file_paths` from the manifest, run `git hash-object` on each listed path, accumulate those hashes. This is faster and avoids a full workspace walk.
+   - **Full-workspace fallback** (when `manifest.yaml` is absent): enumerate every file in the working tree using `git ls-files --cached --others --exclude-standard`, compute `git hash-object <file>` for each, accumulate hashes into a set.
    The manifest-preferred strategy is used when a manifest is present; the fallback is used otherwise. The full-workspace set need only be built once if multiple hash directories lack a manifest.
 3. Walk every hash directory under `.hash-record/<shard>/<full-hash>/`. For each, check whether `<full-hash>` is in the valid-hash set.
 4. Each hash directory whose hash is NOT in the valid-hash set is **orphaned** — record it for deletion.

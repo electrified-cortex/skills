@@ -23,23 +23,23 @@ Run every step with the named tool. Do not summarize or plan.
 
 4. **For each hash directory, decide whether to index:**
 
-   a. Find all `.md` leaf files beneath the hash directory (excluding `.manifest.yaml`). Use the Bash tool:
+   a. Find all `.md` leaf files beneath the hash directory (excluding `manifest.yaml`). Use the Bash tool:
 
       ```bash
-      find "<hash_dir>" -type f -name "*.md" ! -name ".manifest.yaml"
+      find "<hash_dir>" -type f -name "*.md" ! -name "manifest.yaml"
       ```
 
    b. For each leaf file path, use the Read tool to read the file. Extract the `file_path` field from the YAML frontmatter (lines between the first `---` and second `---`). If the field is absent or the file has no valid frontmatter, skip that file silently.
 
    c. Collect all non-empty `file_path` values found. Deduplicate. Sort lexically.
 
-   d. If a `.manifest.yaml` already exists, read its current `file_paths` list with the Read tool. If the existing list matches the collected paths exactly (same set), skip this hash directory — it is already up to date.
+   d. If a `manifest.yaml` already exists, read its current `file_paths` list with the Read tool. If the existing list matches the collected paths exactly (same set), skip this hash directory — it is already up to date.
 
    e. If the collected `file_paths` list is empty (no leaf records found with a `file_path` field), skip writing manifest for this hash directory. Do not create an empty manifest.
 
    f. Union the existing `file_paths` (if any) with the newly collected paths. Deduplicate. Sort lexically.
 
-   g. Write `<hash_dir>/.manifest.yaml` using the Write tool with this exact content:
+   g. Write `<hash_dir>/manifest.yaml` using the Write tool with this exact content:
 
       ```yaml
       file_paths:
@@ -49,7 +49,7 @@ Run every step with the named tool. Do not summarize or plan.
 
       Replace `<path-N>` with each sorted, deduplicated `file_path` value.
 
-5. **Count.** Track the number of hash directories for which a new `.manifest.yaml` was written.
+5. **Count.** Track the number of hash directories for which a new `manifest.yaml` was written.
 
 6. **Output result:**
    - If count is 0: output `CLEAN`
@@ -66,10 +66,10 @@ One line only:
 ## Rules
 
 - Never modify any leaf `.md` record file. Read-only on all leaf records.
-- Never delete any file — overwrite outdated `.manifest.yaml` in place, never delete and recreate.
-- Write ONLY to `.manifest.yaml` at the hash-directory level. No other write locations.
-- This skill is the sole writer of `.manifest.yaml`. No other skill writes manifest.
-- Merge existing `file_paths` when a `.manifest.yaml` already exists — never lose previously indexed paths.
+- Never delete any file — overwrite outdated `manifest.yaml` in place, never delete and recreate.
+- Write ONLY to `manifest.yaml` at the hash-directory level. No other write locations.
+- This skill is the sole writer of `manifest.yaml`. No other skill writes manifest.
+- Merge existing `file_paths` when a `manifest.yaml` already exists — never lose previously indexed paths.
 - Skip leaf files with missing or malformed frontmatter silently. Never raise on bad records.
 - Do not follow symlinks when walking `.hash-record/`.
 - Reject `repo_root` values containing `..` or shell metacharacters.

@@ -18,21 +18,21 @@ Run every step with named tool. Don't summarize or plan.
 3. Per hash dir:
    a. Bash:
       ```bash
-      find "<hash_dir>" -type f -name "*.md" ! -name ".manifest.yaml"
+      find "<hash_dir>" -type f -name "*.md" ! -name "manifest.yaml"
       ```
    b. Read each leaf. Extract `file_path` from YAML frontmatter. Absent/invalid frontmatter → skip silently.
    c. Collect non-empty `file_path` values. Deduplicate. Sort lexically.
-   d. `.manifest.yaml` exists → Read `file_paths`. Matches collected set exactly → skip.
+   d. `manifest.yaml` exists → Read `file_paths`. Matches collected set exactly → skip.
    e. `file_paths` empty → skip; don't create empty manifest.
    f. Union existing `file_paths` (if any) with collected. Deduplicate. Sort.
-   g. Write `<hash_dir>/.manifest.yaml` (Write tool), exact content:
+   g. Write `<hash_dir>/manifest.yaml` (Write tool), exact content:
       ```yaml
       file_paths:
         - <path-1>
         - <path-2>
       ```
 
-4. Count hash dirs with `.manifest.yaml` written.
+4. Count hash dirs with `manifest.yaml` written.
 
 5. Output: count=0 → `CLEAN`; else → `indexed: <count>`
 
@@ -43,9 +43,9 @@ Output (one line):
 
 Rules:
 Never modify leaf `.md` records; read-only.
-Never delete — overwrite outdated `.manifest.yaml` in-place; don't delete+recreate.
-Write ONLY to `.manifest.yaml` at hash-dir level.
-Sole writer of `.manifest.yaml`; no other skill writes manifest.
+Never delete — overwrite outdated `manifest.yaml` in-place; don't delete+recreate.
+Write ONLY to `manifest.yaml` at hash-dir level.
+Sole writer of `manifest.yaml`; no other skill writes manifest.
 Merge existing `file_paths` — never lose indexed paths.
 Skip leaves with missing/malformed frontmatter silently; never raise on bad records.
 Don't follow symlinks in `.hash-record/`.
