@@ -35,11 +35,12 @@ Procedure:
 6. Hygiene results available from Phase 0 (pre-collected) → feed Phase 3 Check 8. No re-dispatch.
 7. Read skill at `skill_path`. Type: inline/dispatch. Locate spec: check `spec_path` or `spec.md` co-located. Not found: simple inline (<30 lines) → skip Phase 1; dispatch/complex inline → error verdict + write record + `PATH:` + stop.
 8. Run Phase 1 → 2 → 3 (stop on first fail). Assign verdict. Map to `result`: PASS → `pass`; PASS_WITH_FINDINGS/NEEDS_REVISION/FAIL → `findings`; error → `error`.
-9. Write audit record at `<audit_cache_dir><filename>.md` (filename = `--filename` VERBATIM). `mkdir -p` first. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list repo-relative>` (one per source file from step 3, lexical sort; paths relative to `<repo-root>` from step 4a — compute via `git ls-files --full-name <file>` or strip `<repo-root>/` from absolute paths), `operation_kind: skill-auditing`, `result: <mapped>`.
-   - Correct YAML: file_paths with repo-relative entries (skill-auditing/...). Wrong: singular file_path, absolute paths, dir-only.
-   - Body: `# Result` H1 → state verdict → findings (phase/check refs) → **References** subsection (only `findings:` paths from step 6; CLEAN omitted; ERROR noted).
-10. Output `PATH: <audit_cache_dir><filename>.md` → stop.
-11. If `--fix` active AND verdict == NEEDS_REVISION: enter Fix Mode below. PASS → done. FAIL → skip fix mode, report for author. Single-pass; no re-audit/recompress.
+9. Scrub absolute paths from body: before writing, scan rendered body for absolute paths (Windows drive-letter prefix like `<letter>:\...` / `<letter>:/...`, or Unix root-anchored paths under `/Users/`, `/home/`, `/d/`, etc.). Replace each with its repo-relative form (same as `file_paths:` entries). Body MUST NOT contain absolute paths.
+10. Write audit record at `<audit_cache_dir><filename>.md` (filename = `--filename` VERBATIM). `mkdir -p` first. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list repo-relative>` (one per source file from step 3, lexical sort; paths relative to `<repo-root>` from step 4a — compute via `git ls-files --full-name <file>` or strip `<repo-root>/` from absolute paths), `operation_kind: skill-auditing`, `result: <mapped>`.
+    - Correct YAML: file_paths with repo-relative entries (skill-auditing/...). Wrong: singular file_path, absolute paths, dir-only.
+    - Body: `# Result` H1 → state verdict → findings (phase/check refs) → **References** subsection (only `findings:` paths from step 6; CLEAN omitted; ERROR noted).
+11. Output `PATH: <audit_cache_dir><filename>.md` → stop.
+12. If `--fix` active AND verdict == NEEDS_REVISION: enter Fix Mode below. PASS → done. FAIL → skip fix mode, report for author. Single-pass; no re-audit/recompress.
 
 Artifact Selection:
 

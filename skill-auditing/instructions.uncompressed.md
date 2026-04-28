@@ -58,7 +58,8 @@ Phase 0 runs before the cache check so results are available for Phase 3 Check 8
 6. **Hygiene results available** from Phase 0 (pre-collected). These feed Phase 3 Check 8. No re-dispatch here.
 7. **Read the skill** at `skill_path`. Determine type: inline or dispatch. Locate companion spec — check `spec_path` if provided, otherwise `spec.md` co-located with `skill_path`. If not found: simple inline skills (<30 lines) may skip Phase 1; dispatch or complex inline → record an error verdict, write the record, output `PATH:`, and stop.
 8. **Run Phase 1 → Phase 2 → Phase 3** (stop on first failure). Assign verdict. Map to `result` field: PASS → `pass`; PASS_WITH_FINDINGS / NEEDS_REVISION / FAIL → `findings`; error → `error`.
-9. **Write audit record** at `<audit_cache_dir><filename>.md` — filename is the `--filename` value verbatim (e.g. `claude-sonnet.md`), no skill-name prefix, no timestamp, no extra qualifiers. `mkdir -p <audit_cache_dir>` first. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list of repo-relative paths>` (one entry per source file from step 3, sorted lexically; each path is relative to `<repo-root>` resolved from `skill_path` — compute via `git ls-files --full-name <file>` or strip `<repo-root>/` from each absolute path), `operation_kind: skill-auditing` (verbatim from `--filename`), `result: <mapped value>`.
+9. **Scrub absolute paths from record body.** Before writing, scan the rendered body for any absolute filesystem path (Windows drive-letter prefix `<letter>:\...` or `<letter>:/...`, or Unix root-anchored paths under `/Users/`, `/home/`, `/d/`, etc.). For each hit, replace it with its repo-relative form — the same relative path used in `file_paths:` frontmatter (e.g., body should read `skill-auditing`, never the full absolute form). The body MUST NOT contain absolute paths.
+10. **Write audit record** at `<audit_cache_dir><filename>.md` — filename is the `--filename` value verbatim (e.g. `claude-sonnet.md`), no skill-name prefix, no timestamp, no extra qualifiers. `mkdir -p <audit_cache_dir>` first. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list of repo-relative paths>` (one entry per source file from step 3, sorted lexically; each path is relative to `<repo-root>` resolved from `skill_path` — compute via `git ls-files --full-name <file>` or strip `<repo-root>/` from each absolute path), `operation_kind: skill-auditing` (verbatim from `--filename`), `result: <mapped value>`.
 
    ```yaml
    # Correct:
@@ -80,8 +81,8 @@ Phase 0 runs before the cache check so results are available for Phase 3 Check 8
    ```
 
    Body: open with `# Result` H1, state verdict, list findings (with phase and check references), then a **References** subsection listing only the `findings:` paths collected in step 6 (files that returned `CLEAN` are omitted; `ERROR` responses are noted separately as sub-dispatch failures).
-10. **Output** `PATH: <audit_cache_dir><filename>.md` and stop.
-11. If `--fix` is active **and** the verdict is exactly NEEDS_REVISION, enter the Fix Mode procedure below. PASS → nothing to fix; FAIL → fix mode is skipped and defects are reported for author action. Fix mode is single-pass; the auditor does not re-audit or recompress.
+11. **Output** `PATH: <audit_cache_dir><filename>.md` and stop.
+12. If `--fix` is active **and** the verdict is exactly NEEDS_REVISION, enter the Fix Mode procedure below. PASS → nothing to fix; FAIL → fix mode is skipped and defects are reported for author action. Fix mode is single-pass; the auditor does not re-audit or recompress.
 
 ## When to audit which artifact
 
