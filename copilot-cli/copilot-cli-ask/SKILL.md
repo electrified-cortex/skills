@@ -48,8 +48,12 @@ Answer: <Copilot's plain text response>
 
 ## Error Handling
 
-- Model unavailable → surface "model not available" and stop.
-- Copilot exits non-zero → surface the stderr output as the error and stop.
+| Condition | Action |
+| --- | --- |
+| `copilot --version` fails | Output `Status: UNAVAILABLE`, set `Answer:` to the stderr, stop. |
+| Caller-supplied model is unsupported (Copilot rejects) | Output `Status: ERROR`, set `Answer:` to "model not available: `<model>`", stop. |
+| `copilot -p ...` exits non-zero | Output `Status: ERROR`, set `Answer:` to the stderr, stop. |
+| `copilot -p ...` exits zero with empty stdout | Output `Status: ERROR`, set `Answer:` to "empty response", stop. |
 
 ## Rules
 
