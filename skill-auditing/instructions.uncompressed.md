@@ -16,10 +16,6 @@
   (`uncompressed.md`, `instructions.uncompressed.md`) instead of the compiled
   runtime (`SKILL.md`, `instructions.txt`).
 
-## Audit Intent
-
-**Sonnet is the baseline. Haiku wins the eval game.** A working skill must run under sonnet (table stakes). A skill that also runs reliably under haiku has won — cheap, deterministic, predictable. Push every skill toward the haiku bar by closing interpretive slack: replace prose conditionals with decision trees, ambiguous directives with explicit step lists, implied behavior with normative statements. Findings that move a skill from "works on sonnet" to "wins on haiku" take priority.
-
 ## Procedure
 
 0. **Guard:** If `--filename` was not passed, output `ERROR: --filename required` and stop immediately.
