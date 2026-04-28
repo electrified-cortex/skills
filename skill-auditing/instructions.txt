@@ -3,14 +3,12 @@ Skill Auditing Instructions
 Dispatch Parameters:
 
 skill_path (required) — absolute path to SKILL.md to audit.
---filename <name> (required) — exact filename string for record file + frontmatter `model:` field; lowercase-hyphenated vendor-class (e.g. claude-sonnet, claude-opus); use verbatim, no inference, no sub-version. Missing -> ERROR: --filename required. Stop.
 spec_path (optional) — companion spec path if not beside SKILL.md.
 --fix (optional) — single-pass fix on `uncompressed.md` & `instructions.uncompressed.md` (NEEDS_REVISION verdict only). Refuses pending git changes (untracked/unstaged/staged/conflicted) or paths escaping skill dir. Never modifies spec.md, README.md, SKILL.md, instructions.txt.
 --uncompressed (optional) — audit source (uncompressed.md, instructions.uncompressed.md) vs compiled (SKILL.md, instructions.txt).
 
 Procedure:
 
-0. Guard: --filename not passed -> ERROR: --filename required. Stop.
 1. Read target skill dir (glob/ls containing skill_path).
 2. Identify source files — spec.md, uncompressed.md, instructions.uncompressed.md (if present). Skip SKILL.md, instructions.txt (compressed artifacts).
 3. git hash-object <file> each source file. Collect (filename, blob-hash) pairs.
@@ -20,20 +18,16 @@ Procedure:
    repo_root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null)
    [ -z "$repo_root" ] && repo_root="$target_dir"
    Save <repo_root> for all cache path construction.
-5a. Compute cache filename: leaf = <filename>.md where <filename> = --filename verbatim. Lowercase-hyphenated vendor-class (e.g. claude-haiku, claude-sonnet). No skill name, timestamp, sub-version. See ../hash-record/filenames.md for canonical.
-5b. Compute cache path:
-   <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.1/<filename>.md
-   v1.1 = skill-auditing version (declared in spec.md; must match). Drift = defect. Surface & stop.
-   Correct: .hash-record/<sh>/<hash>/skill-auditing/v1.1/claude-sonnet.md
-   Wrong: .hash-record/<sh>/<hash>/skill-auditing/skill-auditing-sonnet-claude-sonnet.md
-   Wrong: .hash-record/<sh>/<hash>/skill-auditing/claude-sonnet-2026-04-27T19-17-52Z.md
-5c. Probe cache: test -f <path-from-5b>.
+5a. Compute cache path: record filename is hardcoded as report.md.
+   <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.2/report.md
+   v1.2 = skill-auditing version (declared in spec.md; must match). Drift = defect. Surface & stop.
+5b. Probe cache: test -f <path-from-5a>.
    HIT (file exists): output PATH: <abs-path>. Stop. No re-audit.
-   MISS: save <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.1/ as <audit_cache_dir>. Continue.
+   MISS: save <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.2/ as <audit_cache_dir>. Continue.
 6. Read skill at skill_path. Type: inline or dispatch. Locate spec: check spec_path or spec.md co-located. Not found: simple inline (<30 lines) skip Phase 1; dispatch/complex -> error verdict + write record + PATH: + stop.
 8. Run Phase 1 -> 2 -> 3 (stop on first fail). Verdict: PASS -> pass; PASS_WITH_FINDINGS/NEEDS_REVISION/FAIL -> findings; error -> error.
 9. Scrub absolute paths from body. Scan for absolute filesystem path (Windows <letter>:\... or <letter>:/..., Unix /Users/, /home/, /d/, etc.). Replace with repo-relative form (same as file_paths: frontmatter). Body must not contain absolute paths.
-10. Write audit record at <audit_cache_dir><filename>.md (--filename verbatim). mkdir -p first. Frontmatter: hash: <manifest_hash>, file_paths: YAML list repo-relative (one per source from step 3, lex sort; paths relative to <repo-root> — compute via git ls-files --full-name or strip <repo-root>/), operation_kind: skill-auditing, result: <mapped>.
+10. Write audit record at <audit_cache_dir>report.md. mkdir -p first. Frontmatter: hash: <manifest_hash>, file_paths: YAML list repo-relative (one per source from step 3, lex sort; paths relative to <repo-root> — compute via git ls-files --full-name or strip <repo-root>/), operation_kind: skill-auditing, model: <executing-model-class> (agent records its own model class at write time, e.g. claude-haiku, claude-sonnet, claude-opus), result: <mapped>.
     Correct:
     file_paths:
       - skill-auditing/instructions.uncompressed.md
@@ -48,7 +42,7 @@ Procedure:
     WRONG (singular multi-file):
     file_path: skill-auditing/SKILL.md
 Body: # Result H1, state verdict, list findings (phase + check refs).
-11. Output PATH: <audit_cache_dir><filename>.md. Stop.
+11. Output PATH: <audit_cache_dir>report.md. Stop.
 12. --fix active + verdict == NEEDS_REVISION -> Fix Mode. PASS -> done. FAIL -> skip fix; report for author. Single-pass; no re-audit/recompress.
 
 Artifact Selection:
@@ -403,7 +397,7 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
 1. Eligibility gate. Enter fix mode only when verdict == NEEDS_REVISION.
  PASS → nothing to fix. FAIL (any phase) → fix mode is skipped; defects are
  reported for author action.
-2. Preflight report path writability. Compute report path via the hash-record manifest path (`<audit_cache_dir><filename>.md`). If unwritable, STOP fix mode and exit without modifying anything.
+2. Preflight report path writability. Compute report path via the hash-record manifest path (`<audit_cache_dir>report.md`). If unwritable, STOP fix mode and exit without modifying anything.
 3. Identify writable candidates. Only `uncompressed.md` and
  `instructions.uncompressed.md` co-located with skill_path are eligible.
  - Reject any candidate path that resolves outside skill dir
@@ -448,7 +442,7 @@ file_paths:
   - <repo-relative path to second source file>
   ...
 operation_kind: skill-auditing
-model: <filename>
+model: <executing-model-class>
 result: pass | findings | error | skipped
 ---
 ```

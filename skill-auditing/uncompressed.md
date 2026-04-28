@@ -5,12 +5,24 @@ description: Audit a skill for quality, classification, cost, and compliance wit
 
 # Skill Auditing
 
-Without reading `instructions.txt` yourself, spawn a zero-context, haiku-class sub-agent (in the background if possible):
+## Input
 
-**Claude Code:** `Agent` tool. Pass: `"Read and follow instructions.txt here. Input: skill_path=<path> --filename claude-haiku [--fix] [--uncompressed]"`
+`<skill_path>` — absolute path to the target skill's `SKILL.md`
+`<flags>` — optional, any combination of `--fix` `--uncompressed`
 
-**VS Code / Copilot:** `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow instructions.txt in <skill_dir>. Input: skill_path=<path> --filename claude-haiku [--fix] [--uncompressed]")`
+- `--fix`: single-pass fix on `uncompressed.md` and `instructions.uncompressed.md` when the audit verdict is `NEEDS_REVISION`. Refuses if the skill dir has pending git changes.
+- `--uncompressed`: audit the source files (`uncompressed.md`, `instructions.uncompressed.md`) instead of the compiled artifacts (`SKILL.md`, `instructions.txt`).
 
-Returns: `PATH: <abs-path-to-record.md>` on success, `ERROR: <reason>` on pre-write failure.
+## Inspect
 
-NEVER READ/INTERPRET `instructions.txt` YOURSELF. Let the sub-agent do the work.
+Variables:
+
+`<instructions>` = `instructions.txt` (this folder; NEVER READ THIS FILE)
+`<instructions-abspath>` = absolute path to `<instructions>`
+`<input-args>` = `skill_path=<skill_path> [--fix] [--uncompressed]`
+`<tier>` = `fast-cheap`
+`<description>` = `Auditing skill: <skill_path>`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+
+Follow `dispatch` skill. See `../dispatch/SKILL.md`.
+Returns: `PATH: <abs-path-to-record.md>` | `ERROR: <reason>`
