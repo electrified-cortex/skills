@@ -93,6 +93,14 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
 - **Compiled artifacts immutable**: `SKILL.md`, `instructions.txt`,
   `spec.md`, and `README.md` must never be modified by the auditor
   in any mode.
+- **No absolute paths in record body**: The record body MUST NOT contain
+  absolute filesystem paths. The `Path:` line and any other path mentioned
+  in the body MUST be repo-relative to the resolved repo root (e.g.,
+  `Path: skill-auditing`, not a Windows drive-letter prefixed path or a
+  Unix absolute path under `/Users/`, `/home/`, etc.). Before writing the record, the
+  executor MUST replace any leaked absolute path in the rendered body with
+  its repo-relative form — the same path that goes into `file_paths:`
+  frontmatter.
 
 ## Behavior
 
