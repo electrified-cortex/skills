@@ -5,6 +5,8 @@ description: Dispatch skill. Creates or updates skill.index and skill.index.md a
 
 Dispatch skill. Creates or updates two index artifacts at every indexed dir in a skill tree: `skill.index` (raw index) and `skill.index.md` (metadata overlay). Integrity stamp (`skill.index.sha256`) written by auditor after PASS — not builder.
 
+
+
 Artifacts:
 
 Every indexed dir gets exactly two files from builder:
@@ -17,6 +19,8 @@ Every indexed dir gets exactly two files from builder:
 Absent stamp = unaudited since last build, not needs-rebuild.
 
 Invocation:
+
+
 
 Use Dispatch agent (zero context): "Read and follow `instructions.txt` (in this dir). Input: `root=<path> [--dot-allow <name,...>] [--rebuild]`"
 
@@ -83,6 +87,8 @@ path: ../../skills/task-engine/scan-tasks/SKILL.md
 
 Metadata Overlay Format (`skill.index.md`):
 
+
+
 H1: dir's identifying title plus " — skill index" suffix. Example: `# Overseer — skill index`.
 Optional preamble (at most two sentences) between H1 and first section. Preferred phrasing: "Match the operator's words (or your current situation) to an entry below, then load that skill." Do not describe index mechanics.
 One `## name [marker]` section per entry key in same order as raw index. Self entry's section uses dir's own name, not `.`. Marker (`[op]` or `[self]`) must appear on every section heading.
@@ -98,6 +104,8 @@ Mustn't describe trailing slashes, dot entries, nav mechanics, or index artifact
 Must pass full compression pass before builder writes. Compression fails → builder aborts node (blocked), leaves prior artifacts unchanged, continues with siblings.
 
 Build Logic:
+
+
 
 Incremental Mode (default):
 

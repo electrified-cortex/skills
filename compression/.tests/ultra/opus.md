@@ -1,4 +1,4 @@
-Grand Chocolate Souffle
+# Grand Chocolate Souffle
 
 Souffle exposes every kitchen habit: whipping patience, folding lightness, timing. Name from French "to puff" — 19th-century showpiece. Sounds forbidding but it's well-built base + whipped egg whites + steady heat.
 

@@ -16,6 +16,15 @@
   (`uncompressed.md`, `instructions.uncompressed.md`) instead of the compiled
   runtime (`SKILL.md`, `instructions.txt`).
 
+## Phase 0 — Markdown Hygiene
+
+Dispatch `markdown-hygiene --filename claude-haiku` (no `--fix`) on each `.md` file in the skill directory. Collect per-file verdicts:
+- `CLEAN` — no violations; omit from results.
+- `findings: <abs-path>` — collect the path.
+- `ERROR: <reason>` — flag as sub-dispatch failure.
+
+Phase 0 runs before the cache check so results are available for Phase 3 Check 8. The auditor does not re-dispatch markdown-hygiene during Phase 3 — it uses Phase 0 verdicts.
+
 ## Procedure
 
 0. **Guard:** If `--filename` was not passed, output `ERROR: --filename required` and stop immediately.
@@ -34,7 +43,7 @@
    Incorrect: .hash-record/<sh>/<hash>/skill-auditing/skill-auditing-sonnet-claude-sonnet.md
    Incorrect: .hash-record/<sh>/<hash>/skill-auditing/claude-sonnet-2026-04-27T19-17-52Z.md
    ```
-6. **Hygiene per file:** dispatch `markdown-hygiene` on each `.md` file in the skill directory (including `SKILL.md`, `instructions.txt` if present). Each call returns one of three states: `CLEAN` (no violations — no path emitted), `findings: <abs-path>` (unresolved violations — collect the path), or `ERROR: <reason>` (pre-write failure — flag as sub-dispatch failure). Only `findings:` paths are collected; `CLEAN` files contribute no entry. These are independently cached at per-file blob hashes and do not affect the manifest hash.
+6. **Hygiene results available** from Phase 0 (pre-collected). These feed Phase 3 Check 8. No re-dispatch here.
 7. **Read the skill** at `skill_path`. Determine type: inline or dispatch. Locate companion spec — check `spec_path` if provided, otherwise `spec.md` co-located with `skill_path`. If not found: simple inline skills (<30 lines) may skip Phase 1; dispatch or complex inline → record an error verdict, write the record, output `PATH:`, and stop.
 8. **Run Phase 1 → Phase 2 → Phase 3** (stop on first failure). Assign verdict. Map to `result` field: PASS → `pass`; PASS_WITH_FINDINGS / NEEDS_REVISION / FAIL → `findings`; error → `error`.
 9. **Write audit record** at `<audit_cache_dir><filename>.md` — filename is the `--filename` value verbatim (e.g. `claude-sonnet.md`), no skill-name prefix, no timestamp, no extra qualifiers. `mkdir -p <audit_cache_dir>` first. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list of repo-relative paths>` (one entry per source file from step 3, sorted lexically; each path is relative to the git root containing `.hash-record/` — compute via `git ls-files --full-name <file>` or strip `git rev-parse --show-toplevel` from each absolute path), `operation_kind: skill-auditing` (verbatim from `--filename`), `result: <mapped value>`.
@@ -241,11 +250,11 @@ turn when possible.
 
 ### 8. Markdown hygiene
 
-For each `.md` file, `markdown-hygiene` returns `CLEAN`, `findings: <abs-path>`, or `ERROR: <reason>`.
+Use Phase 0 verdicts (pre-collected before cache check):
 
-- All files return `CLEAN` → check PASSES; no References entries added.
-- Any file returns `findings:` → add the path to References; mark check FINDINGS (not PASS).
-- Any file returns `ERROR:` → flag as sub-dispatch failure; treat as check failure for that file.
+- All files `CLEAN` → check PASSES; no References entries.
+- Any `findings: <abs-path>` → add path to References; mark check FINDINGS.
+- Any `ERROR: <reason>` → flag sub-dispatch failure; treat as check failure for that file.
 
 ### 9. No dispatch references in instructions
 

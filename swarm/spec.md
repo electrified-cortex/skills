@@ -55,7 +55,7 @@ Does NOT cover:
 The registry is normative. All built-in personalities must appear in this table. Trigger conditions are evaluated against problem traits. Multiple triggers may be satisfied; all matching personalities are included unless filtered by `personality_filter`.
 
 | # | Personality | Trigger condition | Default model class | Backend | Scope limiter |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | 1 | Devil's Advocate | always | sonnet-class | dispatch-sonnet | Challenge assumptions; no constructive suggestions |
 | 2 | Security Auditor | problem touches auth, user input, API endpoints, data access, secrets, or network calls | sonnet-class | dispatch-sonnet | Find vulnerabilities only; no design advice |
 | 3 | Code Quality Critic | problem includes code (new or modified) | sonnet-class | dispatch-sonnet | Code conventions, readability, duplication; no security or arch |
@@ -75,7 +75,7 @@ Callers may supply additional personalities that extend the registry for a singl
 ## Inputs
 
 | Input | Required | Type | Description |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `problem` | required | artifact | The content under review. |
 | `personality_filter` | optional | list of personality names or indices | If supplied, restricts the candidate set to the named personalities (from built-in registry + custom menu). Personalities not in the filter are not evaluated against trigger conditions and are not dispatched. |
 | `model_overrides` | optional | map of personality name → model class | Pins the given personalities to the specified model class for this invocation. Overrides the default model class in the registry. |
@@ -270,7 +270,7 @@ Mitigation: strip reviewer attribution before synthesis output; speak in host vo
 ## Section Classification
 
 | Section | Type | Required |
-|---|---|---|
+| --- | --- | --- |
 | Purpose | Descriptive | Yes |
 | Scope | Normative | Yes |
 | Definitions | Normative | Yes |

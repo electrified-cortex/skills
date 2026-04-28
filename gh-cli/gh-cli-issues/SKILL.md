@@ -5,25 +5,25 @@ description: Manage GitHub issues using the gh issue subcommand. Full lifecycle:
 
 `gh issue` subcommand. Full lifecycle: create, list, view, edit, comment, close, transfer.
 
-Create:
+## Create
 
 ```bash
 gh issue create --title "title" --body "body" --label bug,high-priority --assignee user1,@me
 ```
 
-Body from file:
+## Body from file
 
 ```bash
 gh issue create --title "title" --body-file issue.md
 ```
 
-List (default state: open):
+## List (default state: open)
 
 ```bash
 gh issue list --state all --assignee @me --label bug --milestone "v1.0" --limit 50
 ```
 
-Search + jq:
+## Search + jq
 
 ```bash
 gh issue list --search "is:open label:stale" --json number,title --jq '.[].number'
@@ -31,27 +31,27 @@ gh issue list --search "is:open label:stale" --json number,title --jq '.[].numbe
 
 States: `open`, `closed`, `all`.
 
-View:
+## View
 
 ```bash
 gh issue view 123 --comments
 ```
 
-Edit:
+## Edit
 
 ```bash
 gh issue edit 123 --title "new" --add-label triage --remove-label stale
 gh issue edit 123 --add-assignee user1 --remove-assignee user2 --milestone "v2.0"
 ```
 
-Close/reopen:
+## Close/reopen
 
 ```bash
 gh issue close 123 --comment "Fixed in #456"
 gh issue reopen 123
 ```
 
-Comment:
+## Comment
 
 ```bash
 gh issue comment 123 --body "text"
@@ -71,7 +71,7 @@ gh api --method PATCH /repos/{owner}/{repo}/issues/comments/{comment_id} \
 gh api --method DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}
 ```
 
-Transfer:
+## Transfer
 
 ```bash
 gh issue transfer 123 --repo owner/other-repo

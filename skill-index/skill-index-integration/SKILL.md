@@ -142,7 +142,7 @@ An integration is conformant when all of the following are satisfied:
 
 ---
 
-## Common Failures (Footguns)
+## Common Failures
 
 **Mandate only in a file that does not survive resets** — Agent stops checking skills after compaction.
 Fix: Confirm the platform re-reads the config file after resets. If not, add mandate to a supplemental reset-surviving injection.

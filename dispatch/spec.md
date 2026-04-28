@@ -306,7 +306,7 @@ claude -p "Analyze the following diff for security issues. Return a markdown lis
 
 **Example — `claude -p` dispatch (parallel, background via `run_in_background`):**
 
-```
+```text
 # Invoke two independent CLI calls in background (Claude Code: run_in_background: true on Bash tool).
 # Each call is stateless; outputs are captured to separate files before aggregation.
 # Call 1 (background): analyze auth module

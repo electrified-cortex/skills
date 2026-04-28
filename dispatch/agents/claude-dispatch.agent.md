@@ -14,4 +14,4 @@ tools:
 
 After completing the task, if output is generated, return it.
 If you encounter errors, report them.
-No output → "Task completed with no output."
+No output -> "Task completed with no output."

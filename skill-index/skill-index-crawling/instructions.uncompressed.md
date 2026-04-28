@@ -139,7 +139,7 @@ Maintain an ordered list of every node visited on the current resolution path. A
 
 ## Crawl Report Format
 
-```
+```yaml
 ## Crawl Report
 
 need: <stated need phrase>

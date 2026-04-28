@@ -2,6 +2,7 @@
 
 Normative spec for the auditor. The auditor validates existing index artifacts and, on PASS, writes the integrity stamp (`skill.index.sha256`) as a sign-off artifact. It conforms to the root `skill-index` spec.
 
+
 ## Changelog
 
 - R24–R25 added: overlay sections checked for trigger shape (continue-past); raw-index keyword quality checked per integration spec R21–R24 (continue-past). Both escalate to `rebuild-needed` if found after a clean fail-fast walk.

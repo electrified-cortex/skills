@@ -4,6 +4,7 @@ Defines which skills belong in each agent's index, how to classify shared skills
 
 ---
 
+
 ## Per-Agent Skill Domains
 
 ### Summary Table
@@ -17,6 +18,7 @@ Defines which skills belong in each agent's index, how to classify shared skills
 | Deputy | General-purpose support, auditing, analysis | Spec-auditing, skill-auditing, tool-auditing, code-review, compression, dispatch, audit-reporting, hash-stamp, skill-index-crawling | Fleet management, task-engine execution, memory routing |
 
 ---
+
 
 ## Per-Agent Notes
 

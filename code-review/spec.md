@@ -399,4 +399,3 @@ prohibits passing the caller's dispute to the substantive pass.
   spec-auditing.
 - **dispatch agent** (`dispatch.agent.md`): provides the zero-context
   bootstrap that review passes require.
-

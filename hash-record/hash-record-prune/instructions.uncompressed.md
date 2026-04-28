@@ -91,3 +91,4 @@ One line only:
 - Never prune based on age, model, or operation-kind. Orphan status (hash not in valid-hash set) is the only signal.
 - Reject `repo_root` values containing `..` or shell metacharacters.
 - Partial deletion (some orphans removed, limit reached) is a valid intermediate state. Re-running resumes correctly.
+

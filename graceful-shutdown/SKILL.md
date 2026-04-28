@@ -7,14 +7,18 @@ description: >-
 Don't re-audit unchanged files.
 See `../iteration-safety/SKILL.md`.
 
-Trigger Phrases: ordered shutdown, wrap up and close, session teardown, fleet teardown, closing all workers, stop all agents, end session, shutdown sequence
+## Trigger Phrases
 
-Pre-conditions:
+ordered shutdown, wrap up and close, session teardown, fleet teardown, closing all workers, stop all agents, end session, shutdown sequence
+
+## Pre-conditions
+
 Curator, Overseer, and at least one Worker session active.
 If no Workers active at shutdown, Steps 3–5 are no-ops; Overseer calls session/close after Step 2; Curator proceeds from Step 6.
 Curator has write access to `<workspace-root>/.agents/agents/curator/memory/`.
 
-Key Terms:
+## Key Terms
+
 Clean point — task state from which another agent can resume without loss: commit exists minimum; if all acceptance criteria met, sealed required; else commit suffices.
 Sealed — task has `## Completion` added and committed in worktree. Overseer handles pipeline dir moves; Workers only write Completion section.
 Bridge — Telegram MCP server process; auto-exits when last session closes.
@@ -26,9 +30,9 @@ workspace-root — top-level dir containing `.agents/`; resolved at runtime as p
 tmcp-root — the Telegram MCP server repository directory, resolved at runtime as `<workspace-root>/Telegram MCP`.
 Pipeline stages — `40-queued` (pending), `50-active` (claimed), `60-review` (ready), `70-done` (completed). Open tasks = any stage except `70-done`.
 
-Full Procedure:
+## Full Procedure
 
-Step 1 — Pre-signal warning (Curator)
+### Step 1 — Pre-signal warning (Curator)
 
 Curator MUST call `shutdown/warn` before signaling Workers.
 
@@ -38,7 +42,7 @@ action(type: "shutdown/warn", token: <token>)
 
 Advisory only — proceed regardless of response. Don't wait for acknowledgment.
 
-Step 2 — Curator signals Overseer
+### Step 2 — Curator signals Overseer
 
 Curator DMs Overseer to coordinate Worker shutdown. Curator MUSTN'T skip Overseer and DM Workers directly.
 
@@ -48,7 +52,7 @@ send(type: "dm", target: <Overseer-SID>, message: "Initiating shutdown. Signal e
 
 Curator waits for Overseer's confirmation DM (Step 5 output) before Step 6.
 
-Step 3 — Overseer signals each Worker individually
+### Step 3 — Overseer signals each Worker individually
 
 Separate DMs to each Worker — not broadcast. Each DM MUST include Overseer's own SID so Workers know where to send CLOSED reply.
 
@@ -58,7 +62,7 @@ send(type: "dm", target: <Worker-SID>, message: "Shutting down. Reach clean poin
 
 Overseer MUST track count of Workers signaled. 300 s timeout begins after last signal DM `send` returns successfully.
 
-Step 4 — Workers reach clean point and close
+### Step 4 — Workers reach clean point and close
 
 Each Worker executes independently:
 
@@ -92,7 +96,7 @@ action(type: "session/close", token: <token>)
 
 Workers MUSTN'T pass `force: true`. After `session/close` succeeds, Worker exits dequeue loop and doesn't call `session/start` again.
 
-Step 5 — Overseer tracks confirmations and closes
+### Step 5 — Overseer tracks confirmations and closes
 
 Confirmation = DM containing "CLOSED: session/close complete". Overseer MUST wait for confirmation from every Worker signaled.
 
@@ -106,7 +110,7 @@ action(type: "session/close", token: <token>)
 
 No `force: true` needed.
 
-Step 6 — Generate compaction metrics report (Curator)
+### Step 6 — Generate compaction metrics report (Curator)
 
 After Overseer confirms all Workers closed, Curator generates a session-scope compaction metrics report from the bridge event log. Runs before handoff so report path can be referenced in handoff.
 
@@ -126,7 +130,7 @@ Failure tolerance (required): if `scripts/event-report.mjs` missing, exits non-z
 
 Include report path in handoff `## State` section (Step 7).
 
-Step 7 — Curator writes handoff document
+### Step 7 — Curator writes handoff document
 
 Curator MUST write `memory/handoff.md` at:
 
@@ -159,7 +163,7 @@ reason: <free text describing why shutdown was triggered>
 `operator` from Telegram display name or `memory/operator.md` if present; else `operator: unknown`.
 `## Carryovers` MUST have one bullet per open task (40-queued, 50-active, 60-review). Empty valid only if no tasks in those stages.
 
-Step 8 — Curator calls shutdown
+### Step 8 — Curator calls shutdown
 
 ```text
 action(type: "shutdown", token: <token>)
@@ -174,7 +178,7 @@ action(type: "shutdown", token: <token>, force: true)
 
 Then Step 9. Don't treat `{shutting_down: false}` as completed shutdown. `shutting_down` field is authoritative.
 
-Step 9 — Curator closes session
+### Step 9 — Curator closes session
 
 ```text
 action(type: "session/close", token: <token>, force: true)
@@ -182,7 +186,7 @@ action(type: "session/close", token: <token>, force: true)
 
 `force: true` required — Curator is last session; without it, `session/close` returns `LAST_SESSION` error.
 
-Sequence Diagram:
+## Sequence Diagram
 
 ```text
 Curator         Overseer        Worker(s)       Bridge
@@ -206,11 +210,11 @@ Curator         Overseer        Worker(s)       Bridge
   |--session/close (force:true)-------→              | (last session → bridge exits)
 ```
 
-Error Handling:
+## Error Handling
 Worker can't reach clean point: commit WIP with note ("partial — [reason]"), wipe token, DM Overseer "CLOSED: session/close complete", call `session/close`. Don't block shutdown waiting for impossible clean state.
 `shutdown` returns PENDING_MESSAGES: always retry with `force: true`. Expected when msgs queued; not an error.
 
-Footguns:
+## Footguns
 
 F1 — Worker closes session before reaching clean point
 Worker MUST commit (and seal if all acceptance criteria met) before `session/close`. Uncommitted worktree isn't a clean point.
@@ -232,6 +236,6 @@ F5 — Curator DMs Workers directly, bypassing Overseer
 Curator signals Overseer only (Step 2). Overseer owns Worker fleet; sends individual DMs and tracks confirmations.
 ANTI-PATTERN: Curator sends "please close" DMs to individual Worker SIDs instead of delegating to Overseer.
 
-Related Skills:
+## Related Skills
 `markdown-hygiene` — run after any edit to this file
 `iteration-safety` — pointer block in this file cites this skill

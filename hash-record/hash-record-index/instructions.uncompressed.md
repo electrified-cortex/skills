@@ -9,11 +9,11 @@
 
 Run every step with the named tool. Do not summarize or plan.
 
-0. **Validate input.** If `repo_root` contains `..` or shell metacharacters, output `ERROR: invalid repo_root` and stop.
+1. **Validate input.** If `repo_root` contains `..` or shell metacharacters, output `ERROR: invalid repo_root` and stop.
 
-1. **Verify store exists.** Use the Bash tool: `test -d "<repo_root>/.hash-record"`. If absent, output `CLEAN` and stop — nothing to index.
+2. **Verify store exists.** Use the Bash tool: `test -d "<repo_root>/.hash-record"`. If absent, output `CLEAN` and stop — nothing to index.
 
-2. **Collect hash directories.** Use the Bash tool:
+3. **Collect hash directories.** Use the Bash tool:
 
    ```bash
    find "<repo_root>/.hash-record" -mindepth 2 -maxdepth 2 -type d \
@@ -22,15 +22,15 @@ Run every step with the named tool. Do not summarize or plan.
 
    Each result is a path of the form `<repo_root>/.hash-record/<shard>/<full-hash>`. If none found, output `CLEAN` and stop.
 
-3. **Determine max-age threshold.** Default `--max-age-hours` to 24 if not supplied. Compute the cutoff timestamp: current UTC time minus `<N>` hours.
+4. **Determine max-age threshold.** Default `--max-age-hours` to 24 if not supplied. Compute the cutoff timestamp: current UTC time minus `<N>` hours.
 
-4. **For each hash directory, decide whether to index:**
+5. **For each hash directory, decide whether to index:**
 
    a. Check whether `<hash_dir>/.meta.yaml` exists (Bash `test -f`).
    b. If it exists, read it with the Read tool. Parse the `last_seen` field. If `last_seen` is more recent than the cutoff timestamp, skip this hash directory — it is already up to date.
    c. If `.meta.yaml` is absent or its `last_seen` is at or before the cutoff, proceed to index this hash directory.
 
-5. **Index a hash directory:**
+6. **Index a hash directory:**
 
    a. Find all `.md` leaf files beneath the hash directory (excluding `.meta.yaml`). Use the Bash tool:
 
@@ -59,9 +59,9 @@ Run every step with the named tool. Do not summarize or plan.
 
       Replace `<path-N>` with each sorted, deduplicated `file_path` value. Replace `<ISO-8601-timestamp>` with the computed timestamp.
 
-6. **Count.** Track the number of hash directories for which a new `.meta.yaml` was written.
+7. **Count.** Track the number of hash directories for which a new `.meta.yaml` was written.
 
-7. **Output result:**
+8. **Output result:**
    - If count is 0: output `CLEAN`
    - Otherwise: output `indexed: <count>`
 

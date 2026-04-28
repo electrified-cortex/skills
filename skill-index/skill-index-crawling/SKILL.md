@@ -32,6 +32,7 @@ How the Crawler Works:
 10. Track every visited node on resolution path. Descent would land on visited node → return "reference loop" with ordered visited sequence, stop.
 
 Entry Types:
+
 | Key form | Meaning |
 | --- | --- |
 | `foo` | Leaf skill at `./foo/` |
@@ -52,6 +53,7 @@ Combo entry: descent marker AND target emits `.` self entry in its own `skill.in
 2. Leaf produces no hit → descend into sub-node, re-apply.
 
 Stop Conditions:
+
 | Outcome | Condition |
 | --- | --- |
 | Hit returned | Exactly one hit survives ranking |

@@ -1,4 +1,4 @@
-Grand Chocolate Souffle
+# Grand Chocolate Souffle
 
 Souffle exposes kitchen habits: whipping patience, folding lightness, serving timing. Name from French "to puff" — 19th-century classic. Good souffle = well-built base + carefully whipped whites + steady heat.
 

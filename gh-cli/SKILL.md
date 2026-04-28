@@ -6,6 +6,7 @@ description: GitHub CLI operations — routes to domain-specific sub-skills via 
 Routes GitHub CLI tasks to correct domain sub-skill. Doesn't run `gh` commands itself.
 
 When to Use:
+
 Use when unsure which sub-skill owns task, or want auto-routing. If domain known, dispatch sub-skill directly.
 
 How It Works:
@@ -16,6 +17,7 @@ How It Works:
 5. Task spans multiple domains → handle primary, report remaining to caller.
 
 Domain Routing:
+
 | Domain | Sub-skill | Use for |
 | --- | --- | --- |
 | actions | gh-cli-actions/ | Workflows, runs, secrets, variables, caches |
@@ -28,6 +30,7 @@ Domain Routing:
 | setup | gh-cli-setup/ | Install, authenticate, and configure gh |
 
 PR Sub-skills:
+
 prs domain sub-skills under `gh-cli-prs/`:
 gh-cli-prs-comments/ — add/edit/delete PR comments
 gh-cli-prs-create/ — open new PRs
@@ -35,6 +38,7 @@ gh-cli-prs-merge/ — merge strategies, branch updates, revert
 gh-cli-prs-review/ — approve, request changes, dismiss reviews
 
 Rules:
+
 Verify `gh auth status` before executing if setup skill wasn't loaded.
 Never improvise commands — use only what domain skill documents.
 One domain per invocation. Multiple domains → complete primary first, note remaining.

@@ -118,6 +118,7 @@ rules but retain more natural phrasing.
 
 ### Ranking by Conformance
 
+
 1. **Sonnet** — highest conformance at Ultra (98%) and strong at Full (95%). Best
    structural rule adherence. Minor Lite issue (1 uncontracted negation, 4 articles
    removed).
@@ -152,6 +153,7 @@ Combined score = reduction% × (conformance/100). Higher = better.
 
 ### Key Insight: Context Contamination in Benchmarks
 
+
 Initial Opus tests were run directly by the Curator agent (Claude Opus), which had
 full context about the test procedure, other models' results, and the conformance
 scoring rubric. Those biased results showed Opus at 59.5%/99% Ultra — dramatically
@@ -166,6 +168,7 @@ agents should have NO access to other results, scoring rubrics, or tier rules be
 what's in their compression prompt.
 
 ### Key Insight: Conformance vs Compression Trade-off
+
 
 At Ultra, an inversion appears among smaller models:
 

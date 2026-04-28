@@ -7,7 +7,7 @@
 - v1.2: Fixed audit findings (Haiku pass): defined "operational domain," "index stamp," "stale index"; clarified task description extraction; added R26 (announcement); clarified multi-skill resolution in Behavior; added E6 (mandate-loss recovery); added D3 mandate examples; added D2 single-domain scope note; linked Don'ts to Footguns; noted deliberate omission of platform table.
 - v1.3: Fixed audit findings (Sonnet pass): added definitions for entry key, cascade, sub-node, subtree depth, root skill.index; standardized note/log terminology; resolved E5/E6 scope boundary; aligned R26 and Behavior minimum forms; aligned R2/D1 conditional; added Behavior preamble; simplified C4; added Conformance section; R12 simplified; R25 added escape clause; misc. low/informational fixes.
 - v1.3.1: Fixed remaining findings (final pass): resolved C4 "if needed" contradiction; added E6 reload mechanism criteria; added Integration definition; clarified Behavior/E4 multi-match ordering.
-- v1.4: Added R27–R30 covering the overlay as the primary discovery surface. The raw index is a substring-match lookup; the overlay (`skill.index.md`) is the human-readable trigger map loaded into agent context on every reset. Updated discovery-mandate language to reference situational routing, not just keyword substring matching.
+- v1.4: Added R27-R30 covering the overlay as the primary discovery surface. The raw index is a substring-match lookup; the overlay (`skill.index.md`) is the human-readable trigger map loaded into agent context on every reset. Updated discovery-mandate language to reference situational routing, not just keyword substring matching.
 
 ---
 

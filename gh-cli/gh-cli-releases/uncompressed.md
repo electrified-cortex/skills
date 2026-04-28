@@ -99,3 +99,4 @@ gh release download v1.0.0 --archive zip
 ## Scope Boundaries
 
 This skill covers `gh release` only. It does not manage Git tags directly, generate changelogs automatically from commits, handle release attestations or artifact signing, or configure release automation in CI/CD pipelines.
+

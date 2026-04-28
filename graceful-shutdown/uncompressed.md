@@ -301,3 +301,4 @@ ANTI-PATTERN: Curator sends "please close" DMs to individual Worker SIDs instead
 
 - `markdown-hygiene` — run after any edit to this file
 - `iteration-safety` — pointer block in this file cites this skill
+

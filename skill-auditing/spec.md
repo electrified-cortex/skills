@@ -62,7 +62,7 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
 18. If no companion spec exists and the skill is dispatch or complex
     inline, the auditor **must** FAIL immediately without entering
     Phase 1.
-19. Before entering Phase 1, the auditor **must** dispatch `markdown-hygiene` on each `.md` file in the skill directory. Each call returns one of three states: `CLEAN` (no violations or fully fixed — no path emitted), `findings: <abs-path>` (unresolved violations — record the path), or `ERROR: <reason>` (pre-write failure — flag as sub-dispatch failure). Only `findings:` paths are collected and referenced in the audit record body under a **References** subsection. `CLEAN` files contribute nothing to References. `ERROR` responses are flagged separately.
+19. Before the cache check (Phase 0), the auditor **must** dispatch `markdown-hygiene` on each `.md` file in the skill directory. Each call returns one of three states: `CLEAN` (no violations or fully fixed — no path emitted), `findings: <abs-path>` (unresolved violations — record the path), or `ERROR: <reason>` (pre-write failure — flag as sub-dispatch failure). Only `findings:` paths are collected and referenced in the audit record body under a **References** subsection. `CLEAN` files contribute nothing to References. `ERROR` responses are flagged separately. Phase 0 verdicts feed Phase 3 Check 8; the auditor must not re-dispatch markdown-hygiene during Phase 3.
 20. After all verdict-bearing Phase 3 checks, the auditor **must** perform
     the eval-presence check via the co-located `eval.txt` sub-instructions.
     This requirement specifies that the check exists, not its full procedure.
@@ -153,6 +153,10 @@ On completion, the auditor assigns one of four verdicts (PASS, NEEDS_REVISION, F
 
 The audit executes three phases in order. Failure at any phase stops
 the audit — subsequent phases do not execute.
+
+### Phase 0 — Markdown Hygiene
+
+Before the cache check, the host dispatches `markdown-hygiene --filename claude-haiku` (no `--fix`) on each `.md` file in the skill directory. Each call returns `CLEAN` (no violations — omit from results), `findings: <abs-path>` (collect the path), or `ERROR: <reason>` (flag as sub-dispatch failure). Phase 0 verdicts are collected once and passed to the auditor; Phase 3 Check 8 consumes them directly without re-dispatching.
 
 ### Phase 1 — Spec Gate
 

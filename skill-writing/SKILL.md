@@ -13,7 +13,7 @@ situations or keywords that should fire the skill. Shy descriptions
 undertrigger; pushy descriptions trigger correctly. Trigger phrases
 double as index keywords.
 
-Workflow:
+## Workflow
 
 New skill — follow order. Never skip steps.
 
@@ -36,7 +36,7 @@ NOT done until both audits return PASS. Intermediate gate (step 4): PASS require
 
 Revising: update spec first. Exception: non-normative changes (README, examples, typo fixes) → skip to step 2. Update `uncompressed.md` → hygiene → intermediate audit (`--uncompressed`) → compress → final audit. Never modify SKILL.md directly — compiled artifact.
 
-Decision: Inline or Dispatch?
+## Decision: Inline or Dispatch?
 
 "Could someone with no context do this from just inputs?" Yes → dispatch. No → inline.
 
@@ -44,7 +44,7 @@ Inline = needs caller's context, judgment, creative intent. Inline skills don't 
 Dispatch = mechanical processing against rules. Use Dispatch agent (zero context).
 This skill: decides whether a skill dispatches + how to structure it. Dispatch mechanics (decision tree, model tiers, prompt construction, footguns) → read the `dispatch` skill.
 
-Skill Folder Convention:
+## Skill Folder Convention
 
 ```text
 skill-name/
@@ -56,11 +56,11 @@ skill-name/
 
 `instructions.txt` present = dispatch skill. Absent = inline.
 
-Inline Skill:
+## Inline Skill
 
 SKILL.md IS the full instruction set. Agent reads and applies directly.
 
-Dispatch Skill (Routing Card):
+## Dispatch Skill (Routing Card)
 
 SKILL.md = minimal routing card. `instructions.txt` holds procedure.
 Dispatch via Dispatch agent: "Read and follow `instructions.txt`. Input: `<params>`"
@@ -71,15 +71,15 @@ Don't rely on repo-local fallback filenames — those belong in skill-specific a
 Dispatch instruction file must be in same dir or known path.
 Compressed `instructions.txt`: only instructions — no title headers, no descriptions, no preamble. `instructions.uncompressed.md` MAY include H1 title for markdown-hygiene (MD041); strip after compression. When running markdown-hygiene on `SKILL.md`, pass `--ignore MD041` (no H1 sanctioned per R-FM-3).
 
-Requirements:
+## Requirements
 
-Naming:
+### Naming
 
 Dir name = kebab-case, equal to `name` frontmatter. Mismatch → skill unreachable.
 Nested sub-skills must use fully-qualified names including parent prefix. Example: under `electrified-cortex/skill-index/`, children are `skill-index-auditing/`, `skill-index-building/` — not bare `auditing/`, `building/`. Ref: `electrified-cortex/gh-cli/` (`gh-cli-actions`, `gh-cli-api`). Bare unqualified names don't resolve.
 Never use "SKILL" in any filename except `SKILL.md`.
 
-Content:
+### Content
 
 Frontmatter: `name` + `description`
 Self-contained: no spec dependency at runtime
@@ -91,13 +91,13 @@ No cross-file-path refs to sibling skill internals (R-FM-11): FORBIDDEN: `../oth
 
 Verify with `skill-auditing`. Flags markdown issues.
 
-Footgun Mirroring:
+## Footgun Mirroring
 
 If companion spec has `Footguns` section, mirror it in `uncompressed.md`/`SKILL.md`:
 Preserve all F#: entries, Mitigation: lines, ANTI-PATTERN: examples.
 Canonical ref: `dispatch` skill.
 
-Related:
+## Related
 
 `spec-writing` — write spec first (step 1)
 `markdown-hygiene` — run on uncompressed sources (step 3)

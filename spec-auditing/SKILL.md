@@ -10,7 +10,7 @@ Input: `<target-path> [--spec <spec-path>] [--fix]`"
 
 Don't attempt spec auditing inline. Inline attempts → shallow, inconsistent audits. Dispatched agent runs in isolated context; strict disposition defined in `instructions.txt`.
 
-Parameters:
+Parameters
 `target-path` (required): path to spec or companion file
 `--spec <spec-path>` (optional): explicit spec path (pair-audit mode)
 `--fix` (flag, optional): fix mode — target must be git-tracked and clean; modifies to match spec, up to 3 passes
@@ -18,7 +18,7 @@ Parameters:
 Returns: Pass / Pass with Findings / Fail. Each finding: Finding ID, Severity, Title, Affected file(s), Evidence (with quote), Explanation, Recommended fix.
 One skill per invocation. Chain multiple subjects as separate runs.
 
-Modes:
+Modes
 Audit (default): read-only. Returns Pass / Pass with Findings / Fail.
 Fix (`--fix`): modifies target to match spec. Up to 3 passes with re-audit.
 Spec-only: when explicitly requested for isolated spec review, or target is `spec.md` with no companion. Audits spec quality: Completeness, Enforceability, Structural Integrity, Economy, Terminology, Internal Consistency. Coverage Summary: N/A — spec-only, no companion. When targeting `spec.md` without explicit spec-only request, auto-detects companion (sibling `<name>.md`) → Pair-Audit if found.
@@ -43,4 +43,4 @@ Stops: missing target → STOP; --spec unresolvable → STOP; --fix on untracked
 
 When producing file output: follow the `audit-reporting` skill at `../audit-reporting/SKILL.md`. Apply its path shape (target-kind derived dynamically from the actual target-path using audit-reporting's derivation rules), frontmatter (mapping spec-auditing verdicts to audit-reporting vocabulary: `Pass → PASS`, `Pass with Findings → PASS_WITH_FINDINGS`, `Fail → FAIL`), and .gitignore check. Target-kind is computed from the actual target-path, not assumed to always be `spec`.
 
-Related: `spec-writing` (governs specs), `skill-auditing` (audits skills), `compression` (exemplar dispatch pattern)
+Related `spec-writing` (governs specs), `skill-auditing` (audits skills), `compression` (exemplar dispatch pattern)
