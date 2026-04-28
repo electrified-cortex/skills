@@ -1,7 +1,5 @@
 # Copilot CLI — Uncompressed Reference
 
-Router skill that accepts any GitHub Copilot CLI task and dispatches it to the correct operation sub-skill. This skill does not execute `copilot` commands itself.
-
 ## Purpose
 
 The host agent should never need to know which Copilot CLI flags exist, how to construct a prompt for structured Copilot output, how to parse Copilot's markdown output, which models are available, or the threat-model implications of `--allow-all-tools`. All of that lives inside the dispatched sub-skill.
