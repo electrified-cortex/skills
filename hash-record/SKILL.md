@@ -9,11 +9,10 @@ Consumer skills call into this for storage; hash-record never runs operations of
 ## Path
 
 ```text
-.hash-record/<hash[0:2]>/<full-hash>/<skill>/[v<version>/]<model>/<timestamp>.md
+.hash-record/<hash[0:2]>/<full-hash>/<skill>/[v<version>/]<model>.md
 ```
 
-- 2-char shard, full 40-char hash inside, then skill / optional version / model / timestamp.
-- Timestamp: `YYYY-MM-DDTHH-MM-SS-mmmZ` (ISO 8601 UTC, ms precision).
+- 2-char shard, full 40-char hash inside, then skill / optional version / model.
 - Version segment omitted when skill has no `version` frontmatter.
 
 ## API
@@ -34,8 +33,7 @@ Path is deterministic from input. Probe and Write agree.
 hash: <full git blob hash>
 file_path: <git-relative path>
 operation_kind: <skill name>
-actor: <skill+model+version>
-timestamp: <ISO 8601 UTC, ms>
+model: <model-identifier>
 result: pass | findings | error | skipped
 ---
 ```
@@ -44,7 +42,7 @@ result: pass | findings | error | skipped
 
 ## Don'ts
 
-Don't store outside `.hash-record/`. Don't truncate hash except shard prefix. Don't overwrite — always new timestamp. Don't auto-invoke eager cleanup. Don't perform consumer ops. Don't mutate git state.
+Don't store outside `.hash-record/`. Don't truncate hash except shard prefix. Re-runs overwrite the canonical record at the same path. Don't auto-invoke eager cleanup. Don't perform consumer ops. Don't mutate git state.
 
 ## Transition
 
