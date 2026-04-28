@@ -15,3 +15,5 @@ desktop.ini
 # Log files
 logs/
 *.log
+
+temp/
