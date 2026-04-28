@@ -16,6 +16,10 @@
   (`uncompressed.md`, `instructions.uncompressed.md`) instead of the compiled
   runtime (`SKILL.md`, `instructions.txt`).
 
+## Audit Intent
+
+**Audit intent:** push the skill toward haiku-class executability. Findings that close interpretive slack (vague directives, missing decision trees, implied behavior) take priority. "Haiku failed, escalate to sonnet" is itself a smell — flag it.
+
 ## Procedure
 
 0. **Guard:** If `--filename` was not passed, output `ERROR: --filename required` and stop immediately.
@@ -362,6 +366,73 @@ Any of the following → HIGH:
 
 Content must go in `instructions.uncompressed.md` (executor procedure) or `spec.md` (rationale/behavior).
 
+### Dispatch Skill Checks (DS-1..DS-6)
+
+Applies to dispatch skills only (N/A for inline skills). Run against `uncompressed.md` (the host-facing card).
+
+### (DS-1) Return shape declared
+
+The host card MUST explicitly declare the return shape. Canonical shapes: `PATH: <abs-path-to-artifact>` on success, `ERROR: <reason>` on pre-write failure. A card returning content (multi-line reports, structured findings, inline results) instead of a path — for a skill that produces an artifact — MUST be flagged. Missing return shape declaration → HIGH.
+
+### (DS-2) Host card minimalism
+
+`uncompressed.md` MUST NOT contain any of the following; each present → HIGH:
+
+- Internal cache mechanism descriptions (e.g., "iteration-safe via hash-record", "hash blob check") — caching is implementation detail invisible to the host.
+- Adaptive/conditional rules invisible to the host (e.g., "MD041 auto-suppressed when frontmatter present") — belong in `instructions.uncompressed.md`.
+- Tool-fallback hints (e.g., "use the CLI if available") — belong in instructions where the dispatched agent decides.
+- Subjective qualifiers (e.g., "Sonnet-class equivalent or diminishing returns") — replace with the operative model class in the dispatch line.
+- Prose describing what the skill does or how it works internally — belongs in `spec.md`. The card answers: how to dispatch, what params, what return shape, what modes. Nothing else.
+
+### (DS-3) Description trigger phrases
+
+The frontmatter `description` MUST follow the pattern: `<one-line action>. Triggers — <phrase1>, <phrase2>, ..., <phraseN>.` with 3–6 comma-separated trigger phrases. Violations → LOW:
+
+- Description written as prose without trigger phrases.
+- Description stuffed with implementation notes (e.g., "Dispatch skill", "Iteration-safe via hash-record", "Zero errors gate") — these waste trigger-phrase budget and must be removed.
+
+### (DS-4) Inline dispatch guard
+
+The dispatch instruction MUST follow the canonical cross-platform dispatch pattern:
+
+```text
+Without reading `<instructions-file>` yourself, spawn a zero-context, haiku-class sub-agent in the background:
+
+**Claude Code:** `Agent` tool. Pass: `"Read and follow <instructions-file> here. Input: <args>"`
+
+**VS Code / Copilot:** `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow <instructions-file> in <skill_dir>. Input: <args>")`
+
+Don't read `<instructions-file>` yourself.
+
+Returns: `<return contract>`
+
+NEVER READ OR INTERPRET `<instructions-file>` YOURSELF. Let the sub-agent do the work.
+```
+
+Three reinforcements required:
+
+- **Opening prefix:** `Without reading <instructions-file> yourself, spawn...` — primes the agent before reading the bullets.
+- **Mid-block warning:** `Don't read <instructions-file> yourself.` — repeated after the cross-platform bullets.
+- **Closing reinforcement:** `NEVER READ OR INTERPRET <instructions-file> YOURSELF. Let the sub-agent do the work.` — uppercase at end of body. Empirically, the closing uppercase form makes VS Code Copilot reliably dispatch instead of inlining.
+
+Violations:
+
+- Standalone bold warnings (`**Do not execute this skill inline.**`) separated from the dispatch line → HIGH (fold into pattern, don't keep as banner).
+- Missing the opening "Without reading" prefix → HIGH.
+- Missing the closing uppercase reinforcement → MEDIUM.
+- Cross-platform bullets reduced to a single platform → HIGH (dual Claude Code / VS Code form is the cross-platform contract).
+- VS Code line missing `model: "Claude Haiku 4.5"` literal → HIGH.
+
+### (DS-5) No substrate duplication
+
+Consumer skills that produce records (audit reports, hygiene reports, review reports) MUST NOT inline the hash-record path schema, frontmatter shape, or shard layout from a referenced substrate skill (e.g., `hash-record`). Must reference the substrate by name only. Duplication of path math, frontmatter schema, or shard layout → HIGH.
+
+### (DS-6) No overbuilt sub-skill dispatches for trivial work
+
+A sub-skill folder whose entire procedure fits within 2–3 inline steps in the consumer's instructions is an anti-pattern. Two extra inline steps are cheaper than spawning another agent for those two steps. Flag any sub-skill whose procedure a consuming agent could execute directly in 2–3 steps → LOW (escalate to HIGH if the sub-skill adds no logic beyond a filesystem operation plus a write).
+
+These checks extend Phase 3. Violations recorded in the Phase 3 findings table under a "Dispatch Skill Checks" group. HIGH violations contribute to NEEDS_REVISION or FAIL depending on count; LOW violations contribute to NEEDS_REVISION.
+
 ## Verdict Rules
 
 - **PASS**: All three phases pass.
@@ -492,6 +563,12 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 | No verbatim Rule A/B (A-FM-9b) | PASS/FAIL/N/A | |
 | Cross-reference anti-pattern (A-XR-1) | PASS/FAIL | |
 | Launch-script form (A-FM-10) | PASS/FAIL/N/A | |
+| Return shape declared (DS-1) | PASS/FAIL/N/A | |
+| Host card minimalism (DS-2) | PASS/FAIL/N/A | |
+| Description trigger phrases (DS-3) | PASS/FAIL/N/A | |
+| Inline dispatch guard (DS-4) | PASS/FAIL/N/A | |
+| No substrate duplication (DS-5) | PASS/FAIL/N/A | |
+| No overbuilt sub-skill dispatch (DS-6) | PASS/FAIL/N/A | |
 
 ### Issues
 

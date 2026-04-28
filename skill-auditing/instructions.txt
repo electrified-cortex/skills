@@ -1,3 +1,7 @@
+Audit Intent:
+
+Push skill toward haiku-class executability. Findings closing interpretive slack (vague directives, missing decision trees, implied behavior) take priority. "Haiku failed, escalate to sonnet" is itself a smell — flag it.
+
 Dispatch Parameters:
 
 - `skill_path` (required): Absolute path to SKILL.md audit target
@@ -138,6 +142,55 @@ Deep verify SKILL.md faithfully represents spec.
 17. (A-XR-1) Cross-reference anti-pattern: Scan `SKILL.md`, `instructions.txt`, sub-instructions, `uncompressed.md` for pointer (file path/inline link) to ANOTHER skill's `uncompressed.md` or `spec.md`. Violations: "See uncompressed.md," "See spec.md," "Reference: `<skill>/uncompressed.md`," links ending `.uncompressed.md`/`.spec.md`. NOT violations: skill NAME only (e.g., "see `compression` skill"); subject-matter mentions in skill-auditing's own artifacts (audits these files, must name them). Any cross-file pointer -> HIGH.
 18. (A-FM-10) Launch-script form (dispatch only; N/A inline): Verify `uncompressed.md` ONLY has: frontmatter (`name`, `description`); optional H1; dispatch invocation + input signature; return contract; optional 2-line iteration-safety pointer. Any of: executor steps/phases, modes tables, examples beyond signature, rationale/"why exists," breadcrumbs/Related, behavior/output descriptions, model-class guidance, false-positive guards -> HIGH. Content -> `instructions.uncompressed.md` or `spec.md`.
 
+Dispatch Skill Checks (DS-1..DS-6) — dispatch skills only; N/A for inline. Run against `uncompressed.md`.
+
+19. (DS-1) Return shape declared: Host card MUST explicitly declare return shape. Canonical: `PATH: <abs-path-to-artifact>` on success, `ERROR: <reason>` on pre-write failure. Card returning content (multi-line reports, inline results) instead of path — for artifact-producing skill — MUST be flagged. Missing return shape -> HIGH.
+
+20. (DS-2) Host card minimalism: `uncompressed.md` MUST NOT contain any of (each -> HIGH):
+    - Internal cache mechanism descriptions (e.g., "iteration-safe via hash-record", "hash blob check") — implementation detail invisible to host.
+    - Adaptive/conditional rules invisible to host (e.g., "MD041 auto-suppressed when frontmatter present") — -> `instructions.uncompressed.md`.
+    - Tool-fallback hints (e.g., "use the CLI if available") — -> instructions.
+    - Subjective qualifiers (e.g., "Sonnet-class equivalent or diminishing returns") — replace with operative model class in dispatch line.
+    - Prose describing what skill does or how it works internally — -> `spec.md`. Card answers: how to dispatch, params, return shape, modes. Nothing else.
+
+21. (DS-3) Description trigger phrases: frontmatter `description` MUST follow pattern: `<one-line action>. Triggers — <phrase1>, <phrase2>, ..., <phraseN>.` with 3-6 comma-separated phrases. Violations -> LOW:
+    - Description as prose without trigger phrases.
+    - Description stuffed with implementation notes (e.g., "Dispatch skill", "Iteration-safe via hash-record") — waste trigger-phrase budget, remove.
+
+22. (DS-4) Inline dispatch guard: dispatch instruction MUST follow canonical cross-platform pattern:
+
+    ```text
+    Without reading `<instructions-file>` yourself, spawn a zero-context, haiku-class sub-agent in the background:
+
+    **Claude Code:** `Agent` tool. Pass: `"Read and follow <instructions-file> here. Input: <args>"`
+
+    **VS Code / Copilot:** `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow <instructions-file> in <skill_dir>. Input: <args>")`
+
+    Don't read `<instructions-file>` yourself.
+
+    Returns: `<return contract>`
+
+    NEVER READ OR INTERPRET `<instructions-file>` YOURSELF. Let the sub-agent do the work.
+    ```
+
+    Three reinforcements required:
+    - Opening prefix: `Without reading <instructions-file> yourself, spawn...` — primes agent before bullets.
+    - Mid-block warning: `Don't read <instructions-file> yourself.` — repeated after cross-platform bullets.
+    - Closing reinforcement: `NEVER READ OR INTERPRET <instructions-file> YOURSELF. Let the sub-agent do the work.` — uppercase at end of body. Closing uppercase makes VS Code Copilot reliably dispatch instead of inline.
+
+    Violations:
+    - Standalone bold warnings (`**Do not execute this skill inline.**`) separated from dispatch line -> HIGH (fold into pattern).
+    - Missing opening "Without reading" prefix -> HIGH.
+    - Missing closing uppercase reinforcement -> MEDIUM.
+    - Cross-platform bullets reduced to single platform -> HIGH (dual Claude Code / VS Code is cross-platform contract).
+    - VS Code line missing `model: "Claude Haiku 4.5"` literal -> HIGH.
+
+23. (DS-5) No substrate duplication: Consumer skills producing records MUST NOT inline hash-record path schema, frontmatter shape, or shard layout from referenced substrate skill (e.g., `hash-record`). Reference by name only. Duplication of path math, frontmatter schema, shard layout -> HIGH.
+
+24. (DS-6) No overbuilt sub-skill dispatches: Sub-skill whose entire procedure fits in 2-3 inline steps in consumer's instructions is anti-pattern. Two inline steps cheaper than spawning another agent for those steps. Flag sub-skill a consuming agent could execute directly in 2-3 steps -> LOW (escalate to HIGH if sub-skill adds no logic beyond filesystem operation plus write).
+
+Violations recorded in Phase 3 findings under "Dispatch Skill Checks" group. HIGH -> NEEDS_REVISION or FAIL by count; LOW -> NEEDS_REVISION.
+
 Verdict Rules:
 
 PASS: All three phases pass.
@@ -247,6 +300,12 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 | No verbatim Rule A/B (A-FM-9b) | PASS/FAIL/N/A | |
 | Cross-reference anti-pattern (A-XR-1) | PASS/FAIL | |
 | Launch-script form (A-FM-10) | PASS/FAIL/N/A | |
+| Return shape declared (DS-1) | PASS/FAIL/N/A | |
+| Host card minimalism (DS-2) | PASS/FAIL/N/A | |
+| Description trigger phrases (DS-3) | PASS/FAIL/N/A | |
+| Inline dispatch guard (DS-4) | PASS/FAIL/N/A | |
+| No substrate duplication (DS-5) | PASS/FAIL/N/A | |
+| No overbuilt sub-skill dispatch (DS-6) | PASS/FAIL/N/A | |
 
 ### Issues
 
