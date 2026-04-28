@@ -3,8 +3,6 @@ name: markdown-hygiene
 description: Detect markdownlint violations in a .md file. Detect-only — no fix. Triggers — lint markdown, scan markdown, MD violations, markdownlint pass, detect markdown issues.
 ---
 
-# Markdown Hygiene
-
 `<instructions>`= `instructions.txt` (in this skill folder; NEVER READ THIS FILE)
 `<instructions-abspath>`= the absolute path to `<instructions>`
 `<input-suffix>`= `Input: <markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
