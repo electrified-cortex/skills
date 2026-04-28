@@ -48,4 +48,4 @@ Don't store outside `.hash-record/`. Don't truncate hash except shard prefix. Re
 
 `.sha256` sidecars and `operator-signoff` records both currently valid governance signals during rollout. Either suffices; consumers MUST NOT require both.
 
-Related: `code-review`, `audit-reporting`, `swarm`, `skill-auditing`, `spec-auditing`, `markdown-hygiene`.
+Related: `code-review`, `swarm`, `skill-auditing`, `spec-auditing`, `markdown-hygiene`.

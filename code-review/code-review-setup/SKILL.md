@@ -40,4 +40,8 @@ Every `not-ready` check produces remediation specific enough to act on without f
 
 Don't write files. Don't throw, exit, or refuse output on `not-ready` — return the report; host decides. Don't fail overall on optional checks. Don't include vague remediation. Don't dispatch code-review. Don't chain checks (each is independent).
 
+## Iteration safety
+
+No caching. The check runs end-to-end every invocation. Stale-result risk outweighs re-run cost.
+
 Related: `code-review`, `swarm`.

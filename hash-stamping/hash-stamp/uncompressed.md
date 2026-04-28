@@ -5,8 +5,6 @@ description: Dispatch skill. Writes or updates SHA-256 companion files alongside
 
 # Hash Stamp — Stamp
 
-Dispatch skill. Writes or updates `.sha256` companion files for one or more target files.
-
 ## Invocation
 
 Without reading `instructions.txt` yourself, use a Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory). Input: `<path|glob|--tree <root>> [--force]`"

@@ -5,8 +5,6 @@ description: Preflight readiness check — verify the host environment can run c
 
 # Code Review Setup
 
-Inline sub-skill of `code-review`. Run once per environment before the first code-review invocation. Verifies the runtime can execute code-review and returns actionable remediation when it can't.
-
 ## When to invoke
 
 Before the first code-review claim in a new environment, on a new machine, after a permission allow-list change, or after a fresh checkout/install. Idempotent — safe to re-run.

@@ -1,58 +1,36 @@
-Dispatch Parameters:
-`repo_root` (required): abs path to repo root containing `.hash-record/`.
-`--dry-run` (optional): list orphans without deleting. Default: delete.
-`--limit <N>` (optional): max hash dirs to delete per invocation. Default: unlimited.
+Params:
+`repo_root`: repo root w/ `.hash-record/`.
+`--dry-run`: list orphans; no delete (default: delete).
+`--limit <N>`: max hash dirs deleted/invocation.
 
-Procedure:
-Run each step with named tool. Don't summarize or plan.
+Procedure (each step named tool):
 
-1. Bash: `test -d "<repo_root>/.hash-record"`. Absent → `CLEAN`, stop.
+1. Verify: Bash `test -d "<repo_root>/.hash-record"` → absent = `CLEAN`, stop.
 
-2. Bash:
-```bash
-find "<repo_root>/.hash-record" -mindepth 2 -maxdepth 2 -type d \
-  ! -name '.prune' ! -name '.*'
-```
-Form: `<repo_root>/.hash-record/<shard>/<full-hash>`. Extract `<full-hash>` (basename). None → `CLEAN`, stop.
+2. Collect: Bash `find "<repo_root>/.hash-record" -mindepth 2 -maxdepth 2 -type d ! -name '.prune' ! -name '.*'`
+   Extract basename (full-hash). None = `CLEAN`, stop.
 
-3. Build valid-hash set — prefer manifest:
-Manifest-preferred: per hash dir, check `<repo_root>/.hash-record/<shard>/<full-hash>/manifest.yaml` (Bash `test -f`). Exists → Read tool, extract `file_paths`; per path: Bash `git hash-object "<repo_root>/<file_path>"`. Accumulate into valid-hash set for this dir.
-Full-workspace fallback: once for all dirs lacking manifest. Bash:
-```bash
-cd "<repo_root>" && git ls-files --cached --others --exclude-standard
-```
-Per file: Bash `git hash-object "<repo_root>/<file>"`. Accumulate. Covers all meta-absent dirs.
-`<full-hash>` valid if in effective set (manifest-derived or workspace-derived).
+3. Valid-hash set (prefer manifest):
+   • Manifest: per dir test `<repo_root>/.hash-record/<shard>/<full-hash>/manifest.yaml`; read, extract `file_paths`; `git hash-object` each file; accumulate.
+   • Fallback: once for missing manifests. Bash `cd "<repo_root>" && git ls-files --cached --others --exclude-standard`; `git hash-object` each.
+   Valid: hash in effective set.
 
-4. Orphan: `<full-hash>` not in effective valid-hash set.
+4. Orphan: hash not in valid set.
 
-5. `--dry-run` → skip deletion, output `dry-run: <count>`, stop.
+5. `--dry-run` → output `dry-run: <count>`, stop.
 
-6. Per orphan (up to `--limit`), Bash:
-```bash
-rm -rf "<repo_root>/.hash-record/<shard>/<full-hash>"
-```
-Don't follow symlinks. Don't delete paths resolving outside `<repo_root>/.hash-record/`. Stop at `--limit`; remaining left for next invocation.
+6. Delete orphans (≤ `--limit`): Bash `rm -rf "<repo_root>/.hash-record/<shard>/<full-hash>"`
+   No symlinks; no paths outside `.hash-record/`; stop at limit.
 
-7. Per shard with no remaining subdirs:
-```bash
-rmdir "<repo_root>/.hash-record/<shard>" 2>/dev/null || true
-```
+7. Prune empty shards: `rmdir "<repo_root>/.hash-record/<shard>" 2>/dev/null || true`.
 
-8. Output one line: `CLEAN` / `dry-run: <count>` / `pruned: <count>`.
+8. Output: `CLEAN` | `dry-run: <count>` | `pruned: <count>`.
 
-Output:
-`CLEAN` — no orphans.
-`pruned: <count>` — deleted.
-`dry-run: <count>` — orphans found; nothing deleted.
-`ERROR: <reason>` — pre-execution failure (e.g., `repo_root` not found, path-traversal rejected).
+Exit codes:
+`CLEAN`: no orphans.
+`pruned: <count>`: deleted.
+`dry-run: <count>`: found; not deleted.
+`ERROR: <reason>`: failure (bad `repo_root`, path-traversal rejected).
 
-Rules:
-Never delete hash dir whose hash is in valid-hash set.
-Never delete `.hash-record/` or admin dirs (dot-prefixed).
-Never follow symlinks in `.hash-record/`.
-Never delete paths resolving outside `<repo_root>/.hash-record/`.
-Build full-workspace set once before deletions; in-pass changes don't affect deletion list.
-Never prune by age, model, or operation-kind — orphan status is sole signal.
-Reject `repo_root` with `..` or shell metacharacters.
-Partial deletion (limit reached) is valid; re-run resumes.
+Safety:
+Never delete hash if in valid set. Never delete `.hash-record/` or dot-dirs. No symlinks. No out-of-bounds paths. Build set once; in-pass changes ignored. No age/model/op-kind pruning—orphan status only. Reject `repo_root` w/ `..` or shell chars. Partial deletion OK; re-run resumes.

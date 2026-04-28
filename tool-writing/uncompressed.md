@@ -5,6 +5,7 @@ Conventions for creating, placing, and documenting tool scripts so they are disc
 ## Scope
 
 **In scope:**
+
 - Shell script creation (Bash and PowerShell)
 - Companion spec file requirements
 - Placement conventions (standalone tools/ or inside skill folders)
@@ -12,6 +13,7 @@ Conventions for creating, placing, and documenting tool scripts so they are disc
 - Error handling patterns
 
 **Out of scope:**
+
 - Skill creation (see skill-writing)
 - Agent file creation (see agent-builder)
 - TypeScript/Node.js tool development

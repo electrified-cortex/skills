@@ -5,7 +5,7 @@ description: >-
   Lightweight — fast-cheap model can run it.
 ---
 
-Verify tool scripts follow conventions. Inline — run checklist against each script directly.
+Verify tool scripts follow conventions. Run checklist against each script directly.
 
 ## Checklist (per script)
 

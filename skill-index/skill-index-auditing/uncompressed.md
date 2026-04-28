@@ -5,7 +5,7 @@ description: Validator for a skill-index cascade. Returns ok, rebuild-needed, or
 
 # Skill Index Auditing
 
-Dispatch skill. Validator for a skill-index cascade. Returns `ok`, `rebuild-needed`, or `inconclusive`. On a PASS verdict, writes `skill.index.sha256` alongside each validated raw index as a sign-off artifact. Never invokes the builder.
+Dispatch skill.
 
 ## Purpose
 

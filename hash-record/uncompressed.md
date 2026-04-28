@@ -78,7 +78,7 @@ When input is a directory (not a single file), compute an aggregate cache key:
 3. Sort pairs lexically by filename. Write one `<filename> <hash>` line per pair.
 4. Pipe that manifest text through `git hash-object --stdin`. Result = manifest hash; use as the hash-record key.
 
-Manifest hash is stable, dependency-free, and invalidates on any source change. Not a sub-skill — inline procedure only.
+Manifest hash is stable, dependency-free, and invalidates on any source change.
 
 ## Don'ts
 
@@ -102,4 +102,4 @@ While hash-record rolls out, existing `.sha256` sidecar gates remain in place. B
 
 `.hash-record/` may be committed (public trust ledger) or gitignored (local cache). Per-repo decision. Hash-record functions identically in either mode.
 
-Related: `code-review`, `audit-reporting`, `swarm`, `skill-auditing`, `spec-auditing`, `markdown-hygiene` (all consumers).
+Related: `code-review`, `swarm`, `skill-auditing`, `spec-auditing`, `markdown-hygiene` (all consumers).

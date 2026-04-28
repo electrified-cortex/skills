@@ -17,7 +17,7 @@ Multi-personality review and analysis infrastructure skill. Given any artifact, 
 - **Dispatch skill**: `electrified-cortex/dispatch` — authoritative agent-launching mechanism. Swarm delegates all sub-agent launches here; never reinvent the launch primitive.
 - **Disagree set**: subset of swarm findings where two or more personalities reached contradictory conclusions on the same point.
 - **Confidence rating**: High / Medium / Low scalar attached to synthesis output. Reflects reviewer agreement, evidence quality, and scope coverage.
-- **Model class**: abstract tier identifier — `haiku-class` (shallow/mechanical), `sonnet-class` (moderate reasoning, default), `opus-class` (heavy architectural reasoning), `gpt-class` (non-Anthropic frontier models, e.g. via copilot-cli for vendor diversity). No bare model names anywhere.
+- **Model class**: abstract tier identifier — `haiku-class` (shallow/mechanical), `sonnet-class` (moderate reasoning, default), `opus-class` (heavy architectural reasoning). No bare model names anywhere.
 - **Caller override**: caller-supplied `model_overrides` map pinning one or more personalities to a specific model class for the current invocation.
 - **High-severity point**: finding that would block shipping or require architectural change. Used in confidence rating determination.
 - **Availability probe**: lightweight shell command (e.g., `copilot --version`) or tool call confirming backend is live before including the personality.

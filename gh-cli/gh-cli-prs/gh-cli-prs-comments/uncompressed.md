@@ -1,3 +1,8 @@
+---
+name: gh-cli-prs-comments
+description: Add, edit, delete pull request comments via GitHub CLI.
+---
+
 # GH CLI PR Comments
 
 Add, edit, and delete general comments on pull requests using `gh pr comment`.

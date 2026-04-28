@@ -53,6 +53,7 @@ Stdout return (one line):
 
 ## Constraints
 
+- `repo_root` MUST NOT contain `..` or shell metacharacters. The skill MUST reject such values before any filesystem operation.
 - The skill MUST NOT delete any record under a hash that is currently in the valid-hash set, even if the record is for an unused operation-kind, model, or version.
 - The skill MUST NOT delete the `.hash-record/` directory itself or any non-hash-keyed administrative directory.
 - The skill MUST scope deletions to descendants of `<repo_root>/.hash-record/`. Paths that resolve outside this tree (via symlink or otherwise) MUST be rejected.

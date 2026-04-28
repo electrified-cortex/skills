@@ -11,7 +11,7 @@ Adaptive MD041: first non-blank `---` (YAML) → auto-suppress MD041; no flag ne
 
 Modes:
 Detect (default, no `--fix`): read-only, no git check; always runs; one detect record.
-Fix (with `--fix`): `git status --porcelain -- <file>` → proceed if empty or `M ` (M+space); else `ERROR: target_dirty: stage, re-run; cached detect carries forward`, stop. Writes second record at post-fix hash.
+Fix (with `--fix`): `git status --porcelain -- <file>` → proceed with fix if empty or `M ` (M+space). Otherwise auto-degrade to detect-only — emit the detect record with findings, output `findings: <abs-path-to-record.md>`, and add a `note: untracked or dirty — fix skipped` line to the record body. NEVER hard-error on untracked; the report is always useful.
 Source→Target: `--source X --target Y` reads X, fixes, writes Y; X untouched; implies `--fix`.
 
 Procedure:

@@ -1,10 +1,11 @@
 ---
 name: skill-auditing
-version: 1.0
 description: Audit skill for quality, classification, cost, compliance with skill-writing spec. Triggers — audit this skill, check skill quality, review skill compliance, validate skill structure, skill needs review.
 ---
 
-Spawn a zero-context, haiku-class sub-agent in the background:
+Using the `../markdown-hygiene` skill, collect all the markdown issues for all the files in the target skill folder. The hygiene records land in `.hash-record/` keyed by each file's content hash; the auditor reads those cached records directly — it does NOT dispatch markdown-hygiene.
+
+Then spawn a zero-context, haiku-class sub-agent in the background:
 
 **Claude Code:** `Agent` tool. Pass: `"Read and follow instructions.txt here. Input: skill_path=<path> --filename claude-haiku [--fix] [--uncompressed]"`
 

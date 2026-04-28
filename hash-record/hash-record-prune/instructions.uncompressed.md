@@ -66,14 +66,4 @@ One line only:
 - `dry-run: <count>` — orphans found; nothing deleted.
 - `ERROR: <reason>` — pre-execution failure (e.g., `repo_root` not found, path-traversal rejected).
 
-## Rules
-
-- Never delete a hash directory whose hash appears in the valid-hash set.
-- Never delete `.hash-record/` itself or any administrative directory (any dot-prefixed dir).
-- Never follow symlinks when walking `.hash-record/`.
-- Never delete paths that resolve outside `<repo_root>/.hash-record/`.
-- Build the full-workspace valid-hash set once before any deletion begins. Changes during the pass do not affect this invocation's deletion list.
-- Never prune based on age, model, or operation-kind. Orphan status (hash not in valid-hash set) is the only signal.
-- Reject `repo_root` values containing `..` or shell metacharacters.
-- Partial deletion (some orphans removed, limit reached) is a valid intermediate state. Re-running resumes correctly.
 

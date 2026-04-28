@@ -16,7 +16,7 @@ Detect and optionally fix markdownlint violations. Zero errors after the fix pas
 
 **Detect (default, no `--fix`):** Read-only. No git-state check. Always runs regardless of whether the file is tracked, untracked, staged, or dirty. Produces one detect record.
 
-**Fix (with `--fix`):** Requires the target file to be tracked + clean (or staged + working-tree-clean). Run `git status --porcelain -- <file>` — proceed only if output is empty or the first character is `M` and the second is a space. Otherwise output `ERROR: target_dirty: stage your changes and re-run with --fix; the cached detect record will carry forward (no rescan)` and stop. The Fix pass writes a second record at the post-fix hash.
+**Fix (with `--fix`):** Run `git status --porcelain -- <file>`. If the output is empty or the first character is `M` and the second is a space, proceed with the fix pass (writes a second record at the post-fix hash). Otherwise — file is untracked or dirty — auto-degrade to detect-only: emit the detect record with findings, output `findings: <abs-path-to-record.md>`, and add a `note: untracked or dirty — fix skipped` line to the record body. NEVER hard-error on untracked; the report is always useful even when fix isn't applicable.
 
 **Source→Target:** `--source X --target Y` reads X, applies fixes, writes the clean version to Y. Source untouched. No git-state check. Implies `--fix`.
 

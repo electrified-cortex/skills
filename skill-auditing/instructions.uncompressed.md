@@ -16,19 +16,6 @@
   (`uncompressed.md`, `instructions.uncompressed.md`) instead of the compiled
   runtime (`SKILL.md`, `instructions.txt`).
 
-## Phase 0 — Markdown Hygiene
-
-Dispatch `markdown-hygiene --filename claude-haiku` on each `.md` file in the skill directory. Phase 0 inherits the `--fix` flag from skill-auditing's invocation:
-- Called with `--fix`: dispatch `markdown-hygiene --filename claude-haiku --fix` per `.md`. Hygiene applied upfront; audit proceeds against clean files.
-- Called without `--fix`: dispatch `markdown-hygiene --filename claude-haiku` (detect-only) per `.md`. Findings flow into the audit report's "Markdown hygiene" summary.
-
-Collect per-file verdicts either way:
-- `CLEAN` — no violations; omit from results.
-- `findings: <abs-path>` — collect the path.
-- `ERROR: <reason>` — flag as sub-dispatch failure.
-
-Phase 0 runs before the cache check so results are available for Phase 3 Check 8. The auditor does not re-dispatch markdown-hygiene during Phase 3 — it uses Phase 0 verdicts.
-
 ## Procedure
 
 0. **Guard:** If `--filename` was not passed, output `ERROR: --filename required` and stop immediately.
@@ -37,12 +24,14 @@ Phase 0 runs before the cache check so results are available for Phase 3 Check 8
 3. **Run** `git hash-object <file>` on each source file. Collect `(filename, blob-hash)` pairs.
 4. **Build manifest:** sort pairs lexically by filename. Write one `<filename> <hash>` line per pair to a temp string. Run `git hash-object --stdin` on that text. Save the 40-char result as `<manifest_hash>`.
 4a. **Resolve repo root** from `skill_path` (use the Bash tool):
+
     ```bash
     target_dir=$(dirname "<skill_path>")
     repo_root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null)
     # Fallback: no .git/ found → place .hash-record/ adjacent to the skill directory
     [ -z "$repo_root" ] && repo_root="$target_dir"
     ```
+
     Save `<repo_root>` for all subsequent cache path construction.
 5. **Cache check:** `test -f <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/<filename>.md` (use the Bash tool). `<filename>` is the value from `--filename`, used verbatim — no skill-name prefix, no timestamp, no extra qualifiers. If the file exists (cache HIT): output `PATH: <abs-path-to-that-file>` and stop — do not re-run the audit. If the file does not exist (cache MISS): save `<repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/` as `<audit_cache_dir>` and continue.
 
@@ -55,8 +44,8 @@ Phase 0 runs before the cache check so results are available for Phase 3 Check 8
    Incorrect: .hash-record/<sh>/<hash>/skill-auditing/skill-auditing-sonnet-claude-sonnet.md
    Incorrect: .hash-record/<sh>/<hash>/skill-auditing/claude-sonnet-2026-04-27T19-17-52Z.md
    ```
-6. **Hygiene results available** from Phase 0 (pre-collected). These feed Phase 3 Check 8. No re-dispatch here.
-7. **Read the skill** at `skill_path`. Determine type: inline or dispatch. Locate companion spec — check `spec_path` if provided, otherwise `spec.md` co-located with `skill_path`. If not found: simple inline skills (<30 lines) may skip Phase 1; dispatch or complex inline → record an error verdict, write the record, output `PATH:`, and stop.
+
+6. **Read the skill** at `skill_path`. Determine type: inline or dispatch. Locate companion spec — check `spec_path` if provided, otherwise `spec.md` co-located with `skill_path`. If not found: simple inline skills (<30 lines) may skip Phase 1; dispatch or complex inline → record an error verdict, write the record, output `PATH:`, and stop.
 8. **Run Phase 1 → Phase 2 → Phase 3** (stop on first failure). Assign verdict. Map to `result` field: PASS → `pass`; PASS_WITH_FINDINGS / NEEDS_REVISION / FAIL → `findings`; error → `error`.
 9. **Scrub absolute paths from record body.** Before writing, scan the rendered body for any absolute filesystem path (Windows drive-letter prefix `<letter>:\...` or `<letter>:/...`, or Unix root-anchored paths under `/Users/`, `/home/`, `/d/`, etc.). For each hit, replace it with its repo-relative form — the same relative path used in `file_paths:` frontmatter (e.g., body should read `skill-auditing`, never the full absolute form). The body MUST NOT contain absolute paths.
 10. **Write audit record** at `<audit_cache_dir><filename>.md` — filename is the `--filename` value verbatim (e.g. `claude-sonnet.md`), no skill-name prefix, no timestamp, no extra qualifiers. `mkdir -p <audit_cache_dir>` first. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list of repo-relative paths>` (one entry per source file from step 3, sorted lexically; each path is relative to `<repo-root>` resolved from `skill_path` — compute via `git ls-files --full-name <file>` or strip `<repo-root>/` from each absolute path), `operation_kind: skill-auditing` (verbatim from `--filename`), `result: <mapped value>`.
@@ -80,7 +69,7 @@ Phase 0 runs before the cache check so results are available for Phase 3 Check 8
    file_path: skill-auditing/SKILL.md
    ```
 
-   Body: open with `# Result` H1, state verdict, list findings (with phase and check references), then a **References** subsection listing only the `findings:` paths collected in step 6 (files that returned `CLEAN` are omitted; `ERROR` responses are noted separately as sub-dispatch failures).
+   Body: open with `# Result` H1, state verdict, list findings (with phase and check references).
 11. **Output** `PATH: <audit_cache_dir><filename>.md` and stop.
 12. If `--fix` is active **and** the verdict is exactly NEEDS_REVISION, enter the Fix Mode procedure below. PASS → nothing to fix; FAIL → fix mode is skipped and defects are reported for author action. Fix mode is single-pass; the auditor does not re-audit or recompress.
 
@@ -185,10 +174,8 @@ mismatch in either → FAIL.
 `instructions.uncompressed.md` (if present) MUST contain an H1.
 `instructions.txt` (if present) MUST NOT contain an H1. Violation in
 `SKILL.md` or `instructions.txt` → HIGH. Missing H1 in `uncompressed.md`
-or `instructions.uncompressed.md` → flagged by markdown-hygiene (Phase 3
-check 8).
-
-When running markdown-hygiene on `SKILL.md`, pass `--ignore MD041` — SKILL.md intentionally has no H1 per R-FM-3.
+or `instructions.uncompressed.md` → FAIL. MD041 findings on `SKILL.md` are
+expected and not a violation (R-FM-3 sanctioned no-H1).
 
 ### 5. No duplication
 
@@ -261,22 +248,14 @@ Uses Dispatch agent (zero-context isolation). Instruction file right-sized
 (<500 lines). Sub-skills referenced by pointer, not inlined. Single dispatch
 turn when possible.
 
-### 8. Markdown hygiene
-
-Use Phase 0 verdicts (pre-collected before cache check):
-
-- All files `CLEAN` → check PASSES; no References entries.
-- Any `findings: <abs-path>` → add path to References; mark check FINDINGS.
-- Any `ERROR: <reason>` → flag sub-dispatch failure; treat as check failure for that file.
-
-### 9. No dispatch references in instructions
+### 8. No dispatch references in instructions
 
 `instructions.txt` must not tell the agent to dispatch other skills.
 Subagents can't dispatch — only the host agent can. References to other
 skills as "Related" context are OK. "Run this skill" or "dispatch this" →
 FAIL. Remediation: move dispatch steps to SKILL.md.
 
-### 10. No spec breadcrumbs in runtime
+### 9. No spec breadcrumbs in runtime
 
 SKILL.md and `instructions.txt` must not reference the skill's own
 companion `spec.md` — not as a pointer, breadcrumb, or "see spec.md"
@@ -287,59 +266,51 @@ may reference the `spec.md` under audit — never their own companion
 spec. Remediation: delete the reference; if the information is genuinely
 needed at runtime, inline it.
 
-### 11. (A-FM-2) Description not restated
+### 10. (A-FM-2) Description not restated
 
 Search every artifact (`uncompressed.md`, `SKILL.md`,
 `instructions.uncompressed.md`, `instructions.txt`) for body prose that
 duplicates the `description` frontmatter value. Any restatement → LOW
 (escalate to HIGH if verbatim duplication).
 
-### 12. (A-FM-4) Lint wins
-
-Run `markdown-hygiene` with `--ignore MD041` on `SKILL.md` (covered by check 8;
-R-FM-3 sanctioned no-H1 exception). Expect `CLEAN` | `findings: <abs>` |
-`ERROR: <reason>`. `CLEAN` → PASS. `findings:` → record path under References
-and flag FINDINGS. `ERROR:` → flag as sub-dispatch failure. Confirm no other
-violations are suppressed or dismissed. Any other suppressed violation → HIGH.
-
-### 13. (A-FM-5) No exposition in runtime artifacts
+### 11. (A-FM-5) No exposition in runtime artifacts
 
 Scan `SKILL.md`, `uncompressed.md`, `instructions.uncompressed.md`, and
 `instructions.txt` for rationale, "why this exists," root-cause narrative,
 historical notes, or background prose. Any found → HIGH. Rationale belongs
 exclusively in `spec.md`.
 
-### 14. (A-FM-6) No non-helpful tags
+### 12. (A-FM-6) No non-helpful tags
 
 Check all artifacts for descriptor lines that carry no operational value
 (e.g., "inline apply directly no dispatch," "dispatch skill," bare type
 labels not used as actionable instructions). Any found → LOW.
 
-### 15. (A-FM-7) No empty sections
+### 13. (A-FM-7) No empty sections
 
 Verify every heading in every artifact has body content before the next
 heading or end of file. An empty section → HIGH.
 
-### 16. (A-FM-8) Iteration-safety placement
+### 14. (A-FM-8) Iteration-safety placement
 
 Verify the Iteration Safety blurb is absent from
 `instructions.uncompressed.md` and `instructions.txt`. Presence in
 either → HIGH. Additionally, if the guard appears in both `SKILL.md` and
 `instructions.*`, flag as probable duplication → HIGH.
 
-### 17. (A-FM-9a) Iteration-safety pointer form
+### 15. (A-FM-9a) Iteration-safety pointer form
 
 If a caller skill references iteration-safety, verify it uses the exact
 2-line pointer block form (`Do not re-audit unchanged files.` + `See
 \`<path>/iteration-safety/SKILL.md\`.`) and that the relative path
 matches the caller's actual folder depth. Any deviation → HIGH.
 
-### 18. (A-FM-9b) No verbatim Rule A/B restatement
+### 16. (A-FM-9b) No verbatim Rule A/B restatement
 
 Scan all artifacts for verbatim restatement of iteration-safety Rules A
 or B beyond the sanctioned 2-line pointer block. Any found → HIGH.
 
-### 19. (A-XR-1) Cross-reference anti-pattern
+### 17. (A-XR-1) Cross-reference anti-pattern
 
 Scan `SKILL.md`, `instructions.txt`, any sub-instructions (e.g. `eval.txt`),
 and `uncompressed.md` for any pointer — by file path or inline link — to
@@ -358,7 +329,7 @@ NOT violations:
 
 Any cross-file path pointer → HIGH.
 
-### 20. (A-FM-10) Launch-script form on dispatch skills
+### 18. (A-FM-10) Launch-script form on dispatch skills
 
 Applies to dispatch skills only (N/A for inline skills).
 
@@ -422,9 +393,6 @@ preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
       additions.
    2. Non-critical Phase 3 issues: conciseness, breadcrumbs, cost analysis,
       dispatch refs, spec breadcrumbs.
-   3. Hygiene fixes scoped to the writable candidates only. Hygiene defects
-      in `spec.md`, `README.md`, or compiled artifacts are surfaced as
-      findings, not auto-fixed.
 7. **Never auto-fix:** Phase 1 (spec) defects, defects whose root cause is in
    `spec.md` or `README.md` or a compiled artifact, defects requiring author
    judgment. Surface them as findings.
@@ -505,11 +473,9 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 | Completeness | PASS/FAIL | |
 | Breadcrumbs | PASS/FAIL | |
 | Cost analysis | PASS/FAIL/N/A | |
-| Markdown hygiene | PASS/FAIL | |
 | No dispatch refs | PASS/FAIL/N/A | |
 | No spec breadcrumbs | PASS/FAIL | |
 | Description not restated (A-FM-2) | PASS/FAIL | |
-| Lint wins (A-FM-4) | PASS/FAIL | |
 | No exposition in runtime (A-FM-5) | PASS/FAIL | |
 | No non-helpful tags (A-FM-6) | PASS/FAIL | |
 | No empty sections (A-FM-7) | PASS/FAIL | |
@@ -527,10 +493,6 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 
 <one line>
 
-### References
-
-- <findings: path from markdown-hygiene — only for files with unresolved violations; CLEAN files omitted>
-- <ERROR entries noted here if any sub-dispatch failed>
 ```
 
 ## Rules
