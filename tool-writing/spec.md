@@ -1,6 +1,6 @@
 # Tool Writing — Spec
 
-How to write tool scripts in the cortex.lan workspace.
+How to write tool scripts in the workspace.
 
 ## Purpose
 

@@ -4,7 +4,7 @@ Ready-to-paste discovery mandate blocks for agent startup-context.md or CLAUDE.m
 
 ---
 
-## Version 1 — Concise (4 lines)
+## Version 1 — Concise (4 lines
 
 Use for agents where every token counts (e.g., Worker, Sentinel). Minimal but fully conformant with R5–R9 and R27–R28.
 
@@ -19,12 +19,12 @@ Before responding to any task, match the operator's words or your current situat
 
 **Substitution guide:**
 
-- `<path-to-skill.index>`: absolute or working-directory-relative path to the agent's scoped `skill.index` file. Example: `D:/agents/worker/skill.index`
-- `<path-to-skill.index.md>`: same directory, `.md` extension. Example: `D:/agents/worker/skill.index.md`
+- `<path-to-skill.index>`: absolute or working-directory-relative path to the agent's scoped `skill.index` file. Example: `agents/worker/skill.index`
+- `<path-to-skill.index.md>`: same directory, `.md` extension. Example: `agents/worker/skill.index.md`
 
 ---
 
-## Version 2 — Expanded (8 lines)
+## Version 2 — Expanded (8 lines
 
 Use for agents that coordinate other agents or handle ambiguous operator input (e.g., Curator, Overseer, Deputy). Includes examples of what "matching your situation" means, reducing false negatives after context resets.
 
@@ -61,7 +61,7 @@ Matching examples:
 
 ---
 
-## Anti-patterns (do not use)
+## Anti-patterns (do not use
 
 The following forms are non-conformant and must not appear in the mandate:
 

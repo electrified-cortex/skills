@@ -1,6 +1,6 @@
 # Proposed Update: skill-index-building SKILL.md
 
-**Source file:** `D:\Users\essence\Development\cortex.lan\.agents\skills\electrified-cortex\skill-index\skill-index-building\SKILL.md`
+**Source file:** `skill-index/skill-index-building/SKILL.md` (relative to electrified-cortex root)
 
 **Change summary:**
 

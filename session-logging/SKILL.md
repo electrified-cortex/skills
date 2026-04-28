@@ -1,6 +1,6 @@
 ---
 name: session-logging
-description: Standards for creating session log entries in logs/session/ and logs/telegram/. Use when writing any log entry or summary during a cortex.lan session.
+description: Standards for creating session log entries in logs/session/ and logs/telegram/. Use when writing any log entry or summary during a workspace session.
 ---
 
 Log every interaction, decision, discovery, and outcome. If it's not written down, it didn't happen.

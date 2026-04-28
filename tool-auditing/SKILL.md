@@ -11,7 +11,7 @@ Verify tool scripts follow conventions. Inline — run checklist against each sc
 
 1. Companion spec (`<name>.spec.md`) in same dir — FAIL if missing.
 2. Parameter/usage block at top of script — WARN if missing.
-3. No hardcoded absolute paths (e.g., `D:\...`, `/home/...`) — FAIL if found.
+3. No hardcoded absolute paths (Windows drive-letter prefixes or unix `/home/...`, `/Users/...` roots) — FAIL if found.
 4. Error handling: Bash `set -e` (or equivalent); PowerShell `$ErrorActionPreference` — WARN if missing.
 5. Self-documenting: parameter descriptions or leading comments — WARN if sparse (fewer than one comment per logical block).
 6. No interactive input (`Read-Host`, `read -p`, `Get-Credential`) — FAIL if found.

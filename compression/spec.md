@@ -189,8 +189,9 @@ The compression skill is invoked by:
    the audit → compress → re-audit cycle.
 3. **File audit skill** (`auditing/file-audit/`) — dispatches compression
    via this skill when a target needs to be reduced.
-4. **Copilot caveman-compress** (`cortex.lan/.github/skills/caveman-compress/`) —
-   Copilot-specific wrapper that references this as the canonical source.
+4. **Copilot caveman-compress** (`.github/skills/caveman-compress/` in the
+   workspace) — Copilot-specific wrapper that references this as the
+   canonical source.
 
 ## Example — Before and After
 

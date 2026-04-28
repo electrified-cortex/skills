@@ -1,6 +1,6 @@
 # Curator Index Reference Implementation
 
-**Source file:** `D:\Users\essence\Development\cortex.lan\.agents\agents\curator\skill.index.md`
+**Source file:** `agents/curator/skill.index.md` (relative to the consuming agent's workspace root)
 
 **What changed from the current file:**
 
