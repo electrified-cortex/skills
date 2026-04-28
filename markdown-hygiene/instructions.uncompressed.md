@@ -1,6 +1,9 @@
 # Markdown Hygiene
 
-Detect markdownlint violations in a `.md` file. Produce a report with imperative `Fix:` instructions if there are findings. Detect-only — never modifies the target.
+The following instructs you how to detect markdownlint violations in a `.md` file.
+Produce a report with imperative `Fix:` instructions if there are findings. Detect-only — never modifies the target.
+
+DON'T READ the target file until instructed.
 
 ## Inputs
 
@@ -12,7 +15,7 @@ Input shape: `<markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
 
 The host MAY have run a markdown linter with auto-fix before dispatching, applying mechanical fixes upstream. This skill does NOT depend on that — it always verifies the file as it stands NOW. If the host pre-fixed cleanly, this skill returns `CLEAN`. If anything remains, this skill records it.
 
-Record filename is fixed: `report.md`.
+Hash record filename is fixed: `report.md`.
 
 ## Procedure
 

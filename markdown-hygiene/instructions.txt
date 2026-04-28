@@ -1,4 +1,7 @@
-Detect markdownlint violations in a `.md` file. Produce a report with imperative `Fix:` instructions if there are findings. Detect-only — never modifies the target.
+The following instructs you how to detect markdownlint violations in a `.md` file.
+Produce a report with imperative `Fix:` instructions if there are findings. Detect-only — never modifies the target.
+
+DON'T READ the target file until instructed.
 
 ## Inputs
 
