@@ -33,17 +33,26 @@
     ```
 
     Save `<repo_root>` for all subsequent cache path construction.
-5. **Cache check:** `test -f <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/<filename>.md` (use the Bash tool). `<filename>` is the value from `--filename`, used verbatim — no skill-name prefix, no timestamp, no extra qualifiers. If the file exists (cache HIT): output `PATH: <abs-path-to-that-file>` and stop — do not re-run the audit. If the file does not exist (cache MISS): save `<repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/` as `<audit_cache_dir>` and continue.
+5a. **Compute the cache filename.** The leaf is `<filename>.md` where `<filename>` is the value from `--filename`, used VERBATIM. Lowercase-hyphenated, vendor-class only (e.g. `claude-haiku`, `claude-sonnet`, `claude-opus`). Do NOT include: caller skill name, timestamp/date, sub-version qualifiers. See `../hash-record/filenames.md` for canonical values.
+
+5b. **Compute the cache path.** Path shape:
+
+   ```text
+   <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/<filename>.md
+   ```
 
    The `v1.0` segment is mandatory for skill-auditing records. The version is declared in `spec.md` and MUST match the version embedded in this instructions file. If they ever drift, that's a defect — surface and stop.
-
-   **Filename format:** `<filename>.md` ONLY. The `<filename>` is the value passed via `--filename` — used VERBATIM, no inference. Lowercase-hyphenated, vendor-class only (e.g. `claude-haiku`, `claude-sonnet`, `claude-opus`). **Do NOT include**: caller skill name, timestamp/date, sub-version qualifiers. See `../hash-record/filenames.md` for canonical values.
 
    ```text
    Correct:   .hash-record/<sh>/<hash>/skill-auditing/v1.0/claude-sonnet.md
    Incorrect: .hash-record/<sh>/<hash>/skill-auditing/skill-auditing-sonnet-claude-sonnet.md
    Incorrect: .hash-record/<sh>/<hash>/skill-auditing/claude-sonnet-2026-04-27T19-17-52Z.md
    ```
+
+5c. **Probe the cache.** Run `test -f <path-from-5b>` (use the Bash tool).
+
+   - **HIT** (file exists): output `PATH: <abs-path-to-that-file>` and stop. Do not re-run the audit.
+   - **MISS** (file does not exist): save `<repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/` as `<audit_cache_dir>` and continue.
 
 6. **Read the skill** at `skill_path`. Determine type: inline or dispatch. Locate companion spec — check `spec_path` if provided, otherwise `spec.md` co-located with `skill_path`. If not found: simple inline skills (<30 lines) may skip Phase 1; dispatch or complex inline → record an error verdict, write the record, output `PATH:`, and stop.
 8. **Run Phase 1 → Phase 2 → Phase 3** (stop on first failure). Assign verdict. Map to `result` field: PASS → `pass`; PASS_WITH_FINDINGS / NEEDS_REVISION / FAIL → `findings`; error → `error`.
