@@ -12,3 +12,4 @@ VS Code / Copilot: `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and fol
 Returns: `PATH: <abs-path-to-record.md>` on success, `ERROR: <reason>` on pre-write failure.
 
 NEVER READ/INTERPRET `instructions.txt` YOURSELF. Let the sub-agent handle.
+

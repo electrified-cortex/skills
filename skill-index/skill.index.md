@@ -1,23 +1,21 @@
-# Skill Index
-
-A cascading per-directory index system for agent skill discovery.
+# skill-index - skill index
 
 ## skill-index
 
-Root entry for the skill-index toolkit — lets agents find skills by reading compact index nodes.
+Supports Root skill for the skill-index toolkit Governs sub-skills that let agents discover available skills by readin.
 
 ## skill-index-auditing
 
-Validates a skill-index cascade; returns ok, rebuild-needed, or inconclusive.
+Supports Validator for a skill-index cascade Returns ok, rebuild-needed, or inconclusive On PASS, writes skillindex.
 
 ## skill-index-building
 
-Builds or rebuilds the raw index and overlay at each directory in a skill tree.
+Supports Dispatch skill Creates or updates skillindex and skillindexmd at every indexed directory in a skill tree.
 
 ## skill-index-crawling
 
-Reads an existing cascade to locate the skill matching a stated need.
+Supports Reads an existing skill-index cascade to locate the skill matching an agent's stated need — read-only, no file.
 
 ## skill-index-integration
 
-Wires the skill-index cascade into an agent — sets the index pointer, writes the discovery mandate, and enforces demand loading.
+Supports Wire a skill-index cascade into an agent's context: place the index pointer, write the discovery mandate, enfo.

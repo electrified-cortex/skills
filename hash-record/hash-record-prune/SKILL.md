@@ -5,8 +5,6 @@ description: Remove orphaned hash directories from a repository's .hash-record/ 
 
 Dispatch isolated agent (Dispatch agent, zero context): "Read and follow `instructions.txt` (in this directory). Input: `repo_root=<absolute-path> [--dry-run] [--limit <N>]`"
 
-
-
 - `repo_root` (string, required): absolute path to repo root containing `.hash-record/` dir.
 - `--dry-run` (flag, optional): list orphaned hash dirs without deleting. Default: delete.
 - `--limit <N>` (integer, optional): cap hash dirs deleted per invocation. Default: unlimited.

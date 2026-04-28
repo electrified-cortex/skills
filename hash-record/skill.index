@@ -1,0 +1,4 @@
+﻿.: Content-hash-keyed durable record store. Probe / Read / Write / Invalidate API. Replaces .audit-reports/ and, hash record, hash record skill, hash record workflow
+hash-record-index: Build and refresh manifest.yaml index files inside each hash directory under .hash-record/. Triggers — index h, hash record index, hash record index skill, hash record index workflow
+hash-record-manifest: Compute a manifest hash for a set of files. Triggers — compute manifest hash, multi-file cache key, hash-recor, hash record manifest, hash record manifest skill, hash record manifest workflow
+hash-record-prune: Remove orphaned hash directories from a repository's .hash-record/ store. Triggers — prune hash records, clean, hash record prune, hash record prune skill, hash record prune workflow

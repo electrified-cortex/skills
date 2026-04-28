@@ -56,7 +56,7 @@ Pass `--model <model>` only when the caller supplied an explicit model name. Def
 
 Embed the diff or file content inline in the prompt string. There is no file-input flag; `-P` (uppercase) does not exist in the Copilot CLI. The prompt MUST request the canonical severity vocabulary and the clean signal:
 
-```
+```bash
 Review the following change set for correctness, security vulnerabilities, and code quality.
 Return a structured findings list. Each finding must include:
   severity: blocker | major | minor | nit
@@ -76,7 +76,7 @@ Severity vocabulary is fixed: `blocker / major / minor / nit`. Do NOT instruct C
 
 Return this structure regardless of Copilot's raw output format:
 
-```
+```yaml
 Status: CLEAN | FINDINGS | UNAVAILABLE | ERROR
 Findings:
   - severity: blocker | major | minor | nit

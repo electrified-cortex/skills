@@ -64,6 +64,7 @@ If compression of any phrase would introduce ambiguity or change meaning, keep t
 ### Pass Order
 
 Compression must follow this sequence:
+
 1. Preserve scan — identify all protected content; mark as untouchable
 2. Remove — strip all 11 remove categories
 3. Transform — apply synonyms, fragments, arrows, abbreviations, merge bullets
@@ -100,6 +101,7 @@ The `rules.txt` itself must be Ultra-compressed. This spec file (`uncompressed.m
 ## Audit Checklist
 
 Verifying rules.txt against spec:
+
 - [ ] Self-contained — agent needs only rules.txt to apply Ultra
 - [ ] Remove section covers all 11 categories: articles, filler, pleasantries, hedging, connective fluff, imperative softeners, redundant phrasing, unnecessary punctuation, non-structural markdown, excess heading depth, judgment-based markdown removal
 - [ ] Transform section covers: synonyms, fragments, arrows, abbreviations list, merge redundant bullets, one example per pattern, `[thing] [action] [reason]` pattern template, scope directive (agent thinking)

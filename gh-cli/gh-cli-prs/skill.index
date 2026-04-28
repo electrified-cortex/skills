@@ -1,5 +1,5 @@
-.: pull request lifecycle, PR overview, which PR sub-skill, choose PR operation
-gh-cli-prs-comments: PR comment, add comment to PR, edit PR comment, delete PR comment
-gh-cli-prs-create: open PR, create PR, new pull request, branch to PR, draft PR
-gh-cli-prs-merge: merge PR, squash merge, close PR, update PR branch, revert PR
-gh-cli-prs-review: approve PR, request changes, dismiss review, submit review, LGTM
+﻿.: Entry point for pull request management via the GitHub CLI. Handles common PR inspection and routes write oper, gh cli prs, gh cli prs skill, gh cli prs workflow
+gh-cli-prs-comments: Add, edit, delete pull request comments via GitHub CLI, gh cli prs comments, gh cli prs comments skill, gh cli prs comments workflow
+gh-cli-prs-create: Open pull request via GitHub CLI, gh cli prs create, gh cli prs create skill, gh cli prs create workflow
+gh-cli-prs-merge: Merge, update, revert, close pull request via GitHub CLI, gh cli prs merge, gh cli prs merge skill, gh cli prs merge workflow
+gh-cli-prs-review: Approve, request changes on, dismiss pull request review via GitHub CLI, gh cli prs review, gh cli prs review skill, gh cli prs review workflow

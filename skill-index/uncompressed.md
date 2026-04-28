@@ -5,8 +5,6 @@ description: Root skill for the skill-index toolkit. Governs sub-skills that let
 
 # Skill Index
 
-Root skill for the skill-index toolkit. Governs a family of sub-skills that together let agents discover available skills by reading compact index nodes rather than walking the filesystem.
-
 ## What This Skill Covers
 
 The skill-index toolkit produces, validates, and stamps a cascading, tree-structured index of skills present in a directory hierarchy. An index node placed in an agent's working directory is the agent's complete discovery surface for that directory and its descendants. The agent reads the node; it does not traverse the filesystem.

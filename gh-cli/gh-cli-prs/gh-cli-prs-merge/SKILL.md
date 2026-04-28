@@ -7,15 +7,18 @@ Finalize PRs via `gh pr merge`, `gh pr update-branch`, `gh pr revert`. Covers me
 
 Merging:
 Choose strategy matching repo policy:
+
 ```bash
 gh pr merge 123 --merge --delete-branch    # merge commit — full history
 gh pr merge 123 --squash --delete-branch   # squash — single commit
 gh pr merge 123 --rebase                   # rebase — replay on base
 ```
+
 `--delete-branch` removes source branch after merge.
 
 Branch Update:
 PR branch behind base:
+
 ```bash
 gh pr update-branch 123
 gh pr update-branch 123 --force    # force if conflicts — may overwrite local changes
@@ -23,11 +26,13 @@ gh pr update-branch 123 --force    # force if conflicts — may overwrite local 
 
 Revert:
 Opens new revert PR undoing changes from merged PR:
+
 ```bash
 gh pr revert 123 --branch revert-pr-123
 ```
 
 Close Without Merge:
+
 ```bash
 gh pr close 123 --comment "Superseded by #456"
 ```

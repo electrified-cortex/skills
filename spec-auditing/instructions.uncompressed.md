@@ -8,7 +8,7 @@ invocation.
 Optional audit context: explicit spec-only request, repository or project
 conventions, and custom severity thresholds.
 
-## Gates:
+## Gates
 
 1. Resolve target path. Missing/unreadable → STOP: target file missing.
 2. Mode detection:
@@ -38,7 +38,7 @@ conventions, and custom severity thresholds.
 7. Reject approve/stamp requests → STOP: approve mode not supported.
 8. Spec-only mode: skip companion-dependent gates (gate 4 reads spec only; skip gate 6 — no writes will occur; gate 7 unchanged). `--fix` in spec-only → report unsupported, proceed audit-only.
 
-## Fix mode:
+## Fix mode
 
 1. Run full audit first (read-only pass).
 2. Apply fixes to target file only; spec is immutable. Spec defects found during audit → report as finding; do not repair spec.
@@ -46,7 +46,7 @@ conventions, and custom severity thresholds.
 4. Re-audit after each fix pass. Stop at 3 passes or on earlier alignment.
 5. When spec lacks sufficient detail to guide a fix, report as spec critique; do not guess.
 
-## Interpretation:
+## Interpretation
 
 1. `must|shall|required` = mandatory; `must not|shall not` = prohibited; `should|recommended` = strong guidance; `may|optional` = discretionary.
 2. Examples non-normative unless explicitly marked.
@@ -60,7 +60,7 @@ conventions, and custom severity thresholds.
 10. Never silently normalize contradictions.
 11. Never propose rewrites until audit is complete.
 
-## Audit (pair-audit mode):
+## Audit (pair-audit mode)
 
 1. Extract from spec: requirements, prohibitions, defaults, precedence, definitions, procedures, exceptions, audience.
 2. Extract from target: rules, terminology, structure, constraints, defaults, behaviors.
@@ -73,20 +73,23 @@ conventions, and custom severity thresholds.
 9. Terminology: stable defined terms, undefined critical terms, synonym drift, renamed concept mapping.
 10. Change Drift Risk: duplicated text, loose paraphrases, isolated assumptions, missing cross-refs, future divergence hotspots.
 11. Unauthorized Additions:
-   - **Meta mode**: classify target-only additions as `Valid Extension`, `Derived but Unstated`, or `Unauthorized Addition`.
-   - **Domain mode, authority supplied**: authority spec is the domain spec provided via `--spec`. Apply the same three-way classification against that authority.
-   - **Domain mode, no authority supplied**: skip this check. Report as Informational: "domain mode, no authority declared — Unauthorized Additions check skipped."
+
+- **Meta mode**: classify target-only additions as `Valid Extension`, `Derived but Unstated`, or `Unauthorized Addition`.
+- **Domain mode, authority supplied**: authority spec is the domain spec provided via `--spec`. Apply the same three-way classification against that authority.
+- **Domain mode, no authority supplied**: skip this check. Report as Informational: "domain mode, no authority declared — Unauthorized Additions check skipped."
+
 12. Economy: apply the removal test to duplicated rules, unnecessary scaffolding, and prose that can be removed without changing effect. Confirm the effect before reporting waste. Consolidation opportunities = Informational; escalate to Low/Medium where waste creates drift risk.
 13. Compression fidelity: flag loss, gain, bloat. Loss/gain = governance failures (High+); bloat = quality issue (Medium).
 
-## Audit (spec-only mode — apply instead of pair-audit when no companion):
+## Audit (spec-only mode — apply instead of pair-audit when no companion)
 
 Six checks only. Steps numbered to match pair-audit for cross-reference; skip steps 2–5, 10–11, and 13 (require companion).
 Apply steps 1, 6, 7, 8, 9, 12 as defined in pair-audit above.
 Additionally: Internal Consistency — no contradictions within the spec itself.
 (No Semantic Alignment, Requirement Coverage, Contradiction Detection, Change Drift Risk, Unauthorized Additions, or Compression Fidelity — all require a companion.)
 
-## Assumptions (unless overridden):
+## Assumptions (unless overridden)
+
 Both files describe same system/behavior/contract.
 Both files meaningfully aligned.
 Markdown headings, structure semantically relevant.
@@ -94,7 +97,8 @@ Normative statements include explicit/implied reqs.
 Examples subordinate to rules unless explicitly normative.
 Mandatory behavior without normative keyword but contextually binding → flag as enforceability issue.
 
-## Companion expectations:
+## Companion expectations
+
 Reflect all material spec reqs without simplifying away meaning.
 Self-contained — never reference/depend on spec at runtime.
 Content not justified by spec's purpose = finding.
@@ -106,21 +110,22 @@ as an omission when the design explicitly delegates that detail to the
 companion dispatch instructions file. The thin companion must still cover:
 invocation syntax, parameters, return values, and key error conditions.
 
-## Severity:
+## Severity
+
 Critical: reverses meaning, breaks trust, unsafe impl, violates gating/precedence/safety.
 High: materially weakens correctness, completeness, scope control, or auditability.
 Medium: meaningful weakness, should fix, does not invalidate pair.
 Low: minor wording/structure/duplication, limited impact.
 Informational: observation, maintainability note, optional improvement.
 
-## Result:
+## Result
 
 1. `Fail` if any Critical exists, 2+ High exist, or stricter threshold says fail.
 2. `Pass with Findings` if the audit produces any finding and no fail condition is met.
 3. `Pass` only when no findings are produced.
 4. State threshold used if caller provides one.
 
-## Evidence:
+## Evidence
 
 1. Every non-trivial finding must include evidence.
 2. Evidence: file name, heading if available, quote or precise excerpt.
@@ -128,7 +133,7 @@ Informational: observation, maintainability note, optional improvement.
 4. Label: direct evidence, reasonable inference, or uncertainty.
 5. Never present inference as fact.
 
-## Output:
+## Output
 
 1. Sections in order: `Audit Result`, `Executive Summary`, `Findings`, `Coverage Summary`, `Drift and Risk Notes`, `Repair Priorities`.
 2. `Audit Result`: `Pass`, `Pass with Findings`, or `Fail`.

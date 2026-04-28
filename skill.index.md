@@ -1,57 +1,77 @@
-# electrified-cortex — skill index
+# electrified-cortex - skill index
 
 ## code-review
 
-Comprehensive review of a diff — your change, another agent's, or an outside PR. Output is findings; fixes are yours to apply.
+Supports Tiered code review on a change set Read-only — never modifies code Triggers — review this diff, code review.
 
 ## compression
 
-Shrinks a markdown or text file without losing meaning. Common use: a skill that is too long to load cheaply.
+Supports Compress md and text files via subagent dispatch Triggers — compress this file, reduce tokens, shrink instru.
 
 ## copilot-cli
 
-Routes Copilot CLI tasks (review, ask, explain) to operation sub-skills. Use when you want a non-Claude perspective via the standalone `copilot` binary.
+Supports Router — accepts any GitHub Copilot CLI task and dispatches to the correct operation sub-skill Does not execu.
 
 ## dispatch
 
-How to dispatch another agent well — when to, which model, prompt shape, known failure modes.
+Supports Decision tree for whether, how, and at what model tier to dispatch sub-agents.
 
 ## gh-cli
 
-All GitHub operations — pull requests, issues, Actions, releases, repos, API.
+Supports GitHub CLI operations — routes to domain-specific sub-skills via dispatch.
+
+## hash-record
+
+Supports Content-hash-keyed durable record store Probe / Read / Write / Invalidate API Replaces audit-reports/ and.
 
 ## hash-stamping
 
-SHA-256 integrity stamp suite — verify whether stamped files have drifted (audit) or write/update `.sha256` companions after edits (stamp).
+Supports SHA-256 integrity stamp suite Verify stamp drift or write/update stamps Triggers — verify stamp, check integ.
+
+## iteration-safety
+
+Supports Rules for iterating audit, compression, hygiene, or review passes Reference this skill from callers; do not e.
+
+## janitor
+
+Supports prune accumulated artifacts, session-log hygiene, audit-report sweep, handoff cleanup, dry-run delete preview.
 
 ## markdown-hygiene
 
-Fix any formatting problems in a markdown file without changing the content itself.
+Supports Fix markdownlint violations in a md file Triggers — fix markdown, lint markdown, normalize formatting, clean.
+
+## session-logging
+
+Supports Standards for creating session log entries in logs/session/ and logs/telegram/ Use when writing any log entry.
 
 ## skill-auditing
 
-Evaluates a skill — is it well-written, on-spec, correctly classified. Read-only output.
+Supports Audit a skill for quality, classification, cost, and compliance with the skill-writing spec Triggers — audit.
 
 ## skill-index
 
-Cascading per-directory index system — lets agents discover skills without walking the filesystem.
+Supports Root skill for the skill-index toolkit Governs sub-skills that let agents discover available skills by readin.
 
 ## skill-writing
 
-Read before writing or authoring any skill. Skills drift in style over time; do not copy an existing one as a template.
+Supports How to write skills — decision tree for inline vs dispatch, structure, quality criteria.
 
 ## spec-auditing
 
-Verify a spec still holds up — after you wrote or changed it, or after its subject changed.
+Supports Audit a spec/companion pair or a spec alone Dispatch instructionstxt — don't audit inline.
 
 ## spec-writing
 
-Authoring a new spec — requirements before implementation, phrased so they are actually verifiable.
+Supports Write precise, testable, auditable specification documents with explicit scope, stable terminology, and enforc.
+
+## swarm
+
+Supports Multi-personality review infrastructure — selects personalities, gates availability, dispatches in parallel, a.
 
 ## tool-auditing
 
-Check a Bash or PowerShell script against conventions — error handling, path safety, no interactive prompts.
+Supports Audit tool scripts for companion spec, conventions, and error handling Triggers — audit tool, check tool scri.
 
 ## tool-writing
 
-Writing a Bash or PowerShell script — argument parsing, exit codes, structured output.
+Supports Write tool scripts with companion specs Bash is the default; PowerShell is a legitimate alternative Spec fir.

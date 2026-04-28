@@ -268,6 +268,7 @@ it as body prose anywhere in `uncompressed.md`, `SKILL.md`,
 `instructions.uncompressed.md`, or `instructions.txt`.
 
 R-FM-3 **H1 per artifact.**
+
 - `spec.md` — MUST have an H1 (normal markdownlint rule MD041).
 - `uncompressed.md` — MUST have an H1 (normal markdownlint).
 - `SKILL.md` — MUST NOT have an H1. Frontmatter `name` carries the title.

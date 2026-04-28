@@ -36,7 +36,7 @@ NOT done until both audits return PASS. Intermediate gate (step 4): PASS require
 
 Revising: update spec first. Exception: non-normative changes (README, examples, typo fixes) → skip to step 2. Update `uncompressed.md` → hygiene → intermediate audit (`--uncompressed`) → compress → final audit. Never modify SKILL.md directly — compiled artifact.
 
-## Decision: Inline or Dispatch?
+## Decision: Inline or Dispatch
 
 "Could someone with no context do this from just inputs?" Yes → dispatch. No → inline.
 

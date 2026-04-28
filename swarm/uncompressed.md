@@ -96,6 +96,7 @@ Callers may supply additional personalities for a single invocation. Each entry 
 Construct a review packet from `problem`. The packet must be self-contained: a reader with zero prior context must understand what is being reviewed, why, and what the key decisions were.
 
 Packet fields (omit if not applicable to artifact type):
+
 - Goal: what problem is being solved or what output is being evaluated.
 - Approach: what was proposed, implemented, or produced.
 - Key decisions: why this approach over alternatives.
@@ -139,6 +140,7 @@ Rationale: inline prompts bloat context regardless of which personalities are se
 Dispatch all swarm personalities in parallel using the `dispatch` skill. All dispatches in a single swarm invocation must be issued as a single batch; do not issue them sequentially.
 
 Each personality dispatch receives:
+
 1. The full review packet from Step 1.
 2. The personality's prompt loaded in Step 4.
 3. An explicit read-only constraint (see Constraints C1–C3).
@@ -284,6 +286,7 @@ Anti-pattern: `personality_filter: ["Security Auditor"]` — caller expects Secu
 ## Scope Boundaries
 
 Does NOT cover:
+
 - The `code-review` consumer skill or any other consumer skill's internal logic.
 - How to write reviewer prompts (data concern, not a behavioral requirement of this skill).
 - Non-review dispatch use cases (search, generation, transformation).

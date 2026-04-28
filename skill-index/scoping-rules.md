@@ -161,3 +161,4 @@ When a skill appears relevant to two agents, apply this decision rule:
 2. **Execution vs. governance split.** Execution skills (`claim-task`, `task-execution`) belong to Worker; governance/closure skills (`verification`, `finalization`) belong to Overseer.
 3. **Audit skills belong to auditors.** `spec-auditing`, `skill-auditing`, `tool-auditing` belong to Curator and Deputy, not Worker or Sentinel's exclusive domain.
 4. **Shared utility skills** (`compression`, `dispatch`, `hash-stamp`) may appear in multiple agents' indexes if those agents genuinely use them.
+

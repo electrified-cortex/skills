@@ -1,11 +1,13 @@
-# hash-stamping
+﻿# hash-stamping - skill index
 
-Two sub-skills for SHA-256 integrity stamps. Match your situation to the entry below.
+## hash-stamping
 
-## hash-stamp-audit
-
-Verify stamps — check whether any stamped file has drifted from its recorded hash. Use when checking if a spec changed, triggering an audit, or running a pre-merge integrity check.
+Supports SHA-256 integrity stamp suite Verify stamp drift or write/update stamps Triggers — verify stamp, check integ.
 
 ## hash-stamp
 
-Write or update `.sha256` companions for one or more files. Use immediately after editing any stamped file to keep stamps current.
+Supports Writes or updates SHA-256 companion files alongside target files.
+
+## hash-stamp-audit
+
+Supports Read-only skill Verifies SHA-256 stamp integrity across a skill tree Finds all sha256 companion files and c.

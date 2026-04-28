@@ -96,3 +96,5 @@ Cursor is assumed to follow the same requirements: `.github/agents/` placement, 
 | Sub-agent cannot use required tools | `tools` field missing or incomplete |
 | Sub-agent missing task context | Prompt relies on context that doesn't inherit; hand-feed explicitly |
 | Dispatch hangs or appears parallel | No — `runSubagent` serializes; re-evaluate for blocking cost |
+
+

@@ -25,7 +25,7 @@ checks:
   - name: <check identifier>
     status: ready | not-ready | not-applicable
     detail: <what was tested, what was found>
-    remediation: <required action; null when status is ready or not-applicable>
+remediation: <required action; null when status is ready or not-applicable>
 ```
 
 `overall` is `ready` only when every check is `ready` or `not-applicable`. One `not-ready` fails the overall.
@@ -68,9 +68,5 @@ Vague remediation ("fix permissions", "see docs") is insufficient.
 - Don't include remediation that requires further diagnosis.
 - Don't dispatch code-review as part of the check.
 - Don't depend on one check's result inside another. Each check is independent.
-
-## Iteration safety
-
-No caching. The check runs end-to-end every invocation. Stale-result risk outweighs re-run cost.
 
 Related: `code-review`, `swarm`.

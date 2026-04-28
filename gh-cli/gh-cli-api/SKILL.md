@@ -11,13 +11,15 @@ description: Make authenticated REST and GraphQL calls to the GitHub API via the
 - Complex GraphQL queries or mutations
 - Bulk or scripted API interactions
 
-## REST — GET:
+## REST — GET
+
 ```bash
 gh api /repos/owner/repo
 gh api /user --jq '.login'
 ```
 
-## REST — mutate:
+## REST — mutate
+
 ```bash
 gh api --method POST /repos/owner/repo/issues \
   --field title="title" --field body="body"
@@ -26,28 +28,33 @@ gh api --method PATCH /repos/owner/repo/issues/123 \
   --field state="closed"
 ```
 
-## Pagination (multiple requests; slow on large datasets):
+## Pagination (multiple requests; slow on large datasets)
+
 ```bash
 gh api /user/repos --paginate --jq '.[].name'
 ```
 
-## jq — extract:
+## jq — extract
+
 ```bash
 gh api /repos/owner/repo --jq '.stargazers_count'
 ```
 
-## jq — filter + transform:
+## jq — filter + transform
+
 ```bash
 gh api /repos/owner/repo/issues --jq '[.[] | select(.state=="open") | {number, title}]'
 ```
 
-## GraphQL — query:
+## GraphQL — query
+
 ```bash
 gh api graphql -f query='
   { viewer { login repositories(first: 5) { nodes { name } } } }'
 ```
 
-## GraphQL — mutation (resolve review thread):
+## GraphQL — mutation (resolve review thread)
+
 ```bash
 gh api graphql -f query='
   mutation { resolveReviewThread(input: {threadId: "THREAD_ID"}) { thread { isResolved } } }'

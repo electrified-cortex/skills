@@ -1,23 +1,21 @@
-# GH CLI — Pull Requests
-
-Pull request operations split across focused sub-skills.
+# gh-cli-prs - skill index
 
 ## gh-cli-prs
 
-PR lifecycle overview — dispatches to sub-skills for create, review, comment, merge.
+Supports Entry point for pull request management via the GitHub CLI Handles common PR inspection and routes write oper.
 
 ## gh-cli-prs-comments
 
-Add, edit, delete PR comments.
+Supports Add, edit, delete pull request comments via GitHub CLI.
 
 ## gh-cli-prs-create
 
-Open a PR from a branch.
+Supports Open pull request via GitHub CLI.
 
 ## gh-cli-prs-merge
 
-Merge, update branch, revert, or close a PR.
+Supports Merge, update, revert, close pull request via GitHub CLI.
 
 ## gh-cli-prs-review
 
-Approve, request changes, or dismiss a PR review.
+Supports Approve, request changes on, dismiss pull request review via GitHub CLI.

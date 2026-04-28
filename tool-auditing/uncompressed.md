@@ -9,6 +9,7 @@ Verify that tool scripts have companion specs, follow naming conventions, handle
 ## Scope
 
 **In scope:**
+
 - Checking for companion spec file existence
 - Verifying script has parameter documentation
 - Checking for hardcoded absolute paths
@@ -16,6 +17,7 @@ Verify that tool scripts have companion specs, follow naming conventions, handle
 - Checking output format consistency
 
 **Out of scope:**
+
 - Executing the script (audit is read-only)
 - Evaluating script logic correctness
 - Performance testing

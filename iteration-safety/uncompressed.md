@@ -1,4 +1,4 @@
----
+﻿---
 name: iteration-safety
 description: Rules for iterating audit, compression, hygiene, or review passes. Reference this skill from callers; do not embed these rules elsewhere.
 ---

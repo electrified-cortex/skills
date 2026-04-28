@@ -1,39 +1,38 @@
-# GH CLI
-
-All GitHub CLI operations — routes to the appropriate domain sub-skill.
+﻿# gh-cli - skill index
 
 ## gh-cli
 
-Routes GitHub CLI operations to the appropriate domain sub-skill.
+Supports GitHub CLI operations — routes to domain-specific sub-skills via dispatch.
 
 ## gh-cli-actions
 
-Trigger, monitor, and manage GitHub Actions workflows, runs, secrets, and variables.
+Supports Trigger, monitor, manage GitHub Actions workflows, runs, secrets, variables via CLI.
 
 ## gh-cli-api
 
-Make REST and GraphQL calls to the GitHub API when no dedicated subcommand applies.
+Supports Make authenticated REST and GraphQL calls to the GitHub API via the CLI Use when no dedicated gh subcommand c.
 
 ## gh-cli-issues
 
-Create, list, edit, close, and bulk-manage GitHub issues.
+Supports Manage GitHub issues using the gh issue subcommand Full lifecycle: create, list, view, edit, comment, close.
 
 ## gh-cli-projects
 
-Create and manage GitHub Projects v2 boards, items, and fields.
+Supports Create, manage GitHub Projects v2 boards, items, fields via CLI.
 
 ## gh-cli-prs
 
-Pull request lifecycle — create, review, comment, and merge.
+Supports Entry point for pull request management via the GitHub CLI Handles common PR inspection and routes write oper.
 
 ## gh-cli-releases
 
-Create, publish, upload assets, edit, and delete GitHub releases.
+Supports Manage GitHub releases via gh release Full lifecycle: create, publish, upload assets, edit, delete.
 
 ## gh-cli-repos
 
-Create, clone, fork, sync, edit, and delete repositories.
+Supports Create, clone, fork, sync, edit, delete GitHub repositories via CLI.
 
 ## gh-cli-setup
 
-Install, authenticate, and configure the GitHub CLI.
+Supports Install, authenticate, and configure the GitHub CLI Prerequisite for all other gh-cli skills.
+
