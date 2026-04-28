@@ -18,5 +18,3 @@ Don't read `instructions.txt` yourself.
 Returns: `PATH: <abs-path-to-record.md>` on success, `ERROR: <reason>` on pre-write failure.
 
 Non-haiku callers: see `../hash-record/filenames.md` for the canonical `--filename` value.
-
-Don't re-audit unchanged files (cache HIT — see `../iteration-safety/SKILL.md`).

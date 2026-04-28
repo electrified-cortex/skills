@@ -51,8 +51,8 @@
 
 5c. **Probe the cache.** Run `test -f <path-from-5b>` (use the Bash tool).
 
-   - **HIT** (file exists): output `PATH: <abs-path-to-that-file>` and stop. Do not re-run the audit.
-   - **MISS** (file does not exist): save `<repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/` as `<audit_cache_dir>` and continue.
+- **HIT** (file exists): output `PATH: <abs-path-to-that-file>` and stop. Do not re-run the audit.
+- **MISS** (file does not exist): save `<repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/` as `<audit_cache_dir>` and continue.
 
 6. **Read the skill** at `skill_path`. Determine type: inline or dispatch. Locate companion spec — check `spec_path` if provided, otherwise `spec.md` co-located with `skill_path`. If not found: simple inline skills (<30 lines) may skip Phase 1; dispatch or complex inline → record an error verdict, write the record, output `PATH:`, and stop.
 8. **Run Phase 1 → Phase 2 → Phase 3** (stop on first failure). Assign verdict. Map to `result` field: PASS → `pass`; PASS_WITH_FINDINGS / NEEDS_REVISION / FAIL → `findings`; error → `error`.
@@ -101,27 +101,27 @@ host agent chooses the mode based on what it is doing.
 
 Verify the companion spec is structurally sound. Must pass before any skill-level checks.
 
-### 1. Spec exists
+### Spec exists
 
 `spec.md` must exist (or `spec_path` must resolve). Exception: simple inline
 skills under ~30 lines may skip this phase entirely — proceed to Phase 2.
 
-### 2. Required sections
+### Required sections
 
 The spec must contain: Purpose, Scope, Definitions, Requirements,
 Constraints. Missing sections → FAIL.
 
-### 3. Normative language
+### Normative language
 
 Requirements must use enforceable language (must, shall, required). Vague
 terms in normative sections → FAIL.
 
-### 4. Internal consistency
+### Internal consistency
 
 No contradictions between sections. No duplicate rules. No normative content
 in descriptive sections.
 
-### 5. Spec completeness
+### Spec completeness
 
 All terms used are defined. All behavior explicitly stated, not implied.
 
@@ -132,12 +132,12 @@ do not proceed to Phase 2.
 
 Quick structural verification of the SKILL.md.
 
-### 1. Classification
+### Classification
 
 Apply: "Could someone with no context do this from just the inputs?" Yes →
 should be dispatch. No → should be inline. Flag misclassification.
 
-### 2. Inline/dispatch file consistency
+### Inline/dispatch file consistency
 
 File presence is definitive for type: any allowed dispatch instruction file
 present (`instructions.txt` or `<name>.md` in the skill directory, or the
@@ -150,7 +150,7 @@ If dispatch: verify SKILL.md is a short routing card (structural details
 in Check #3). If inline: verify SKILL.md contains the full procedure.
 Mismatch between file-system evidence and SKILL.md structure → FAIL.
 
-### 3. Structure
+### Structure
 
 **Inline:** frontmatter (`name`, `description`), direct instructions,
 self-contained.
@@ -170,7 +170,7 @@ parameter that duplicates an OUTPUT already determined by a referenced sub-skill
 own hash-record write), flag as HIGH. The input surface must not override
 conventions dictated by referenced sub-skills.
 
-### 4. Frontmatter
+### Frontmatter
 
 `name` and `description` present and accurate.
 
@@ -186,7 +186,7 @@ mismatch in either → FAIL.
 or `instructions.uncompressed.md` → FAIL. MD041 findings on `SKILL.md` are
 expected and not a violation (R-FM-3 sanctioned no-H1).
 
-### 5. No duplication
+### No duplication
 
 Not duplicating existing capability. If similar exists, recommend merge or
 distinguish.
@@ -197,22 +197,22 @@ If any Phase 2 check fails → verdict FAIL, do not proceed to Phase 3.
 
 Deep verification that the SKILL.md faithfully represents the spec.
 
-### 1. Coverage
+### Coverage
 
 Every normative requirement in the spec must be represented in the SKILL.md.
 Missing requirements → FAIL.
 
-### 2. No contradictions
+### No contradictions
 
 SKILL.md must not contradict the spec. Spec is authoritative; SKILL.md is
 subordinate.
 
-### 3. No unauthorized additions
+### No unauthorized additions
 
 SKILL.md must not introduce normative requirements not present in the
 spec.
 
-### 4. Conciseness
+### Conciseness
 
 Every line affects runtime behavior. No rationale in SKILL.md (belongs in
 spec). No redundant explanations. Agent-facing density.
@@ -239,17 +239,17 @@ Named finding patterns to flag:
 A skill passes conciseness only if an agent can skim it in one pass and know
 exactly what to do — no hunting through paragraphs for the operative rule.
 
-### 5. Skill completeness
+### Skill completeness
 
 All runtime instructions present. No implicit assumptions. Edge cases
 addressed or excluded. Defaults stated.
 
-### 6. Breadcrumbs
+### Breadcrumbs
 
 Ends with related skills/topics. References are valid (targets exist). No
 stale references.
 
-### 7. Cost analysis (dispatch only)
+### Cost analysis (dispatch only)
 
 **`--uncompressed` mode: SKIP.**
 
@@ -257,14 +257,14 @@ Uses Dispatch agent (zero-context isolation). Instruction file right-sized
 (<500 lines). Sub-skills referenced by pointer, not inlined. Single dispatch
 turn when possible.
 
-### 8. No dispatch references in instructions
+### No dispatch references in instructions
 
 `instructions.txt` must not tell the agent to dispatch other skills.
 Subagents can't dispatch — only the host agent can. References to other
 skills as "Related" context are OK. "Run this skill" or "dispatch this" →
 FAIL. Remediation: move dispatch steps to SKILL.md.
 
-### 9. No spec breadcrumbs in runtime
+### No spec breadcrumbs in runtime
 
 SKILL.md and `instructions.txt` must not reference the skill's own
 companion `spec.md` — not as a pointer, breadcrumb, or "see spec.md"
@@ -275,51 +275,50 @@ may reference the `spec.md` under audit — never their own companion
 spec. Remediation: delete the reference; if the information is genuinely
 needed at runtime, inline it.
 
-### 10. (A-FM-2) Description not restated
+### (A-FM-2) Description not restated
 
 Search every artifact (`uncompressed.md`, `SKILL.md`,
 `instructions.uncompressed.md`, `instructions.txt`) for body prose that
 duplicates the `description` frontmatter value. Any restatement → LOW
 (escalate to HIGH if verbatim duplication).
 
-### 11. (A-FM-5) No exposition in runtime artifacts
+### (A-FM-5) No exposition in runtime artifacts
 
 Scan `SKILL.md`, `uncompressed.md`, `instructions.uncompressed.md`, and
 `instructions.txt` for rationale, "why this exists," root-cause narrative,
 historical notes, or background prose. Any found → HIGH. Rationale belongs
 exclusively in `spec.md`.
 
-### 12. (A-FM-6) No non-helpful tags
+### (A-FM-6) No non-helpful tags
 
 Check all artifacts for descriptor lines that carry no operational value
 (e.g., "inline apply directly no dispatch," "dispatch skill," bare type
 labels not used as actionable instructions). Any found → LOW.
 
-### 13. (A-FM-7) No empty sections
+### (A-FM-7) No empty sections
 
 Verify every heading in every artifact has body content before the next
 heading or end of file. An empty section → HIGH.
 
-### 14. (A-FM-8) Iteration-safety placement
+### (A-FM-8) Iteration-safety placement
 
 Verify the Iteration Safety blurb is absent from
 `instructions.uncompressed.md` and `instructions.txt`. Presence in
 either → HIGH. Additionally, if the guard appears in both `SKILL.md` and
 `instructions.*`, flag as probable duplication → HIGH.
 
-### 15. (A-FM-9a) Iteration-safety pointer form
+### (A-FM-9a) Iteration-safety pointer form
 
 If a caller skill references iteration-safety, verify it uses the exact
-2-line pointer block form (`Do not re-audit unchanged files.` + `See
-\`<path>/iteration-safety/SKILL.md\`.`) and that the relative path
+2-line pointer block form (`Do not re-audit unchanged files. See <path>/iteration-safety/SKILL.md`.`) and that the relative path
 matches the caller's actual folder depth. Any deviation → HIGH.
 
-### 16. (A-FM-9b) No verbatim Rule A/B restatement
+### (A-FM-9b) No verbatim Rule A/B restatement
 
 Scan all artifacts for verbatim restatement of iteration-safety Rules A
 or B beyond the sanctioned 2-line pointer block. Any found → HIGH.
 
-### 17. (A-XR-1) Cross-reference anti-pattern
+### (A-XR-1) Cross-reference anti-pattern
 
 Scan `SKILL.md`, `instructions.txt`, any sub-instructions (e.g. `eval.txt`),
 and `uncompressed.md` for any pointer — by file path or inline link — to
@@ -327,7 +326,7 @@ ANOTHER skill's `uncompressed.md` or `spec.md`. Violations:
 
 - "See uncompressed.md for full version"
 - "See spec.md for requirements"
-- "Reference: &lt;some-skill&gt;/uncompressed.md"
+- "Reference: `<some-skill>/uncompressed.md`"
 - Any href or inline link whose target ends in `.uncompressed.md` or `.spec.md`
 
 NOT violations:
@@ -338,7 +337,7 @@ NOT violations:
 
 Any cross-file path pointer → HIGH.
 
-### 18. (A-FM-10) Launch-script form on dispatch skills
+### (A-FM-10) Launch-script form on dispatch skills
 
 Applies to dispatch skills only (N/A for inline skills).
 
