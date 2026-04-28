@@ -3,13 +3,11 @@
 The following instructs you how to detect markdownlint violations in a `.md` file.
 Produce a report with imperative `Fix:` instructions if there are findings. Detect-only — never modifies the target.
 
-DON'T READ the target file until instructed.
-
 ## Inputs
 
 Input shape: `<markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
 
-- `<markdown_file_path>` (required): absolute path to the `.md` file to verify.
+- `<markdown_file_path>` (required): absolute path to the `.md` file to verify. DON'T READ until instructed.
 - `--ignore <RULE>[,<RULE>...]` (optional): rules to skip — not flagged.
 - Adaptive: if the first non-blank line is `---` (YAML frontmatter), MD041 is auto-suppressed.
 

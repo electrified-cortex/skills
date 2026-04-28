@@ -7,7 +7,7 @@ DON'T READ the target file until instructed.
 
 Input shape: `<markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
 
-- `<markdown_file_path>` (required): absolute path to the `.md` file to verify.
+- `<markdown_file_path>` (required): absolute path to the `.md` file to verify. DON'T READ until instructed.
 - `--ignore <RULE>[,<RULE>...]` (optional): rules to skip — not flagged.
 - Adaptive: if the first non-blank line is `---` (YAML frontmatter), MD041 is auto-suppressed.
 
