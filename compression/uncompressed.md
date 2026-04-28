@@ -5,22 +5,20 @@ description: Compress .md and text files via subagent dispatch. Triggers — com
 
 # Compression
 
-If source is `.md`: apply `../markdown-hygiene` skill with `--fix` before compressing. Hygiene findings land in their own `.hash-record/` records, separate from compression output.
+Without reading `instructions.txt` yourself, spawn a zero-context Dispatch sub-agent (sonnet-class — the Dispatch agent default; do NOT pass a haiku override):
 
-Spawn a zero-context, haiku-class sub-agent in the background:
+`prompt`: `Read and follow instructions.txt here. Input: <file-path> [--tier <lite|full|ultra>] [--source <src> --target <dst>]`
 
-**Claude Code:** `Agent` tool. Pass: `"Read and follow instructions.txt here. Input: <file-path> [--tier <lite|full|ultra>] [--source <src> --target <dst>] [--hygiene-verdict <path>]"`
+**Claude Code:** `Agent` tool. `subagent_type: "Dispatch"`, `prompt: "<prompt>"`. Run in background if possible.
 
-**VS Code / Copilot:** `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow instructions.txt in <skill_dir>. Input: <file-path> [--tier <lite|full|ultra>] [--source <src> --target <dst>] [--hygiene-verdict <path>]")`
+**VS Code / Copilot:** `runSubagent(agentName: "Dispatch", prompt: "<prompt>")`. Synchronous.
 
-Don't read `instructions.txt` yourself.
+Parameters:
 
-file-path (required): file to compress
---tier (optional): lite | full | ultra; default ultra
---source X --target Y (optional): source→target mode; no git check; X untouched
---hygiene-verdict (optional): path to Phase 0 verdict file from host
+- `file-path` (required): file to compress.
+- `--tier` (optional): `lite` | `full` | `ultra`; default `ultra`.
+- `--source <src> --target <dst>` (optional): source-to-target mode; no git check; source untouched.
 
-Returns: `<before>→<after> bytes | <N>% reduction | <tier> | <mode>` + hygiene lines if `.md`
+Returns: `<before>→<after> bytes | <N>% reduction | <tier> | <mode>`
 
-Do not re-audit unchanged files.
-See `../iteration-safety/SKILL.md`.
+NEVER READ OR INTERPRET `instructions.txt` YOURSELF. Let the sub-agent handle.

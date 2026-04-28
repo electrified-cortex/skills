@@ -50,7 +50,7 @@ conventions, and custom severity thresholds.
 
 1. `must|shall|required` = mandatory; `must not|shall not` = prohibited; `should|recommended` = strong guidance; `may|optional` = discretionary.
 2. Examples non-normative unless explicitly marked.
-3. Similar wording ≠ matching meaning until verified.
+3. Similar wording â‰  matching meaning until verified.
 4. Ambiguous wording → state ambiguity, list readings, state risk, request minimum clarification.
 5. Spec lacks required data → say what's missing, why confidence blocked, whether result can pass, what resolves it.
 6. Never invent intent, never downgrade because intent seems obvious, never rewrite during audit, never modify spec.

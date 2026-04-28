@@ -1,6 +1,6 @@
 # Compression Process
 
-Input: `<file-path>` [`--tier <lite|full|ultra>`] [`--source <src> --target <dst>`] [`--hygiene-verdict <path>`] (default tier: ultra)
+Input: `<file-path>` [`--tier <lite|full|ultra>`] [`--source <src> --target <dst>`] (default tier: ultra)
 Blurb → skip gate, step 4
 
 ## Modes
@@ -8,15 +8,6 @@ Blurb → skip gate, step 4
 **Source→Target:** `--source X --target Y` → read X, compress, write Y. No git check. X untouched.
 **In-place (default):** compress file directly. Git check required.
 **Fallback:** if file is untracked/dirty and no `--target`, create `<file>.compressed` alongside.
-
-## Phase 0 — Source Hygiene Verdict
-
-If `--hygiene-verdict <path>` provided: read the file. Each line is one of:
-- `CLEAN: <file>` — no issues
-- `FINDINGS: <file> → <record-path>` — issues found; record at path
-- `ERROR: <file> → <reason>` — hygiene check failed
-
-Hold results for output. No action on content — verdict is informational.
 
 Steps:
 
@@ -31,16 +22,9 @@ Steps:
 5. Verify (file mode only, not blurb): compare compressed result against original content. Every fact, rule, and constraint must survive.
    - Recoverable (single dropped item or collapsed qualifier) → fix in-place, report fix + suggest prevention.
    - Not recoverable (multi-element loss, structural damage, meaning reversal) → restore original, `REJECTED: content lost — <details>`.
-6. If target is `.md`: apply markdown lint checks inline to compressed result. Fix common issues in-place (trailing spaces, missing blank lines around fenced blocks, etc.).
-   - All fixed → record fixes in output.
-   - Some issues remain → record fixes; list remaining as warnings.
-   - Nothing to fix → record `hygiene: clean`.
-   Hygiene issues never cause rejection — caller is informed so no further hygiene pass is needed.
-7. Write result to target (in-place, `.compressed`, or `--target` path).
+6. Write result to target (in-place, `.compressed`, or `--target` path).
 
 Output (required): `<before>→<after> bytes | <N>% reduction | <tier> | <mode>`
 Mode = `in-place`, `alongside (<file>.compressed)`, or `source→target (<dst>)`
 If fixed: append `Fixed: <what>` + `Suggest: <prevention>`
-If `.md`: append `Hygiene: clean` or `Hygiene: fixed <N> issue(s)` or `Hygiene: <N> warning(s) — <details>`
-If `--hygiene-verdict` provided: append `Source hygiene: <verdict-summary>` (one line summarising Phase 0 result)
 Blurb mode: compressed text, then `---`, then reduction line.

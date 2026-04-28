@@ -84,6 +84,13 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
 
 6. If ALL violations are unfixable (manual-only rules like MD040 with no language to infer): output `findings: <detect_record_path>` (no second record) and stop.
 7. **Read the detect record** written in step 5 (use the Read tool). Extract every `Fix:` line from the FINDINGS body. Each `Fix:` line is a standalone imperative instruction — apply it literally to the target file using the Edit or Write tool. No re-scan. No markdown-rule knowledge required. For each `Fix:` line: either apply it successfully or mark it as not applicable (unfixable). The file on disk MUST contain all applied fixes after this step.
+
+7a. **Byte-preservation self-check (mandatory).** Run `git diff --no-index <source-path> <fixed-path>` (or read both files and compare). The diff MUST contain ONLY changes implied by the applied Fix: instructions — no UTF-8 special-character rewrites, no smart-quote substitutions, no em-dash → mojibake (`â€"`), no arrow → mojibake (`â†'`), no Unicode replacement characters (`U+FFFD`), no BOM additions, no line-ending changes (CRLF must remain CRLF; LF must remain LF). Specifically:
+
+   - For every byte ≥ 0x80 in the source file: the same byte sequence MUST appear in the output file at a corresponding offset (modulo explicit Fix: changes). em dash = `0xE2 0x80 0x94`, en dash = `0xE2 0x80 0x93`, right arrow = `0xE2 0x86 0x92`, left double quote = `0xE2 0x80 0x9C`, right double quote = `0xE2 0x80 0x9D`, etc. — all preserved verbatim.
+   - Any unintended byte change → REVERT the fix (restore source content), output `ERROR: byte corruption during fix — fix aborted, file restored, surface to caller for review`, stop. Do NOT write a fix record.
+   - This guard exists because LLM rewrites of files have been observed corrupting UTF-8 multi-byte sequences via Latin-1 misinterpretation, producing mojibake. The dispatch MUST self-verify against this class of failure.
+
 8. **Compute new hash:** `git hash-object <fixed-file-path>`. Save as `<fix_hash>`. Set `<fix_cache_dir>` = `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene` (no trailing slash; `<repo-root>` from step 2).
 9. **Write fix record** at `<fix_cache_dir>/<filename>.md`:
    - `mkdir -p <fix_cache_dir>` (Bash tool).
