@@ -6,6 +6,19 @@ Normative spec for the stamp sub-skill. Writes or updates SHA-256 companion file
 
 After editing a stamped file, its `.sha256` companion must be updated. This skill accepts a single file, a glob pattern, or a directory tree and writes/updates companions for all matching targets.
 
+## Scope
+
+Covers writing and updating `.sha256` companion files. Does not cover verifying stamps (see `audit/` sub-skill) or modifying the target files themselves.
+
+## Definitions
+
+- **Companion file**: a `.sha256` file co-located with the stamped target, containing a single `sha256sum`-format line.
+- **Target**: a file (or files matching a glob/tree pattern) for which a companion is written or updated.
+- **WRITTEN**: status for a new companion created where none existed.
+- **UPDATED**: status for a companion overwritten because the stored hash differed from the current hash.
+- **UNCHANGED**: status for a companion skipped because the stored hash matches the current hash.
+- **ERROR**: status for any failure to read the target or write the companion.
+
 ## Requirements
 
 R1. Accept one of: a single file path, a glob pattern, or `--tree <root>` for recursive discovery.

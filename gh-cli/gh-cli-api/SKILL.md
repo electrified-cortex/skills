@@ -3,8 +3,6 @@ name: gh-cli-api
 description: Make authenticated REST and GraphQL calls to the GitHub API via the CLI. Use when no dedicated gh subcommand covers the operation.
 ---
 
-Make authenticated REST and GraphQL calls to GitHub API using `gh api`. Use when no dedicated `gh` subcommand covers operation.
-
 ## When to Use
 
 `gh api` is escape hatch — not default. Prefer domain-specific skills (issues, prs, releases) when they cover operation. Use for:
@@ -67,3 +65,7 @@ Use `gh auth login` interactively or set `GH_TOKEN` in env config (shell profile
 ## Scope Boundaries
 
 Covers `gh api` for REST and `gh api graphql` for GraphQL. Doesn't replace domain skills, manage GitHub Apps or OAuth Apps, or cover webhook config.
+
+## See Also
+
+`gh-cli-issues`, `gh-cli-prs`, `gh-cli-prs-comments`, `gh-cli-releases`, `gh-cli-repos`, `gh-cli-actions`

@@ -22,6 +22,13 @@ gh run list --workflow ci.yml --branch main --json databaseId,status,conclusion
 gh run watch "$RUN_ID"
 ```
 
+Check overall run health via statusCheckRollup:
+
+```bash
+gh run view "$RUN_ID" --json statusCheckRollup --jq '.statusCheckRollup[] | {name, status, conclusion}'
+# conclusion: SUCCESS = healthy; FAILURE/CANCELLED = unhealthy; null = in progress
+```
+
 Logs:
 
 ```bash
@@ -75,4 +82,6 @@ gh cache delete --all
 ```
 
 Scope: `gh run`, `gh workflow`, `gh secret`, `gh variable`, `gh cache`. Doesn't cover workflow YAML, self-hosted runners, or OIDC trust configs.
+
+Related: `gh-cli-prs` (CI checks on PRs), `gh-cli-api` (custom Actions API calls)
 

@@ -3,30 +3,20 @@ name: gh-cli-releases
 description: Manage GitHub releases via gh release. Full lifecycle: create, publish, upload assets, edit, delete.
 ---
 
-Manage GitHub releases via `gh release`. Full lifecycle: create, publish, upload assets, edit, delete.
-
 ## Listing
 
 ```bash
 gh release list
+gh release list --exclude-drafts --limit 1   # latest published; drafts excluded
+# Note: gh release view without tag → latest release, but returns empty if latest is draft
 ```
 
-## Latest published (exclude drafts)
-
-```bash
-gh release list --exclude-drafts --limit 1
-```
-
-`gh release view` without tag → latest release; empty if latest is draft. Use `--exclude-drafts` for reliable latest.
-
-## Create — Direct Publish
+## Create — Direct Publish (requires existing tag pushed first)
 
 ```bash
 gh release create v1.0.0 --title "v1.0.0" --notes "Release notes" --target main
 gh release create v1.0.0 --notes-file CHANGELOG.md
 ```
-
-Requires existing Git tag pushed before running.
 
 ## Create — Draft then Publish
 

@@ -5,8 +5,6 @@ description: Make authenticated REST and GraphQL calls to the GitHub API via the
 
 # GH CLI API
 
-Make authenticated REST and GraphQL calls to the GitHub API using `gh api`. Use this skill when no dedicated `gh` subcommand covers the operation.
-
 ## When to Use
 
 Use `gh api` as an escape hatch — not as a default. Prefer domain-specific skills (issues, prs, releases, etc.) when they cover the operation. Use this skill for:

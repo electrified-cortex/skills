@@ -5,8 +5,6 @@ description: Entry point for pull request management via the GitHub CLI. Handles
 
 # GH CLI PRs
 
-Entry point for pull request management via the GitHub CLI. This skill handles common PR inspection commands and routes write operations to the appropriate sub-skill.
-
 ## When to Use
 
 Use this skill when you need to inspect PRs (list, view, diff, check status) or when you want routing handled automatically for write operations. If you already know the sub-skill, dispatch it directly.
@@ -63,3 +61,7 @@ Each stage of the PR lifecycle has its own sub-skill:
 ## Scope Boundaries
 
 This skill covers `gh pr` subcommands only. It does not touch git operations, branch protection, or CODEOWNERS.
+
+## Related Skills
+
+`gh-cli-prs-create`, `gh-cli-prs-review`, `gh-cli-prs-comments`, `gh-cli-prs-merge`

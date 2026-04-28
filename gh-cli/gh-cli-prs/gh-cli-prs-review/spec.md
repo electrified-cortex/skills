@@ -13,7 +13,15 @@ Guide an agent through performing, editing, and dismissing pull request reviews.
 
 `gh pr review`. Does not cover inline comments or general (non-review) PR comments — see `gh-cli-prs-comments`.
 
-## Intent
+## Definitions
+
+- **Approve review**: a review verdict that marks the PR as approved by the reviewer.
+- **Request changes review**: a review verdict that blocks merge until the reviewer dismisses or changes their verdict; requires a body explaining what needs fixing.
+- **Comment-only review**: a review submitted with no approve/reject verdict — informational only.
+- **Dismiss**: the act of removing a previously submitted review verdict, replacing it with no verdict.
+- **Review ID**: the unique identifier of a submitted review, required by `gh pr review --dismiss`.
+
+## Requirements
 
 The skill must enable an agent to:
 
@@ -34,7 +42,8 @@ If a request-changes review is submitted without a body, `gh` will require one �
 
 N/A — each review operation is a discrete single command; there are no competing execution paths within this skill.
 
-## Don'ts
+## Constraints
 
-- Does not cover requesting reviewers — that belongs to `gh-cli-prs-create` (at creation) or cover the `gh pr edit --add-reviewer` path.
+- Does not cover requesting reviewers — that belongs to `gh-cli-prs-create` (at creation) or the `gh pr edit --add-reviewer` path.
 - Does not cover resolving review threads — see `gh-cli-api` for the GraphQL mutation.
+- Does not cover inline comments or general PR comments — see `gh-cli-prs-comments`.

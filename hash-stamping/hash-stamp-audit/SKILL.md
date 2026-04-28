@@ -7,10 +7,6 @@ description: >-
   integrity check, sha256 validation.
 ---
 
-# hash-stamp-audit
-
-Read-only. Verifies every `.sha256` companion in a tree matches current hash of its target.
-
 Dispatch: "Read and follow `instructions.txt` (in this dir). Input: `root=<path> [--git-only]`"
 
 `root` (required): audit root. `--git-only`: limit to companions of git-modified/untracked files.

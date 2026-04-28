@@ -3,8 +3,6 @@ name: session-logging
 description: Standards for creating session log entries in logs/session/ and logs/telegram/. Use when writing any log entry or summary during a workspace session.
 ---
 
-Log every interaction, decision, discovery, and outcome. If it's not written down, it didn't happen.
-
 ## Directory Layout
 
 - Session logs: `logs/session/YYYYMM/DD/HHmmss/`
@@ -14,7 +12,7 @@ Each session gets its own timestamped directory.
 
 ## Entry Naming
 
-Number entries sequentially with two-digit prefix so they sort correctly:
+Number entries sequentially with two-digit prefix:
 
 ```text
 01-session-start.md
@@ -32,13 +30,11 @@ summary.md
 - Key decisions made
 - Follow-up tasks created
 
-## Log as You Go
-
-For long sessions, log as events happen. Don't wait until the end — waiting risks losing detail.
-
 ## What to Log
 
 - Significant incoming messages and requests
 - Every decision and the reasoning behind it
 - Discoveries: unexpected state, missing files, errors
 - Outcomes: tasks created, changes made, commands run
+
+Log as events happen. Don't wait until the end.

@@ -13,7 +13,15 @@ Guide an agent through finalizing a pull request — merging, keeping the branch
 
 `gh pr merge`, `gh pr update-branch`, and `gh pr revert`. Does not cover checks or review status — those are inputs to the decision to merge, not part of this skill.
 
-## Intent
+## Definitions
+
+- **Merge commit**: a strategy that preserves all commits from the source branch as-is, adding a merge commit to the base.
+- **Squash**: a strategy that combines all commits from the source branch into a single commit on the base.
+- **Rebase**: a strategy that replays commits from the source branch onto the base without a merge commit.
+- **Branch update**: the act of synchronizing a PR branch with its base when the base has moved ahead.
+- **Revert PR**: a new pull request that undoes the changes introduced by a previously merged PR.
+
+## Requirements
 
 The skill must enable an agent to:
 
@@ -35,7 +43,7 @@ If a merge is attempted without specifying a strategy and the repository has mul
 
 Merge strategy must be explicitly specified — no default strategy may be assumed. Branch deletion after merge is opt-in — the agent must not delete the source branch unless the caller explicitly requests it.
 
-## Don'ts
+## Constraints
 
 - Does not cover `gh pr checks` — checking readiness before merge is out of scope here.
 - Does not cover git operations after merge (e.g., pulling the updated base locally).

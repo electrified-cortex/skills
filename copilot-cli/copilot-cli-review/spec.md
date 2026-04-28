@@ -20,6 +20,14 @@ Does NOT cover:
 - Fixing the findings. Output is read-only review; remediation is the caller's job.
 - Other Copilot CLI operations (chat, explain). Those are sibling sub-skills under `copilot-cli/`.
 
+## Definitions
+
+- **working_dir**: the directory passed by the caller in which Copilot CLI is invoked. Must be constrained to the target repo or worktree; never a root or secrets directory.
+- **threat surface**: the set of actions `--allow-all-tools` permits — read, edit, and execute within the working directory. The working_dir constraint is the mitigation.
+- **severity vocabulary (canonical)**: `blocker / major / minor / nit`. This skill normalizes all Copilot severity output to this four-value set before returning.
+- **inline content serialization**: embedding diff or file content as a string literal inside the `-p` prompt argument, since Copilot CLI has no file-input flag.
+- **Copilot CLI binary**: the `copilot` executable on the host PATH. This skill detects it via `copilot --version`; it does not install or manage it.
+
 ## Requirements
 
 ### Invocation

@@ -3,7 +3,7 @@ name: hash-stamping
 description: SHA-256 integrity stamp suite. Verify stamp drift (audit/) or write/update stamps (stamp/).
 ---
 
-SHA-256 integrity stamp suite. Two sub-skills:
+Two dispatch sub-skills:
 
 - `audit/` — verify stamps, detect drift. Use to check if a file changed since last stamp.
 - `stamp/` — write or update `.sha256` companions. Use after editing stamped files.

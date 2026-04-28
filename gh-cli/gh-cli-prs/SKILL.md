@@ -3,8 +3,6 @@ name: gh-cli-prs
 description: Entry point for pull request management via the GitHub CLI. Handles common PR inspection and routes write operations to sub-skills.
 ---
 
-Entry point for PR management via GitHub CLI. Handles common PR inspection; routes write ops to sub-skills.
-
 When to Use:
 Inspect PRs (list, view, diff, check status) or auto-route write ops. Know sub-skill → dispatch directly.
 
@@ -47,3 +45,5 @@ Notes:
 Use `--repo owner/name` when not in local clone of target repo.
 `gh pr checks --watch` blocks until CI completes.
 Covers `gh pr` commands only. Git ops, branch protection, CODEOWNERS out of scope.
+
+Related: `gh-cli-prs-create`, `gh-cli-prs-review`, `gh-cli-prs-comments`, `gh-cli-prs-merge`
