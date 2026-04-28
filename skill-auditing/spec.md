@@ -39,7 +39,7 @@ and should run in an isolated agent via the Dispatch agent pattern.
 
 ## Version
 
-1.0
+1.1
 
 Bump this when the audit semantics, output schema, or check codes change in a way that invalidates prior records. Bump SHOULD be coordinated with the matching value in `instructions.uncompressed.md`.
 
@@ -128,12 +128,12 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
 The audit executes as a three-phase gate flow. Each phase is a hard gate: failure at any phase
 stops all further evaluation and produces a FAIL verdict. Phases do not run in parallel.
 
-On entry, the auditor identifies the skill's source files (`spec.md`, `uncompressed.md`, `instructions.uncompressed.md` if present — `SKILL.md` and `instructions.txt` are excluded as derived artifacts), computes a manifest hash from those files using the hash-record manifest procedure, and checks the cache by probing `test -f .hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/<filename>.md`. `<filename>` is the value passed via `--filename` — used VERBATIM — the leaf filename is `<filename>.md` with no skill-name prefix, no timestamp, and no extra qualifiers. On a cache hit, the auditor outputs `PATH: <existing-record>` and stops immediately. On a miss, the auditor proceeds with the full audit.
+On entry, the auditor identifies the skill's source files (`spec.md`, `uncompressed.md`, `instructions.uncompressed.md` if present — `SKILL.md` and `instructions.txt` are excluded as derived artifacts), computes a manifest hash from those files using the hash-record manifest procedure, and checks the cache by probing `test -f .hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.1/<filename>.md`. `<filename>` is the value passed via `--filename` — used VERBATIM — the leaf filename is `<filename>.md` with no skill-name prefix, no timestamp, and no extra qualifiers. On a cache hit, the auditor outputs `PATH: <existing-record>` and stops immediately. On a miss, the auditor proceeds with the full audit.
 
 **Filename format:** `<filename>.md` ONLY. The `<filename>` is the value passed via `--filename`, verbatim — lowercase-hyphenated, vendor-class only (e.g. `claude-haiku`, `claude-sonnet`, `claude-opus`). **Do NOT include**: caller skill name, timestamp/date, sub-version qualifiers. See `../hash-record/filenames.md` for canonical values.
 
 ```text
-Correct:   .hash-record/<sh>/<hash>/skill-auditing/v1.0/claude-sonnet.md
+Correct:   .hash-record/<sh>/<hash>/skill-auditing/v1.1/claude-sonnet.md
 Incorrect: .hash-record/<sh>/<hash>/skill-auditing/skill-auditing-sonnet-claude-sonnet.md
 Incorrect: .hash-record/<sh>/<hash>/skill-auditing/claude-sonnet-2026-04-27T19-17-52Z.md
 ```
@@ -142,7 +142,7 @@ The auditor then dispatches `markdown-hygiene` on each `.md` file in the skill d
 
 Phase 1 (Spec Gate) validates the companion spec's structure and normative quality. Phase 2 (Skill Smoke Check) validates SKILL.md structure, classification, and frontmatter. Phase 3 (Spec Compliance Audit) performs deep cross-verification between spec and SKILL.md, including cost analysis for dispatch skills, markdown hygiene, and instruction file constraints.
 
-On completion, the auditor assigns one of four verdicts (PASS, NEEDS_REVISION, FAIL, or error) and writes the full structured report to `.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/<filename>.md` — the leaf filename is the `--filename` value verbatim (e.g. `claude-sonnet.md`), no skill-name prefix, no timestamp, no extra qualifiers. The record frontmatter uses the manifest hash as `hash`, a `file_paths` list (repo-relative path strings for every source file in the manifest, sorted lexically) as the path anchor, `skill-auditing` as `operation_kind`, and the `result` field maps: PASS → `pass`; PASS_WITH_FINDINGS / NEEDS_REVISION / FAIL → `findings`; error → `error`. The record body opens with `# Result`, states the verdict, lists findings, and includes a **References** subsection listing only `findings:` paths from markdown-hygiene (files that returned `CLEAN` are omitted; `ERROR` responses are noted separately). The auditor outputs `PATH: <record-path>` and exits. Without `--fix`, the auditor exits without modifying any skill file. With `--fix` and a NEEDS_REVISION verdict, the auditor performs a single fix pass against the skill's authoritative source files (see Fix Mode Behavior) and exits; re-audit is the caller's responsibility after recompression.
+On completion, the auditor assigns one of four verdicts (PASS, NEEDS_REVISION, FAIL, or error) and writes the full structured report to `.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.1/<filename>.md` — the leaf filename is the `--filename` value verbatim (e.g. `claude-sonnet.md`), no skill-name prefix, no timestamp, no extra qualifiers. The record frontmatter uses the manifest hash as `hash`, a `file_paths` list (repo-relative path strings for every source file in the manifest, sorted lexically) as the path anchor, `skill-auditing` as `operation_kind`, and the `result` field maps: PASS → `pass`; PASS_WITH_FINDINGS / NEEDS_REVISION / FAIL → `findings`; error → `error`. The record body opens with `# Result`, states the verdict, lists findings, and includes a **References** subsection listing only `findings:` paths from markdown-hygiene (files that returned `CLEAN` are omitted; `ERROR` responses are noted separately). The auditor outputs `PATH: <record-path>` and exits. Without `--fix`, the auditor exits without modifying any skill file. With `--fix` and a NEEDS_REVISION verdict, the auditor performs a single fix pass against the skill's authoritative source files (see Fix Mode Behavior) and exits; re-audit is the caller's responsibility after recompression.
 
 ## Defaults and Assumptions
 

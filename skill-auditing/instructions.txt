@@ -28,20 +28,20 @@ Procedure:
     Cache path shape:
 
     ```text
-    <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/<filename>.md
+    <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.1/<filename>.md
     ```
 
-    `v1.0` = skill-auditing's own version (declared in `spec.md`; this file MUST match). Drift = defect -> surface and stop.
+    `v1.1` = skill-auditing's own version (declared in `spec.md`; this file MUST match). Drift = defect -> surface and stop.
 
     ```text
-    Correct:   .hash-record/<sh>/<hash>/skill-auditing/v1.0/claude-sonnet.md
+    Correct:   .hash-record/<sh>/<hash>/skill-auditing/v1.1/claude-sonnet.md
     Incorrect: .hash-record/<sh>/<hash>/skill-auditing/skill-auditing-sonnet-claude-sonnet.md
     Incorrect: .hash-record/<sh>/<hash>/skill-auditing/claude-sonnet-2026-04-27T19-17-52Z.md
     ```
 
 5b. Probe cache: `test -f <path-from-5a>`.
 - HIT (file exists): output `PATH: <abs-path>` -> stop. Don't re-run audit.
-- MISS: save `<repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/` as `<audit_cache_dir>` -> continue.
+- MISS: save `<repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.1/` as `<audit_cache_dir>` -> continue.
 
 6. Read skill at `skill_path`. Type: inline/dispatch. Locate spec: check `spec_path` or `spec.md` co-located. Not found: simple inline (<30 lines) -> skip Phase 1; dispatch/complex inline -> error verdict + write record + `PATH:` + stop.
 7. Run Phase 1 -> 2 -> 3 (stop on first fail). Assign verdict. Map to `result`: PASS -> `pass`; PASS_WITH_FINDINGS/NEEDS_REVISION/FAIL -> `findings`; error -> `error`.

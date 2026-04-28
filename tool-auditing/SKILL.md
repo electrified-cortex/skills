@@ -1,8 +1,6 @@
 ---
 name: tool-auditing
-description: >-
-  Audit tool scripts for companion spec, conventions, error handling.
-  Lightweight — fast-cheap model can run it.
+description: Audit tool scripts for companion spec, conventions, and error handling. Triggers — audit tool, check tool script, review tool conventions, tool compliance, tool script audit.
 ---
 
 Verify tool scripts follow conventions. Run checklist against each script directly.

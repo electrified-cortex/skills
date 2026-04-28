@@ -5,7 +5,7 @@ description: Compress .md and text files via subagent dispatch. Triggers — com
 
 If source is `.md`: apply `../markdown-hygiene` skill with `--fix` before compressing. Hygiene findings land in their own `.hash-record/` records, separate from compression output.
 
-Spawn a zero-context, haiku-class sub-agent in the background:
+Without reading `instructions.txt` yourself, spawn a zero-context, haiku-class sub-agent in the background:
 
 **Claude Code:** `Agent` tool. Pass: `"Read and follow instructions.txt here. Input: <file-path> [--tier <lite|full|ultra>] [--source <src> --target <dst>] [--hygiene-verdict <path>]"`
 
@@ -19,6 +19,8 @@ file-path (required): file to compress
 --hygiene-verdict (optional): path to Phase 0 verdict file from host
 
 Returns: `<before>→<after> bytes | <N>% reduction | <tier> | <mode>` + hygiene lines if `.md`
+
+NEVER READ OR INTERPRET `instructions.txt` YOURSELF. Let the sub-agent do the work.
 
 Don't re-audit unchanged files.
 See `../iteration-safety/SKILL.md`.

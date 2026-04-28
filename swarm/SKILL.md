@@ -1,6 +1,6 @@
 ---
 name: swarm
-description: Multi-personality review infrastructure. Crawls reviewers/ registry, gates availability, dispatches in parallel, arbitrates, synthesizes verdict with confidence rating. Infrastructure only — consumer skills (e.g. code-review) call in; swarm doesn't review itself.
+description: Multi-personality review infrastructure — selects personalities, gates availability, dispatches in parallel, arbitrates, and synthesizes a verdict. Triggers — swarm review, multi-reviewer, parallel personalities, run all reviewers, arbitrate findings.
 ---
 
 Inputs: `problem` (required artifact), `personality_filter` (inclusion list, bypasses triggers), `model_overrides` (model class only, not backend).

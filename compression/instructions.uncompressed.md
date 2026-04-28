@@ -31,12 +31,12 @@ Steps:
 5. Verify (file mode only, not blurb): compare compressed result against original content. Every fact, rule, and constraint must survive.
    - Recoverable (single dropped item or collapsed qualifier) → fix in-place, report fix + suggest prevention.
    - Not recoverable (multi-element loss, structural damage, meaning reversal) → restore original, `REJECTED: content lost — <details>`.
-5a. If target is `.md`: apply markdown lint checks inline to compressed result. Fix common issues in-place (trailing spaces, missing blank lines around fenced blocks, etc.).
+6. If target is `.md`: apply markdown lint checks inline to compressed result. Fix common issues in-place (trailing spaces, missing blank lines around fenced blocks, etc.).
    - All fixed → record fixes in output.
    - Some issues remain → record fixes; list remaining as warnings.
    - Nothing to fix → record `hygiene: clean`.
    Hygiene issues never cause rejection — caller is informed so no further hygiene pass is needed.
-6. Write result to target (in-place, `.compressed`, or `--target` path).
+7. Write result to target (in-place, `.compressed`, or `--target` path).
 
 Output (required): `<before>→<after> bytes | <N>% reduction | <tier> | <mode>`
 Mode = `in-place`, `alongside (<file>.compressed)`, or `source→target (<dst>)`

@@ -1,6 +1,6 @@
 ---
 name: dispatch-setup
-description: Configure the dispatch skill agent file correctly in VS Code and Cursor.
+description: Configure the dispatch skill agent file correctly in VS Code and Cursor. Triggers — dispatch setup, configure dispatch, runSubagent not working, agent not found, VS Code dispatch, Cursor dispatch setup.
 ---
 
 Claude Code CLI has no known setup issues.
@@ -76,3 +76,4 @@ Assumed similar to VS Code: same path, frontmatter rules, model name format. No 
 | Wrong model silently | Slug in `model` field |
 | Sub-agent can't use tools | `tools` field missing or incomplete |
 | Sub-agent lacks task context | Context not inherited; hand-feed it |
+| Dispatch hangs or appears parallel | No — `runSubagent` serializes; re-evaluate for blocking cost |

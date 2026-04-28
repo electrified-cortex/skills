@@ -3,7 +3,7 @@ name: skill-auditing
 description: Audit skill for quality, classification, cost, compliance with skill-writing spec. Triggers — audit this skill, check skill quality, review skill compliance, validate skill structure, skill needs review.
 ---
 
-Apply `../markdown-hygiene` skill with `--fix` to every `.md` file in the target skill folder. Hygiene always runs with fix — clean before audit, every time. Findings land in `.hash-record/<file-hash>/markdown-hygiene/claude-haiku.md` records, separate from the audit body.
+Apply `../markdown-hygiene` skill with `--fix` to every `.md` file in the target skill folder — in parallel where the runtime supports it. Hygiene always runs with fix — clean before audit, every time. Findings land in `.hash-record/<file-hash>/markdown-hygiene/claude-haiku.md` records, separate from the audit body.
 
 Then without reading `instructions.txt` yourself, spawn a zero-context, haiku-class sub-agent in the background:
 
