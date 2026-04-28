@@ -49,8 +49,8 @@ VS Code requires the human-readable model name, not the API slug.
 | Valid | Invalid (slug — do not use) |
 | --- | --- |
 | `Claude Sonnet 4.6` | `claude-sonnet-4-6` |
-| `Claude Haiku 4.5 (Copilot)` | `claude-haiku-4-5` |
-| `Claude Opus 4.6 (Copilot)` | `claude-opus-4-6` |
+| `Claude Haiku 4.5` | `claude-haiku-4-5` |
+| `Claude Opus 4.6` | `claude-opus-4-6` |
 
 Using a slug causes silent fallback to an unintended model or an error. The failure mode is not always surfaced in the UI.
 

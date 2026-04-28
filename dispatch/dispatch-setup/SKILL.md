@@ -42,8 +42,8 @@ Use the human-readable form with spaces. Slugs are invalid.
 | Valid | Invalid |
 | --- | --- |
 | `Claude Sonnet 4.6` | `claude-sonnet-4-6` |
-| `Claude Haiku 4.5 (Copilot)` | `claude-haiku-4-5` |
-| `Claude Opus 4.6 (Copilot)` | `claude-opus-4-6` |
+| `Claude Haiku 4.5` | `claude-haiku-4-5` |
+| `Claude Opus 4.6` | `claude-opus-4-6` |
 
 Slug in `model` field → silent fallback or error. Failure not always surfaced in the UI.
 
