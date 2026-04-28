@@ -5,26 +5,52 @@ description: Detect markdownlint violations in a .md file. Detect-only — no fi
 
 # Markdown Hygiene
 
-`<instructions>`: `instructions.txt` (in this skill folder; NEVER READ THIS FILE)
-`<instructions-abspath>`: the absolute path to `<instructions>`
-`<hashname>`: the model being dispatched
-`<dispatch-prompt>`: `Read and follow <instructions-abspath>`
-`<input-suffix>`: `Input: <markdown_file_path> --hashname <hashname> [--ignore <RULE>[,<RULE>...]]`
+`<instructions>`= `instructions.txt` (in this skill folder; NEVER READ THIS FILE)
+`<instructions-abspath>`= the absolute path to `<instructions>`
+`<input-suffix>`= `Input: <markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
+`<prompt>`= `Read and follow <instructions-abspath>; <input-suffix>`
+`<description>`= `Inspecting Markdown Hygiene: <markdown_file_path>`
+`<report>`= The result file produced by the instructions.
+
+If you have any markdown linter available in your runtime, run its auto-fix pass on `<markdown_file_path>` now (the cheap mechanical fixes — trailing spaces, blanks around headings, list-marker consistency). Don't install one if it's not present; continue without. The dispatch verifies regardless.
 
 Without reading `instructions.txt` yourself, spawn a zero-context Dispatch sub-agent (haiku-class):
 
-Claude Code `Agent` tool:
-`subagent_type: "Dispatch"`, `prompt: "<dispatch-prompt>; <input-suffix>"`, `model: "haiku"`
-Run in background if possible.
+Claude Code:
 
-VS Code / Copilot `runSubagent(agentName: "Dispatch", model: "Claude Haiku 4.5", prompt: "<prompt>")`. Synchronous.
+```tool
+Agent({
+  subagent_type: "Dispatch",
+  prompt: "<prompt>",
+  model: "haiku",
+  run_in_background: true,
+  description: "<description>"
+})
+```
 
-`<path-to-instructions.txt>` resolves to `markdown-hygiene/instructions.txt` in this skill's directory.
+VS Code / Copilot:
 
-Returns: `CLEAN` | `findings: <abs-path-to-record.md>` | `ERROR: <reason>`.
+```tool
+runSubagent({
+  agentName: "Dispatch",
+  prompt: "<prompt>",
+  model: "Claude Haiku 4.5",
+  description: "<description>"
+})
+```
 
-`CLEAN`: done.
+If you are unable to use the "Dispatch" agent, omit the subagent name/type,
+but notify the host that the "Dispatch" agent needs to be installed.
 
-`findings`: dispatch again using the pattern above WITHOUT the `model` field (sonnet-class default), passing the findings record path as `<path-to-instructions.txt>`. The record's `Fix:` lines are the imperative instructions.
+NEVER READ/INTERPRET `<instructions-abspath>` YOURSELF. Let the sub-agent handle.
 
-NEVER READ OR INTERPRET `<instructions>` YOURSELF. Let the sub-agent handle.
+Returns: `CLEAN` | `findings: <report>` | `ERROR: <reason>`.
+
+`CLEAN`: done. Stop here.
+
+If `ERROR` or the 3rd iteration stop and report findings; otherwise:
+`<prompt>`= `For this <markdown_file_path>, read <report> and fix any issues.`
+`<description>`= `Fixing Markdown Hygiene: <markdown_file_path>`
+Use the same pattern for dispatch above but omit the model.
+
+Keep iteration count; repeat from the top.

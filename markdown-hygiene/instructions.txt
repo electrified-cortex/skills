@@ -1,144 +1,148 @@
-Detect, fix markdownlint violations. Zero errors gates execution.
+Detect markdownlint violations in a `.md` file. Produce a report with imperative `Fix:` instructions if there are findings. Detect-only — never modifies the target.
 
-Params:
-`file_path` (required): absolute path to .md file
-`--filename <name>` (required): filename for record; lowercase-hyphenated; use VERBATIM — no inference, suffix, date, sub-version. Missing → `ERROR: --filename required`, stop.
-`--fix` (optional): apply fixes after detect; without, detect-only — file untouched.
-`--source X --target Y` (optional): read X, fix, write Y; X untouched, no git check; implies `--fix`.
-`--ignore <RULE>[,<RULE>...]` (optional): skip rules — not scanned, flagged, fixed.
-`--force` (optional): bypass cache HIT, re-execute despite cached record.
-Adaptive MD041: first non-blank `---` (YAML) → auto-suppress MD041; no flag needed.
+## Inputs
 
-Modes:
-Detect (default, no `--fix`): read-only, no git check; always runs; one detect record.
-Fix (with `--fix`): `git status --porcelain -- <file>` → proceed with fix if empty or `M ` (M+space). Otherwise auto-degrade to detect-only — emit the detect record with findings, output `findings: <abs-path-to-record.md>`, and add a `note: untracked or dirty — fix skipped` line to the record body. NEVER hard-error on untracked; the report is always useful.
-Source→Target: `--source X --target Y` reads X, fixes, writes Y; X untouched; implies `--fix`.
+Input shape: `<markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
 
-Procedure:
+- `<markdown_file_path>` (required): absolute path to the `.md` file to verify.
+- `--ignore <RULE>[,<RULE>...]` (optional): rules to skip — not flagged.
+- Adaptive: if the first non-blank line is `---` (YAML frontmatter), MD041 is auto-suppressed.
 
-Executor, not planner. Run each step's tool calls. Don't summarize, don't show "fixed version" inline. Don't stop early. Dispatch incomplete without record file + output path.
+The host MAY have pre-fixed; this skill always verifies.
 
-Two passes: detect (always), fix (only if `--fix` or `--source`/`--target`).
+Record filename is fixed: `report.md`.
 
-Pass 1 — Detect:
+## Procedure
 
-0. Guard: missing `--filename` → `ERROR: --filename required`, stop immediately.
-1. Read target (Read tool). Guard: unreadable or non-.md → `ERROR: <reason>`, stop. Adaptive MD041: first non-blank `---` → add MD041 to suppressed set.
-2. Resolve repo root from target file's path (Bash):
-   `target_dir=$(dirname "<file_path>"); repo_root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null); [ -z "$repo_root" ] && repo_root="$target_dir"`
-   Fallback: no .git/ found → `repo_root="$target_dir"` (place `.hash-record/` adjacent to target).
-3. `git hash-object <file_path>` (Bash). Save 40-char as `<hash>`.
-4. Cache check: `test -f <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<filename>.md` (Bash) where `<filename>` = `--filename` value. Skip if `--force`.
-   — Exists: read `result:` frontmatter — if `pass` output `CLEAN`; if `findings` output `findings: <path>` — stop (HIT).
-   — Missing: MISS. Save `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene` as `<detect_cache_dir>` (no /). Continue.
-4. Scan markdownlint violations. Prefer `markdownlint` CLI (see tooling.md); else use knowledge. Skip rules in `--ignore` or adaptive suppressed set. Cross-check findings vs actual lines — drop unreferenced.
-   Per-rule anchors:
-   — MD001: heading levels increment by one (H1→H3 violates).
-   — MD003: heading style consistent (atx `#` vs setext `===`/`---`); flag headings differing from first.
-   — MD004: list markers consistent (`-`, `*`, `+`); flag items using different marker than first in list.
-   — MD009: trailing spaces; flag lines ending with 1+ spaces (except two-space line-break).
-   — MD010: hard tabs; flag tabs in non-code content.
-   — MD012: 2+ consecutive blanks; flag runs.
-   — MD022: headings need blank before + after (except start/end).
-   — MD023: headings no leading whitespace (start `#`).
-   — MD024: duplicate heading text among siblings; flag identical text at same level/parent.
-   — MD025: one H1 per file; flag every H1 after first.
-   — MD026: headings no ending punctuation (. ! ? : , ;).
-   — MD029: ordered list prefixes consistent (all `1.` or strictly incrementing).
-   — MD031: code blocks need blank before + after.
-   — MD032: lists need blank before + after.
-   — MD033: no inline HTML; flag `<tag>`, `</tag>`, `<!-- comment -->` outside blocks.
-   — MD034: bare URLs; flag `http://`, `https://` outside brackets, backticks, links.
-   — MD040: code blocks need language ID (` ```python `, not bare ` ``` `).
-   — MD041: first non-blank must be H1 (suppressed with frontmatter or `--ignore MD041`).
-   — MD047: file ends exactly one newline.
-   — MD055: table pipe style consistent across rows.
-   — MD056: all table rows same cell count.
-   — MD058: tables need blank before + after.
-   — MD060: table separators spaced (`| --- |` not `|---|`).
-5. Write detect record at `<detect_cache_dir>/<filename>.md`:
-   — Filename: `<filename>.md` (value from `--filename`, VERBATIM; append nothing). Caller controls filename; executor uses supplied value as-is. Missing → stop with `ERROR: --filename required`.
-     Correct: `.hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku.md`
-     Incorrect: appended date/qualifiers/inferred model.
-   — `mkdir -p <detect_cache_dir>` (Bash).
-   — Frontmatter: `hash: <hash>`, `file_path: <repo-relative>` (via `git ls-files --full-name` or strip `<repo-root>/` from absolute path; `<repo-root>` from step 2; e.g. `markdown-hygiene/instructions.uncompressed.md`), `operation_kind: markdown-hygiene`, `result: pass|findings`.
-   — Body: Report Format. No violations: `# Result\n\nCLEAN`. Violations: `# Result\n\nFINDINGS\n\n- <list>`. Each entry: `MD0XX line N: <desc>` + indented `Fix: <imperative>`. Fix: standalone, literal.
-   — No violations: output `CLEAN`, stop.
-   — Violations, no `--fix`: output `findings: <detect_cache_dir>/<filename>.md`, stop.
+You are executor, not planner. Run each step's tool calls. Produce a record file and output its absolute path.
 
-Pass 2 — Fix (only when `--fix` + violations):
+Cache-first ordering: hash and cache-check before reading the file. A cache HIT short-circuits with no Read tool call.
 
-6. ALL violations unfixable (manual-only, e.g., MD040 no-language) → output `findings: <detect_record_path>`, stop (no second record).
-7. Read detect record (Read tool). Extract `Fix:` lines from FINDINGS body. Apply literally via Edit/Write. No re-scan, no knowledge. File MUST contain all applied fixes.
-8. Compute new hash: `git hash-object <fixed-file>`. Save as `<fix_hash>`. Set `<fix_cache_dir>` = `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene` (no /).
-9. Write fix record at `<fix_cache_dir>/<filename>.md`:
-   — `mkdir -p <fix_cache_dir>` (Bash).
-   — Frontmatter: `hash: <fix_hash>`, `file_path: <repo-relative>`, `operation_kind: markdown-hygiene`, `result: pass|findings`.
-   — Body: Report Format. All applied: `# Result\n\nFIXED\n\n- <list>`. Some remain: `# Result\n\nPARTIAL\n\n...`.
-   — All fixed: output `CLEAN`, stop. Some remain: output `findings: <fix_cache_dir>/<filename>.md`, stop.
+1. **Resolve repo root.** Pick the form your runtime supports.
 
-Dispatch return (one line):
-Clean (no violations OR all fixed): `CLEAN`
-Findings (remain — detect-only or PARTIAL): `findings: <absolute-path-to-record.md>`
-Pre-write failure: `ERROR: <reason>`
+   ```bash
+   target_dir=$(dirname "<markdown_file_path>")
+   repo_root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null)
+   [ -z "$repo_root" ] && repo_root="$target_dir"
+   ```
 
-Record body — minimum info not in frontmatter. Frontmatter: `file_path`, `result`, `hash`, `model`. Never dupe `file_path` in body. Body opens: `# Result`.
+   ```powershell
+   $target_dir = Split-Path -Parent "<markdown_file_path>"
+   $repo_root = (& git -C $target_dir rev-parse --show-toplevel 2>$null)
+   if (-not $repo_root) { $repo_root = $target_dir }
+   ```
 
-CLEAN:
-```
+   Save `<repo_root>`.
+2. **Hash** the target: `git hash-object <markdown_file_path>`. Save 40-char result as `<hash>`. If `git hash-object` fails (file missing, unreadable) -> `ERROR: <reason>`, stop.
+3. **Cache check:** `test -f <repo_root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/report.md`.
+   - HIT: read `result:` frontmatter from the record file. `pass` -> output `CLEAN`, stop. `findings` -> output `findings: <abs-path>`, stop. (No need to read `<markdown_file_path>` itself.)
+   - MISS: save `<repo_root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene` as `<cache_dir>`. Continue.
+4. **Scan** `<markdown_file_path>` for residual violations. Prefer `markdownlint` CLI or VS Code/Cursor markdown extension; else apply rule knowledge directly. Cross-check each finding against actual line — drop any finding you cannot point at on a specific verified line. Skip rules in `--ignore`. Covers EVERY rule below, including all four table rules (MD055/MD056/MD058/MD060).
+5. **Adaptive MD041:** read first non-blank line (e.g. `head -n 5`). If `---`, drop any MD041 finding and record `adaptive: MD041 suppressed`.
+6. **Reference rule list:**
+
+   - MD001 — heading levels increment by one (H1 to H3 violates).
+   - MD003 — heading style consistent (atx `#` vs setext `===`/`---`); flag headings differing from the first.
+   - MD004 — list markers consistent (`-`, `*`, `+`); flag items using a different marker than the first in the list.
+   - MD009 — trailing spaces; flag lines ending with 1+ spaces (except two-space line-break).
+   - MD010 — hard tabs; flag tabs in non-code content.
+   - MD012 — multiple consecutive blanks; flag runs of 2+.
+   - MD022 — headings need blank before AND after (except start/end).
+   - MD023 — headings must not have leading whitespace.
+   - MD024 — duplicate heading text among siblings.
+   - MD025 — only one H1 per file; flag every H1 after the first.
+   - MD026 — headings must not end with `.`, `!`, `?`, `:`, `,`, `;`.
+   - MD029 — ordered list prefixes consistent (all `1.` or strictly incrementing).
+   - MD031 — fenced code blocks need blanks before AND after.
+   - MD032 — lists need blanks before AND after.
+   - MD033 — no inline HTML outside fenced blocks.
+   - MD034 — bare URLs (not in angle brackets, backticks, or links).
+   - MD040 — fenced code blocks need a language identifier.
+   - MD041 — first non-blank line must be H1 (suppressed for frontmatter or `--ignore MD041`).
+   - MD047 — file must end with exactly one newline.
+   - MD055 — table pipe style consistent across rows.
+   - MD056 — all rows in a table same number of cells.
+   - MD058 — tables need blanks before AND after.
+   - MD060 — table cell separators need a space on each side of the dash run.
+7. **Write record** at `<cache_dir>/report.md`:
+   - `mkdir -p <cache_dir>` (Bash).
+   - Frontmatter (open `---`, close `---`):
+     - `hash: <hash>`
+     - `file_path: <repo-relative path>` — repo-relative string, NOT absolute, NOT directory-only. Compute via `git ls-files --full-name <file>` or strip `<repo_root>/` from the absolute path.
+     - `operation_kind: markdown-hygiene`
+     - `result: pass` (no violations) or `result: findings` (violations)
+   - Body:
+     - No violations: `# Result\n\nCLEAN`. Output `CLEAN`, stop.
+     - Violations: `# Result\n\nFINDINGS\n\n- <list>`. Each entry is two lines:
+       - The finding line: `MD0XX line N: <description>`
+       - An indented `Fix: <imperative instruction>` line — complete and standalone. The fix-stage agent will apply this literally with no markdown-rule knowledge.
+   - Output `findings: <cache_dir>/report.md`, stop.
+
+## Return
+
+`CLEAN` (no violations or cache HIT pass) | `findings: <abs-path-to-record.md>` | `ERROR: <reason>`.
+
+## Report Format
+
+Record body always opens with `# Result` H1.
+
+CLEAN (no violations):
+
+```text
 # Result
 
 CLEAN
 ```
 
-FINDINGS (violations, no `--fix`) — each entry: `MD0XX line N: <desc>` + indented `Fix: <imperative>`:
-```
+FINDINGS (violations found):
+
+```text
 # Result
 
 FINDINGS
 
-- MD022 line 7: blank missing before "Configuration"
+- MD022 line 7: blank line missing before heading "Configuration"
   Fix: insert blank line before line 7
 - MD047: file lacks trailing newline
-  Fix: append single newline at end
+  Fix: append a single newline at end of file
+- MD058 line 23: table missing blank line before
+  Fix: insert blank line before line 23
+- MD056 line 31: table row 3 has 4 cells, table has 3 columns
+  Fix: split or remove the extra cell on line 31; ensure all rows have 3 cells
 ```
 
-FIXED (all resolved):
+Each entry is two lines: the finding line (`MD0XX line N: <description>`), then an indented `Fix:` line.
+
+### Fix line philosophy
+
+The `Fix:` line is a complete, standalone imperative. The fix-stage agent applies it literally — no markdown-rule knowledge, no rule-name interpretation. Two tests: would a human applying only the `Fix:` line (without the finding line, without the rule code) produce a correct result? Would two different agents produce identical edits?
+
+If either test fails, the `Fix:` line is too vague. Rewrite it with explicit content (what bytes to insert, what bytes to remove, what cell count to enforce, what column to align).
+
+Bad: `Fix: fix the table` — no rule knowledge transferred to the agent; ambiguous.
+Bad: `Fix: enforce MD058` — assumes rule knowledge.
+Good: `Fix: insert blank line before line 23` — explicit, byte-precise.
+Good: `Fix: split the cell on line 31 into two cells; ensure all rows have exactly 3 cells` — explicit, no rule knowledge needed.
+
+### Table fix examples
+
+Tables (MD055/MD056/MD058/MD060) are high-frequency violators that markdown linters flag but agents often miscorrect. Worked examples per rule:
+
+```text
+- MD058 line 23: table missing blank line before
+  Fix: insert blank line before line 23
+
+- MD058 line 28: table missing blank line after
+  Fix: insert blank line after line 27 (between the last table row and the next non-blank line)
+
+- MD056 line 31: table row 3 has 4 cells, header declares 3 columns
+  Fix: examine line 31; either remove the trailing extra cell to make it 3 cells, or, if the cell is intentional, add a 4th column to the header on line 28 and the separator on line 29
+
+- MD055 line 30: table separator uses ":---:" (centered) but header on line 28 is left-aligned
+  Fix: change line 30 separator to `| --- | --- | --- |` to match left-aligned header style; OR change the header's alignment style consistently
+
+- MD060 line 29: table separator uses `|---|---|---|` (no spaces)
+  Fix: replace line 29 with `| --- | --- | --- |` — exactly one space on each side of every dash run
 ```
-# Result
 
-FIXED
-
-- MD022: blanks around heading (1)
-- MD047: trailing newline (1)
-```
-
-PARTIAL (some unfixable):
-```
-# Result
-
-PARTIAL
-
-Fixed:
-- MD022 (1)
-
-Remaining (manual):
-- MD040 line 14: missing language ID
-```
-
-Verdict: CLEAN → pass; FIXED → pass; FINDINGS → findings; PARTIAL → findings; error → error.
-
-Tables — two canonical modes, never mix per table:
-Mode A (default): 1–3 dashes per cell, pipe-padded; widths flexible. e.g. `| - | --- | --- |`
-Mode B (aligned): dashes match header width; use when readability matters.
-Prohibitions: no unpadded pipes (`|---|---|` violates MD060; use `| --- | --- |`); no extra whitespace in headers (`|  Header  |` → `| Header |`); no inconsistent widths; no mixed Mode A + B.
-
-Rules:
-Fix every violation. Never suppress unless in `--ignore`.
-Never change meaning — formatting only.
-Never introduce violations while fixing.
-Preserve code blocks, frontmatter, tech strings exactly.
-Fix would change meaning → report unfixable.
-One file per dispatch.
-Use tools + knowledge; no external packages.
-Intentional bad markdown: violation inside inline code or demonstrating incorrect syntax → preserve, report PARTIAL with line. Don't fix content demonstrating violation.
+*Every table `Fix:` line names the exact column count, the exact separator format, or the exact line numbers. Generic instructions like "fix the table" or "make rows consistent" will fail the apply test.*
