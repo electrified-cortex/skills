@@ -53,8 +53,8 @@ R8. The `tools` field must list every tool the agent needs to complete its tasks
 R9. Model names in VS Code agent frontmatter use the human-readable space-separated form. Canonical examples:
 
 - `Claude Sonnet 4.6`
-- `Claude Haiku 4.5` — for shallow/cheap tasks
-- `Claude Opus 4.6` — for critical/deep tasks
+- `Claude Haiku 4.5 ` — for shallow/cheap tasks
+- `Claude Opus 4.6 ` — for critical/deep tasks
 
 R10. The `model` field in `runSubagent` at call time also accepts the human-readable form. Omitting it defaults to the Copilot default model (typically Sonnet). Do not pass a slug at the call site.
 

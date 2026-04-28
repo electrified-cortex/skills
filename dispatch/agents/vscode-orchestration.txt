@@ -1,7 +1,7 @@
 runSubagent(agentName: "Dispatch", prompt: "...", description: "...")
 - prompt: full task instructions (or "read <path> and follow it") + all needed context (sub-agent sees nothing from this conversation)
 - description: 3-5 word label shown in UI (e.g. "Scan task queue")
-- model: omit = Sonnet (default); "Claude Haiku 4.5" for simple/cheap tasks; "Claude Opus 4.6" for critical/deep work
+- model: omit = Sonnet (default); "Claude Haiku 4.5 " for simple/cheap tasks; "Claude Opus 4.6 " for critical/deep work
 Prompt must include: goal (1 sentence) + conversation context + output shape + scope.
 Prompt check: would a stranger reading cold know exactly what to do? If no, not ready.
 Skip passing: project docs, CLAUDE.md, memory — inherited automatically.
