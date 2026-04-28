@@ -11,7 +11,7 @@ This is a reference card for configuring dispatch in VS Code (GitHub Copilot) an
 
 VS Code discovers agent files from `.github/agents/` in the project root. The dispatch agent file must be at:
 
-```
+```path
 .github/agents/dispatch.agent.md
 ```
 
