@@ -156,7 +156,11 @@ the audit — subsequent phases do not execute.
 
 ### Phase 0 — Markdown Hygiene
 
-Before the cache check, the host dispatches `markdown-hygiene --filename claude-haiku` (no `--fix`) on each `.md` file in the skill directory. Each call returns `CLEAN` (no violations — omit from results), `findings: <abs-path>` (collect the path), or `ERROR: <reason>` (flag as sub-dispatch failure). Phase 0 verdicts are collected once and passed to the auditor; Phase 3 Check 8 consumes them directly without re-dispatching.
+Before the cache check, the auditor MUST dispatch `markdown-hygiene --filename claude-haiku` on each `.md` file in the skill directory. Phase 0 MUST inherit the `--fix` flag from skill-auditing's own invocation:
+- When skill-auditing is invoked with `--fix`, Phase 0 MUST pass `--fix` to each `markdown-hygiene` dispatch. Hygiene is applied upfront; the audit proceeds against the resulting clean files.
+- When invoked without `--fix`, Phase 0 MUST dispatch detect-only (no `--fix`). Findings flow into the audit report's "Markdown hygiene" summary.
+
+Each call returns `CLEAN` (no violations — omit from results), `findings: <abs-path>` (collect the path), or `ERROR: <reason>` (flag as sub-dispatch failure). Phase 0 verdicts are collected once; Phase 3 Check 8 MUST consume them directly. The auditor MUST NOT re-dispatch `markdown-hygiene` during Phase 3.
 
 ### Phase 1 — Spec Gate
 

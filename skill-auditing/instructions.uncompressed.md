@@ -18,7 +18,11 @@
 
 ## Phase 0 — Markdown Hygiene
 
-Dispatch `markdown-hygiene --filename claude-haiku` (no `--fix`) on each `.md` file in the skill directory. Collect per-file verdicts:
+Dispatch `markdown-hygiene --filename claude-haiku` on each `.md` file in the skill directory. Phase 0 inherits the `--fix` flag from skill-auditing's invocation:
+- Called with `--fix`: dispatch `markdown-hygiene --filename claude-haiku --fix` per `.md`. Hygiene applied upfront; audit proceeds against clean files.
+- Called without `--fix`: dispatch `markdown-hygiene --filename claude-haiku` (detect-only) per `.md`. Findings flow into the audit report's "Markdown hygiene" summary.
+
+Collect per-file verdicts either way:
 - `CLEAN` — no violations; omit from results.
 - `findings: <abs-path>` — collect the path.
 - `ERROR: <reason>` — flag as sub-dispatch failure.
