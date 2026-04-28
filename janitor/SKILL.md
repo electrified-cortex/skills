@@ -21,4 +21,4 @@ Dispatch (zero context): Read and follow `instructions.txt` (in this directory).
 
 Returns: YAML report — overall status, pruned (pattern/candidates/deleted), preserved (pattern/paths/reason).
 
-Related: `iteration-safety`, `audit-reporting`, `session-logging`
+Related: `iteration-safety`, `hash-record`, `session-logging`

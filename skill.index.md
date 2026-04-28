@@ -1,9 +1,5 @@
 # electrified-cortex — skill index
 
-## audit-reporting
-
-Defines where and how audit skills write report files — applied inline when producing output from any audit skill.
-
 ## code-review
 
 Comprehensive review of a diff — your change, another agent's, or an outside PR. Output is findings; fixes are yours to apply.
