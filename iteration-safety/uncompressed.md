@@ -33,4 +33,5 @@ Do not re-audit unchanged files.
 See `../iteration-safety/SKILL.md`.
 ```
 
+Do not copy Rules A or B text into caller specs — embed the pointer block above instead.
 Do not restate Rule B's verbatim quote in caller skills.

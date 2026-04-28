@@ -1,9 +1,7 @@
 ---
 name: code-review
-description: Tiered code review on a change set. Read-only — never modifies code.
+description: Tiered code review on a change set. Read-only — never modifies code. Triggers — review this diff, code review, smoke pass, substantive pass, check this PR, review change set.
 ---
-
-# Code Review
 
 Don't read `instructions.txt` yourself — use Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory).
 Input: `change_set=<form> tier=<smoke|substantive> [prior_findings=<json>] [focus=<csv>] [context_pointer=<path>]`"

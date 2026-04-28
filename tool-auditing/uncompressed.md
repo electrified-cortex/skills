@@ -56,9 +56,7 @@ Verify that tool scripts have companion specs, follow naming conventions, handle
 
 ## Output
 
-Report follows the `audit-reporting` skill at `../audit-reporting/SKILL.md`. Apply its path shape (including target-kind), frontmatter requirements, and `.gitignore` check before writing any report. Targets are `tools/**` -> target-kind is `tool`.
-
-Verdict mapping (tool-auditing -> audit-reporting frontmatter): `PASS -> PASS`, `FAIL -> FAIL`, `WARN -> PASS_WITH_FINDINGS`.
+Write findings to `.hash-record/` via the `hash-record` skill. Targets are `tools/**` — use target-kind `tool`. Verdict enum: `PASS`, `FAIL`, `PASS_WITH_FINDINGS` (maps from internal `WARN`). The `result` frontmatter field in the hash-record entry must use this enum.
 
 ## Iteration Safety
 

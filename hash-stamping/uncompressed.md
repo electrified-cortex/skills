@@ -1,16 +1,16 @@
 ---
 name: hash-stamping
-description: SHA-256 integrity stamp suite. Verify stamp drift (audit/) or write/update stamps (stamp/).
+description: SHA-256 integrity stamp suite. Verify stamp drift or write/update stamps. Triggers — verify stamp, check integrity, detect drift, update sha256, stamp this file, hash mismatch.
 ---
 
-# Hash Stamp
+# Hash Stamping
 
 Suite of two dispatch skills for managing SHA-256 integrity stamps alongside tracked artifacts.
 
 ## Sub-skills
 
-- **`audit/`** — verify stamps, detect drift. Use when checking whether a file has changed since its last stamp (e.g., triggering an audit, pre-merge check, CI gate).
-- **`stamp/`** — write or update `.sha256` companions. Use after editing any stamped file.
+- **`hash-stamp-audit/`** — verify stamps, detect drift. Use when checking whether a file has changed since its last stamp (e.g., triggering an audit, pre-merge check, CI gate).
+- **`hash-stamp/`** — write or update `.sha256` companions. Use after editing any stamped file.
 
 ## Stamp Policy
 

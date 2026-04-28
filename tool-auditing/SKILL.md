@@ -32,9 +32,7 @@ Read-only. Report only — caller decides remediation.
 
 ## Output
 
-Output follows the `audit-reporting` skill at `../audit-reporting/SKILL.md`. Apply its path shape (including target-kind), frontmatter requirements, and .gitignore check before writing any report. Targets are `tools/**` → target-kind is `tool`.
-
-Verdict mapping (tool-auditing → audit-reporting frontmatter): `PASS → PASS`, `FAIL → FAIL`, `WARN → PASS_WITH_FINDINGS`. The internal `## Report` body may keep `WARN`; the YAML frontmatter `verdict` field must use audit-reporting vocabulary.
+Write findings to `.hash-record/` via the `hash-record` skill. Targets are `tools/**` — use target-kind `tool`. Verdict enum: `PASS`, `FAIL`, `PASS_WITH_FINDINGS` (maps from internal `WARN`). The `## Report` body may keep `WARN`; the `result` frontmatter field in the hash-record must use the verdict enum above.
 
 ## Iteration Safety
 
