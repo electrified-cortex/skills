@@ -24,8 +24,11 @@ Pass 1 — Detect:
 
 0. Guard: missing `--filename` → `ERROR: --filename required`, stop immediately.
 1. Read target (Read tool). Guard: unreadable or non-.md → `ERROR: <reason>`, stop. Adaptive MD041: first non-blank `---` → add MD041 to suppressed set.
-2. `git hash-object <file_path>` (Bash). Save 40-char as `<hash>`.
-3. Cache check: `test -f <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<filename>.md` (Bash) where `<filename>` = `--filename` value. Skip if `--force`.
+2. Resolve repo root from target file's path (Bash):
+   `target_dir=$(dirname "<file_path>"); repo_root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null); [ -z "$repo_root" ] && repo_root="$target_dir"`
+   Fallback: no .git/ found → `repo_root="$target_dir"` (place `.hash-record/` adjacent to target).
+3. `git hash-object <file_path>` (Bash). Save 40-char as `<hash>`.
+4. Cache check: `test -f <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<filename>.md` (Bash) where `<filename>` = `--filename` value. Skip if `--force`.
    — Exists: read `result:` frontmatter — if `pass` output `CLEAN`; if `findings` output `findings: <path>` — stop (HIT).
    — Missing: MISS. Save `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene` as `<detect_cache_dir>` (no /). Continue.
 4. Scan markdownlint violations. Prefer `markdownlint` CLI (see tooling.md); else use knowledge. Skip rules in `--ignore` or adaptive suppressed set. Cross-check findings vs actual lines — drop unreferenced.
@@ -58,7 +61,7 @@ Pass 1 — Detect:
      Correct: `.hash-record/<sh>/<hash>/markdown-hygiene/claude-haiku.md`
      Incorrect: appended date/qualifiers/inferred model.
    — `mkdir -p <detect_cache_dir>` (Bash).
-   — Frontmatter: `hash: <hash>`, `file_path: <repo-relative>` (via `git ls-files --full-name` or strip `git rev-parse --show-toplevel`; e.g. `markdown-hygiene/instructions.uncompressed.md`), `operation_kind: markdown-hygiene`, `result: pass|findings`.
+   — Frontmatter: `hash: <hash>`, `file_path: <repo-relative>` (via `git ls-files --full-name` or strip `<repo-root>/` from absolute path; `<repo-root>` from step 2; e.g. `markdown-hygiene/instructions.uncompressed.md`), `operation_kind: markdown-hygiene`, `result: pass|findings`.
    — Body: Report Format. No violations: `# Result\n\nCLEAN`. Violations: `# Result\n\nFINDINGS\n\n- <list>`. Each entry: `MD0XX line N: <desc>` + indented `Fix: <imperative>`. Fix: standalone, literal.
    — No violations: output `CLEAN`, stop.
    — Violations, no `--fix`: output `findings: <detect_cache_dir>/<filename>.md`, stop.

@@ -26,13 +26,16 @@ Procedure:
 2. Identify source files — `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` (if present). Skip `SKILL.md` & `instructions.txt` (compressed artifacts).
 3. `git hash-object <file>` each source file. Collect `(filename, blob-hash)` pairs.
 4. Build manifest: sort pairs lexically. Write `<filename> <hash>` per pair → temp string. `git hash-object --stdin` on text → 40-char `<manifest_hash>`.
+4a. Resolve repo root from `skill_path` (Bash):
+    `target_dir=$(dirname "<skill_path>"); repo_root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null); [ -z "$repo_root" ] && repo_root="$target_dir"`
+    Fallback: no .git/ found → `repo_root="$target_dir"` (place `.hash-record/` adjacent to skill dir).
 5. Cache check: `test -f <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/<filename>.md`. `<filename>` = `--filename` VERBATIM (no skill-name/timestamp/qualifiers). Cache HIT → output `PATH: <abs-path>` + stop. Cache MISS → save path as `<audit_cache_dir>` + continue.
    - `v1.0` mandatory (declared in `spec.md`, MUST match this file version). Drift = defect → surface + stop.
    - Filename format: `<filename>.md` ONLY. VERBATIM `--filename`, lowercase-hyphenated vendor-class (e.g. `claude-haiku`). See `../hash-record/filenames.md` for canonical. Correct: `.hash-record/<sh>/<hash>/skill-auditing/v1.0/claude-sonnet.md`. Wrong: skill-auditing-sonnet-claude-sonnet.md or timestamps.
 6. Hygiene results available from Phase 0 (pre-collected) → feed Phase 3 Check 8. No re-dispatch.
 7. Read skill at `skill_path`. Type: inline/dispatch. Locate spec: check `spec_path` or `spec.md` co-located. Not found: simple inline (<30 lines) → skip Phase 1; dispatch/complex inline → error verdict + write record + `PATH:` + stop.
 8. Run Phase 1 → 2 → 3 (stop on first fail). Assign verdict. Map to `result`: PASS → `pass`; PASS_WITH_FINDINGS/NEEDS_REVISION/FAIL → `findings`; error → `error`.
-9. Write audit record at `<audit_cache_dir><filename>.md` (filename = `--filename` VERBATIM). `mkdir -p` first. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list repo-relative>` (one per source file from step 3, lexical sort; paths relative to git root containing `.hash-record/` — compute via `git ls-files --full-name <file>` or strip `git rev-parse --show-toplevel`), `operation_kind: skill-auditing`, `result: <mapped>`.
+9. Write audit record at `<audit_cache_dir><filename>.md` (filename = `--filename` VERBATIM). `mkdir -p` first. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list repo-relative>` (one per source file from step 3, lexical sort; paths relative to `<repo-root>` from step 4a — compute via `git ls-files --full-name <file>` or strip `<repo-root>/` from absolute paths), `operation_kind: skill-auditing`, `result: <mapped>`.
    - Correct YAML: file_paths with repo-relative entries (skill-auditing/...). Wrong: singular file_path, absolute paths, dir-only.
    - Body: `# Result` H1 → state verdict → findings (phase/check refs) → **References** subsection (only `findings:` paths from step 6; CLEAN omitted; ERROR noted).
 10. Output `PATH: <audit_cache_dir><filename>.md` → stop.

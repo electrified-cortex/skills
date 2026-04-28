@@ -417,11 +417,18 @@ result: pass | findings | error | skipped
 ```
 
 `file_paths` MUST be a YAML list of repo-relative path strings — one entry per source
-file consumed in the manifest hash, sorted lexically. The repo root is the git root
-containing the `.hash-record/` directory being written to (the submodule root if
-writing into a submodule's `.hash-record/`). Compute each path via
-`git ls-files --full-name <file>` from inside the file's repo, or strip
-`git rev-parse --show-toplevel` from each absolute path.
+file consumed in the manifest hash, sorted lexically. The repo root MUST be resolved
+from the skill's location, not from CWD:
+
+```bash
+target_dir=$(dirname "<skill_path>")
+repo_root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null)
+# Fallback: no .git/ found → place .hash-record/ adjacent to the skill directory
+[ -z "$repo_root" ] && repo_root="$target_dir"
+```
+
+Compute each repo-relative path via `git ls-files --full-name <file>` from inside the
+file's repo, or strip `<repo-root>/` from each absolute path.
 
 ```yaml
 # Correct:

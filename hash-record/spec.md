@@ -99,7 +99,7 @@ Field constraints:
 
 **`file_path` and `file_paths` — repo-relative path rule:**
 
-- **Single-file consumers** MUST use `file_path:` as a single repo-relative path string. The root is the git repository that contains the `.hash-record/` directory being written to (the submodule root if writing into a submodule's `.hash-record/`). Compute via `git ls-files --full-name <file>` from inside the file's repo, or by stripping the `git rev-parse --show-toplevel` prefix from the absolute path.
+- **Single-file consumers** MUST use `file_path:` as a single repo-relative path string. The root is the git repository resolved from the target file's location (see Repo Root Resolution). Compute via `git ls-files --full-name <file>` from inside the file's repo, or by stripping `<repo-root>/` from the absolute path.
 - **Multi-file consumers** MUST use `file_paths:` as a YAML list of repo-relative path strings — one entry per input source file, sorted lexically.
 
 ```yaml
@@ -130,6 +130,26 @@ Malformed records are treated as misses by the probe operation (the malformed fi
 After the frontmatter, the body contains operation-specific content (findings list for code-review, lint summary for hygiene, audit verdict for audits, etc.). Record body shape is the consumer skill's responsibility; hash-record only requires the frontmatter shape and field validity.
 
 `file_path` is the **human anchor** — operators reading a record by path can find which source file it pertains to. The hash directory is the system anchor; `file_path` is the navigation aid.
+
+### Repo Root Resolution
+
+Consumer skills MUST resolve the repo root from the **target file's path**, not from CWD. The dispatched agent's CWD is the agent's home repo, not the target file's repo.
+
+```bash
+target_dir=$(dirname "<target_file_or_dir>")
+repo_root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null)
+```
+
+If no `.git/` is found via the walk-up (command exits non-zero), fall back to creating `.hash-record/` adjacent to the target file or directory:
+
+```bash
+[ -z "$repo_root" ] && repo_root="$target_dir"
+```
+
+- For single-file consumers (e.g., `markdown-hygiene`): `target_dir = dirname(<file_path>)`.
+- For multi-file consumers (e.g., `skill-auditing`): `target_dir = dirname(<skill_path>)`.
+
+The resolved `<repo_root>` is then used for all cache path construction and for computing repo-relative `file_path`/`file_paths` values.
 
 ### Lookup API
 

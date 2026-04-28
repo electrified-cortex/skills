@@ -48,12 +48,29 @@ No domain-specific terms. Rule identifiers (MD001, MD022, etc.) are markdownlint
 
 Two-pass model: detect first, fix second (only if `--fix` is present). The detect pass runs regardless of `--fix`. This splits cognitive load — first pass is read-only analysis, second pass is edit-only.
 
+**Repo Root Resolution:**
+
+Compute `<repo-root>` from the target file's location, not from CWD:
+
+```bash
+target_dir=$(dirname "<file_path>")
+repo_root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null)
+```
+
+If no `.git/` is found via walk-up (command exits non-zero), fall back to
+creating `.hash-record/` adjacent to the target file:
+
+```bash
+repo_root="$target_dir"
+```
+
 **Pass 1 — Detect:**
 
 1. Read the target file. Guard: if file is unreadable or not a `.md` file,
    output `ERROR: <reason>` and stop.
-2. Compute the git blob hash (`git hash-object <file>`). Check for a cached
-   record at `.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<filename>.md`
+2. Compute `<repo-root>` via Repo Root Resolution above. Compute the git blob
+   hash (`git hash-object <file>`). Check for a cached record at
+   `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<filename>.md`
    (`test -f <path>`). If the file exists and `--force` was not passed, read its
    `result:` frontmatter field — if `pass` output `CLEAN`, if `findings` output
    `findings: <record-path>` — and stop (cache HIT). Otherwise save the parent
@@ -74,6 +91,7 @@ Two-pass model: detect first, fix second (only if `--fix` is present). The detec
 7. If any `Fix:` instruction is not applicable (e.g., the violation is manual-only), skip it and note it as remaining.
 8. Compute the new git blob hash of the modified file. Write a second record
    at `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene/<filename>.md` with:
+   (`<repo-root>` resolved via Repo Root Resolution above, same as step 2)
    - `result: pass` if all Fix instructions applied; `result: findings` if some remain.
    - Body per the Body Format section (FIXED or PARTIAL).
    - If all fixed (FIXED): output `CLEAN` and stop. If some remain (PARTIAL): output `findings: <second-record-path>` and stop.
@@ -116,9 +134,9 @@ Two-pass model: detect first, fix second (only if `--fix` is present). The detec
 `result`. The `model` field is set to the value passed via `--filename` — caller-controlled, executor never modifies it.
 
 `file_path` MUST be a single repo-relative path string — relative to the git root
-that contains the `.hash-record/` directory being written to. Compute via
-`git ls-files --full-name <file>` from inside the file's repo, or strip the
-`git rev-parse --show-toplevel` prefix from the absolute path.
+that contains the `.hash-record/` directory being written to (resolved via Repo Root
+Resolution above). Compute via `git ls-files --full-name <file>` from inside the
+file's repo, or strip `<repo-root>/` from the absolute path.
 
 ```yaml
 # Correct:

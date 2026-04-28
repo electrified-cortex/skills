@@ -36,6 +36,14 @@ Phase 0 runs before the cache check so results are available for Phase 3 Check 8
 2. **Identify source files** — typically `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` if present. Skip `SKILL.md` and `instructions.txt` — those are compressed artifacts derived from the source.
 3. **Run** `git hash-object <file>` on each source file. Collect `(filename, blob-hash)` pairs.
 4. **Build manifest:** sort pairs lexically by filename. Write one `<filename> <hash>` line per pair to a temp string. Run `git hash-object --stdin` on that text. Save the 40-char result as `<manifest_hash>`.
+4a. **Resolve repo root** from `skill_path` (use the Bash tool):
+    ```bash
+    target_dir=$(dirname "<skill_path>")
+    repo_root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null)
+    # Fallback: no .git/ found → place .hash-record/ adjacent to the skill directory
+    [ -z "$repo_root" ] && repo_root="$target_dir"
+    ```
+    Save `<repo_root>` for all subsequent cache path construction.
 5. **Cache check:** `test -f <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/<filename>.md` (use the Bash tool). `<filename>` is the value from `--filename`, used verbatim — no skill-name prefix, no timestamp, no extra qualifiers. If the file exists (cache HIT): output `PATH: <abs-path-to-that-file>` and stop — do not re-run the audit. If the file does not exist (cache MISS): save `<repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.0/` as `<audit_cache_dir>` and continue.
 
    The `v1.0` segment is mandatory for skill-auditing records. The version is declared in `spec.md` and MUST match the version embedded in this instructions file. If they ever drift, that's a defect — surface and stop.
@@ -50,7 +58,7 @@ Phase 0 runs before the cache check so results are available for Phase 3 Check 8
 6. **Hygiene results available** from Phase 0 (pre-collected). These feed Phase 3 Check 8. No re-dispatch here.
 7. **Read the skill** at `skill_path`. Determine type: inline or dispatch. Locate companion spec — check `spec_path` if provided, otherwise `spec.md` co-located with `skill_path`. If not found: simple inline skills (<30 lines) may skip Phase 1; dispatch or complex inline → record an error verdict, write the record, output `PATH:`, and stop.
 8. **Run Phase 1 → Phase 2 → Phase 3** (stop on first failure). Assign verdict. Map to `result` field: PASS → `pass`; PASS_WITH_FINDINGS / NEEDS_REVISION / FAIL → `findings`; error → `error`.
-9. **Write audit record** at `<audit_cache_dir><filename>.md` — filename is the `--filename` value verbatim (e.g. `claude-sonnet.md`), no skill-name prefix, no timestamp, no extra qualifiers. `mkdir -p <audit_cache_dir>` first. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list of repo-relative paths>` (one entry per source file from step 3, sorted lexically; each path is relative to the git root containing `.hash-record/` — compute via `git ls-files --full-name <file>` or strip `git rev-parse --show-toplevel` from each absolute path), `operation_kind: skill-auditing` (verbatim from `--filename`), `result: <mapped value>`.
+9. **Write audit record** at `<audit_cache_dir><filename>.md` — filename is the `--filename` value verbatim (e.g. `claude-sonnet.md`), no skill-name prefix, no timestamp, no extra qualifiers. `mkdir -p <audit_cache_dir>` first. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list of repo-relative paths>` (one entry per source file from step 3, sorted lexically; each path is relative to `<repo-root>` resolved from `skill_path` — compute via `git ls-files --full-name <file>` or strip `<repo-root>/` from each absolute path), `operation_kind: skill-auditing` (verbatim from `--filename`), `result: <mapped value>`.
 
    ```yaml
    # Correct:

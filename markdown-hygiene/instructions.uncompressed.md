@@ -30,11 +30,21 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
 
 0. **Guard:** If `--filename` was not passed, output `ERROR: --filename required` and stop immediately.
 1. **Read** the target file (use the Read tool). Guard: if the file is unreadable or not a `.md` file, output `ERROR: <reason>` and stop. Check adaptive MD041: if the first non-blank line is `---`, add MD041 to the suppressed set for this run.
-2. **Run:** `git hash-object <file_path>` (use the Bash tool). Save the 40-char result as `<hash>`.
-3. **Cache check:** `test -f <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<filename>.md` (use the Bash tool) where `<filename>` is the value from `--filename`. Skip if `--force` was passed.
+2. **Resolve repo root** from the target file's path (use the Bash tool):
+
+   ```bash
+   target_dir=$(dirname "<file_path>")
+   repo_root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null)
+   # Fallback: if no .git/ found, place .hash-record/ adjacent to the target file
+   [ -z "$repo_root" ] && repo_root="$target_dir"
+   ```
+
+   Save `<repo_root>` for all subsequent cache path construction.
+3. **Run:** `git hash-object <file_path>` (use the Bash tool). Save the 40-char result as `<hash>`.
+4. **Cache check:** `test -f <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<filename>.md` (use the Bash tool) where `<filename>` is the value from `--filename`. Skip if `--force` was passed.
    - File exists: read its `result:` frontmatter field — if `pass` output `CLEAN`; if `findings` output `findings: <repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene/<filename>.md` — and stop (cache HIT).
    - File does not exist: cache MISS. Save `<repo-root>/.hash-record/<hash[0:2]>/<hash>/markdown-hygiene` as `<detect_cache_dir>` (no trailing slash). Continue.
-4. **Scan** for markdownlint violations. Prefer the `markdownlint` CLI or VS Code extension if available (see co-located `tooling.md`); otherwise use your knowledge of markdown rules. Skip any rule in `--ignore` or the adaptive suppressed set. **Cross-check** each finding against the actual line before recording — drop any finding you cannot point at on a specific verified line. Per-rule detection anchors:
+5. **Scan** for markdownlint violations. Prefer the `markdownlint` CLI or VS Code extension if available (see co-located `tooling.md`); otherwise use your knowledge of markdown rules. Skip any rule in `--ignore` or the adaptive suppressed set. **Cross-check** each finding against the actual line before recording — drop any finding you cannot point at on a specific verified line. Per-rule detection anchors:
    - MD001 — heading levels must increment by one (H1->H3 is a violation)
    - MD003 — heading style must be consistent (atx `#` vs setext `===`/`---`): flag any heading that differs from the first heading's style
    - MD004 — list markers must be consistent (`-`, `*`, `+`): flag any list item using a different marker than the first in its list
@@ -58,12 +68,12 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
    - MD056 — all rows in a table must have the same number of cells
    - MD058 — tables must be preceded AND followed by a blank line
    - MD060 — table cell separators must have a space on each side of the dash run (`| --- |` not `|---|`)
-5. **Write detect record** at `<detect_cache_dir>/<filename>.md`:
+6. **Write detect record** at `<detect_cache_dir>/<filename>.md`:
 
    - `mkdir -p <detect_cache_dir>` (Bash tool).
    - Frontmatter (open `---`, close `---`):
      - `hash: <hash>`
-     - `file_path: <repo-relative path>` — MUST be a single repo-relative path string relative to the git root containing `.hash-record/`. Compute via `git ls-files --full-name <file>` from inside the file's repo, or strip `git rev-parse --show-toplevel` from the absolute path. Example: `markdown-hygiene/instructions.uncompressed.md`. NOT an absolute path, NOT a directory-only path.
+     - `file_path: <repo-relative path>` — MUST be a single repo-relative path string relative to `<repo-root>` (resolved in step 2). Compute via `git ls-files --full-name <file>` from inside the file's repo, or strip `<repo-root>/` from the absolute path. Example: `markdown-hygiene/instructions.uncompressed.md`. NOT an absolute path, NOT a directory-only path.
      - `operation_kind: markdown-hygiene`
      - `result: pass` (no violations) or `result: findings` (violations exist)
    - Body per Report Format: `# Result\n\nCLEAN` (no violations) or `# Result\n\nFINDINGS\n\n- <list>` (violations). For FINDINGS each entry is two lines: the finding line (`MD0XX line N: <description>`) followed immediately by an indented `Fix: <imperative instruction>` line. The `Fix:` line must be a complete, standalone instruction — the fix pass will apply it literally without any markdown-rule knowledge.
@@ -74,7 +84,7 @@ Two passes: detect first (always), fix second (only if `--fix` or `--source/--ta
 
 6. If ALL violations are unfixable (manual-only rules like MD040 with no language to infer): output `findings: <detect_record_path>` (no second record) and stop.
 7. **Read the detect record** written in step 5 (use the Read tool). Extract every `Fix:` line from the FINDINGS body. Each `Fix:` line is a standalone imperative instruction — apply it literally to the target file using the Edit or Write tool. No re-scan. No markdown-rule knowledge required. For each `Fix:` line: either apply it successfully or mark it as not applicable (unfixable). The file on disk MUST contain all applied fixes after this step.
-8. **Compute new hash:** `git hash-object <fixed-file-path>`. Save as `<fix_hash>`. Set `<fix_cache_dir>` = `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene` (no trailing slash).
+8. **Compute new hash:** `git hash-object <fixed-file-path>`. Save as `<fix_hash>`. Set `<fix_cache_dir>` = `<repo-root>/.hash-record/<fix_hash[0:2]>/<fix_hash>/markdown-hygiene` (no trailing slash; `<repo-root>` from step 2).
 9. **Write fix record** at `<fix_cache_dir>/<filename>.md`:
    - `mkdir -p <fix_cache_dir>` (Bash tool).
    - Frontmatter:
