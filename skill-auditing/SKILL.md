@@ -1,18 +1,18 @@
 ---
 name: skill-auditing
-description: Audit skill for quality, classification, cost, compliance w/ spec. Triggers: audit skill, check quality, review compliance, validate structure.
+description: Audit a skill for quality, classification, cost, and compliance with the skill-writing spec. Triggers — audit this skill, check skill quality, review skill compliance, validate skill structure, skill needs review.
 ---
 
-Apply `../markdown-hygiene` w/ `--fix` to all `.md` files in target skill folder—parallel where supported. Hygiene runs w/ fix—clean before audit every time. Findings→`.hash-record/<file-hash>/markdown-hygiene/claude-haiku.md` records, separate from audit body.
+Skill Auditing:
 
-Then spawn zero-context haiku subagent (background if supported):
+Spawn haiku-class sub-agent (background if possible):
 
 **Claude Code:** `Agent` tool. Pass: `"Read and follow instructions.txt here. Input: skill_path=<path> --filename claude-haiku [--fix] [--uncompressed]"`
 
-**Copilot:** `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow instructions.txt in <skill_dir>. Input: skill_path=<path> --filename claude-haiku [--fix] [--uncompressed]")`
+**VS Code / Copilot:** `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow instructions.txt in <skill_dir>. Input: skill_path=<path> --filename claude-haiku [--fix] [--uncompressed]")`
 
-Returns: `PATH: <abs-path-to-record.md>` (success) or `ERROR: <reason>`.
+Don't read `instructions.txt` yourself.
 
-Non-haiku: see `../hash-record/filenames.md` for canonical `--filename` value.
+Returns: `PATH: <abs-path-to-record.md>` on success, `ERROR: <reason>` on pre-write failure.
 
-Don't read/interpret `instructions.txt`—delegate to subagent.
+NEVER read/interpret `instructions.txt` yourself—let sub-agent handle.
