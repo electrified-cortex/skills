@@ -1,18 +1,18 @@
 ---
 name: skill-auditing
-description: Audit skill for quality, classification, cost, compliance with skill-writing spec. Triggers — audit this skill, check skill quality, review skill compliance, validate skill structure, skill needs review.
+description: Audit skill for quality, classification, cost, compliance w/ spec. Triggers: audit skill, check quality, review compliance, validate structure.
 ---
 
-Apply `../markdown-hygiene` skill with `--fix` to every `.md` file in the target skill folder — in parallel where the runtime supports it. Hygiene always runs with fix — clean before audit, every time. Findings land in `.hash-record/<file-hash>/markdown-hygiene/claude-haiku.md` records, separate from the audit body.
+Apply `../markdown-hygiene` w/ `--fix` to all `.md` files in target skill folder—parallel where supported. Hygiene runs w/ fix—clean before audit every time. Findings→`.hash-record/<file-hash>/markdown-hygiene/claude-haiku.md` records, separate from audit body.
 
-Then without reading `instructions.txt` yourself, spawn a zero-context, haiku-class sub-agent (in the background if possible):
+Then spawn zero-context haiku subagent (background if supported):
 
 **Claude Code:** `Agent` tool. Pass: `"Read and follow instructions.txt here. Input: skill_path=<path> --filename claude-haiku [--fix] [--uncompressed]"`
 
-**VS Code / Copilot:** `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow instructions.txt in <skill_dir>. Input: skill_path=<path> --filename claude-haiku [--fix] [--uncompressed]")`
+**Copilot:** `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow instructions.txt in <skill_dir>. Input: skill_path=<path> --filename claude-haiku [--fix] [--uncompressed]")`
 
-Returns: `PATH: <abs-path-to-record.md>` on success, `ERROR: <reason>` on pre-write failure.
+Returns: `PATH: <abs-path-to-record.md>` (success) or `ERROR: <reason>`.
 
-Non-haiku callers: see `../hash-record/filenames.md` for the canonical `--filename` value.
+Non-haiku: see `../hash-record/filenames.md` for canonical `--filename` value.
 
-NEVER READ OR INTERPRET `instructions.txt` YOURSELF. Let the sub-agent do the work.
+Don't read/interpret `instructions.txt`—delegate to subagent.
