@@ -15,18 +15,18 @@ find "<repo_root>/.hash-record" -mindepth 2 -maxdepth 2 -type d \
 ```
 Form: `<repo_root>/.hash-record/<shard>/<full-hash>`. Extract `<full-hash>` (basename). None → `CLEAN`, stop.
 
-3. Build valid-hash set — prefer meta:
-Meta-preferred: per hash dir, check `<repo_root>/.hash-record/<shard>/<full-hash>/.meta.yaml` (Bash `test -f`). Exists → Read tool, extract `file_paths`; per path: Bash `git hash-object "<repo_root>/<file_path>"`. Accumulate into valid-hash set for this dir.
-Full-workspace fallback: once for all dirs lacking meta. Bash:
+3. Build valid-hash set — prefer manifest:
+Manifest-preferred: per hash dir, check `<repo_root>/.hash-record/<shard>/<full-hash>/.manifest.yaml` (Bash `test -f`). Exists → Read tool, extract `file_paths`; per path: Bash `git hash-object "<repo_root>/<file_path>"`. Accumulate into valid-hash set for this dir.
+Full-workspace fallback: once for all dirs lacking manifest. Bash:
 ```bash
 cd "<repo_root>" && git ls-files --cached --others --exclude-standard
 ```
 Per file: Bash `git hash-object "<repo_root>/<file>"`. Accumulate. Covers all meta-absent dirs.
-`<full-hash>` valid if in effective set (meta-derived or workspace-derived).
+`<full-hash>` valid if in effective set (manifest-derived or workspace-derived).
 
 4. Orphan: `<full-hash>` not in effective valid-hash set.
 
-5. `--dry-run` → skip deletion, go to step 8, output `dry-run: <count>`, stop.
+5. `--dry-run` → skip deletion, output `dry-run: <count>`, stop.
 
 6. Per orphan (up to `--limit`), Bash:
 ```bash
@@ -39,31 +39,17 @@ Don't follow symlinks. Don't delete paths resolving outside `<repo_root>/.hash-r
 rmdir "<repo_root>/.hash-record/<shard>" 2>/dev/null || true
 ```
 
-8. Timestamp: `date -u +"%Y-%m-%dT%H-%M-%SZ"`. Bash `mkdir -p "<repo_root>/.hash-record/.prune"`. Write tool → `<repo_root>/.hash-record/.prune/<timestamp>.md`:
-```markdown
-# Prune Summary
-
-- orphans_found: <total count>
-- deleted: <count actually deleted>
-- skipped: <count not deleted due to --limit>
-- dry_run: <true|false>
-
-## Orphaned Hashes
-
-<list of orphaned full-hashes, one per line, truncated to first 50 if more>
-```
-
-9. Output one line: `CLEAN` / `dry-run: <count>` / `pruned: <count>`.
+8. Output one line: `CLEAN` / `dry-run: <count>` / `pruned: <count>`.
 
 Output:
 `CLEAN` — no orphans.
-`pruned: <count>` — deleted; see `.hash-record/.prune/`.
-`dry-run: <count>` — listed in summary; nothing deleted.
+`pruned: <count>` — deleted.
+`dry-run: <count>` — orphans found; nothing deleted.
 `ERROR: <reason>` — pre-execution failure (e.g., `repo_root` not found, path-traversal rejected).
 
 Rules:
 Never delete hash dir whose hash is in valid-hash set.
-Never delete `.hash-record/` or admin dirs (`.prune/`, dot-prefixed).
+Never delete `.hash-record/` or admin dirs (dot-prefixed).
 Never follow symlinks in `.hash-record/`.
 Never delete paths resolving outside `<repo_root>/.hash-record/`.
 Build full-workspace set once before deletions; in-pass changes don't affect deletion list.

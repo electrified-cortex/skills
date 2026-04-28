@@ -1,8 +1,8 @@
 ---
 hash: 3b2f0c4157fb09b98b72f1b05f409ff7bfc9e4b5
 file_paths:
-  - .agents/skills/electrified-cortex/copilot-cli/copilot-cli-explain/spec.md
-  - .agents/skills/electrified-cortex/copilot-cli/copilot-cli-explain/uncompressed.md
+  - copilot-cli/copilot-cli-explain/spec.md
+  - copilot-cli/copilot-cli-explain/uncompressed.md
 operation_kind: skill-auditing
 model: claude-haiku
 result: pass

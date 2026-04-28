@@ -1,6 +1,6 @@
 ---
 hash: b331ee0e96ea7a495f9f4284c4e434e41ec47845
-file_path: .agents/skills/electrified-cortex/code-review/SKILL.md
+file_path: code-review/SKILL.md
 operation_kind: markdown-hygiene
 result: findings
 ---

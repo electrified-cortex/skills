@@ -1,6 +1,6 @@
 ---
 hash: 2cb9f5c6b36e8e36b2e8f5c6b36e8e36b2e8f5c6
-file_path: skills/electrified-cortex/compression/.tests/RESULTS.md
+file_path: compression/.tests/RESULTS.md
 operation_kind: markdown-hygiene
 result: findings
 ---

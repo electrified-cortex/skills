@@ -17,7 +17,7 @@ Does NOT delete records whose hash currently matches a workspace file. Does NOT 
 - **Orphaned record**: a record whose `<full-hash>` key does not match the git blob hash of any current file in the repository working tree (tracked OR untracked, excluding ignored).
 - **Valid-hash set**: the set of git blob hashes computed from every non-ignored file in the working tree at the moment the prune pass begins.
 - **Hash directory**: the path `.hash-record/<shard>/<full-hash>/`. Pruning operates at this granularity — an entire hash directory and all its descendants are removed when the hash is orphaned.
-- **Administrative directory**: a dot-prefixed directory directly under `.hash-record/` that is NOT a shard directory. Includes `.prune/` (where summary records are written) and any other dot-prefixed dirs. Administrative directories are excluded from the hash-directory walk and MUST NOT be deleted.
+- **Administrative directory**: a dot-prefixed directory directly under `.hash-record/` that is NOT a shard directory (e.g., any dot-prefixed dirs). Administrative directories are excluded from the hash-directory walk and MUST NOT be deleted.
 - **Dry-run**: a mode that reports what would be deleted without modifying the filesystem.
 
 ## Requirements
@@ -32,31 +32,29 @@ Does NOT delete records whose hash currently matches a workspace file. Does NOT 
 
 1. Resolve `repo_root` and verify `<repo_root>/.hash-record/` exists. If absent, output `CLEAN` and stop — nothing to prune.
 2. Build the **valid-hash set** using one of two strategies, chosen per hash directory:
-   - **Meta-preferred** (when `<repo_root>/.hash-record/<shard>/<full-hash>/.meta.yaml` exists, produced by `hash-record-index`): read `file_paths` from the meta, run `git hash-object` on each listed path, accumulate those hashes. This is faster and avoids a full workspace walk.
-   - **Full-workspace fallback** (when `.meta.yaml` is absent): enumerate every file in the working tree using `git ls-files --cached --others --exclude-standard`, compute `git hash-object <file>` for each, accumulate hashes into a set.
-   The meta-preferred strategy is used when meta is present; the fallback is used otherwise. The full-workspace set need only be built once if multiple hash directories lack meta.
+   - **Manifest-preferred** (when `<repo_root>/.hash-record/<shard>/<full-hash>/.manifest.yaml` exists, produced by `hash-record-index`): read `file_paths` from the manifest, run `git hash-object` on each listed path, accumulate those hashes. This is faster and avoids a full workspace walk.
+   - **Full-workspace fallback** (when `.manifest.yaml` is absent): enumerate every file in the working tree using `git ls-files --cached --others --exclude-standard`, compute `git hash-object <file>` for each, accumulate hashes into a set.
+   The manifest-preferred strategy is used when a manifest is present; the fallback is used otherwise. The full-workspace set need only be built once if multiple hash directories lack a manifest.
 3. Walk every hash directory under `.hash-record/<shard>/<full-hash>/`. For each, check whether `<full-hash>` is in the valid-hash set.
 4. Each hash directory whose hash is NOT in the valid-hash set is **orphaned** — record it for deletion.
-5. If `--dry-run` is set, write the orphan list to a record and return its path; do not delete.
+5. If `--dry-run` is set, skip deletion and output `dry-run: <count>`; stop.
 6. Otherwise, delete each orphan hash directory via `rm -rf` (or equivalent) — the entire directory and all leaf records inside it. Stop if `--limit` is reached.
-7. After deletion (or dry-run report), prune any now-empty `<shard>/` parent directory.
-8. Write a summary record at `<repo_root>/.hash-record/.prune/<timestamp>.md` containing: count of orphans found, count deleted, count skipped due to `--limit`, list of orphaned hashes (truncated to first 50 if larger).
+7. After deletion, prune any now-empty `<shard>/` parent directory.
+8. Output the result.
 
 ### Output
 
 Stdout return (one line):
 
 - `CLEAN` — no orphans found.
-- `pruned: <count>` — orphans deleted; full list in summary record.
-- `dry-run: <count>` — orphans listed in summary record; nothing deleted.
-- `ERROR: <reason>` — pre-write failure.
-
-The summary record path is recoverable via the standard `.hash-record/.prune/` directory.
+- `pruned: <count>` — orphans deleted.
+- `dry-run: <count>` — orphans found; nothing deleted.
+- `ERROR: <reason>` — pre-execution failure.
 
 ## Constraints
 
 - The skill MUST NOT delete any record under a hash that is currently in the valid-hash set, even if the record is for an unused operation-kind, model, or version.
-- The skill MUST NOT delete the `.hash-record/` directory itself or any non-hash-keyed administrative directory (e.g., `.prune/`).
+- The skill MUST NOT delete the `.hash-record/` directory itself or any non-hash-keyed administrative directory.
 - The skill MUST scope deletions to descendants of `<repo_root>/.hash-record/`. Paths that resolve outside this tree (via symlink or otherwise) MUST be rejected.
 - The skill MUST compute the valid-hash set ATOMICALLY before any deletion begins. Any file changes during the prune pass do not affect the current invocation's deletion list.
 - The skill MUST NOT prune records based on age. Time-based eviction is out of scope; only orphan-status evictions are permitted.

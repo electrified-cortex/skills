@@ -1,9 +1,9 @@
 ---
 hash: 1d1f837ad9b201754a7663f7d8bc2c64ce8fa08a
 file_paths:
-  - .agents/skills/electrified-cortex/code-review/instructions.uncompressed.md
-  - .agents/skills/electrified-cortex/code-review/spec.md
-  - .agents/skills/electrified-cortex/code-review/uncompressed.md
+  - code-review/instructions.uncompressed.md
+  - code-review/spec.md
+  - code-review/uncompressed.md
 operation_kind: skill-auditing
 result: pass
 ---

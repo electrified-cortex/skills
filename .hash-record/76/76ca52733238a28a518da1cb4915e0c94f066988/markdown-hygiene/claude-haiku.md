@@ -1,6 +1,6 @@
 ---
 hash: 76ca52733238a28a518da1cb4915e0c94f066988
-file_path: .agents/skills/electrified-cortex/compression/.tests/ultra/opus.md
+file_path: compression/.tests/ultra/opus.md
 operation_kind: markdown-hygiene
 result: findings
 ---

@@ -1,8 +1,8 @@
 ---
 hash: 7e8c5f3d4a2b1c9d8f6e5a4b3c2d1e9f0a1b2c3d
 file_paths:
-  - .agents/skills/electrified-cortex/copilot-cli/copilot-cli-ask/spec.md
-  - .agents/skills/electrified-cortex/copilot-cli/copilot-cli-ask/uncompressed.md
+  - copilot-cli/copilot-cli-ask/spec.md
+  - copilot-cli/copilot-cli-ask/uncompressed.md
 operation_kind: skill-auditing
 model: claude-haiku
 result: findings

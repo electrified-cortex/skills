@@ -1,9 +1,9 @@
 ---
 hash: d643fc7665fa39a01eef68bb7c832977e8a28357
 file_paths:
-  - .agents/skills/electrified-cortex/compression/instructions.uncompressed.md
-  - .agents/skills/electrified-cortex/compression/spec.md
-  - .agents/skills/electrified-cortex/compression/uncompressed.md
+  - compression/instructions.uncompressed.md
+  - compression/spec.md
+  - compression/uncompressed.md
 operation_kind: skill-auditing
 model: claude-haiku
 result: pass

@@ -21,10 +21,10 @@ Run every step with the named tool. Do not summarize or plan.
 
    Each result is a path of the form `<repo_root>/.hash-record/<shard>/<full-hash>`. Extract `<full-hash>` (the basename) from each. If none found, output `CLEAN` and stop.
 
-3. **Build the valid-hash set.** Two strategies — prefer meta when available:
+3. **Build the valid-hash set.** Two strategies — prefer manifest when available:
 
-   - **Meta-preferred:** For each hash directory, check whether `<repo_root>/.hash-record/<shard>/<full-hash>/.meta.yaml` exists (Bash `test -f`). If it exists, read it with the Read tool. Extract the `file_paths` list. For each path in `file_paths`, run `git hash-object "<repo_root>/<file_path>"` (Bash). Accumulate the resulting hashes into the valid-hash set for this directory.
-   - **Full-workspace fallback:** Build once for all hash directories whose meta is absent. Use the Bash tool:
+   - **Manifest-preferred:** For each hash directory, check whether `<repo_root>/.hash-record/<shard>/<full-hash>/.manifest.yaml` exists (Bash `test -f`). If it exists, read it with the Read tool. Extract the `file_paths` list. For each path in `file_paths`, run `git hash-object "<repo_root>/<file_path>"` (Bash). Accumulate the resulting hashes into the valid-hash set for this directory.
+   - **Full-workspace fallback:** Build once for all hash directories whose manifest is absent. Use the Bash tool:
 
      ```bash
      cd "<repo_root>" && git ls-files --cached --others --exclude-standard
@@ -32,11 +32,11 @@ Run every step with the named tool. Do not summarize or plan.
 
      For each file path returned, run `git hash-object "<repo_root>/<file>"` (Bash). Accumulate all hashes. This set covers every hash directory that lacked meta.
 
-   A `<full-hash>` is **valid** if it appears in its effective valid-hash set (meta-derived or workspace-derived).
+   A `<full-hash>` is **valid** if it appears in its effective valid-hash set (manifest-derived or workspace-derived).
 
 4. **Identify orphans.** For each hash directory: if `<full-hash>` is NOT in its effective valid-hash set, mark it as orphaned.
 
-5. **Dry-run path.** If `--dry-run` is set, skip deletion. Proceed directly to step 8 to write the summary record, then output `dry-run: <count>` and stop.
+5. **Dry-run path.** If `--dry-run` is set, skip deletion. Output `dry-run: <count>` and stop.
 
 6. **Delete orphans.** For each orphaned hash directory (up to `--limit` if specified), run via Bash:
 
@@ -52,22 +52,7 @@ Run every step with the named tool. Do not summarize or plan.
    rmdir "<repo_root>/.hash-record/<shard>" 2>/dev/null || true
    ```
 
-8. **Write summary record.** Compute a timestamp string (`date -u +"%Y-%m-%dT%H-%M-%SZ"`). Write a file at `<repo_root>/.hash-record/.prune/<timestamp>.md` using the Write tool. Create the `.prune/` directory first if absent (Bash `mkdir -p`). Content:
-
-   ```markdown
-   # Prune Summary
-
-   - orphans_found: <total count>
-   - deleted: <count actually deleted>
-   - skipped: <count not deleted due to --limit>
-   - dry_run: <true|false>
-
-   ## Orphaned Hashes
-
-   <list of orphaned full-hashes, one per line, truncated to first 50 if more>
-   ```
-
-9. **Output result.** Print one line to stdout:
+8. **Output result.** Print one line to stdout:
    - If no orphans found: `CLEAN`
    - If dry-run: `dry-run: <count>`
    - If deletions performed: `pruned: <count>`
@@ -77,14 +62,14 @@ Run every step with the named tool. Do not summarize or plan.
 One line only:
 
 - `CLEAN` — no orphans found.
-- `pruned: <count>` — orphans deleted; see `.hash-record/.prune/` for the summary record.
-- `dry-run: <count>` — orphans listed in summary record; nothing deleted.
+- `pruned: <count>` — orphans deleted.
+- `dry-run: <count>` — orphans found; nothing deleted.
 - `ERROR: <reason>` — pre-execution failure (e.g., `repo_root` not found, path-traversal rejected).
 
 ## Rules
 
 - Never delete a hash directory whose hash appears in the valid-hash set.
-- Never delete `.hash-record/` itself or any administrative directory (`.prune/`, any dot-prefixed dir).
+- Never delete `.hash-record/` itself or any administrative directory (any dot-prefixed dir).
 - Never follow symlinks when walking `.hash-record/`.
 - Never delete paths that resolve outside `<repo_root>/.hash-record/`.
 - Build the full-workspace valid-hash set once before any deletion begins. Changes during the pass do not affect this invocation's deletion list.
