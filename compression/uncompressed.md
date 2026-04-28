@@ -5,21 +5,16 @@ description: Compress .md files via subagent dispatch. Supports in-place, source
 
 # Compression
 
-Without reading `instructions.txt` yourself, use a Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory).
-Input: `<file-path> [--tier <lite|full|ultra>] [--source <src> --target <dst>]`" (default: ultra)
+Phase 0 (`.md` source): host runs `markdown-hygiene --filename claude-haiku [--fix]` on source; pass verdict as `--hygiene-verdict <path>`.
 
-Modes:
+Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory). Input: `<file-path> [--tier <lite|full|ultra>] [--source <src> --target <dst>] [--hygiene-verdict <path>]`" (default tier: ultra)
 
-- `--source X --target Y` → read X, compress to Y. No git check. Primary workflow for skill development.
-- Default → in-place if tracked+clean; creates `.compressed` alongside if untracked/dirty.
+file-path (required): file to compress
+--tier (optional): lite | full | ultra; default ultra
+--source X --target Y (optional): source→target mode; no git check; X untouched
+--hygiene-verdict (optional): path to Phase 0 verdict file from host
 
-Tiers: `ultra/rules.txt` — telegraphic, abbreviations, arrows; `full/rules.txt` — drop articles, fragments OK; `lite/rules.txt` — drop filler, keep grammar
-
-For `.md` targets: after compression, runs a markdown-hygiene pass on the result. Fixes lint issues in-place; remaining unfixable issues reported as warnings, never rejected. Output always states hygiene outcome so callers know no further pass is needed.
-
-## Iteration Safety
+Returns: `<before>→<after> bytes | <N>% reduction | <tier> | <mode>` + hygiene lines if `.md`
 
 Do not re-audit unchanged files.
 See `../iteration-safety/SKILL.md`.
-
-Related: `skill-writing` (skills workflow), `spec-auditing` (post-compression verification)
