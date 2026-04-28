@@ -17,7 +17,7 @@ Out of scope: non-iterating read-only skills; single-pass transforms; skills tha
 - **Findings** — verdict artifacts that indicate more work is needed (e.g. NEEDS_REVISION, FAIL, WARN, PARTIAL, Pass with Findings — the exact label depends on the calling skill's vocabulary).
 - **Source file** — the file(s) whose content the iterating skill evaluates. For audits: the target under audit. For compression: the uncompressed source. For code-review: the source files in the change set.
 
-## Rules
+## Requirements
 
 **Rule A — Fix before re-pass.** If a pass produces findings, the caller MUST resolve those findings — by fixing directly, dispatching the fix, or explicitly accepting/waiving (with recorded rationale, where the calling skill permits it) — before running another pass against the same source. Running another pass without acting on prior findings is forbidden.
 
@@ -53,13 +53,15 @@ No restated Rule B verbatim quote in callers — the quote lives in this skill o
 
 2026-04-24: an agent ran nine consecutive audits against the same file with no content change between runs. The rules below exist to prevent that class of failure from recurring across the skill tree.
 
-## Don'ts
+## Constraints
+
+### Don'ts
 
 - Do not reword Rule B's verbatim quote.
 - Do not copy Rules A and B into other skills' specs — reference this skill instead.
 - Do not add verdict vocabulary here that is not shared by every iterating skill — keep the definition of "findings" abstract and let each calling skill name its own verdict labels.
 - Do not turn this into a procedural audit skill — it is a shared rules module, not an audit runner.
 
-## Precedence
+### Precedence
 
 If a calling skill's spec contradicts Rule A or Rule B, the calling skill must be revised. These rules are authoritative.
