@@ -12,14 +12,8 @@ Spawn a zero-context, haiku-class sub-agent in the background:
 
 Don't read `instructions.txt` yourself.
 
-skill_path (required): Absolute path to SKILL.md
---filename <name> (required): exact filename string for record file + frontmatter `model:` field; lowercase-hyphenated vendor-class only (e.g. `claude-sonnet`, `claude-opus`); use VERBATIM, no inference, no sub-version. Missing → `ERROR: --filename required`, stop.
-spec_path (optional): Companion spec if not co-located
---fix (optional): single-pass fix vs authoritative source files. Never modifies `spec.md`, `README.md`, `SKILL.md`, `instructions.txt`.
---uncompressed (optional): audit uncompressed source files vs compiled runtime.
-
 Returns: `PATH: <abs-path-to-record.md>` on success, `ERROR: <reason>` on pre-write failure.
 
-Non-sonnet dispatch: see `../hash-record/filenames.md` for canonical `--filename` value.
+Non-haiku callers: see `../hash-record/filenames.md` for the canonical `--filename` value.
 
-Don't re-audit unchanged files. See `../iteration-safety/SKILL.md`.
+Don't re-audit unchanged files (cache HIT — see `../iteration-safety/SKILL.md`).
