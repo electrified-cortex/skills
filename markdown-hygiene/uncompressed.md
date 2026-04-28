@@ -1,56 +1,44 @@
 ---
 name: markdown-hygiene
-description: Detect markdownlint violations in a .md file. Detect-only — no fix. Triggers — lint markdown, scan markdown, MD violations, markdownlint pass, detect markdown issues.
+description: Fix markdownlint violations in a .md file. Triggers — lint markdown, scan markdown, MD violations, markdownlint pass, fix markdown.
 ---
 
 # Markdown Hygiene
 
-`<instructions>`= `instructions.txt` (in this skill folder; NEVER READ THIS FILE)
-`<instructions-abspath>`= the absolute path to `<instructions>`
-`<input-suffix>`= `Input: <markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
-`<prompt>`= `Read and follow <instructions-abspath>; <input-suffix>`
-`<description>`= `Inspecting Markdown Hygiene: <markdown_file_path>`
-`<report>`= The result file produced by the instructions.
+## Input
 
-If you have any markdown linter available in your runtime, run its auto-fix pass on `<markdown_file_path>` now (the cheap mechanical fixes — trailing spaces, blanks around headings, list-marker consistency). Don't install one if it's not present; continue without. The dispatch verifies regardless.
+`<markdown_file_path>` — the path to the target file
 
-Without reading `instructions.txt` yourself, spawn a zero-context Dispatch sub-agent (haiku-class):
+## Preparation
 
-Claude Code:
+If your runtime has a markdown linter, run its auto-fix pass on `<markdown_file_path>` first (cheap mechanical fixes — trailing spaces, blanks around headings, list-marker consistency). Don't install one if absent. The dispatch verifies regardless.
 
-```tool
-Agent({
-  subagent_type: "Dispatch",
-  prompt: "<prompt>",
-  model: "haiku",
-  run_in_background: true,
-  description: "<description>"
-})
-```
+## Inspect
 
-VS Code / Copilot:
+Variables:
 
-```tool
-runSubagent({
-  agentName: "Dispatch",
-  prompt: "<prompt>",
-  model: "Claude Haiku 4.5",
-  description: "<description>"
-})
-```
+`<instructions>` = `instructions.txt` (this folder; NEVER READ THIS FILE)
+`<instructions-abspath>` = absolute path to `<instructions>`
+`<input-args>` = `<markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
+`<tier>` = `fast-cheap`
+`<description>` = `Inspecting Markdown Hygiene: <markdown_file_path>`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
-If you are unable to use the "Dispatch" agent, omit the subagent name/type,
-but notify the host that the "Dispatch" agent needs to be installed.
+Follow `dispatch` skill. See `../dispatch/SKILL.md`.
+Returns: `CLEAN` | `findings: <report-path>` | `ERROR: <reason>`
+(`<report-path>` = path to output file.)
 
-NEVER READ/INTERPRET `<instructions-abspath>` YOURSELF. Let the sub-agent handle.
+## Iteration loop
 
-Returns: `CLEAN` | `findings: <report>` | `ERROR: <reason>`.
+`CLEAN` → stop.
+`ERROR` → stop, surface reason.
 
-`CLEAN`: done. Stop here.
+Max 3 iterations. If still findings after the 3rd, stop and report the last `<report-path>` to the host.
 
-If `ERROR` or the 3rd iteration stop and report findings; otherwise:
-`<prompt>`= `For this <markdown_file_path>, read <report> and fix any issues.`
-`<description>`= `Fixing Markdown Hygiene: <markdown_file_path>`
-Use the same pattern for dispatch above but omit the model.
+`findings: <report-path>` → dispatch a fix pass with these variables:
 
-Keep iteration count; repeat from the top.
+`<tier>` = `standard`
+`<description>` = `Fixing Markdown Hygiene: <markdown_file_path>`
+`<prompt>` = `For this <markdown_file_path>, read <report-path> and fix any issues.`
+
+Follow `dispatch` skill (same as Inspect). Then loop from "Inspect".

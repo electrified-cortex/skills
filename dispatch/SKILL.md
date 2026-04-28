@@ -1,95 +1,69 @@
 ---
 name: dispatch
-description: Decision tree for whether, how, and at what model tier to dispatch sub-agents.
+description: How to dispatch a sub-agent. Triggers — dispatch, sub-agent, isolated scope, background, background execution, background task, background agent.
 ---
 
-Read once. Terms (`fast-cheap`, `standard`, `deep`, foreground/background, F1–F5) assumed known by any caller. Inline skills don't reference this skill.
+## Input
 
-## Decision Tree
+`<prompt>` — verbatim prompt sent to sub-agent
+`<description>` — short run label shown by host
+`<tier>` — `fast-cheap` | `standard` (default) | `deep`
+`<model-override>` (optional) — concrete model string or alias (e.g. `Claude Sonnet 4.6`, `GPT 5.4`, `gpt-5-codex`); bypasses tier lookup when set
 
-Apply in order. Stop at first match.
+## Derived
 
-| Condition | Outcome |
-| --- | --- |
-| Speculative, blocked, or low priority | Defer (record draft, move on) |
-| Requires host conversation context | Inline |
-| Holds exclusive resource host already owns | Inline (F1) |
-| Completable in <~3 host turns | Inline (F2) |
-| Result needed this turn, blocking unacceptable | Defer or batch |
-| Result needed this turn, blocking acceptable | Dispatch foreground |
-| Result can arrive later | Dispatch background |
+`<concrete-model>` = `<model-override>` if set, else derived from `<tier>` via table below.
 
-Default: inline. Dispatch is the exception.
+## Process
 
-## Model Tier
+If `<prompt>` instructs sub-agent to read a file, don't read it yourself — sub-agent does. Spawn zero-context Dispatch sub-agent:
 
-Default tier: host's own. Other skills use class names only; this skill is the canonical source of concrete model names.
+### Claude Code
 
-| Tier | Used for | Class description | Minimum model |
-| --- | --- | --- | --- |
-| `fast-cheap` | Shallow/mechanical, true zero-context work | haiku-class — cost-optimized, no chained reasoning | Claude Haiku 4.5 |
-| `standard` | Moderate reasoning. Most common explicit override | sonnet-class — capable default | Claude Sonnet 4.6 |
-| `deep` | Critical-path, max reasoning. Rarely correct as override; consider inline | opus-class — highest reasoning | Claude Opus 4.6 |
+#### Claude Model Aliases
 
-`fast-cheap` pre-pass: appropriate only when work is genuinely zero-scope (mechanical pattern match, format check, extraction). Not appropriate when sub-agent needs judgment, prior context, or chained reasoning.
+| Tier | Class | `model` value |
+| ---- | ----- | ------------- |
+| `fast-cheap` | haiku-class | `haiku` |
+| `standard` | sonnet-class | `sonnet` |
+| `deep` | opus-class | `opus` |
 
-Standard non-Anthropic alternatives: GPT 5.3 codex (great for code review and refactoring, code-heavy work); GPT 5.4 (great for general language, words, prose, English-heavy reasoning). Apply to `gpt-class` workloads; not minimums.
+```tool
+Agent({
+  subagent_type: "Dispatch",
+  prompt: "<prompt>",
+  model: "<concrete-model>",
+  run_in_background: true,
+  description: "<description>"
+})
+```
 
-Update this table and bump `uncompressed.md` date when Anthropic releases a new model in any class.
+### VS Code / Copilot
 
-## Subagent Type
+#### Copilot Model Aliases
 
-Project context (CLAUDE.md, memory index) inherits automatically. Don't hand-feed it.
-Conversation context does NOT inherit. Hand-feed everything else the agent needs.
+| Tier | Class | `model` value |
+| ---- | ----- | ------------- |
+| `fast-cheap` | haiku-class | `Claude Haiku 4.5` |
+| `standard` | sonnet-class | `Claude Sonnet 4.6` |
+| `deep` | opus-class | `Claude Opus 4.6` |
 
-Select narrowest type covering required tool scope. Don't default to maximally permissive.
-Type names evolve between releases — treat as examples, verify from current platform docs.
+GPT alts (gpt-class): GPT 5.3 codex (code), GPT 5.4 (prose). Update when Anthropic releases a new model.
 
-## Well-Formed Prompt
+```tool
+runSubagent({
+  agentName: "Dispatch",
+  prompt: "<prompt>",
+  model: "<concrete-model>",
+  description: "<description>"
+})
+```
 
-Required:
+## Fallback
 
-1. Goal (one sentence, no implicit context)
-2. Hand-fed context (prior decisions, operator preferences, file paths absolute, term definitions, prior findings)
-3. Output shape (verdict, file path, list format)
-4. Scope/length constraints
+If unable to use "Dispatch" agent, omit subagent name/type and continue, but notify host after completion that "Dispatch" agent needs installation for optimal performance and isolation.
 
-Checklist:
+## Return
 
-- [ ] Stranger reading cold knows exactly what to do?
-- [ ] Every needed file referenced by absolute path?
-- [ ] Every constraint stated?
-- [ ] Output described?
+Return sub-agent output to caller (passthrough).
 
-Any "no" → prompt not ready.
-
-## Footguns
-
-| Footgun | Mitigation |
-| --- | --- |
-| F1 — Host-impersonation on shared exclusive resource | Prompt forbids sub-agent from initiating sessions/auth/touching named resource. If work needs it, inline. |
-| F2 — Dispatch for trivial work | Apply Q4 — <3 host turns → inline. |
-| F3 — Tight-loop micro-dispatches | Aggregate into one dispatch with structured result. If impossible, reconsider dispatch. |
-| F4 — Hook-denial escape via dispatch | Never. Treat denial as authoritative; request permission, change approach, or escalate. |
-| F5 — Thin-prompt context assumption | Every prompt satisfies Well-Formed Prompt. Hand-feed all context agent can't inherit. |
-
-## When Inline Cost Is Unaffordable
-
-(a) Dispatch with fully hand-fed context prompt, or (b) defer. Don't dispatch incorrectly because inline is expensive.
-
-## Dispatch Install
-
-Requires a companion agent file in your project's agent directory. See `installation.md`.
-
-## Platform Gotchas
-
-**VS Code (GitHub Copilot):** Use `runSubagent` with `agentName: "Dispatch"`. It is blocking — no background dispatch.
-
-## Supplemental
-
-For empirical evidence (context-inheritance tests), anti-pattern walkthroughs, error-handling guidance, and precedence notes: see `supplemental.md` in this skill folder.
-
-## Related
-
-- Agent files: `dispatch/agents/` — ready-to-install Dispatch agent definitions for Claude Code CLI and VS Code.
-- Installation: `installation.md` — where to put agent files, VS Code invocation, and what to do if not installed.
