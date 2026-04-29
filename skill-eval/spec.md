@@ -19,7 +19,7 @@ Out of scope: evaluating skills that have no defined success criterion. The call
 - **Score** — caller-supplied verdict for a single trial: PASS, FAIL, or PARTIAL with optional numeric metric.
 - **Run** — the full matrix: every sample input × every model class × N trials each.
 
-## Inputs
+## Parameters
 
 - `target_skill` (required) — path to the target skill folder (e.g. `../compression/`).
 - `sample_inputs` (required) — path to a folder of sample input files OR a JSON array of input objects.
@@ -58,20 +58,22 @@ Body:
 - Per-input results table.
 - Failure inventory (every FAIL with input ID, model class, trial number, error).
 
-## Iteration Safety
+## Requirements
 
-Do not re-audit unchanged files.
-See `../iteration-safety/SKILL.md`.
+1. Caller MUST supply `target_skill`, `sample_inputs`, `trials`, and `scoring` — all are required unless noted optional.
+2. `trials` MUST be an integer between 1 and 10 inclusive.
+3. Each trial MUST dispatch the target skill at the named model class with one sample input.
+4. Eval MUST apply caller-supplied scoring to each trial output to obtain a per-trial score.
+5. Eval MUST aggregate results per (model class × input) and per model class.
+6. Eval MUST write a report via audit-reporting (target-kind = `eval`).
+7. Eval MUST NOT run without a scoring directive — no default scoring exists.
+8. Eval MUST NOT modify the target skill during execution. Eval is read-only against the target.
+9. Model classes MUST be resolved via the dispatch skill's class mapping — bare model IDs MUST NOT be hardcoded.
+10. Eval MUST NOT re-audit unchanged files. See `../iteration-safety/SKILL.md`.
 
-## Don'ts
+## Constraints
 
-- Do not run with `trials` greater than 10 — cost grows linearly and the marginal signal flattens.
-- Do not run without scoring — there is no fallback.
-- Do not infer success from absence of error. Scoring is required.
-- Do not write inputs into the target skill folder. Sample inputs live elsewhere.
-- Do not modify the target skill during eval. Eval is read-only against the target.
-- Do not bake bare model IDs here. Resolve via dispatch skill's class mapping.
-
-## Precedence
-
-If a target skill's spec contradicts what eval observes (e.g. spec claims sonnet-class is required but eval shows haiku-class passes), the eval result is the empirical signal and the skill author should revise the spec — not the other way around.
+1. `trials` MUST NOT exceed 10.
+2. Eval MUST NOT infer success from absence of error — scoring is required.
+3. Eval MUST NOT write sample inputs into the target skill folder.
+4. If a target skill's spec contradicts eval results, the empirical eval result takes precedence over the spec claim.
