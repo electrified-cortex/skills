@@ -94,7 +94,7 @@ The workspace uses four compression tiers:
 | **Full** | Drop articles, fragments OK, short synonyms | General documentation |
 | **Ultra** | Abbreviate, telegraphic, arrows for causality | Agent-to-agent, agent files, skills |
 
-The compression skill implements all three tiers as self-contained sub-skills:
+The compression skill implements all four tiers as self-contained sub-skills:
 
 - `lite/rules.txt` — Lite rules, human-facing content
 - `full/rules.txt` — Full rules, general documentation

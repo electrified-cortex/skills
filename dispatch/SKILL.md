@@ -3,24 +3,26 @@ name: dispatch
 description: How to dispatch a sub-agent. Triggers — dispatch, sub-agent, isolated scope, background, background execution, background task, background agent.
 ---
 
-## Input
+# Dispatch
+
+Input:
 
 `<prompt>` — verbatim prompt sent to sub-agent
 `<description>` — short run label shown by host
 `<tier>` — `fast-cheap` | `standard` (default) | `deep`
-`<model-override>` (optional) — concrete model string or alias (e.g. `Claude Sonnet 4.6`, `GPT 5.4`, `gpt-5-codex`); bypasses tier lookup when set
+`<model-override>` (optional) — concrete model or alias (e.g. `Claude Sonnet 4.6`, `GPT 5.4`, `gpt-5-codex`); bypasses tier lookup when set
 
-## Derived
+Derived:
 
-`<concrete-model>` = `<model-override>` if set, else derived from `<tier>` via table below.
+`<concrete-model>` = `<model-override>` if set, else derived from `<tier>` via table.
 
-## Process
+Process:
 
 If `<prompt>` instructs sub-agent to read a file, don't read it yourself — sub-agent does. Spawn zero-context Dispatch sub-agent:
 
-### Claude Code
+Claude Code:
 
-#### Claude Model Aliases
+Claude Model Aliases:
 
 | Tier | Class | `model` value |
 | ---- | ----- | ------------- |
@@ -38,9 +40,9 @@ Agent({
 })
 ```
 
-### VS Code / Copilot
+VS Code / Copilot:
 
-#### Copilot Model Aliases
+Copilot Model Aliases:
 
 | Tier | Class | `model` value |
 | ---- | ----- | ------------- |
@@ -48,7 +50,7 @@ Agent({
 | `standard` | sonnet-class | `Claude Sonnet 4.6` |
 | `deep` | opus-class | `Claude Opus 4.6` |
 
-GPT alts (gpt-class): GPT 5.3 codex (code), GPT 5.4 (prose). Update when Anthropic releases a new model.
+GPT alts (gpt-class): GPT 5.3 codex (code), GPT 5.4 (prose). Update on new Anthropic model release.
 
 ```tool
 runSubagent({
@@ -59,10 +61,8 @@ runSubagent({
 })
 ```
 
-## Fallback
+Fallback:
+Can't use "Dispatch" agent: omit subagent name/type, continue. Notify host: "Dispatch" agent needs install for optimal perf and isolation.
 
-If unable to use "Dispatch" agent, omit subagent name/type and continue, but notify host after completion that "Dispatch" agent needs installation for optimal performance and isolation.
-
-## Return
-
-Return sub-agent output to caller (passthrough).
+Return:
+Return (passthrough) sub-agent output to caller.

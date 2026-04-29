@@ -3,27 +3,31 @@ name: compression
 description: Compress .md and text files via subagent dispatch. Triggers — compress this file, reduce tokens, shrink instructions, caveman compress, ultra/full/lite compress.
 ---
 
-⚠ Never compress spec files (*.spec.md — token cost acceptable; meaning loss is not).
+# Compression
 
-## Input
+Never compress spec files (`*.spec.md` — token cost acceptable; meaning loss isn't).
+
+Input:
 
 `<file-path>` — path to target file
+Flags: `--tier <none|lite|full|ultra>` (default `ultra`); `--source <src> --target <dst>` — source-to-target mode (source untouched, no git check)
 
-Parameters:
+In-place mode: target must be git-tracked and clean before modification.
 
-- `<file-path>` (required): file to compress.
-- `--tier` (optional): `none` | `lite` | `full` | `ultra`; default `ultra`.
-- `--source <src> --target <dst>` (optional): source-to-target mode; no git check; source untouched.
-- In-place mode: target must be git-tracked and clean before modification.
-- Preserves: code blocks, URLs, technical terms, logic words (not/must/only), actors, normative language (Preserve List). No exceptions at any tier.
-- When target is SKILL.md and source H1 matches frontmatter `name:`, H1 is stripped from target (A-FM-3 compliance).
+Preserves: code blocks, URLs, technical terms, logic words (not/must/only), actors, normative language. No exceptions at any tier.
 
-## Dispatch
+When target is `SKILL.md` and source H1 matches frontmatter `name:`, H1 is stripped from target (A-FM-3 compliance).
 
-Don't read `instructions.txt` yourself — spawn zero-context, standard-tier sub-agent:
+Dispatch:
 
-Claude Code: `Agent` tool. Pass: "Read and follow `instructions.txt` here. Input: `<file-path> [--tier <none|lite|full|ultra>] [--source <src> --target <dst>]`"
+Variables:
 
-VS Code / Copilot: `runSubagent(model: "Claude Sonnet 4.6", prompt: "Read and follow `instructions.txt` in this directory. Input: `<file-path> [--tier <none|lite|full|ultra>] [--source <src> --target <dst>]`")`
+`<instructions>` = `instructions.txt` (this folder; NEVER READ THIS FILE)
+`<instructions-abspath>` = absolute path to `<instructions>`
+`<input-args>` = `<file-path> [--tier <none|lite|full|ultra>] [--source <src> --target <dst>]`
+`<tier>` = `standard`
+`<description>` = `Compressing: <file-path>`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
+Follow `dispatch` skill. See `../dispatch/SKILL.md`.
 Returns: `<before>-><after> bytes | <N>% reduction | <tier> | <mode> | hygiene: clean|fixed N|N warning(s)`

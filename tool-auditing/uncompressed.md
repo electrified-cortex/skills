@@ -1,87 +1,46 @@
-# Tool Auditing — Uncompressed Reference
+---
+name: tool-auditing
+description: Audit a tool script for companion spec, conventions, and error handling. Triggers — audit tool, check tool script, review tool conventions, tool compliance, tool script audit.
+---
 
-Audit tool scripts for completeness and convention compliance. Lightweight — haiku-class models can run it.
+# Tool Auditing
 
-## Purpose
+## Input
 
-Verify that tool scripts have companion specs, follow naming conventions, handle errors, and produce predictable output. Read-only audit; caller decides remediation.
+`<tool_path>` — absolute path to ANY member of the **tool trio**: `<stem>.sh`, `<stem>.ps1`, or `<stem>.spec.md`. The audit covers the trio together: ALL three (`<stem>.sh`, `<stem>.ps1`, `<stem>.spec.md`) MUST exist; any missing member causes audit FAIL on Check 1.
 
-## Scope
+## Inline result check
 
-**In scope:**
+Run the `result` tool (in this folder), whichever your runtime has. DON'T READ the trio source at any point — before, during, or after invocation. Run it, branch on stdout, move on.
 
-- Checking for companion spec file existence
-- Verifying script has parameter documentation
-- Checking for hardcoded absolute paths
-- Verifying error handling patterns
-- Checking output format consistency
+- Bash: `bash result.sh <tool_path>`
+- PS7: `pwsh result.ps1 <tool_path>`
 
-**Out of scope:**
+If stdout is `MISS: <abs-path>` -> bind `<report_path>` = `<abs-path>`, continue to Inspect.
+Otherwise -> emit stdout verbatim, stop.
 
-- Executing the script (audit is read-only)
-- Evaluating script logic correctness
-- Performance testing
-- Security review (separate skill)
+## Inspect
 
-## Definitions
+Variables:
 
-- **Tool script:** a PowerShell or Bash script in the `tools/` directory that provides an operator-facing utility.
-- **Companion spec:** the `<name>.spec.md` file co-located with a tool script that documents its purpose, parameters, and contract.
-- **PASS:** all normative checks pass.
-- **FAIL:** one or more FAIL-level checks fail — the script violates a hard convention.
-- **WARN:** one or more WARN-level checks fail — missing recommended practices but not fatally non-conformant.
+`<instructions>` = `instructions.txt` (NEVER READ)
+`<instructions-abspath>` = absolute path to `<instructions>`
+`<input-args>` = `tool_path=<tool_path> --report-path <report_path>`
+`<tier>` = `standard`
+`<description>` = `Auditing tool: <tool_path>`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
-## Audit Checklist (per script)
+Follow `dispatch` skill. See `../dispatch/SKILL.md`.
+If returns `ERROR: <reason>` -> stop, surface reason.
 
-| # | Check | Level | Criterion |
-|---|-------|-------|-----------|
-| 1 | Companion spec exists | FAIL | `<name>.spec.md` in same directory |
-| 2 | Parameter block present | WARN | param/usage block at top of script |
-| 3 | No hardcoded absolute paths | FAIL | no Windows-drive or POSIX-rooted absolute paths in script |
-| 4 | Error handling present | WARN | Bash: `set -e` or equivalent; PowerShell: `$ErrorActionPreference` |
-| 5 | Self-documenting | WARN | comments or parameter descriptions present |
-| 6 | No interactive input | FAIL | no `Read-Host`, `read -p`, or similar |
-| 7 | Consistent output format | WARN | one mode: markdown/JSON/plain text |
+## Inline result check (post-execute)
 
-## Report Format
+You (the host) run `result` again directly — do NOT dispatch it.
+Same invocation as the first Inline result check.
+Branch on stdout (last line):
 
-```markdown
-# Tool Audit: <script-name>
-
-- Status: PASS | FAIL | WARN
-- Companion spec: YES/NO
-- Checks: X/7 passed
-
-| # | Check | Status | Notes |
-|---|-------|--------|-------|
-```
-
-## Output
-
-Write findings to `.hash-record/` via the `hash-record` skill. Targets are `tools/**` — use target-kind `tool`. Verdict enum: `PASS`, `FAIL`, `PASS_WITH_FINDINGS` (maps from internal `WARN`). The `result` frontmatter field in the hash-record entry must use this enum.
-
-## Iteration Safety
-
-Do not re-audit unchanged files. See `../iteration-safety/SKILL.md`.
-
-## Constraints
-
-- Read-only. Never modify scripts.
-- haiku-class model sufficient for this audit.
-- Report only — caller decides remediation.
-
-## Precedence
-
-- `tool-writing` spec defines what is correct; this skill checks against it.
-
-## Don'ts
-
-- Do not modify any tool script — this audit is read-only in all modes.
-- Do not batch-audit multiple tools in a single dispatch invocation unless the skill explicitly supports it.
-- Do not infer intent — findings must be grounded in explicit file content.
-
-## Related
-
-- `tool-writing` — conventions this audit enforces
-- `skill-auditing` — analogous audit for skill files
-- `spec-auditing` — analogous audit for spec files
+- `PASS: <report_path>` -> done.
+- `PASS_WITH_FINDINGS: <report_path>` -> non-blocking warnings; surface verdict and stop.
+- `FAIL: <report_path>` -> blocking; surface verdict and stop.
+- `ERROR: <reason>` -> stop, surface reason.
+- `MISS: <abs-path>` -> executor failed to write report; surface `ERROR: executor did not write report at <report_path>`, stop.

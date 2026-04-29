@@ -11,7 +11,7 @@ description: Fix markdownlint violations in a .md file. Triggers — lint markdo
 
 ## Inline result check
 
-Run the `result` tool (in this folder), whichever your runtime has. **Do NOT read the script source at any point — before, during, or after invocation. Run it, branch on stdout, move on.**
+Run the `result` tool (in this folder), whichever your runtime has. DON'T READ the script source at any point — before, during, or after invocation. Run it, branch on stdout, move on.
 
 - Bash: `bash result.sh <markdown_file_path>`
 - PS7: `pwsh result.ps1 <markdown_file_path>`

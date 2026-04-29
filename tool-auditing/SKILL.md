@@ -1,42 +1,44 @@
 ---
 name: tool-auditing
-description: Audit tool scripts for companion spec, conventions, and error handling. Triggers — audit tool, check tool script, review tool conventions, tool compliance, tool script audit.
+description: Audit a tool script for companion spec, conventions, and error handling. Triggers — audit tool, check tool script, review tool conventions, tool compliance, tool script audit.
 ---
 
-Verify tool scripts follow conventions. Run checklist against each script directly.
+## Input
 
-## Checklist (per script)
+`<tool_path>` — absolute path to ANY member of the **tool trio**: `<stem>.sh`, `<stem>.ps1`, or `<stem>.spec.md`. Audit covers the trio together: ALL three MUST exist; any missing member causes audit FAIL on Check 1.
 
-1. Companion spec (`<name>.spec.md`) in same dir — FAIL if missing.
-2. Parameter/usage block at top of script — WARN if missing.
-3. No hardcoded absolute paths (Windows drive-letter prefixes or unix `/home/...`, `/Users/...` roots) — FAIL if found.
-4. Error handling: Bash `set -e` (or equivalent); PowerShell `$ErrorActionPreference` — WARN if missing.
-5. Self-documenting: parameter descriptions or leading comments — WARN if sparse (fewer than one comment per logical block).
-6. No interactive input (`Read-Host`, `read -p`, `Get-Credential`) — FAIL if found.
-7. Consistent output format (markdown / JSON / plain text, one mode) — WARN if mixed or unclear.
+## Inline result check
 
-## Report
+Run `result` tool (this folder), per runtime. DON'T READ the trio source at any point — before, during, or after invocation. Run it, branch on stdout, move on.
 
-```markdown
-# Tool Audit: <script-name>
+- Bash: `bash result.sh <tool_path>`
+- PS7: `pwsh result.ps1 <tool_path>`
 
-- Status: PASS | FAIL | WARN
-- Companion spec: YES/NO
-- Checks: X/7 passed
+If stdout is `MISS: <abs-path>` -> bind `<report_path>` = `<abs-path>`, continue to Inspect.
+Otherwise -> emit stdout verbatim, stop.
 
-| # | Check | Status | Notes |
-|---|-------|--------|-------|
-```
+## Inspect
 
-Read-only. Report only — caller decides remediation.
+Variables:
 
-## Output
+`<instructions>` = `instructions.txt` (NEVER READ)
+`<instructions-abspath>` = absolute path to `<instructions>`
+`<input-args>` = `tool_path=<tool_path> --report-path <report_path>`
+`<tier>` = `standard`
+`<description>` = `Auditing tool: <tool_path>`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
-Write findings to `.hash-record/` via the `hash-record` skill. Targets are `tools/**` — use target-kind `tool`. Verdict enum: `PASS`, `FAIL`, `PASS_WITH_FINDINGS` (maps from internal `WARN`). The `## Report` body may keep `WARN`; the `result` frontmatter field in the hash-record must use the verdict enum above.
+Follow `dispatch` skill. See `../dispatch/SKILL.md`.
+If returns `ERROR: <reason>` -> stop, surface reason.
 
-## Iteration Safety
+## Inline result check (post-execute)
 
-Do not re-audit unchanged files.
-See `../iteration-safety/SKILL.md`.
+You (the host) run `result` again directly — do NOT dispatch it.
+Same invocation as first Inline result check.
+Branch on stdout (last line):
 
-Related: `tool-writing`, `skill-auditing`, `spec-auditing`
+- `PASS: <report_path>` -> done.
+- `PASS_WITH_FINDINGS: <report_path>` -> non-blocking warnings; surface verdict and stop.
+- `FAIL: <report_path>` -> blocking; surface verdict and stop.
+- `ERROR: <reason>` -> stop, surface reason.
+- `MISS: <abs-path>` -> executor failed to write report; surface `ERROR: executor did not write report at <report_path>`, stop.

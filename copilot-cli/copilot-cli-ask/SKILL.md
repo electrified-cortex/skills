@@ -3,6 +3,8 @@ name: copilot-cli-ask
 description: General query or advice operation via the standalone Copilot CLI binary. Returns Copilot's plain text answer.
 ---
 
+# copilot-cli-ask
+
 ## Prerequisites
 
 ```bash
@@ -53,7 +55,7 @@ Answer: <Copilot's plain text response>
 | `copilot --version` fails | Output `Status: UNAVAILABLE`, set `Answer:` to the stderr, stop. |
 | Caller-supplied model is unsupported (Copilot rejects) | Output `Status: ERROR`, set `Answer:` to "model not available: `<model>`", stop. |
 | `copilot -p ...` exits non-zero | Output `Status: ERROR`, set `Answer:` to the stderr, stop. |
-| `copilot -p ...` exits zero with empty stdout | Output `Status: ERROR`, set `Answer:` to "empty response", stop. |
+| `copilot -p ...` exits zero with empty stdout | Output `Status: OK`, set `Answer:` to empty string. |
 
 ## Rules
 

@@ -9,7 +9,7 @@ description: Fix markdownlint violations in a .md file. Triggers — lint markdo
 
 ## Inline result check
 
-Run the `result` tool (in this folder), whichever your runtime has. DON'T READ the script source at any point — before, during, or after invocation. Run it, branch on stdout, move on.
+Run `result` tool (in this folder), whichever your runtime has. DON'T READ the script source at any point — before, during, or after invocation. Run it, branch on stdout, move on.
 
 - Bash: `bash result.sh <markdown_file_path>`
 - PS7: `pwsh result.ps1 <markdown_file_path>`
@@ -38,7 +38,7 @@ If returns `ERROR: <reason>` -> stop, surface reason.
 ## Inline result check (post-execute)
 
 You (the host) run `result` again directly — do NOT dispatch it.
-Same invocation as the first Inline result check.
+Same invocation as first Inline result check.
 If stdout is `findings: <report_path>` -> continue to Iteration loop.
 Otherwise -> emit stdout verbatim, stop.
 

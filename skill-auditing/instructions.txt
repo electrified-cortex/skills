@@ -1,89 +1,98 @@
-Skill Auditing Instructions
+## Inputs
 
-Dispatch Parameters:
+`skill_dir` (positional, required) — absolute path to skill folder being audited.
+`--report-path <abs-path>` (required) — absolute path to write report. Missing -> `ERROR: --report-path required`, stop. Existing file at `<report_path>` is overwritten.
+`--uncompressed` (optional flag) — switches Phase 1/2/3 audit focus to SOURCE artifacts. Default (absent): audit COMPILED artifacts.
 
-skill_path (required) — absolute path to SKILL.md to audit.
-spec_path (optional) — companion spec path if not beside SKILL.md.
---fix (optional) — single-pass fix on `uncompressed.md` & `instructions.uncompressed.md` (NEEDS_REVISION verdict only). Refuses pending git changes (untracked/unstaged/staged/conflicted) or paths escaping skill dir. Never modifies spec.md, README.md, SKILL.md, instructions.txt.
---uncompressed (optional) — audit source (uncompressed.md, instructions.uncompressed.md) vs compiled (SKILL.md, instructions.txt).
+Hard prohibition: do NOT author scripts (`.ps1`, `.sh`, `.py`, etc.), helper files, or any file other than `<report_path>`. Source files in `skill_dir` are read-only. Use Read/Bash/Grep only for inspection.
 
-Procedure:
+## Procedure
 
-1. Read target skill dir (glob/ls containing skill_path).
-2. Identify source files — spec.md, uncompressed.md, instructions.uncompressed.md (if present). Skip SKILL.md, instructions.txt (compressed artifacts).
-3. git hash-object <file> each source file. Collect (filename, blob-hash) pairs.
-4. Build manifest: sort pairs lex. Write <filename> <hash> per pair -> temp string. git hash-object --stdin on text -> 40-char <manifest_hash>.
-4a. Resolve repo root from skill_path (Bash):
-   target_dir=$(dirname "<skill_path>")
-   repo_root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null)
-   [ -z "$repo_root" ] && repo_root="$target_dir"
-   Save <repo_root> for all cache path construction.
-5a. Compute cache path: record filename is hardcoded as report.md.
-   <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.2/report.md
-   v1.2 = skill-auditing version (declared in spec.md; must match). Drift = defect. Surface & stop.
-5b. Probe cache: test -f <path-from-5a>.
-   HIT (file exists): output PATH: <abs-path>. Stop. No re-audit.
-   MISS: save <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.2/ as <audit_cache_dir>. Continue.
-6. Read skill at skill_path. Type: inline or dispatch. Locate spec: check spec_path or spec.md co-located. Not found: simple inline (<30 lines) skip Phase 1; dispatch/complex -> error verdict + write record + PATH: + stop.
-8. Run Phase 1 -> 2 -> 3 (stop on first fail). Verdict: PASS -> pass; PASS_WITH_FINDINGS/NEEDS_REVISION/FAIL -> findings; error -> error.
-9. Scrub absolute paths from body. Scan for absolute filesystem path (Windows <letter>:\... or <letter>:/..., Unix /Users/, /home/, /d/, etc.). Replace with repo-relative form (same as file_paths: frontmatter). Body must not contain absolute paths.
-10. Write audit record at <audit_cache_dir>report.md. mkdir -p first. Frontmatter: hash: <manifest_hash>, file_paths: YAML list repo-relative (one per source from step 3, lex sort; paths relative to <repo-root> — compute via git ls-files --full-name or strip <repo-root>/), operation_kind: skill-auditing, model: <executing-model-class> (agent records its own model class at write time, e.g. claude-haiku, claude-sonnet, claude-opus), result: <mapped>.
-    Correct:
-    file_paths:
-      - skill-auditing/instructions.uncompressed.md
-      - skill-auditing/SKILL.md
-      - skill-auditing/spec.md
-      - skill-auditing/uncompressed.md
-    WRONG (dir only):
-    file_path: skill-auditing/
-    WRONG (abs paths):
-    file_paths:
-      - /abs/path/to/skill-auditing/SKILL.md
-    WRONG (singular multi-file):
-    file_path: skill-auditing/SKILL.md
-Body: # Result H1, state verdict, list findings (phase + check refs).
-11. Output — after all narrative/report output, emit a final line containing ONLY one of:
-   PATH: <absolute-path-to-record.md>  (success)
-   ERROR: <reason>  (pre-write failure)
-   Final line = last line of stdout. Nothing follows it. Line MUST start at column 0 — no indentation, no quoting, no list-marker prefix. Caller parses last line of stdout to extract return value.
-12. --fix active + verdict == NEEDS_REVISION -> Fix Mode. PASS -> done. FAIL -> skip fix; report for author. Single-pass; no re-audit/recompress.
+1. Determine audit mode from presence of `--uncompressed`:
+   - Default (compiled mode): Phase 1/2/3 targets `SKILL.md` + `instructions.txt`.
+   - `--uncompressed` mode: Phase 1/2/3 targets `uncompressed.md` + `instructions.uncompressed.md` + `spec.md`.
+2. Enumerate files for selected mode. Collect whichever exist. Skip files belonging to other mode (compiled mode: skip `uncompressed.md`; `--uncompressed` mode: skip `SKILL.md` and `instructions.txt`).
+3. Read each file. Determine skill type: inline or dispatch. Locate companion spec — `spec.md` co-located with `skill_dir`. If not found: simple inline skills (<30 lines) may skip Phase 1; dispatch or complex inline → record error verdict, write report, return `ERROR: spec.md not found`, stop.
+4. Run Per-file basic checks (always run, regardless of mode — see section below). Accumulate findings into separate "Per-file" section of report. Per-file findings do NOT block Phase 1/2/3.
+5. Run Phase 1 → Phase 2 → Phase 3 (stop on first phase failure). Assign verdict. Map to `result` field: PASS → `pass`; PASS_WITH_FINDINGS / NEEDS_REVISION / FAIL → `findings`; error → `error`.
+6. Scrub absolute paths from report body. Before writing, scan rendered body for any absolute filesystem path (Windows drive-letter prefix `<letter>:\...` or `<letter>:/...`, or Unix root-anchored paths under `/Users/`, `/home/`, `/d/`, etc.). Replace each with repo-relative form — same relative path used in `file_paths:` frontmatter (e.g., body should read `skill-auditing`, never full absolute form). Body MUST NOT contain absolute paths.
+7. Write report at `<report_path>` (overwrite if present). `mkdir -p $(dirname <report_path>)` first. Frontmatter: `file_paths: <YAML list of repo-relative paths>` (one entry per source file enumerated in step 2, sorted lexically; each path relative to git root containing `skill_dir` — compute via `git ls-files --full-name <file>` or strip `<repo_root>/`), `operation_kind: skill-auditing`, `model: <executing-model-class>` (agent records own model class at write time — e.g. `claude-haiku`, `claude-sonnet`, `claude-opus`), `result: <mapped value>`.
 
-Artifact Selection:
+   ```yaml
+   # Correct:
+   file_paths:
+     - skill-auditing/instructions.uncompressed.md
+     - skill-auditing/spec.md
+     - skill-auditing/uncompressed.md
 
-Default — audit compressed runtime (SKILL.md, instructions.txt) vs spec.md. Regression/smoke check: does shipped artifact match spec? Compressed runtime = what runs.
+   # WRONG (directory only):
+   file_path: skill-auditing/
 
-Build/iteration — --uncompressed -> source (uncompressed.md, instructions.uncompressed.md). Fix source, iterate till PASS. Then default-mode final pass on compressed result.
+   # WRONG (absolute paths):
+   file_paths:
+     - /abs/path/to/skill-auditing/SKILL.md
 
-Pick by intent: regression -> default. Building/revising -> --uncompressed till converges -> default final. Host agent chooses.
+   # WRONG (singular file_path in multi-file context):
+   file_path: skill-auditing/SKILL.md
+   ```
+
+   Body: open with `# Result` H1, state verdict, list findings (with phase and check references).
+8. Return literal string `done` on success. On any failure, return `ERROR: <reason>`.
+
+## Per-file Basic Checks
+
+Always run against ALL files in `<skill_dir>`, regardless of `--uncompressed` mode. Enumerate recursively; skip files whose path passes through dot-prefixed directory component (`.hash-record/`, `.tests/`, `.worktrees/`, or any dir whose name starts with `.`).
+
+For each file, apply relevant checks below. Findings accumulate into Per-file section of report and do NOT block Phase 1/2/3.
+
+### `.md` files
+
+- Not empty — must contain non-whitespace content. Empty → HIGH.
+- Frontmatter where required — `SKILL.md` and `agent.md` MUST have YAML frontmatter (`---` block at line 1). Missing → HIGH.
+- No absolute-path leaks — body must not contain Windows-style (`<letter>:\` or `<letter>:/`) or Unix root-anchored paths (`/Users/`, `/home/`, `/d/`). Any found → HIGH.
+
+### `.sh` files
+
+- Shebang present — first line must be `#!/...`. Missing → HIGH.
+- `--help` / `-h` handling — must contain branch handling `--help` or `-h` and printing usage. Missing → MEDIUM.
+- ASCII-strict output — scan for non-ASCII in echo/printf literals. Any found → MEDIUM. Brief sanity check only.
+
+### `.ps1` files
+
+- `-help` / `--help` handling — must contain branch or param block handling `-help` or `--help` and printing usage. Missing → MEDIUM.
+- ASCII-strict output — scan for non-ASCII in Write-Host/Write-Output/echo literals. Any found → MEDIUM. Brief sanity check only.
+
+### `*.spec.md` files
+
+- Purpose section present — must contain `## Purpose` or `# Purpose` heading. Missing → HIGH.
+- Parameters section present — must contain `## Parameters` or `# Parameters` heading. Missing → HIGH.
+- Output section present — must contain `## Output` or `# Output` heading. Missing → HIGH.
 
 ## Phase 1 — Spec Gate
 
-check the companion spec is structurally sound. Must pass before any skill-level checks.
+Verify companion spec is structurally sound. Must pass before any skill-level checks.
 
 ### Spec exists
 
-`spec.md` must exist (or spec_path must resolve). Exception: simple inline
-skills under ~30 lines may skip this phase entirely — proceed to Phase 2.
+`spec.md` must exist (or `spec_path` must resolve). Exception: simple inline skills under ~30 lines may skip this phase entirely — proceed to Phase 2.
 
-### Required sections spec must contain: Purpose, Scope, Definitions, Requirements,
-Constraints. Missing sections → FAIL.
+### Required sections
+
+Spec must contain: Purpose, Scope, Definitions, Requirements, Constraints. Missing sections → FAIL.
 
 ### Normative language
 
-Requirements must use enforceable language (must, shall, required). Vague
-terms in normative sections → FAIL.
+Requirements must use enforceable language (must, shall, required). Vague terms in normative sections → FAIL.
 
 ### Internal consistency
 
-No contradictions between sections. No duplicate rules. No normative content
-in descriptive sections.
+No contradictions between sections. No duplicate rules. No normative content in descriptive sections.
 
 ### Spec completeness
 
 All terms used are defined. All behavior explicitly stated, not implied.
 
-If any Phase 1 check fails → verdict FAIL, report which spec check failed,
-don't proceed to Phase 2.
+If any Phase 1 check fails → verdict FAIL, report which spec check failed, don't proceed to Phase 2.
 
 ## Phase 2 — Skill Smoke Check
 
@@ -91,61 +100,34 @@ Quick structural verification of SKILL.md.
 
 ### Classification
 
-Apply: "Could someone with no context do this from the inputs?" Yes →
-should be dispatch. No → should be inline. Flag misclassification.
+Apply: "Could someone with no context do this from just the inputs?" Yes → should be dispatch. No → should be inline. Flag misclassification.
 
 ### Inline/dispatch file consistency
 
-File presence is definitive for type: any allowed dispatch instruction file
-present (`instructions.txt` or `<name>.md` in skill dir, or the
-instruction file explicitly referenced by SKILL.md) → skill is dispatch;
-no such file found → skill is inline. If Check #1 (Classification) and
-this check disagree, flag the conflict as a finding but don't double-fail — note the conflict and let the auditor decide.
+File presence is definitive for type: any allowed dispatch instruction file present (`instructions.txt` or `<name>.md` in skill directory, or instruction file explicitly referenced by SKILL.md) → skill is dispatch; no such file found → skill is inline. If Check #1 (Classification) and this check disagree, flag conflict as finding but do NOT double-fail — note conflict and let auditor decide.
 
-If dispatch: check SKILL.md is a short routing card (structural details
-in Check #3). If inline: check SKILL.md contains the full procedure.
-Mismatch between file-system evidence and SKILL.md structure → FAIL.
+If dispatch: verify SKILL.md is short routing card (structural details in Check #3). If inline: verify SKILL.md contains full procedure. Mismatch between file-system evidence and SKILL.md structure → FAIL.
 
 ### Structure
 
-Inline: frontmatter (`name`, `description`), direct instructions,
-self-contained.
-Dispatch: Instruction file exists and is reachable. Params typed with
-required/optional/defaults. Output format specified. Uses Dispatch agent
-(isolated), not background agent with host context. SKILL.md is minimal
-routing content.
+Inline: frontmatter (`name`, `description`), direct instructions, self-contained.
+Dispatch: instruction file exists and reachable. Params typed with required/optional/defaults. Output format specified. Uses Dispatch agent (isolated), not background agent with host context. SKILL.md is minimal routing content.
 
-Stop gates in routing card (dispatch only): if SKILL.md contains refusal
-conditions, eligibility guards, git-clean checks, or path-escape rules, flag
-as NEEDS_REVISION. Finding text: `stop gates belong in instructions.txt, not
-the routing card`. Routing card = invocation signature + output format.
+Stop gates in routing card (dispatch only): if SKILL.md contains refusal conditions, eligibility guards, git-clean checks, or path-escape rules, flag as NEEDS_REVISION. Finding text: `stop gates belong in instructions.txt, not the routing card`. Routing card = invocation signature + output format.
 
-(A-IS-1) Input/output double-specification — if skill takes INPUT
-parameter that duplicates OUTPUT already determined by a referenced sub-skill
-(e.g. passing `result_file` when the sub-skill dictates the output path via its
-own hash-record write), flag as HIGH. The input surface mustn't override
-conventions dictated by referenced sub-skills.
+(A-IS-1) Input/output double-specification — if skill takes INPUT parameter that duplicates OUTPUT already determined by referenced sub-skill (e.g. passing `result_file` when sub-skill dictates output path via its own hash-record write), flag as HIGH. Input surface must not override conventions dictated by referenced sub-skills.
 
 ### Frontmatter
 
 `name` and `description` present and accurate.
 
-(A-FM-1) Name matches folder — `name` field MUST equal skill's
-folder name exactly. Check both `uncompressed.md` and `SKILL.md`;
-mismatch in either → FAIL.
+(A-FM-1) Name matches folder — `name` field MUST equal skill's folder name exactly. Check both `uncompressed.md` and `SKILL.md`; mismatch in either → FAIL.
 
-(A-FM-3) H1 per artifact — `SKILL.md` mustn't contain an H1
-(`# ...` line). `uncompressed.md` MUST contain an H1.
-`instructions.uncompressed.md` (if present) MUST contain an H1.
-`instructions.txt` (if present) mustn't contain an H1. Violation in
-`SKILL.md` or `instructions.txt` → HIGH. Missing H1 in `uncompressed.md`
-or `instructions.uncompressed.md` → FAIL. MD041 findings on `SKILL.md` are
-expected and not a violation (R-FM-3 sanctioned no-H1).
+(A-FM-3) H1 per artifact — `SKILL.md` MUST NOT contain H1 (`# ...` line). `uncompressed.md` MUST contain H1. `instructions.uncompressed.md` (if present) MUST contain H1. `instructions.txt` (if present) MUST NOT contain H1. Violation in `SKILL.md` or `instructions.txt` → HIGH. Missing H1 in `uncompressed.md` or `instructions.uncompressed.md` → FAIL. MD041 findings on `SKILL.md` are expected and not a violation (R-FM-3 sanctioned no-H1).
 
 ### No duplication
 
-Not duplicating existing capability. If similar exists, recommend merge or
-distinguish.
+Not duplicating existing capability. If similar exists, recommend merge or distinguish.
 
 If any Phase 2 check fails → verdict FAIL, don't proceed to Phase 3.
 
@@ -155,138 +137,90 @@ Deep verification that SKILL.md faithfully represents spec.
 
 ### Coverage
 
-Every normative requirement in spec must be represented in SKILL.md.
-Missing requirements → FAIL.
+Every normative requirement in spec must be represented in SKILL.md. Missing requirements → FAIL.
 
 ### No contradictions
 
-SKILL.md mustn't contradict spec. Spec is authoritative; SKILL.md is
-subordinate.
+SKILL.md must not contradict spec. Spec is authoritative; SKILL.md is subordinate.
 
 ### No unauthorized additions
 
-SKILL.md mustn't introduce normative requirements not present in spec.
+SKILL.md must not introduce normative requirements not present in spec.
 
 ### Conciseness
 
-Every line affects runtime behavior. No rationale in SKILL.md (belongs in
-spec). No redundant explanations. Agent-facing density.
+Every line affects runtime behavior. No rationale in SKILL.md (belongs in spec). No redundant explanations. Agent-facing density.
 
 Named finding patterns to flag:
 
-"Too much why": prose explaining *why* a rule exists instead of stating
- what to do. "Why" belongs in `spec.md`. Finding text: `too much why — move rationale to spec.md`.
-"Essay not reference card": skill reads as continuous prose than
- decision trees, tables, or bullet instructions. Finding text: `exposition
- where a decision tree would serve`.
-"Prose conditionals": if/else logic written as prose paragraphs instead
- of a decision tree or table. Finding text: `replace prose conditionals with
- decision tree or table`.
-"Meta-architectural label": any line describing skill's own execution
- pattern than instructing agent what to do. Meta-architectural
- labels are design rationale and must be flagged. Examples: "this is inline
- skill", "mustn't dispatch", "Worker runs directly". agent follows
- instructions as written — it doesn't need to know its classification or be
- told what not to do. Finding text: `meta-architectural label — remove, this is
- design rationale`.
+- "Too much why": prose explaining why a rule exists instead of stating what to do. "Why" belongs in `spec.md`. Finding text: `too much why — move rationale to spec.md`.
+- "Essay not reference card": skill reads as continuous prose rather than decision trees, tables, or bullet instructions. Finding text: `exposition where a decision tree would serve`.
+- "Prose conditionals": if/else logic written as prose paragraphs instead of decision tree or table. Finding text: `replace prose conditionals with decision tree or table`.
+- "Meta-architectural label": any line describing skill's own execution pattern rather than instructing agent what to do. Meta-architectural labels are design rationale and must be flagged. Examples: "this is an inline skill", "must not dispatch", "Worker runs directly". Agent follows instructions as written — it doesn't need to know its classification or be told what not to do. Finding text: `meta-architectural label — remove, this is design rationale`.
 
-A skill passes conciseness only if agent can skim it in one pass and know
-exactly what to do — no hunting through paragraphs for the operative rule.
+Skill passes conciseness only if agent can skim it in one pass and know exactly what to do — no hunting through paragraphs for operative rule.
 
 ### Skill completeness
 
-All runtime instructions present. No implicit assumptions. Edge cases
-addressed or excluded. Defaults stated.
+All runtime instructions present. No implicit assumptions. Edge cases addressed or excluded. Defaults stated.
 
 ### Breadcrumbs
 
-Ends with related skills/topics. References are valid (targets exist). No
-stale references.
+Ends with related skills/topics. References valid (targets exist). No stale references.
 
 ### Cost analysis (dispatch only)
 
---uncompressed mode: SKIP.
-
-Uses Dispatch agent (zero-context isolation). Instruction file right-sized
-(<500 lines). Sub-skills referenced by pointer, not inlined. Single dispatch
-turn when possible.
+Uses Dispatch agent (zero-context isolation). Instruction file right-sized (<500 lines). Sub-skills referenced by pointer, not inlined. Single dispatch turn when possible.
 
 ### No dispatch references in instructions
 
-`instructions.txt` mustn't tell agent to dispatch other skills.
-Subagents can't dispatch — only the host agent can. References to other
-skills as "Related" context are OK. "Run this skill" or "dispatch this" →
-FAIL. Remediation: move dispatch steps to SKILL.md.
+`instructions.txt` must not tell agent to dispatch other skills. Subagents can't dispatch — only host agent can. References to other skills as "Related" context are OK. "Run this skill" or "dispatch this" → FAIL. Remediation: move dispatch steps to SKILL.md.
 
 ### No spec breadcrumbs in runtime
 
-SKILL.md and `instructions.txt` mustn't reference skill's own
-companion `spec.md` — not as a pointer, breadcrumb, or "see spec.md"
-hint. The compressed runtime is self-contained; nudging agent toward spec inflates context and defeats compression. Exception: skills
-whose operation takes a spec as input (`spec-auditing`, `skill-auditing`)
-may reference the `spec.md` under audit — never their own companion
-spec. Remediation: delete the reference; if the information is genuinely
-needed at runtime, inline it.
+SKILL.md and `instructions.txt` must not reference skill's own companion `spec.md` — not as pointer, breadcrumb, or "see spec.md" hint. Compressed runtime is self-contained; nudging agent toward spec inflates context and defeats compression. Exception: skills whose operation takes spec as input (`spec-auditing`, `skill-auditing`) may reference `spec.md` under audit — never their own companion spec. Remediation: delete reference; if information is genuinely needed at runtime, inline it.
 
 ### (A-FM-2) Description not restated
 
-Search every artifact (`uncompressed.md`, `SKILL.md`,
-`instructions.uncompressed.md`, `instructions.txt`) for body prose that
-duplicates the `description` frontmatter value. Any restatement → LOW
-(escalate to HIGH if verbatim duplication).
+Search every artifact (`uncompressed.md`, `SKILL.md`, `instructions.uncompressed.md`, `instructions.txt`) for body prose that duplicates `description` frontmatter value. Any restatement → LOW (escalate to HIGH if verbatim duplication).
 
 ### (A-FM-5) No exposition in runtime artifacts
 
-Scan `SKILL.md`, `uncompressed.md`, `instructions.uncompressed.md`, and
-`instructions.txt` for rationale, "why this exists," root-cause narrative,
-historical notes, or background prose. Any found → HIGH. Rationale belongs
-exclusively in `spec.md`.
+Scan `SKILL.md`, `uncompressed.md`, `instructions.uncompressed.md`, and `instructions.txt` for rationale, "why this exists," root-cause narrative, historical notes, or background prose. Any found → HIGH. Rationale belongs exclusively in `spec.md`.
 
 ### (A-FM-6) No non-helpful tags
 
-Check all artifacts for descriptor lines that carry no op value
-(e.g., "inline apply directly no dispatch," "dispatch skill," bare type
-labels not used as actionable instructions). Any found → LOW.
+Check all artifacts for descriptor lines carrying no operational value (e.g., "inline apply directly no dispatch," "dispatch skill," bare type labels not used as actionable instructions). Any found → LOW.
 
 ### (A-FM-7) No empty sections
 
-check every heading in every artifact has body content before the next
-heading or end of file. empty section → HIGH.
+Verify every heading in every artifact has body content before next heading or end of file. Empty section → HIGH.
 
 ### (A-FM-8) Iteration-safety placement
 
-check the Iteration Safety blurb is absent from
-`instructions.uncompressed.md` and `instructions.txt`. Presence in
-either → HIGH. Additionally, if the guard appears in both `SKILL.md` and
-`instructions.*`, flag as probable duplication → HIGH.
+Verify Iteration Safety blurb is absent from `instructions.uncompressed.md` and `instructions.txt`. Presence in either → HIGH. Additionally, if guard appears in both `SKILL.md` and `instructions.*`, flag as probable duplication → HIGH.
 
 ### (A-FM-9a) Iteration-safety pointer form
 
-If a caller skill references iteration-safety, check it uses the exact
-2-line pointer block form (`don't re-audit unchanged files. See <path>/iteration-safety/SKILL.md`.`) and that the relative path
-matches the caller's actual folder depth. Any deviation → HIGH.
+If caller skill references iteration-safety, verify it uses exact 2-line pointer block form (`Do not re-audit unchanged files. See <path>/iteration-safety/SKILL.md`.`) and relative path matches caller's actual folder depth. Any deviation → HIGH.
 
 ### (A-FM-9b) No verbatim Rule A/B restatement
 
-Scan all artifacts for verbatim restatement of iteration-safety Rules A
-or B beyond the sanctioned 2-line pointer block. Any found → HIGH.
+Scan all artifacts for verbatim restatement of iteration-safety Rules A or B beyond sanctioned 2-line pointer block. Any found → HIGH.
 
 ### (A-XR-1) Cross-reference anti-pattern
 
-Scan `SKILL.md`, `instructions.txt`, any sub-instructions (e.g. `eval.txt`),
-and `uncompressed.md` for any pointer — by file path or inline link — to
-ANOTHER skill's `uncompressed.md` or `spec.md`. Violations:
+Scan `SKILL.md`, `instructions.txt`, any sub-instructions (e.g. `eval.txt`), and `uncompressed.md` for any pointer — by file path or inline link — to ANOTHER skill's `uncompressed.md` or `spec.md`. Violations:
 
-"See uncompressed.md for full version"
-"See spec.md for requirements"
-"Reference: `<some-skill>/uncompressed.md`"
-Any href or inline link whose target ends in `.uncompressed.md` or `.spec.md`
+- "See uncompressed.md for full version"
+- "See spec.md for requirements"
+- "Reference: `<some-skill>/uncompressed.md`"
+- Any href or inline link whose target ends in `.uncompressed.md` or `.spec.md`
 
 NOT violations:
 
-Referencing a skill by SKILL NAME only (e.g. "see the `compression` skill")
-Subject-matter mentions of these file types in skill-auditing's own artifacts
- (this skill audits these files as targets, so it must name them)
+- Referencing skill by SKILL NAME only (e.g. "see the `compression` skill")
+- Subject-matter mentions of these file types in skill-auditing's own artifacts (this skill audits these files as targets, so it must name them)
 
 Any cross-file path pointer → HIGH.
 
@@ -294,62 +228,62 @@ Any cross-file path pointer → HIGH.
 
 Applies to dispatch skills only (N/A for inline skills).
 
-check `uncompressed.md` contains ONLY:
+Verify `uncompressed.md` contains ONLY:
 
-Frontmatter (`name`, `description`)
-Optional H1
-Dispatch invocation + input signature (parameter list)
-Return contract (`Returns:` line)
-Optional 2-line iteration-safety pointer
+- Frontmatter (`name`, `description`)
+- Optional H1
+- Dispatch invocation + input signature (parameter list)
+- Return contract (`Returns:` line)
+- Optional 2-line iteration-safety pointer
 
-Any of the following → HIGH:
+Any of following → HIGH:
 
-Executor procedure steps or phase descriptions
-Modes tables or "When to audit which artifact" tables
-Examples or sample invocations beyond the input signature
-Rationale, "why this exists," or background prose
-Related breadcrumbs or "Related:" sections
-Behavior sections or Output format descriptions
-Model-class guidance (e.g., "Haiku-class handles most audits")
-False-positive guard lists
+- Executor procedure steps or phase descriptions
+- Modes tables or "When to audit which artifact" tables
+- Examples or sample invocations beyond input signature
+- Rationale, "why this exists," or background prose
+- Related breadcrumbs or "Related:" sections
+- Behavior sections or Output format descriptions
+- Model-class guidance (e.g., "Haiku-class handles most audits")
+- False-positive guard lists
 
 Content must go in `instructions.uncompressed.md` (executor procedure) or `spec.md` (rationale/behavior).
 
 ### Dispatch Skill Checks (DS-1..DS-6)
 
-Applies to dispatch skills only (N/A for inline skills). Run against `uncompressed.md` (the host-facing card).
+Applies to dispatch skills only (N/A for inline skills). Run against `uncompressed.md` (host-facing card).
 
 ### (DS-1) Return shape declared
 
-The host card MUST explicitly declare the return shape. Canonical shapes: `PATH: <abs-path-to-artifact>` on success, `ERROR: <reason>` on pre-write failure. A card returning content (multi-line reports, structured findings, inline results) instead of a path — for a skill that produces artifact — MUST be flagged. Missing return shape declaration → HIGH.
+Host card MUST explicitly declare return shape. Canonical shapes: `PATH: <abs-path-to-artifact>` on success, `ERROR: <reason>` on pre-write failure. Card returning content (multi-line reports, structured findings, inline results) instead of path — for skill that produces artifact — MUST be flagged. Missing return shape declaration → HIGH.
 
 ### (DS-2) Host card minimalism
 
-`uncompressed.md` mustn't contain any of the following; each present → HIGH:
+`uncompressed.md` MUST NOT contain any of following; each present → HIGH:
 
-Internal cache mechanism descriptions (e.g., "iteration-safe via hash-record", "hash blob check") — caching is impl detail invisible to the host.
-Adaptive/conditional rules invisible to the host (e.g., "MD041 auto-suppressed when frontmatter present") — belong in `instructions.uncompressed.md`.
-Tool-fallback hints (e.g., "use the CLI if available") — belong in instructions where the dispatched agent decides.
-Subjective qualifiers (e.g., "Sonnet-class equivalent or diminishing returns") — replace with the operative model class in the dispatch line.
-Prose describing what skill does or how it works internally — belongs in `spec.md`. The card answers: how to dispatch, what params, what return shape, what modes. Nothing else.
+- Internal cache mechanism descriptions (e.g., "iteration-safe via hash-record", "hash blob check") — caching is implementation detail invisible to host.
+- Adaptive/conditional rules invisible to host (e.g., "MD041 auto-suppressed when frontmatter present") — belong in `instructions.uncompressed.md`.
+- Tool-fallback hints (e.g., "use the CLI if available") — belong in instructions where dispatched agent decides.
+- Subjective qualifiers (e.g., "Sonnet-class equivalent or diminishing returns") — replace with operative model class in dispatch line.
+- Prose describing what skill does or how it works internally — belongs in `spec.md`. Card answers: how to dispatch, what params, what return shape, what modes. Nothing else.
 
 ### (DS-3) Description trigger phrases
 
-The frontmatter `description` MUST follow the pattern: `<one-line action>. Triggers — <phrase1>, <phrase2>, ..., <phraseN>.` with 3–6 comma-separated trigger phrases. Violations → LOW:
+Frontmatter `description` MUST follow pattern: `<one-line action>. Triggers — <phrase1>, <phrase2>, ..., <phraseN>.` with 3–6 comma-separated trigger phrases. Violations → LOW:
 
-Description written as prose without trigger phrases.
-Description stuffed with impl notes (e.g., "Dispatch skill", "Iteration-safe via hash-record", "Zero errors gate") — these waste trigger-phrase budget and must be removed.
+- Description written as prose without trigger phrases.
+- Description stuffed with implementation notes (e.g., "Dispatch skill", "Iteration-safe via hash-record", "Zero errors gate") — these waste trigger-phrase budget and must be removed.
 
 ### (DS-4) Inline dispatch guard
 
-The dispatch instruction MUST follow the canonical cross-platform dispatch pattern:
+Dispatch instruction MUST follow canonical cross-platform dispatch pattern:
 
 ```text
 Without reading `<instructions-file>` yourself, spawn a zero-context, haiku-class sub-agent in the background:
 
-Claude Code: `Agent` tool. Pass: `"Read and follow <instructions-file> here. Input: <args>"`
+**Claude Code:** `Agent` tool. Pass: `"Read and follow <instructions-file> here. Input: <args>"`
 
-VS Code / Copilot: `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow <instructions-file> in <skill_dir>. Input: <args>")`
+**VS Code / Copilot:** `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow <instructions-file> in <skill_dir>. Input: <args>")`
 
 Don't read `<instructions-file>` yourself.
 
@@ -360,78 +294,33 @@ NEVER READ OR INTERPRET `<instructions-file>` YOURSELF. Let the sub-agent do the
 
 Three reinforcements required:
 
-Opening prefix: `Without reading <instructions-file> yourself, spawn...` — primes agent before reading the bullets.
-Mid-block warning: `Don't read <instructions-file> yourself.` — repeated after the cross-platform bullets.
-Closing reinforcement: `NEVER READ OR INTERPRET <instructions-file> YOURSELF. Let the sub-agent do the work.` — uppercase at end of body. Empirically, the closing uppercase form makes VS Code Copilot reliably dispatch instead of inlining.
+- Opening prefix: `Without reading <instructions-file> yourself, spawn...` — primes agent before reading bullets.
+- Mid-block warning: `Don't read <instructions-file> yourself.` — repeated after cross-platform bullets.
+- Closing reinforcement: `NEVER READ OR INTERPRET <instructions-file> YOURSELF. Let the sub-agent do the work.` — uppercase at end of body. Empirically, closing uppercase form makes VS Code Copilot reliably dispatch instead of inlining.
 
 Violations:
 
-Standalone bold warnings (`don't execute this skill inline.`) separated from the dispatch line → HIGH (fold into pattern, don't keep as banner).
-Missing the opening "Without reading" prefix → HIGH.
-Missing the closing uppercase reinforcement → MEDIUM.
-Cross-platform bullets reduced to a single platform → HIGH (dual Claude Code / VS Code form is the cross-platform contract).
-VS Code line missing `model: "Claude Haiku 4.5"` literal → HIGH.
+- Standalone bold warnings (`**Do not execute this skill inline.**`) separated from dispatch line → HIGH (fold into pattern, don't keep as banner).
+- Missing opening "Without reading" prefix → HIGH.
+- Missing closing uppercase reinforcement → MEDIUM.
+- Cross-platform bullets reduced to single platform → HIGH (dual Claude Code / VS Code form is cross-platform contract).
+- VS Code line missing `model: "Claude Haiku 4.5"` literal → HIGH.
 
 ### (DS-5) No substrate duplication
 
-Consumer skills that produce records (audit reports, hygiene reports, review reports) mustn't inline the hash-record path schema, frontmatter shape, or shard layout from a referenced substrate skill (e.g., `hash-record`). Must reference the substrate by name only. Duplication of path math, frontmatter schema, or shard layout → HIGH.
+Consumer skills that produce records (audit reports, hygiene reports, review reports) MUST NOT inline hash-record path schema, frontmatter shape, or shard layout from referenced substrate skill (e.g., `hash-record`). Must reference substrate by name only. Duplication of path math, frontmatter schema, or shard layout → HIGH.
 
 ### (DS-6) No overbuilt sub-skill dispatches for trivial work
 
-A sub-skill folder whose entire procedure fits within 2–3 inline steps in the consumer's instructions is anti-pattern. Two extra inline steps are cheaper than spawning another agent for those two steps. Flag any sub-skill whose procedure a consuming agent could execute directly in 2–3 steps → LOW (escalate to HIGH if the sub-skill adds no logic beyond a filesystem operation plus write).
+Sub-skill folder whose entire procedure fits within 2–3 inline steps in consumer's instructions is anti-pattern. Two extra inline steps are cheaper than spawning another agent for those two steps. Flag any sub-skill whose procedure consuming agent could execute directly in 2–3 steps → LOW (escalate to HIGH if sub-skill adds no logic beyond filesystem operation plus write).
 
-These checks extend Phase 3. Violations recorded in Phase 3 findings table under a "Dispatch Skill Checks" group. HIGH violations contribute to NEEDS_REVISION or FAIL depending on count; LOW violations contribute to NEEDS_REVISION.
+These checks extend Phase 3. Violations recorded in Phase 3 findings table under "Dispatch Skill Checks" group. HIGH violations contribute to NEEDS_REVISION or FAIL depending on count; LOW violations contribute to NEEDS_REVISION.
 
 ## Verdict Rules
 
-PASS: All three phases pass.
-NEEDS_REVISION: Phase 1 and 2 pass, Phase 3 has 1-2 non-critical
- issues. List fixes.
-FAIL: Any phase fails, or Phase 3 has critical issues.
-
-## Fix Mode (--fix, single-pass, source-first)
-
-Fix mode targets skill's authoritative source files — not the compiled
-runtime. The compiled runtime (`SKILL.md`, `instructions.txt`) is regenerated
-by the caller via the `compression` skill after the auditor exits. This
-preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
-`SKILL.md`).
-
-1. Eligibility gate. Enter fix mode only when verdict == NEEDS_REVISION.
- PASS → nothing to fix. FAIL (any phase) → fix mode is skipped; defects are
- reported for author action.
-2. Preflight report path writability. Compute report path via the hash-record manifest path (`<audit_cache_dir>report.md`). If unwritable, STOP fix mode and exit without modifying anything.
-3. Identify writable candidates. Only `uncompressed.md` and
- `instructions.uncompressed.md` co-located with skill_path are eligible.
- - Reject any candidate path that resolves outside skill dir
- → STOP `refusing to fix: <path> escapes skill dir`.
- - If neither candidate exists, STOP `no writable source files; fix mode
- unavailable`.
- - Never modify `spec.md`, `README.md`, `SKILL.md`, or `instructions.txt`.
-4. Git-clean check. For each candidate, check git status:
- - Untracked, unstaged, staged-but-uncommitted, or merge-conflicted on
- any candidate → STOP `refusing to fix: <path> has pending git changes`.
- - Skill not under git control → STOP `refusing to fix: skill is not under
- git control`.
- - The read-only audit report is still written in either case.
-5. Write the read-only audit report to the computed path first; this is the
- commit point. Any fix-pass failure after this leaves the report intact.
-6. Apply fixes to writable source files only, in severity order:
- 1. Critical Phase 3 issues: coverage, contradictions, unauthorized
- additions.
- 2. Non-critical Phase 3 issues: conciseness, breadcrumbs, cost analysis,
- dispatch refs, spec breadcrumbs.
-7. Never auto-fix: Phase 1 (spec) defects, defects whose root cause is in
- `spec.md` or `README.md` or a compiled artifact, defects requiring author
- judgment. Surface them as findings.
-8. Append a Fix Mode Addendum to the report:
- - `Files Modified` — relative paths of every file the auditor wrote.
- - `Fixes Applied` — per file, what changed and which finding it resolves.
- - `Not Auto-Fixed` — defects deferred to the author.
- - `Next Steps` — re-audit until PASS.
-9. Single-pass only. The auditor doesn't re-audit and doesn't invoke
- compression. Multi-pass convergence is the caller's responsibility
- (fix → recompress → re-audit).
+- PASS: All three phases pass.
+- NEEDS_REVISION: Phase 1 and 2 pass, Phase 3 has 1-2 non-critical issues. List fixes.
+- FAIL: Any phase fails, or Phase 3 has critical issues.
 
 ## Report Format
 
@@ -439,7 +328,6 @@ Frontmatter (required):
 
 ```yaml
 ---
-hash: <manifest-hash>
 file_paths:
   - <repo-relative path to first source file>
   - <repo-relative path to second source file>
@@ -450,7 +338,7 @@ result: pass | findings | error | skipped
 ---
 ```
 
-`file_paths` MUST be a YAML list of repo-relative path strings — one per source file from the manifest, sorted lexically. Repo-relative = relative to the git root containing `.hash-record/`. NOT absolute paths, NOT a dir-only string, NOT a singular `file_path` key.
+`file_paths` MUST be YAML list of repo-relative path strings — one per source file from manifest, sorted lexically. Repo-relative = relative to git root containing `.hash-record/`. NOT absolute paths, NOT directory-only string, NOT singular `file_path` key.
 
 Body (required):
 
@@ -462,7 +350,6 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 ## Skill Audit: <skill-name>
 
 **Verdict:** PASS | NEEDS_REVISION | FAIL
-**Mode:** uncompressed  ← include only when --uncompressed is active; omit in standard mode
 **Type:** inline | dispatch
 **Path:** <path>
 **Failed phase:** <1 | 2 | 3 | none>
@@ -519,6 +406,22 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 | No substrate duplication (DS-5) | PASS/FAIL/N/A | |
 | No overbuilt sub-skill dispatch (DS-6) | PASS/FAIL/N/A | |
 
+### Per-file Basic Checks
+
+| File | Check | Result | Notes |
+| --- | --- | --- | --- |
+| `<filename>` | Not empty | PASS/FAIL | |
+| `<filename>` | Frontmatter (if required) | PASS/FAIL/N/A | |
+| `<filename>` | No abs-path leaks | PASS/FAIL | |
+| `<filename>` | Shebang (.sh) | PASS/FAIL/N/A | |
+| `<filename>` | --help handling | PASS/FAIL/N/A | |
+| `<filename>` | ASCII-strict output | PASS/FAIL/N/A | |
+| `<filename>` | Purpose section (.spec.md) | PASS/FAIL/N/A | |
+| `<filename>` | Parameters section (.spec.md) | PASS/FAIL/N/A | |
+| `<filename>` | Output section (.spec.md) | PASS/FAIL/N/A | |
+
+Omit N/A rows. Add one row group per file. Files with no findings may collapse to single "all checks pass" row.
+
 ### Issues
 
 - <issue and fix>
@@ -531,15 +434,9 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 
 ## Rules
 
-Read-only by default. Never modify any file unless --fix is active and the
- verdict is exactly NEEDS_REVISION.
-With --fix: modify only `uncompressed.md` and `instructions.uncompressed.md`
- co-located with skill_path. Never `spec.md`, `README.md`, `SKILL.md`, or
- `instructions.txt`. Never any file with pending git changes. Never paths
- outside skill dir.
-Single-pass only — no in-process re-audit, no recompression. Caller drives
- the next cycle.
-One skill per dispatch.
-Evidence-based verdicts.
-When in doubt, NEEDS_REVISION over PASS.
+- Read-only. Never modify any source file in `skill_dir`. Write only `<report_path>`.
+- Single-pass only — no in-process re-audit, no recompression. Caller drives next cycle.
+- One skill per dispatch.
+- Evidence-based verdicts.
+- When in doubt, NEEDS_REVISION over PASS.
 
