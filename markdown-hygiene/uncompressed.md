@@ -16,6 +16,8 @@ Run the `result` tool (in this folder), whichever your runtime has. DON'T READ t
 - Bash: `bash result.sh <markdown_file_path>`
 - PS7: `pwsh result.ps1 <markdown_file_path>`
 
+(Note: the terminal output might wrap)
+
 If stdout is `MISS: <abs-path>` -> bind `<report_path>` = `<abs-path>`, continue.
 Otherwise -> emit stdout verbatim, stop.
 
@@ -41,6 +43,7 @@ If returns `ERROR: <reason>` -> stop, surface reason.
 
 You (the host) run `result` again directly — do NOT dispatch it.
 Same invocation as the first Inline result check.
+Output is always exactly one line starting with a prefix. Long paths may visually wrap in terminal display — ignore the wrap, match from the start of the full output string.
 If stdout is `findings: <report_path>` -> continue to Iteration loop.
 Otherwise -> emit stdout verbatim, stop.
 

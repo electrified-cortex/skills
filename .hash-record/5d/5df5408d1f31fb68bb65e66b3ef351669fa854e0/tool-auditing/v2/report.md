@@ -4,7 +4,7 @@ file_paths:
   - hash-record/hash-record-check/check.ps1
   - hash-record/hash-record-check/check.spec.md
 operation_kind: tool-auditing
-model: claude-sonnet-4-6
+model: sonnet-class
 result: pass
 ---
 # Result

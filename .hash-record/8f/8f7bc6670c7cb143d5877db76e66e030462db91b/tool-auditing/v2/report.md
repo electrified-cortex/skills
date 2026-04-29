@@ -4,7 +4,7 @@ file_paths:
   - markdown-hygiene/result.ps1
   - markdown-hygiene/result.spec.md
 operation_kind: tool-auditing
-model: claude-sonnet-4-6
+model: sonnet-class
 result: pass
 ---
 

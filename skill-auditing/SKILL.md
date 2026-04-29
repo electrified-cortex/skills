@@ -16,6 +16,8 @@ Run `result` tool (in this folder), whichever your runtime has. DON'T READ the s
 - Bash: `bash result.sh <skill_dir>`
 - PS7: `pwsh result.ps1 <skill_dir>`
 
+(Note: the terminal output might wrap)
+
 If stdout is `MISS: <abs-path>` -> bind `<report_path>` = `<abs-path>`, continue to Preparation.
 Otherwise -> emit stdout verbatim, stop.
 
@@ -48,7 +50,8 @@ If returns `ERROR: <reason>` -> stop, surface reason.
 
 You (the host) run `result` again directly — do NOT dispatch it.
 Same invocation as first Inline result check.
-Branch on stdout (last line):
+Output is always exactly one line starting with a prefix. Long paths may visually wrap in terminal display — ignore the wrap, match from the start of the full output string.
+Branch on stdout:
 
 - `PASS: <report_path>` -> done.
 - `NEEDS_REVISION: <report_path>` -> caller may dispatch fix pass with report; surface and stop.
