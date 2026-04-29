@@ -9,7 +9,7 @@ description: Fix markdownlint violations in a .md file. Triggers — lint markdo
 
 ## Inline result check
 
-Run the `result` tool (in this folder), whichever runtime has:
+Run the `result` tool (in this folder), whichever your runtime has. DON'T READ the script source at any point — before, during, or after invocation. Run it, branch on stdout, move on.
 
 - Bash: `bash result.sh <markdown_file_path>`
 - PS7: `pwsh result.ps1 <markdown_file_path>`
@@ -50,4 +50,4 @@ Max 3 iterations. Still findings after 3rd -> stop, report last `<report_path>`.
 `<description>` = `Fixing Markdown Hygiene: <markdown_file_path>`
 `<prompt>` = `For this <markdown_file_path>, read <report_path> and fix any issues.`
 
-Follow `dispatch` skill (same as Inspect). Then loop from "Result check (post-execute)".
+Follow `dispatch` skill (same as Inspect). Then loop from "Inline result check".
