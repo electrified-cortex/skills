@@ -11,7 +11,7 @@ Dispatch isolated agent (Dispatch agent, zero context): "Read and follow `instru
 
 Validity uses all active worktrees (main + linked via `git worktree list --porcelain`):
 - Manifest records: re-derive manifest hash from `file_paths` (search all worktree roots for each file; orphaned if any missing or hash changes).
-- Non-manifest records: check `<full-hash>` against union blob-hash set from all worktree scans (each scan excludes `.worktrees/` paths to prevent cross-crawl).
+- Non-manifest records: check `<full-hash>` against union blob-hash set from all worktree scans (each scan excludes `.worktrees/` paths and submodule directory paths).
 
 Returns: `CLEAN` | `pruned: <count>` | `dry-run: <count>` | `ERROR: <reason>`
 

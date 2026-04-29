@@ -45,7 +45,7 @@ Run every step with the named tool. Do not summarize or plan.
    git -C "<wt-root>" ls-files --cached --others --exclude-standard
    ```
 
-   Filter out paths that start with `.worktrees/`. For each remaining path, run `git hash-object "<wt-root>/<file>"` (Bash). Union all hashes into a single set. A `<full-hash>` is **valid** if it appears in this union set; otherwise ORPHANED.
+   Filter out paths that start with `.worktrees/`. Also exclude submodule paths: run `git -C "<wt-root>" submodule foreach --quiet 'echo $displaypath' 2>/dev/null` to list submodule paths and exclude any file entry that matches a submodule path. For each remaining path, run `git hash-object "<wt-root>/<file>"` (Bash). Union all hashes into a single set. A `<full-hash>` is **valid** if it appears in this union set; otherwise ORPHANED.
 
 4. **Identify orphans.** Collect all hash directories marked ORPHANED in steps 3a/3b.
 

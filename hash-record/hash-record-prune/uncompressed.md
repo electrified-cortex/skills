@@ -16,7 +16,7 @@ Parameters:
 Validity rules (all active worktrees — main + linked via `git worktree list --porcelain`):
 
 - **Manifest records** (have `manifest.yaml`): orphaned when re-computing the manifest hash from current `file_paths` yields a different value, or any listed file is missing across all active worktree roots.
-- **Non-manifest records**: orphaned when `<full-hash>` does not match any file blob hash in the union of all active worktree scans. Each scan excludes `.worktrees/` paths.
+- **Non-manifest records**: orphaned when `<full-hash>` does not match any file blob hash in the union of all active worktree scans. Each scan excludes `.worktrees/` paths and submodule directory paths.
 
 Returns: `CLEAN` | `pruned: <count>` | `dry-run: <count>` | `ERROR: <reason>`
 
