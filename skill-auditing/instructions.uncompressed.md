@@ -360,38 +360,6 @@ The frontmatter `description` MUST follow the pattern: `<one-line action>. Trigg
 - Description written as prose without trigger phrases.
 - Description stuffed with implementation notes (e.g., "Dispatch skill", "Iteration-safe via hash-record", "Zero errors gate") — these waste trigger-phrase budget and must be removed.
 
-### (DS-4) Inline dispatch guard
-
-The dispatch instruction MUST follow the canonical cross-platform dispatch pattern:
-
-```text
-Without reading `<instructions-file>` yourself, spawn a zero-context, haiku-class sub-agent in the background:
-
-**Claude Code:** `Agent` tool. Pass: `"Read and follow <instructions-file> here. Input: <args>"`
-
-**VS Code / Copilot:** `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow <instructions-file> in <skill_dir>. Input: <args>")`
-
-Don't read `<instructions-file>` yourself.
-
-Returns: `<return contract>`
-
-NEVER READ OR INTERPRET `<instructions-file>` YOURSELF. Let the sub-agent do the work.
-```
-
-Three reinforcements required:
-
-- **Opening prefix:** `Without reading <instructions-file> yourself, spawn...` — primes the agent before reading the bullets.
-- **Mid-block warning:** `Don't read <instructions-file> yourself.` — repeated after the cross-platform bullets.
-- **Closing reinforcement:** `NEVER READ OR INTERPRET <instructions-file> YOURSELF. Let the sub-agent do the work.` — uppercase at end of body. Empirically, the closing uppercase form makes VS Code Copilot reliably dispatch instead of inlining.
-
-Violations:
-
-- Standalone bold warnings (`**Do not execute this skill inline.**`) separated from the dispatch line → HIGH (fold into pattern, don't keep as banner).
-- Missing the opening "Without reading" prefix → HIGH.
-- Missing the closing uppercase reinforcement → MEDIUM.
-- Cross-platform bullets reduced to a single platform → HIGH (dual Claude Code / VS Code form is the cross-platform contract).
-- VS Code line missing `model: "Claude Haiku 4.5"` literal → HIGH.
-
 ### (DS-5) No substrate duplication
 
 Consumer skills that produce records (audit reports, hygiene reports, review reports) MUST NOT inline the hash-record path schema, frontmatter shape, or shard layout from a referenced substrate skill (e.g., `hash-record`). Must reference the substrate by name only. Duplication of path math, frontmatter schema, or shard layout → HIGH.
@@ -489,7 +457,6 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 | Return shape declared (DS-1) | PASS/FAIL/N/A | |
 | Host card minimalism (DS-2) | PASS/FAIL/N/A | |
 | Description trigger phrases (DS-3) | PASS/FAIL/N/A | |
-| Inline dispatch guard (DS-4) | PASS/FAIL/N/A | |
 | No substrate duplication (DS-5) | PASS/FAIL/N/A | |
 | No overbuilt sub-skill dispatch (DS-6) | PASS/FAIL/N/A | |
 
