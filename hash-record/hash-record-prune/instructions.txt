@@ -7,24 +7,28 @@ Procedure (each step named tool):
 
 1. Verify: Bash `test -d "<repo_root>/.hash-record"` → absent = `CLEAN`, stop.
 
-2. Collect: Bash `find "<repo_root>/.hash-record" -mindepth 2 -maxdepth 2 -type d ! -name '.prune' ! -name '.*'`
+2. Collect: Bash `find "<repo_root>/.hash-record" -mindepth 2 -maxdepth 2 -type d ! -name '.prune' ! -name '.*' ! -path "<repo_root>/.hash-record/.*/*"`
    Extract basename (full-hash). None = `CLEAN`, stop.
 
 3. Validity per hash dir (choose by manifest presence):
 
+   First: enumerate all active worktree roots.
+   `git -C "<repo_root>" worktree list --porcelain` — collect each `worktree <path>` line.
+
    Manifest present (`<full-hash>/manifest.yaml` exists) — re-derive manifest hash:
    a. Read `file_paths` list from manifest YAML.
-   b. Any path under `.worktrees/` → ORPHANED (active worktree scope only).
-   c. Resolve each to absolute path under `repo_root`; any missing → ORPHANED.
-   d. `git hash-object <abs-path>` each; collect (repo-relative-path, blob-hash) pairs.
-   e. Sort pairs lexically by path.
-   f. Build manifest text: `<path> <blob-hash>\n` per line (final line also ends `\n`).
-   g. Write to temp file; `git hash-object <tempfile>`. Result == dir name → VALID; else ORPHANED.
+   b. For each path: search all worktree roots in order; use first root where file exists.
+      If no root has the file → ORPHANED.
+   c. `git hash-object <abs-path>` each; collect (repo-relative-path, blob-hash) pairs.
+   d. Sort pairs lexically by path.
+   e. Build manifest text: `<path> <blob-hash>\n` per line (final line also ends `\n`).
+   f. Write to temp file; `git hash-object <tempfile>`. Result == dir name → VALID; else ORPHANED.
 
    No manifest — blob-hash fallback (build once; share across all non-manifest dirs):
-   `cd "<repo_root>" && git ls-files --cached --others --exclude-standard`
-   Filter out any paths starting with `.worktrees/`. `git hash-object` each remaining file; accumulate set.
-   Hash in set → VALID; else ORPHANED.
+   For each active worktree root:
+     `git -C "<wt-root>" ls-files --cached --others --exclude-standard`
+     Filter out paths starting with `.worktrees/`. `git hash-object` each remaining file; accumulate into union set.
+   Hash in union set → VALID; else ORPHANED.
 
 4. Orphan: all hash dirs marked ORPHANED in step 3.
 
@@ -45,3 +49,4 @@ Exit codes:
 
 Safety:
 Never delete hash if in valid set. Never delete `.hash-record/` or dot-dirs. No symlinks. No out-of-bounds paths. Build set once; in-pass changes ignored. No age/model/op-kind pruning—orphan status only. Reject `repo_root` w/ `..` or shell chars. Partial deletion OK; re-run resumes.
+Previously-deleted records cannot be recovered; pruning is forward-only.

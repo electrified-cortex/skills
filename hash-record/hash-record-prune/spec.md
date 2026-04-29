@@ -14,9 +14,9 @@ Does NOT delete records whose hash currently matches a workspace file. Does NOT 
 
 ## Definitions
 
-- **Orphaned record**: a record whose hash can no longer be re-derived from the active working tree. For **non-manifest records** (no `manifest.yaml`): `<full-hash>` does not match the git blob hash of any current file in the active working tree (tracked OR untracked, excluding gitignored and excluding `.worktrees/`). For **manifest records** (has `manifest.yaml`): re-computing the manifest hash from the current `file_paths` yields a different value — because one or more listed files are missing, changed, or under `.worktrees/`.
-- **Valid-hash set**: for non-manifest records — the set of git blob hashes computed from every file in the active working tree (tracked OR untracked, excluding gitignored and excluding `.worktrees/`) at the moment the prune pass begins.
-- **Active working tree**: the main worktree rooted at `repo_root`. Linked worktrees (under `.worktrees/`) are excluded from all validity checks — the prune scope is the main checkout only.
+- **Orphaned record**: a record whose hash can no longer be re-derived from any active working tree. For **non-manifest records** (no `manifest.yaml`): `<full-hash>` does not match the git blob hash of any current file in the union of all active worktrees (main + linked). For **manifest records** (has `manifest.yaml`): re-computing the manifest hash from the current `file_paths` (resolving each path against any active worktree root) yields a different value — because one or more listed files are missing or changed across all worktrees.
+- **Valid-hash set**: for non-manifest records — the union of git blob hashes computed from every file in every active worktree (main + all linked, each scanned with `git ls-files --cached --others --exclude-standard`, excluding `.worktrees/` paths from each scan to prevent cross-crawl).
+- **Active worktrees**: the main worktree rooted at `repo_root` plus all linked worktrees reported by `git worktree list --porcelain`. `.worktrees/` sub-paths are excluded from each individual worktree scan to prevent cross-crawl, but each linked worktree root IS scanned independently.
 - **Hash directory**: the path `.hash-record/<shard>/<full-hash>/`. Pruning operates at this granularity — an entire hash directory and all its descendants are removed when the hash is orphaned.
 - **Administrative directory**: a dot-prefixed directory directly under `.hash-record/` that is NOT a shard directory (e.g., any dot-prefixed dirs). Administrative directories are excluded from the hash-directory walk and MUST NOT be deleted.
 - **Dry-run**: a mode that reports what would be deleted without modifying the filesystem.
@@ -32,22 +32,22 @@ Does NOT delete records whose hash currently matches a workspace file. Does NOT 
 ### Procedure
 
 1. Resolve `repo_root` and verify `<repo_root>/.hash-record/` exists. If absent, output `CLEAN` and stop — nothing to prune.
-2. Determine validity for each hash directory via the appropriate strategy:
-   - **Manifest strategy** (when `<repo_root>/.hash-record/<shard>/<full-hash>/manifest.yaml` exists): the directory name is a **manifest hash** (not a file blob hash) — it must be re-derived, not looked up:
+2. Enumerate all active worktree roots: run `git worktree list --porcelain` from `repo_root`, extract `worktree <path>` lines. This yields the main worktree root and all linked worktree roots.
+3. Determine validity for each hash directory via the appropriate strategy:
+   - **Manifest strategy** (when `<repo_root>/.hash-record/<shard>/<full-hash>/manifest.yaml` exists): the directory name is a **manifest hash** (not a file blob hash) — it must be re-derived:
      1. Read `file_paths` from the manifest YAML.
-     2. Reject any path under `.worktrees/` — linked worktree paths are outside the active working tree scope. Mark ORPHANED and stop.
-     3. For each listed path, resolve to an absolute path under `repo_root`. If any file is missing or unreadable, mark ORPHANED and stop.
-     4. Run `git hash-object <abs-path>` for each file. Collect (repo-relative-path, blob-hash) pairs.
-     5. Sort pairs lexically by repo-relative path.
-     6. Build manifest text: one line per pair in format `<repo-relative-path> <blob-hash>`, each ending with `\n` (including the final line).
-     7. Run `git hash-object --stdin` (or equivalent via temp file) on the manifest text. If the result equals `<full-hash>`, mark VALID; otherwise mark ORPHANED.
-   - **Full-workspace fallback** (when `manifest.yaml` is absent): the directory name is a single-file blob hash. Build the valid-hash set once (shared across all non-manifest directories): enumerate every file in the active working tree via `git ls-files --cached --others --exclude-standard`, filter out any paths under `.worktrees/`, run `git hash-object <file>` for each, accumulate hashes into a set. If `<full-hash>` is in the set, mark VALID; otherwise mark ORPHANED.
-3. Walk every hash directory under `.hash-record/<shard>/<full-hash>/`. Apply step 2 to each. Collect all directories marked ORPHANED.
-4. Each ORPHANED hash directory is a candidate for deletion.
-5. If `--dry-run` is set, skip deletion and output `dry-run: <count>`; stop.
-6. Otherwise, delete each orphan hash directory via `rm -rf` (or equivalent) — the entire directory and all leaf records inside it. Stop if `--limit` is reached.
-7. After deletion, prune any now-empty `<shard>/` parent directory.
-8. Output the result.
+     2. For each listed path, search all active worktree roots in order; use the first root where the file exists. If no root has the file, mark ORPHANED and stop.
+     3. Run `git hash-object <abs-path>` for each found file. Collect (repo-relative-path, blob-hash) pairs.
+     4. Sort pairs lexically by repo-relative path.
+     5. Build manifest text: one line per pair in format `<repo-relative-path> <blob-hash>`, each ending with `\n` (including the final line).
+     6. Run `git hash-object --stdin` (or equivalent via temp file) on the manifest text. If the result equals `<full-hash>`, mark VALID; otherwise mark ORPHANED.
+   - **Full-workspace fallback** (when `manifest.yaml` is absent): the directory name is a single-file blob hash. Build the **valid-hash set** once (shared across all non-manifest directories): for each active worktree root, enumerate files via `git ls-files --cached --others --exclude-standard`, filter out any paths under `.worktrees/` (prevents cross-crawl), run `git hash-object <file>` for each, and union hashes into a shared set. If `<full-hash>` is in the union set, mark VALID; otherwise mark ORPHANED.
+4. Walk every hash directory under `.hash-record/<shard>/<full-hash>/`. Apply step 3 to each. Collect all directories marked ORPHANED.
+5. Each ORPHANED hash directory is a candidate for deletion.
+6. If `--dry-run` is set, skip deletion and output `dry-run: <count>`; stop.
+7. Otherwise, delete each orphan hash directory via `rm -rf` (or equivalent) — the entire directory and all leaf records inside it. Stop if `--limit` is reached.
+8. After deletion, prune any now-empty `<shard>/` parent directory.
+9. Output the result.
 
 ### Output
 
@@ -72,6 +72,8 @@ Stdout return (one line):
 ## Iteration Safety
 
 This skill is idempotent. A second prune immediately after the first will find zero orphans (the first pass deleted them). The valid-hash set is recomputed every invocation.
+
+**Previously-deleted records cannot be recovered.** Pruning is destructive and forward-only — if a bug causes over-deletion, the affected records are gone. Re-running after a bug-induced over-prune will not restore lost records; re-running only re-derives validity from the current working trees.
 
 ## Don'ts
 
