@@ -98,16 +98,16 @@ A document governed by this spec may contain different types of content.
 
 Each section must be classified as one of:
 
-- **Normative**  
+- **Normative**
   Defines requirements, constraints, or behavior. Must follow all strict rules.
 
-- **Descriptive**  
+- **Descriptive**
   Explains context or intent. Must not contradict normative content.
 
-- **Exploratory**  
+- **Exploratory**
   Captures ideas, tradeoffs, or open questions. May contain ambiguity.
 
-- **Informational**  
+- **Informational**
   Notes, examples, or references.
 
 ### Rules
@@ -211,10 +211,10 @@ Stdout return values that emit absolute paths (e.g. `PATH: <abs>`) are exempt
 
 ## Normative Language
 
-- **must / shall / required** → mandatory  
-- **must not / shall not** → prohibited  
-- **should / recommended** → guidance  
-- **may / optional** → discretionary  
+- **must / shall / required** → mandatory
+- **must not / shall not** → prohibited
+- **should / recommended** → guidance
+- **may / optional** → discretionary
 
 ---
 
