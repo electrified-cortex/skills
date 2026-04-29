@@ -3,8 +3,6 @@ name: copilot-cli-ask
 description: General query or advice operation via the standalone Copilot CLI binary. Returns Copilot's plain text answer.
 ---
 
-# copilot-cli-ask
-
 ## Prerequisites
 
 ```bash

@@ -1,4 +1,4 @@
-﻿# gh-cli - skill index
+# gh-cli - skill index
 
 ## gh-cli
 

@@ -31,7 +31,8 @@ the host. It dispatches to Dispatch one level down — that's the full depth.
 
 Companion `vscode-orchestration.txt` (same folder) — ultra-compressed how-to.
 
-Install path: `.github/agents/orchestrator.agent.md`  
+Install path: `.github/agents/orchestrator.agent.md`
+
 Requires: Dispatch agent also installed at `.github/agents/dispatch.agent.md`
 
 ## Source

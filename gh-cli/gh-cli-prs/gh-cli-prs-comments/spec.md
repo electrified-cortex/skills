@@ -1,4 +1,4 @@
-﻿# gh-cli-prs-comments — Spec
+# gh-cli-prs-comments — Spec
 
 ## Purpose
 

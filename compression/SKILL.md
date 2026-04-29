@@ -3,8 +3,6 @@ name: compression
 description: Compress .md and text files via subagent dispatch. Triggers — compress this file, reduce tokens, shrink instructions, caveman compress, ultra/full/lite compress.
 ---
 
-# Compression
-
 Never compress spec files (`*.spec.md` — token cost acceptable; meaning loss isn't).
 
 Input:

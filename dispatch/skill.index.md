@@ -1,4 +1,4 @@
-﻿# dispatch - skill index
+# dispatch - skill index
 
 ## dispatch
 

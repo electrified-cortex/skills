@@ -3,8 +3,6 @@ name: skill-auditing
 description: Audit a skill for quality, classification, cost, and compliance with the skill-writing spec. Triggers — audit this skill, check skill quality, review skill compliance, validate skill structure, skill needs review.
 ---
 
-# Skill Auditing
-
 ## Input
 
 `<skill_dir>` — absolute path to skill folder being audited (dir containing `spec.md` / `uncompressed.md` / `instructions.uncompressed.md`).

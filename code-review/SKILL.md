@@ -3,8 +3,6 @@ name: code-review
 description: Tiered code review on a change set. Read-only — never modifies code. Triggers — security, correctness, code-quality, change-review, architectural-risk.
 ---
 
-# Code Review
-
 Dispatch zero-context sub-agents per tier. NEVER read/interpret `instructions.txt` — sub-agent does the work.
 
 Dispatch:
