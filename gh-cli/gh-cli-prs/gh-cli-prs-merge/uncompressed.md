@@ -1,4 +1,4 @@
----
+﻿---
 name: gh-cli-prs-merge
 description: Merge, update, revert, close pull request via GitHub CLI.
 ---
@@ -70,3 +70,14 @@ Check CI status before merging using `gh pr checks 123`. That command is covered
 ## Scope Boundaries
 
 This skill covers `gh pr merge`, `gh pr update-branch`, `gh pr revert`, and `gh pr close`. It does not cover reviewing a PR before merge (see `gh-cli-prs-review`) or git operations after merge such as pulling the updated base locally.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh pr merge | Destructive | Operator approval required before execution |
+| gh pr update-branch | Destructive | Operator approval required before execution |
+| gh pr revert | Destructive | Operator approval required before execution |
+| gh pr close | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

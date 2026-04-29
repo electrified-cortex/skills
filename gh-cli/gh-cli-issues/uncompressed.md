@@ -1,4 +1,4 @@
----
+﻿---
 name: gh-cli-issues
 description: Manage GitHub issues using the gh issue subcommand. Full lifecycle: create, list, view, edit, comment, close, transfer.
 ---
@@ -115,3 +115,19 @@ gh issue list --search "label:stale" --json number --jq '.[].number' \
 ## Scope Boundaries
 
 This skill covers `gh issue` only. GitHub Projects v2 placement belongs to `gh-cli-projects`. PR linking belongs to `gh-cli-prs-create`. Milestone creation belongs outside this skill — this skill only assigns issues to existing milestones.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh issue list | Safe | Read-only |
+| gh issue view | Safe | Read-only |
+| gh issue create | Destructive | Operator approval required before execution |
+| gh issue close | Destructive | Operator approval required before execution |
+| gh issue reopen | Destructive | Operator approval required before execution |
+| gh issue edit | Destructive | Operator approval required before execution |
+| gh issue delete | Destructive | Operator approval required before execution |
+| gh issue comment | Destructive | Operator approval required before execution |
+| gh issue transfer | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

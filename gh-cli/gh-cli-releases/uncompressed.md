@@ -1,4 +1,4 @@
----
+﻿---
 name: gh-cli-releases
 description: Manage GitHub releases via gh release. Full lifecycle: create, publish, upload assets, edit, delete.
 ---
@@ -99,3 +99,17 @@ gh release download v1.0.0 --archive zip
 ## Scope Boundaries
 
 This skill covers `gh release` only. It does not manage Git tags directly, generate changelogs automatically from commits, handle release attestations or artifact signing, or configure release automation in CI/CD pipelines.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh release list | Safe | Read-only |
+| gh release view | Safe | Read-only |
+| gh release download | Safe | Read-only |
+| gh release create | Destructive | Operator approval required before execution |
+| gh release edit | Destructive | Operator approval required before execution |
+| gh release delete | Destructive | Operator approval required before execution |
+| gh release upload | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

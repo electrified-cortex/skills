@@ -1,4 +1,4 @@
----
+﻿---
 name: gh-cli
 description: Route any GitHub CLI task to the correct domain sub-skill. Triggers — github cli, gh commands, pull request, repository management, issue lifecycle, release management.
 ---
@@ -22,3 +22,11 @@ Don't read `instructions.txt` yourself.
 Returns: Result from the dispatched domain sub-skill.
 
 NEVER READ OR INTERPRET `instructions.txt` YOURSELF. Let the sub-agent do the work.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh auth status | Safe | Read-only |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

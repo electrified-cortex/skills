@@ -1,4 +1,4 @@
----
+﻿---
 name: gh-cli-setup
 description: Install, authenticate, and configure the GitHub CLI. Prerequisite for all other gh-cli skills.
 ---
@@ -97,3 +97,16 @@ gh auth login --hostname enterprise.internal
 ## Scope Boundaries
 
 This skill covers `gh auth`, `gh config`, and `gh repo set-default` only. It does not cover any domain-specific `gh` subcommands, GitHub token management beyond what `gh auth` provides, or CI/CD pipeline configuration.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh auth login | Safe | Local config only |
+| gh auth logout | Safe | Local config only |
+| gh auth status | Safe | Read-only |
+| gh config set | Safe | Local config only |
+| gh config get | Safe | Read-only |
+| gh repo set-default | Safe | Local config only |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

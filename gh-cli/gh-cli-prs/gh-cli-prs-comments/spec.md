@@ -1,4 +1,4 @@
-# gh-cli-prs-comments — Spec
+﻿# gh-cli-prs-comments — Spec
 
 ## Purpose
 
@@ -38,3 +38,15 @@ N/A — add, edit, and delete are discrete non-overlapping operations; no resolu
 
 - Does not cover review-level comments (those with approve/request-changes verdicts).
 - `gh pr view --comments` truncates at one page — use `gh api --paginate` for exhaustive listing. See the Viewing Comments section.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh pr comment (add) | Destructive | Operator approval required before execution |
+| gh pr comment --edit | Destructive | Operator approval required before execution |
+| gh pr comment --delete | Destructive | Operator approval required before execution |
+| gh pr view --comments | Safe | Read-only |
+| gh api --paginate (GET) | Safe | Read-only |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

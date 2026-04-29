@@ -1,4 +1,4 @@
----
+﻿---
 name: gh-cli-prs-review
 description: Approve, request changes on, dismiss pull request review via GitHub CLI.
 ---
@@ -77,3 +77,14 @@ This skill covers `gh pr review` only. It does not cover inline review comments 
 
 - `gh-cli-prs-create` — adding reviewers, creating PRs
 - `gh-cli-api` — resolving review threads via GraphQL
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh pr review --approve | Destructive | Operator approval required before execution |
+| gh pr review --request-changes | Destructive | Operator approval required before execution |
+| gh pr review --comment | Destructive | Operator approval required before execution |
+| gh pr review --dismiss | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

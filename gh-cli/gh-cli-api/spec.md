@@ -1,4 +1,4 @@
-# gh-cli-api — Spec
+﻿# gh-cli-api — Spec
 
 ## Purpose
 
@@ -53,3 +53,16 @@ Higher-level domain skills (`gh issue`, `gh pr`, etc.) take precedence over `gh 
 - Does not replace the domain-specific skills — `gh api` is for gaps, not everyday use.
 - Does not cover GitHub Copilot API or model-specific endpoints.
 - Does not cover webhook creation or management via the API.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh api GET | Safe | Read-only |
+| gh api POST | Destructive | Operator approval required before execution |
+| gh api PATCH | Destructive | Operator approval required before execution |
+| gh api DELETE | Destructive | Operator approval required before execution |
+| gh api graphql (query) | Safe | Read-only |
+| gh api graphql (mutation) | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

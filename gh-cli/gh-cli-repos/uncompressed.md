@@ -1,4 +1,4 @@
----
+﻿---
 name: gh-cli-repos
 description: Create, clone, fork, sync, edit, delete GitHub repositories via CLI.
 ---
@@ -97,3 +97,21 @@ gh repo set-default --unset
 This skill covers `gh repo` only. It does not manage repository content (files, branches, commits — those are git operations), repository secrets or deploy keys, GitHub Apps, webhooks, or repository integrations.
 
 Related: `gh-cli-actions` (Actions configuration), `gh-cli-api` (advanced repo operations via API)
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh repo view | Safe | Read-only |
+| gh repo list | Safe | Read-only |
+| gh repo clone | Safe | Local only |
+| gh repo create | Destructive | Operator approval required before execution |
+| gh repo delete | Destructive | Operator approval required before execution |
+| gh repo archive | Destructive | Operator approval required before execution |
+| gh repo rename | Destructive | Operator approval required before execution |
+| gh repo fork | Destructive | Operator approval required before execution |
+| gh repo sync | Destructive | Operator approval required before execution |
+| gh repo edit | Destructive | Operator approval required before execution |
+| gh repo set-default | Safe | Local config only |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

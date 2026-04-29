@@ -1,4 +1,4 @@
-# gh-cli-prs — Spec
+﻿# gh-cli-prs — Spec
 
 ## Purpose
 
@@ -59,3 +59,15 @@ Inspection commands are handled directly by this skill; write operations are alw
 - Does not manage branch protection rules or required review policies.
 - Does not configure CODEOWNERS files.
 - Does not cover GitHub Actions triggered by PR events — see `gh-cli-actions`.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh pr list | Safe | Read-only |
+| gh pr view | Safe | Read-only |
+| gh pr diff | Safe | Read-only |
+| gh pr checks | Safe | Read-only |
+| gh pr status | Safe | Read-only |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

@@ -1,4 +1,4 @@
-# gh-cli-repos — Spec
+﻿# gh-cli-repos — Spec
 
 ## Purpose
 
@@ -52,3 +52,21 @@ If a fork operation completes but the upstream remote is not configured, the age
 - Does not manage repository content (files, branches, commits) — that is git, not `gh repo`.
 - Does not cover repository secrets, deploy keys, or rulesets — those are out of scope for basic repo management.
 - Does not cover GitHub Apps, webhooks, or repository integrations.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh repo view | Safe | Read-only |
+| gh repo list | Safe | Read-only |
+| gh repo clone | Safe | Local only |
+| gh repo create | Destructive | Operator approval required before execution |
+| gh repo delete | Destructive | Operator approval required before execution |
+| gh repo archive | Destructive | Operator approval required before execution |
+| gh repo rename | Destructive | Operator approval required before execution |
+| gh repo fork | Destructive | Operator approval required before execution |
+| gh repo sync | Destructive | Operator approval required before execution |
+| gh repo edit | Destructive | Operator approval required before execution |
+| gh repo set-default | Safe | Local config only |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

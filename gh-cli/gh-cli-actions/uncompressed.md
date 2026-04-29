@@ -1,4 +1,4 @@
----
+﻿---
 name: gh-cli-actions
 description: Trigger, monitor, manage GitHub Actions workflows, runs, secrets, variables via CLI.
 ---
@@ -139,3 +139,30 @@ gh cache delete --all
 ## Scope Boundaries
 
 This skill covers `gh run`, `gh workflow`, `gh secret`, `gh variable`, and `gh cache`. It does not cover writing workflow YAML, configuring self-hosted runners, or managing OIDC trust configurations.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh run list | Safe | Read-only |
+| gh run view | Safe | Read-only |
+| gh run watch | Safe | Read-only |
+| gh run download | Safe | Read-only |
+| gh run rerun | Destructive | Operator approval required before execution |
+| gh run cancel | Destructive | Operator approval required before execution |
+| gh workflow list | Safe | Read-only |
+| gh workflow view | Safe | Read-only |
+| gh workflow enable | Destructive | Operator approval required before execution |
+| gh workflow disable | Destructive | Operator approval required before execution |
+| gh workflow run | Destructive | Operator approval required before execution |
+| gh cache list | Safe | Read-only |
+| gh cache delete | Destructive | Operator approval required before execution |
+| gh secret list | Safe | Read-only |
+| gh secret set | Destructive | Operator approval required before execution |
+| gh secret delete | Destructive | Operator approval required before execution |
+| gh variable list | Safe | Read-only |
+| gh variable get | Safe | Read-only |
+| gh variable set | Destructive | Operator approval required before execution |
+| gh variable delete | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

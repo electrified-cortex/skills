@@ -1,4 +1,4 @@
-# gh-cli — Spec
+﻿# gh-cli — Spec
 
 ## Purpose
 
@@ -63,3 +63,11 @@ Authentication verification takes precedence over domain dispatch. Clarification
 - Does not execute any `gh` subcommand itself.
 - Does not manage routing state across multiple invocations.
 - Does not validate the caller's input before routing — that is the domain skill's responsibility.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh auth status | Safe | Read-only |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

@@ -1,4 +1,4 @@
----
+﻿---
 name: gh-cli-prs-comments
 description: Add, edit, delete pull request comments via GitHub CLI.
 ---
@@ -68,3 +68,15 @@ gh api graphql -f query='
 ## Scope Boundaries
 
 This skill covers `gh pr comment` only. Review-level comments (those submitted with an approve or request-changes verdict) belong to `gh-cli-prs-review`. Viewing comments is supported here but is also available in `gh-cli-prs` inspection commands.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh pr comment (add) | Destructive | Operator approval required before execution |
+| gh pr comment --edit | Destructive | Operator approval required before execution |
+| gh pr comment --delete | Destructive | Operator approval required before execution |
+| gh pr view --comments | Safe | Read-only |
+| gh api --paginate (GET) | Safe | Read-only |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

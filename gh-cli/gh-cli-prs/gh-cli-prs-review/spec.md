@@ -1,4 +1,4 @@
----
+﻿---
 name: gh-cli-prs-review
 description: Spec for reviewing pull requests via the GitHub CLI.
 ---
@@ -47,3 +47,14 @@ N/A — each review operation is a discrete single command; there are no competi
 - Does not cover requesting reviewers — that belongs to `gh-cli-prs-create` (at creation) or the `gh pr edit --add-reviewer` path.
 - Does not cover resolving review threads — see `gh-cli-api` for the GraphQL mutation.
 - Does not cover inline comments or general PR comments — see `gh-cli-prs-comments`.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh pr review --approve | Destructive | Operator approval required before execution |
+| gh pr review --request-changes | Destructive | Operator approval required before execution |
+| gh pr review --comment | Destructive | Operator approval required before execution |
+| gh pr review --dismiss | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

@@ -1,4 +1,4 @@
----
+﻿---
 name: gh-cli-prs-create
 description: Open pull request via GitHub CLI.
 ---
@@ -60,3 +60,12 @@ gh pr edit 123 --add-reviewer user3 --add-label bug --remove-label wip
 ## Scope Boundaries
 
 This skill covers `gh pr create`, `gh pr ready`, and `gh pr edit`. It does not cover branch creation or `git push` — the branch must already exist on the remote before running these commands. Reviewing and merging the PR belong to their respective sub-skills.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh pr create | Destructive | Operator approval required before execution |
+| gh pr ready | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

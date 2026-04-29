@@ -1,4 +1,4 @@
----
+﻿---
 name: gh-cli-api
 description: Make authenticated REST and GraphQL calls to the GitHub API via the CLI. Use when no dedicated gh subcommand covers the operation.
 ---
@@ -92,3 +92,16 @@ Never pass tokens as command-line arguments or inline environment variables — 
 ## Scope Boundaries
 
 This skill covers `gh api` for REST and `gh api graphql` for GraphQL. It does not replace domain skills, manage GitHub Apps or OAuth Apps, or cover webhook configuration.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh api GET | Safe | Read-only |
+| gh api POST | Destructive | Operator approval required before execution |
+| gh api PATCH | Destructive | Operator approval required before execution |
+| gh api DELETE | Destructive | Operator approval required before execution |
+| gh api graphql (query) | Safe | Read-only |
+| gh api graphql (mutation) | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

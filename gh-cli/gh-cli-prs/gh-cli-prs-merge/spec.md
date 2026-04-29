@@ -1,4 +1,4 @@
----
+﻿---
 name: gh-cli-prs-merge
 description: Spec for merging, updating, and reverting pull requests via the GitHub CLI.
 ---
@@ -47,3 +47,14 @@ Merge strategy must be explicitly specified — no default strategy may be assum
 
 - Does not cover `gh pr checks` — checking readiness before merge is out of scope here.
 - Does not cover git operations after merge (e.g., pulling the updated base locally).
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh pr merge | Destructive | Operator approval required before execution |
+| gh pr update-branch | Destructive | Operator approval required before execution |
+| gh pr revert | Destructive | Operator approval required before execution |
+| gh pr close | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

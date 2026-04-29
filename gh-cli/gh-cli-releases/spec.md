@@ -1,4 +1,4 @@
-# gh-cli-releases — Spec
+﻿# gh-cli-releases — Spec
 
 ## Purpose
 
@@ -54,3 +54,17 @@ Draft status takes precedence — a draft release is never exposed as the `lates
 - Does not generate changelogs or release notes automatically from commits.
 - Does not cover GitHub release attestations or artifact signing workflows.
 - Does not configure release automation in CI/CD workflows.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh release list | Safe | Read-only |
+| gh release view | Safe | Read-only |
+| gh release download | Safe | Read-only |
+| gh release create | Destructive | Operator approval required before execution |
+| gh release edit | Destructive | Operator approval required before execution |
+| gh release delete | Destructive | Operator approval required before execution |
+| gh release upload | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

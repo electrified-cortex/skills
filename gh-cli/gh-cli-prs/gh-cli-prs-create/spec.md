@@ -1,4 +1,4 @@
-# gh-cli-prs-create — Spec
+﻿# gh-cli-prs-create — Spec
 
 ## Purpose
 
@@ -40,3 +40,12 @@ N/A — this skill issues a single `gh pr create` or `gh pr ready` command per i
 
 - Does not cover `gh pr edit` after creation — that is post-creation metadata management.
 - Does not cover branch creation or git push — assumes the branch already exists on remote.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh pr create | Destructive | Operator approval required before execution |
+| gh pr ready | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

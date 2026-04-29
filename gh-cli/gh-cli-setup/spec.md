@@ -1,4 +1,4 @@
-# gh-cli-setup — Spec
+﻿# gh-cli-setup — Spec
 
 ## Purpose
 
@@ -50,3 +50,16 @@ Authentication verification takes precedence over all other setup steps — no c
 - Does not cover any `gh` subcommand usage beyond `auth`, `config`, and `repo set-default`.
 - Does not manage GitHub tokens or secrets storage beyond what `gh auth` provides.
 - Does not configure CI/CD environments — only local or agent environments.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh auth login | Safe | Local config only |
+| gh auth logout | Safe | Local config only |
+| gh auth status | Safe | Read-only |
+| gh config set | Safe | Local config only |
+| gh config get | Safe | Read-only |
+| gh repo set-default | Safe | Local config only |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

@@ -1,4 +1,4 @@
-# gh-cli-issues — Spec
+﻿# gh-cli-issues — Spec
 
 ## Purpose
 
@@ -53,3 +53,19 @@ Explicit filter flags (`--state`, `--assignee`, `--label`) take precedence over 
 - Does not manage milestones — only assigns issues to existing ones.
 - Does not link issues to Projects v2 — that belongs to `gh-cli-projects`.
 - Does not create branches from issues — that belongs to `gh-cli-prs`.
+
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh issue list | Safe | Read-only |
+| gh issue view | Safe | Read-only |
+| gh issue create | Destructive | Operator approval required before execution |
+| gh issue close | Destructive | Operator approval required before execution |
+| gh issue reopen | Destructive | Operator approval required before execution |
+| gh issue edit | Destructive | Operator approval required before execution |
+| gh issue delete | Destructive | Operator approval required before execution |
+| gh issue comment | Destructive | Operator approval required before execution |
+| gh issue transfer | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.
