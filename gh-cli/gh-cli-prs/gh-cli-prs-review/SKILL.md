@@ -50,6 +50,7 @@ Creation-time: `gh pr create --reviewer`. After creation:
 gh pr edit 123 --add-reviewer user
 
 ```
+
 Covered by `gh-cli-prs-create`, not this skill.
 
 Resolve Threads:

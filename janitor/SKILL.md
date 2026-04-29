@@ -5,10 +5,13 @@ description: >-
   handoff cleanup, dry-run delete preview, operator-invoked maintenance
 ---
 
-Dispatch (zero context): Read and follow `instructions.txt` (in this directory). Input:
+Dispatch (zero context): Read and follow `instructions.txt`
+(in this directory). Input:
 
 ```yaml
-[mode=dry-run|commit] [target_root=<path>] [keep_session_logs=N] [keep_telegram_logs=N] [audit_reports_age_days=N] [keep_handoffs=N] [pattern=<scope-pattern>]
+[mode=dry-run|commit] [target_root=<path>] [keep_session_logs=N]
+[keep_telegram_logs=N] [audit_reports_age_days=N]
+[keep_handoffs=N] [pattern=<scope-pattern>]
 ```
 
 `mode`: `dry-run` (default) or `commit` — preview vs. execute deletions
@@ -19,6 +22,8 @@ Dispatch (zero context): Read and follow `instructions.txt` (in this directory).
 `keep_handoffs`: handoff files to retain; default `3`
 `pattern`: scope filter; all if omitted
 
-Returns: YAML report — overall status, pruned (pattern/candidates/deleted), preserved (pattern/paths/reason).
+Returns: YAML report — overall status,
+pruned (pattern/candidates/deleted),
+preserved (pattern/paths/reason).
 
 Related: `iteration-safety`, `hash-record`, `session-logging`

@@ -1,4 +1,4 @@
----
+﻿---
 name: gh-cli-api
 description: Make authenticated REST and GraphQL calls to the GitHub API via the CLI. Use when no dedicated gh subcommand covers the operation.
 ---

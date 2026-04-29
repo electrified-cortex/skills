@@ -1,4 +1,4 @@
----
+﻿---
 name: hash-stamp-audit
 description: >-
   Read-only skill. Verifies SHA-256 stamp integrity across a skill tree. Finds all .sha256

@@ -1,4 +1,4 @@
----
+﻿---
 name: dispatch
 description: How to dispatch a sub-agent. Triggers — dispatch, sub-agent, isolated scope, background, background execution, background task, background agent.
 ---
@@ -66,4 +66,3 @@ If unable to use "Dispatch" agent, omit subagent name/type and continue, but not
 ## Return
 
 Return sub-agent output to caller (passthrough).
-

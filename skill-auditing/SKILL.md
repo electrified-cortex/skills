@@ -8,7 +8,9 @@ description: Audit a skill for quality, classification, cost, and compliance wit
 `<skill_path>` — absolute path to the target skill's `SKILL.md`
 `<flags>` — optional, any combination of `--fix` `--uncompressed`
 
-- `--fix`: single-pass fix on `uncompressed.md` / `instructions.uncompressed.md` when verdict is `NEEDS_REVISION`. Refuses if skill dir has pending git changes.
+- `--fix`: single-pass fix on `uncompressed.md` /
+  `instructions.uncompressed.md` when verdict is `NEEDS_REVISION`.
+  Refuses if skill dir has pending git changes.
 - `--uncompressed`: audit source files instead of compiled.
 
 ## Inspect
@@ -24,3 +26,4 @@ Variables:
 
 Follow `dispatch` skill. See `../dispatch/SKILL.md`.
 Returns: `PATH: <abs-path-to-record.md>` | `ERROR: <reason>`
+
