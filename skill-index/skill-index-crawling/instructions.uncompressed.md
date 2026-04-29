@@ -29,7 +29,7 @@ Open `skill.index` at `root`. If the file does not exist: return outcome `no ind
 
 Parse each line of `skill.index` as one entry in the form `key: keyword, keyword, keyword`:
 
-- Split at the first colon. Everything before the first colon is the entry key. Everything after (trimmed) is the keyword list, split on `, `.
+- Split at the first colon. Everything before the first colon is the entry key. Everything after (trimmed) is the keyword list, split on `,`.
 - Malformed lines (no colon, empty key, forbidden characters): record in the crawl report under `inconsistencies` and skip that line. Other entries at the same node remain usable.
 
 ### Step 3 — Check the stamp

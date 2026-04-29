@@ -10,6 +10,7 @@ Dispatch isolated agent (Dispatch agent, zero context): "Read and follow `instru
 - `--limit <N>` (integer, optional): cap hash dirs deleted per invocation. Default: unlimited.
 
 Validity scoped to `repo_root` (active worktree only):
+
 - Manifest records: re-derive manifest hash from `file_paths` under `repo_root`; orphaned if any file missing or hash changes.
 - Non-manifest records: check `<full-hash>` against blob-hash set from `repo_root` scan (excludes `.worktrees/` paths and submodule directory paths).
 

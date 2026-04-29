@@ -11,7 +11,7 @@ Without reading `instructions.txt` yourself, spawn a zero-context, haiku-class s
 
 Claude Code: `Agent` tool. Pass: "Read and follow `instructions.txt` here. Input: `[mode=dry-run|commit] [target_root=<path>] [keep_session_logs=N] [keep_telegram_logs=N] [audit_reports_age_days=N] [keep_handoffs=N] [pattern=<scope-pattern>]`"
 
-VS Code / Copilot: `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow `instructions.txt` in this directory. Input: [mode=dry-run|commit] [target_root=<path>] [keep_session_logs=N] [keep_telegram_logs=N] [audit_reports_age_days=N] [keep_handoffs=N] [pattern=<scope-pattern>]")`
+VS Code / Copilot: `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow`instructions.txt`in this directory. Input: [mode=dry-run|commit] [target_root=<path>] [keep_session_logs=N] [keep_telegram_logs=N] [audit_reports_age_days=N] [keep_handoffs=N] [pattern=<scope-pattern>]")`
 
 Don't read `instructions.txt` yourself.
 
