@@ -1,5 +1,5 @@
 ﻿---
-name: gh-cli-prs-create
+name: gh-cli-pr-create
 description: Open pull request via GitHub CLI.
 ---
 

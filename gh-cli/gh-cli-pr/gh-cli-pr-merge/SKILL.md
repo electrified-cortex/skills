@@ -1,5 +1,5 @@
 ---
-name: gh-cli-prs-merge
+name: gh-cli-pr-merge
 description: Merge, update, revert, close pull request via GitHub CLI.
 ---
 
