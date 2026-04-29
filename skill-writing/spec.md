@@ -525,6 +525,8 @@ Use the Decision Tree section for detailed criteria.
   2-line pointer block only (R-FM-9)
 - **Never cross-reference another skill's `uncompressed.md` or `spec.md` by file
   path in any skill artifact** (R-FM-11 — see below)
+- **Never embed absolute filesystem paths in any artifact body** — use
+  repo-relative paths (R-FM-12 — see below)
 
 ## R-FM-11 — No Cross-File-Path References to Sibling Skill Internals
 
@@ -560,6 +562,23 @@ Read and follow `instructions.txt` (in this directory).
 # ALLOWED — sibling by skill name
 For dispatch mechanics, read the `dispatch` skill.
 ```
+
+## R-FM-12 — No Absolute Filesystem Paths in Artifact Bodies
+
+Skill artifacts (`SKILL.md`, `uncompressed.md`, `instructions.uncompressed.md`,
+`instructions.txt`, `spec.md`, and any embedded code samples or examples)
+MUST NOT contain absolute filesystem paths. This covers Windows drive-letter
+prefixes (`<letter>:/...` or `<letter>:\\...`) and Unix root-anchored paths
+under `/Users/`, `/home/`, `/d/`, `/c/`, or any similar root. Use
+repo-relative paths instead, computed via `git ls-files --full-name <file>`
+or by stripping `<repo-root>/` from an absolute path.
+
+- **Right**: `file_path: skill-auditing/instructions.uncompressed.md`
+- **Wrong**: `file_path: <abs-prefix>/.agents/skills/electrified-cortex/skill-auditing/instructions.uncompressed.md`
+
+Frontmatter, body prose, code samples, and embedded examples are all in
+scope. Stdout return values that emit absolute paths (e.g. `PATH: <abs>`)
+are exempt — those are runtime addresses, not artifact body content.
 
 ## Relationship to Other Skills
 

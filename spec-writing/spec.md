@@ -190,6 +190,23 @@ When writing any spec governed by this spec, the spec author must declare all sc
 
 When writing any spec governed by this spec, the spec author must clearly distinguish required, prohibited, and optional behavior using the normative language defined in this spec.
 
+### 7. No Absolute Filesystem Paths in Artifact Bodies
+
+When writing any spec governed by this spec, the spec author must not include
+absolute filesystem paths in any artifact body. This prohibition covers Windows
+drive-letter prefixes (`<letter>:/...` or `<letter>:\\...`) and Unix
+root-anchored paths under `/Users/`, `/home/`, `/d/`, `/c/`, or any similar
+root. Repo-relative paths must be used instead, computed via
+`git ls-files --full-name <file>` or by stripping `<repo-root>/` from an
+absolute path. Frontmatter, body prose, code samples, and embedded examples
+are all in scope.
+
+- **Right**: `file_path: skill-auditing/instructions.uncompressed.md`
+- **Wrong**: `file_path: <abs-prefix>/.agents/skills/electrified-cortex/skill-auditing/instructions.uncompressed.md`
+
+Stdout return values that emit absolute paths (e.g. `PATH: <abs>`) are exempt
+— those are runtime addresses, not artifact body content.
+
 ---
 
 ## Normative Language
@@ -349,6 +366,10 @@ Normative requirements must not be:
 
 Worked wrong-usage examples anywhere in the spec must be prefixed with `ANTI-PATTERN:`.
 
+Artifact bodies (frontmatter, prose, code samples, embedded examples) must not
+contain absolute filesystem paths. Use repo-relative paths only. Stdout return
+values that emit absolute paths at runtime are exempt.
+
 ---
 
 ## Error Handling
@@ -456,4 +477,6 @@ override normative content.
   a re-audit.
 - Do not treat paraphrase as acceptable unless semantically
   equivalent by rigorous test.
+- Do not embed absolute filesystem paths in any artifact body; use
+  repo-relative paths (see Requirement 7).
 
