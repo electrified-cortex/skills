@@ -50,11 +50,11 @@ This rule exists to prevent the host from becoming a second-pass synthesizer of 
 
 The confidence rating reflects reviewer agreement, evidence quality, and scope coverage.
 
-| Condition                                                                              | Rating |
-| -------------------------------------------------------------------------------------- | ------ |
-| All personalities agree AND all findings cite specific evidence                        | High   |
-| Default (no special condition met)                                                     | Medium |
-| Disagree set is non-empty on a high-severity point, or any personality returned no findings | Low  |
+| Condition | Rating |
+| --- | --- |
+| All personalities agree AND all findings cite specific evidence | High |
+| Default (no special condition met) | Medium |
+| Disagree set is non-empty on a high-severity point, or any personality returned no findings | Low |
 
 A high-severity point is a finding that would block shipping or require an architectural change to address.
 
