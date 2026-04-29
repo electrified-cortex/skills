@@ -12,25 +12,20 @@ Procedure (each step named tool):
 
 3. Validity per hash dir (choose by manifest presence):
 
-   First: enumerate all active worktree roots.
-   `git -C "<repo_root>" worktree list --porcelain` — collect each `worktree <path>` line.
-
    Manifest present (`<full-hash>/manifest.yaml` exists) — re-derive manifest hash:
    a. Read `file_paths` list from manifest YAML.
-   b. For each path: search all worktree roots in order; use first root where file exists.
-      If no root has the file → ORPHANED.
-   c. `git hash-object <abs-path>` each; collect (repo-relative-path, blob-hash) pairs.
+   b. For each path: check `test -f "<repo_root>/<path>"`. If missing → ORPHANED.
+   c. `git hash-object "<repo_root>/<path>"` each; collect (repo-relative-path, blob-hash) pairs.
    d. Sort pairs lexically by path.
    e. Build manifest text: `<path> <blob-hash>\n` per line (final line also ends `\n`).
    f. Write to temp file; `git hash-object <tempfile>`. Result == dir name → VALID; else ORPHANED.
 
    No manifest — blob-hash fallback (build once; share across all non-manifest dirs):
-   For each active worktree root:
-     `git -C "<wt-root>" ls-files --cached --others --exclude-standard`
-     Filter out paths starting with `.worktrees/`.
-     Enumerate submodule paths: `git -C "<wt-root>" submodule foreach --quiet 'echo $displaypath' 2>/dev/null`; exclude matching entries.
-     `git hash-object` each remaining file; accumulate into union set.
-   Hash in union set → VALID; else ORPHANED.
+   `git -C "<repo_root>" ls-files --cached --others --exclude-standard`
+   Filter out paths starting with `.worktrees/`.
+   Enumerate submodule paths: `git -C "<repo_root>" submodule foreach --quiet 'echo $displaypath' 2>/dev/null`; exclude matching entries.
+   `git hash-object` each remaining file; accumulate into set.
+   Hash in set → VALID; else ORPHANED.
 
 4. Orphan: all hash dirs marked ORPHANED in step 3.
 

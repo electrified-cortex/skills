@@ -22,30 +22,22 @@ Run every step with the named tool. Do not summarize or plan.
 
    Each result is a path of the form `<repo_root>/.hash-record/<shard>/<full-hash>`. Extract `<full-hash>` (the basename) from each. If none found, output `CLEAN` and stop.
 
-3. **Enumerate active worktrees.** Use the Bash tool:
-
-   ```bash
-   git -C "<repo_root>" worktree list --porcelain
-   ```
-
-   Collect every `worktree <path>` line. This gives the main worktree root and all linked worktree roots. Use this list in steps 3a and 3b below.
-
 3a. **Determine validity — manifest records.** For each hash directory, check whether `<repo_root>/.hash-record/<shard>/<full-hash>/manifest.yaml` exists (Bash `test -f`). If it exists, re-derive the manifest hash:
 
    1. Read `manifest.yaml` with the Read tool. Extract the `file_paths` list.
-   2. For each path in `file_paths`: search all active worktree roots in order; use the first root where the file exists (Bash `test -f`). If no root has the file, mark this hash directory ORPHANED and stop processing it.
-   3. Run `git hash-object "<abs-path>"` (Bash) for each found file. Collect (repo-relative-path, blob-hash) pairs.
+   2. For each path in `file_paths`: check if the file exists under `repo_root` (Bash `test -f "<repo_root>/<path>"`). If missing, mark this hash directory ORPHANED and stop processing it.
+   3. Run `git hash-object "<repo_root>/<path>"` (Bash) for each found file. Collect (repo-relative-path, blob-hash) pairs.
    4. Sort pairs lexically by repo-relative path.
    5. Build manifest text: one `<path> <blob-hash>` line per pair, each ending with `\n` (including the final line).
    6. Write the manifest text to a temp file and run `git hash-object <tempfile>` (Bash). If the result equals `<full-hash>`, mark VALID; otherwise mark ORPHANED.
 
-3b. **Determine validity — non-manifest records (full-workspace fallback).** Build once for all hash directories whose `manifest.yaml` is absent. For each active worktree root, use the Bash tool:
+3b. **Determine validity — non-manifest records.** Build once for all hash directories whose `manifest.yaml` is absent. Use the Bash tool:
 
    ```bash
-   git -C "<wt-root>" ls-files --cached --others --exclude-standard
+   git -C "<repo_root>" ls-files --cached --others --exclude-standard
    ```
 
-   Filter out paths that start with `.worktrees/`. Also exclude submodule paths: run `git -C "<wt-root>" submodule foreach --quiet 'echo $displaypath' 2>/dev/null` to list submodule paths and exclude any file entry that matches a submodule path. For each remaining path, run `git hash-object "<wt-root>/<file>"` (Bash). Union all hashes into a single set. A `<full-hash>` is **valid** if it appears in this union set; otherwise ORPHANED.
+   Filter out paths that start with `.worktrees/`. Also exclude submodule paths: run `git -C "<repo_root>" submodule foreach --quiet 'echo $displaypath' 2>/dev/null` to list submodule paths and exclude any file entry that matches a submodule path. For each remaining path, run `git hash-object "<repo_root>/<file>"` (Bash). A `<full-hash>` is **valid** if it appears in this set; otherwise ORPHANED.
 
 4. **Identify orphans.** Collect all hash directories marked ORPHANED in steps 3a/3b.
 
