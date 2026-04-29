@@ -23,7 +23,7 @@ Otherwise -> emit stdout verbatim, stop.
 
 ## Preparation
 
-If your runtime has a markdown linter, run its auto-fix pass on `<markdown_file_path>`. Don't install one if absent.
+If your runtime has a markdown linter, run its auto-fix pass on `<markdown_file_path>`. Don't install one if absent. Ignore any MD041 warnings if the target file is a SKILL.md.
 
 ## Inspect
 
