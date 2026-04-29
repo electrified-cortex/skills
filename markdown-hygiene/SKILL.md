@@ -7,9 +7,9 @@ description: Fix markdownlint violations in a .md file. Triggers — lint markdo
 
 `<markdown_file_path>` — path to target file
 
-## Result check
+## Inline result check
 
-Run `result` tool (in this folder), whichever runtime has:
+Run the `result` tool (in this folder), whichever runtime has:
 
 - Bash: `bash result.sh <markdown_file_path>`
 - PS7: `pwsh result.ps1 <markdown_file_path>`
@@ -19,7 +19,7 @@ Otherwise -> emit stdout verbatim, stop.
 
 ## Preparation
 
-If runtime has a markdown linter, run its auto-fix pass on `<markdown_file_path>`. Don't install one if absent.
+If runtime has markdown linter, run auto-fix on `<markdown_file_path>`. Don't install if absent.
 
 ## Inspect
 
@@ -35,9 +35,10 @@ Variables:
 Follow `dispatch` skill. See `../dispatch/SKILL.md`.
 If returns `ERROR: <reason>` -> stop, surface reason.
 
-## Result check (post-execute)
+## Inline result check (post-execute)
 
-Re-run `result` (same invocation as first Result check).
+You (the host) run `result` again directly — do NOT dispatch it.
+Same invocation as the first Inline result check.
 If stdout is `findings: <report_path>` -> continue to Iteration loop.
 Otherwise -> emit stdout verbatim, stop.
 
@@ -49,4 +50,4 @@ Max 3 iterations. Still findings after 3rd -> stop, report last `<report_path>`.
 `<description>` = `Fixing Markdown Hygiene: <markdown_file_path>`
 `<prompt>` = `For this <markdown_file_path>, read <report_path> and fix any issues.`
 
-Follow `dispatch` skill (same as Inspect). Then loop from "Inspect".
+Follow `dispatch` skill (same as Inspect). Then loop from "Result check (post-execute)".

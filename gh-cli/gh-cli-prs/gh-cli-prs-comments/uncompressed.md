@@ -49,6 +49,7 @@ gh api --paginate /repos/{owner}/{repo}/pulls/{pull_number}/reviews
 ```
 
 For general PR (issue) comments, also paginate:
+
 ```bash
 gh api --paginate /repos/{owner}/{repo}/issues/{pull_number}/comments
 ```
