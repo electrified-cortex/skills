@@ -1,4 +1,4 @@
-﻿# code-review - skill index
+# code-review - skill index
 
 ## code-review
 
