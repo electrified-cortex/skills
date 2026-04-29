@@ -8,26 +8,31 @@ Inspect PRs (list, view, diff, check status) or auto-route write ops. Know sub-s
 
 Inspection Commands:
 List open PRs by you:
+
 ```bash
 gh pr list --state open --author @me --json number,title,headRefName
 ```
 
 View PR with comments:
+
 ```bash
 gh pr view 123 --comments
 ```
 
 Show PR diff:
+
 ```bash
 gh pr diff 123
 ```
 
 Watch CI until complete:
+
 ```bash
 gh pr checks 123 --watch
 ```
 
 PR status summary:
+
 ```bash
 gh pr status
 ```

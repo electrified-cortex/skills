@@ -56,6 +56,7 @@ Out of scope: evaluating skills that have no defined success criterion.
 Report follows the `audit-reporting` skill. Frontmatter records: target skill, sample input count, trials per cell, model classes tested, run timestamp.
 
 Report body:
+
 - Recommendation block (one line: best model class + caveats)
 - Per-model-class summary table (pass rate, mean latency, error rate)
 - Per-input results table

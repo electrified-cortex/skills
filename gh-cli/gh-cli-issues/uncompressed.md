@@ -115,4 +115,3 @@ gh issue list --search "label:stale" --json number --jq '.[].number' \
 ## Scope Boundaries
 
 This skill covers `gh issue` only. GitHub Projects v2 placement belongs to `gh-cli-projects`. PR linking belongs to `gh-cli-prs-create`. Milestone creation belongs outside this skill — this skill only assigns issues to existing milestones.
-

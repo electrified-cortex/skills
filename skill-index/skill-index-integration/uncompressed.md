@@ -107,6 +107,7 @@ Non-conformant: "Consider checking the skill index before responding." / "It may
 ## Conformance Checklist
 
 An integration is conformant when:
+
 - [ ] Exactly one scoped index pointer (R1-R4) delivered via reset-surviving injection (R2)
 - [ ] Discovery mandate (R5-R9) delivered via the same injection
 - [ ] Keyword scan performed before each task (R10-R12)

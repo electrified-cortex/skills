@@ -35,4 +35,3 @@ Supports Create, clone, fork, sync, edit, delete GitHub repositories via CLI.
 ## gh-cli-setup
 
 Supports Install, authenticate, and configure the GitHub CLI Prerequisite for all other gh-cli skills.
-

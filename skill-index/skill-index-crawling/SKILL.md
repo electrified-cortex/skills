@@ -14,12 +14,14 @@ Invocation:
 Dispatch via Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory). Input: `root=<path> need=<phrase>`"
 
 Parameters:
+
 - `root` (required): absolute path to dir whose `skill.index` is starting node.
 - `need` (required): agent's stated need as plain phrase.
 
 Returns crawl report (see Output).
 
 How the Crawler Works:
+
 1. Open `skill.index` at `root`. Missing → return "no index here", stop.
 2. Parse each line as `key: keyword, keyword, keyword`. Split at first colon; keyword list splits on `,`. Malformed lines recorded and skipped.
 3. Check stamp: open `skill.index.sha256`; compute SHA-256 of `skill.index` stored bytes; compare. Mismatch or missing stamp → overlay untrusted for this node (still usable for identity; not consulted for disambiguation).
@@ -43,12 +45,14 @@ Entry Types:
 
 Shortcut Entry Resolution:
 Shortcut key (multi-segment, e.g. `a/b/c/`). Crawler:
+
 1. Walks each segment from current node's dir.
 2. At each step, verify resolved path doesn't ascend above invocation root (no `..`, no absolute paths). Violation → record `subtree-escape`, don't follow; return "subtree-escape".
 3. At final segment: trailing `/` → open `skill.index` there (sub-node); no trailing `/` → leaf skill.
 
 Combo Entry Handling:
 Combo entry: descent marker AND target emits `.` self entry in its own `skill.index`. Crawler:
+
 1. Treat as leaf first.
 2. Leaf produces no hit → descend into sub-node, re-apply.
 
@@ -66,6 +70,7 @@ Stop Conditions:
 | "broken descent" | Descent target lacks required file; recorded, treated as absent |
 
 Crawl Report Fields:
+
 - `outcome`: one of outcomes above
 - `hit`: matched entry key and resolved path (when outcome is hit)
 - `visited`: ordered list of node paths on resolution path
@@ -91,6 +96,7 @@ F5: Cycle detection skipped on non-shortcut descents.
 Mitigation: Track visited nodes on every descent — direct-child, shortcut, combo sub-node. Halt on revisit.
 
 Don'ts:
+
 - Doesn't produce, author, or update any artifact.
 - Doesn't open skill contents.
 - Doesn't climb above working dir.
@@ -98,6 +104,7 @@ Don'ts:
 - Doesn't follow shortcut entry out of invocation root's subtree.
 
 Related:
+
 - `skill-index` — root spec and toolkit overview
 - `skill-index-building` — produces artifacts this skill reads
 - `skill-index-auditing` — validates cascade before crawling

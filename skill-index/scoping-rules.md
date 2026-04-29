@@ -4,7 +4,6 @@ Defines which skills belong in each agent's index, how to classify shared skills
 
 ---
 
-
 ## Per-Agent Skill Domains
 
 ### Summary Table
@@ -19,7 +18,6 @@ Defines which skills belong in each agent's index, how to classify shared skills
 
 ---
 
-
 ## Per-Agent Notes
 
 ### Curator
@@ -27,6 +25,7 @@ Defines which skills belong in each agent's index, how to classify shared skills
 The Curator owns the spec-to-skill pipeline and memory system. Its index must include every skill involved in authoring, auditing, and compressing artifacts. It also owns the skill-index-building workflow and must index that skill directly.
 
 Skills the Curator should always include:
+
 - `spec-writing` — drafts new work specs
 - `spec-auditing` — validates specs before implementation
 - `skill-auditing` — evaluates skills for quality and drift
@@ -47,6 +46,7 @@ The Curator should NOT index task-engine execution skills (claim-task, task-exec
 The Worker is a pure executor. Its index is narrow by design: only the skills required to claim and execute tasks. It dispatches all implementation work to subagents rather than doing it directly, so its skill surface is intentionally minimal.
 
 Skills the Worker should always include:
+
 - `task-execution` — execute accepted tasks via subagent dispatch
 - `claim-task` (task-engine) — claim a queued task and move it to active
 - `scan-tasks` (task-engine) — scan the queue for available tasks
@@ -61,6 +61,7 @@ The Worker must NOT index spec-authoring, skill-building, fleet management, or s
 The Overseer manages the fleet and owns the task lifecycle closure gate (verification, finalization, sealing). It is the only agent that should index fleet management and task verification skills.
 
 Skills the Overseer should always include:
+
 - `spawn-worker` — add a new worker to the fleet
 - `fleet-management` — fleet health, scaling, shutdown decisions
 - `scan-tasks` (task-engine) — scan review queue before verification
@@ -77,6 +78,7 @@ The Overseer should NOT index spec-authoring, memory routing, or security audit 
 The Sentinel is security-and-compliance focused. Its index is narrow: only review and audit skills. It does not execute tasks or manage fleet state.
 
 Skills the Sentinel should always include:
+
 - `code-review` — security-focused review of code changes
 - `spec-auditing` — audit specs for security gaps and threat coverage
 - `tool-auditing` — review scripts for unsafe patterns and spec conformance
@@ -90,6 +92,7 @@ The Sentinel must NOT index task execution, fleet management, spec authoring, or
 The Deputy is a general-purpose support agent: it audits, analyses, and assists other agents on demand. Its index overlaps with both Curator (auditing) and Sentinel (review) but excludes operational execution skills.
 
 Skills the Deputy should always include:
+
 - `spec-auditing` — validate specs for correctness, completeness, and drift
 - `skill-auditing` — evaluate skills for quality, accuracy, and drift
 - `tool-auditing` — review scripts for correctness, security, and spec conformance
@@ -107,11 +110,13 @@ The Deputy should NOT index fleet management, task-engine execution, or memory-r
 The Dispatch agent is a stateless subagent launcher — it selects the right agent type, model, and invocation method for delegated work. Its index is minimal: only skills required to evaluate delegation decisions.
 
 Skills the Dispatch agent should always include:
+
 - `dispatch` `[self]` — invoked by the agent before delegating any task; self-triggered as part of its own workflow, not prompted by operator
 - `compression` `[self]` — reduce context before handing off to a subagent; agent-self-triggered when output exceeds budget
 - `skill-index-crawling` `[self]` — fallback to shared skill library when no local entry matches
 
 Skills the Dispatch agent may optionally include (depending on role scope):
+
 - `spawn-worker` `[op]` — operator explicitly requests a new worker; operator-triggered
 - `fleet-management` `[op]` — operator requests fleet status, scaling, or shutdown decisions; operator-triggered
 - `session-lifecycle` `[self]` — agent self-recognizes a restart or compaction and loads continuity context; self-triggered
@@ -161,4 +166,3 @@ When a skill appears relevant to two agents, apply this decision rule:
 2. **Execution vs. governance split.** Execution skills (`claim-task`, `task-execution`) belong to Worker; governance/closure skills (`verification`, `finalization`) belong to Overseer.
 3. **Audit skills belong to auditors.** `spec-auditing`, `skill-auditing`, `tool-auditing` belong to Curator and Deputy, not Worker or Sentinel's exclusive domain.
 4. **Shared utility skills** (`compression`, `dispatch`, `hash-stamp`) may appear in multiple agents' indexes if those agents genuinely use them.
-

@@ -34,4 +34,3 @@ The `--model` flag is optional and only passed when the caller explicitly suppli
 ## Threat Model — --allow-all-tools
 
 `--allow-all-tools` permits the Copilot CLI to read within the working directory. This is the documented headless invocation flag. The mitigation is the working-directory constraint: for ask operations, set the working directory to a neutral directory (never `/`, `~`, or a directory containing secrets). The threat model is documented here in uncompressed rationale, not in the runtime card, because it is design context not operational instruction.
-

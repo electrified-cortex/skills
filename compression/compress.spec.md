@@ -209,4 +209,3 @@ The output format is the compressed text followed by the reduction line:
 ## Runtime Requirements
 
 The compression process (`compress.md`) requires only Read and Edit capabilities. Dispatch as an isolated subagent — compression is mechanical and does not require advanced reasoning.
-

@@ -407,7 +407,6 @@ These checks extend Phase 3. Violations recorded in the Phase 3 findings table u
   issues. List fixes.
 - **FAIL**: Any phase fails, or Phase 3 has critical issues.
 
-
 ## Report Format
 
 Frontmatter (required):

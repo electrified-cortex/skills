@@ -23,6 +23,7 @@ Otherwise -> emit stdout verbatim, stop.
 
 If runtime has markdown linter, run auto-fix on `<markdown_file_path>`. Don't install if absent.
 Ignore MD041 warnings if target file: SKILL.md.
+NEVER lint before result check as it will invalidate cached results.
 
 ## Inspect
 

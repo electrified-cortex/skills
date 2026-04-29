@@ -312,6 +312,7 @@ Each addition must be classified as one of:
   No support in the spec. This is a defect.
 
 **Domain mode behavior:** When audit kind is domain:
+
 - If a domain authority spec is provided via `--spec`, apply the three-way classification against that authority.
 - If no domain authority spec is provided, skip this check and report as Informational: "domain mode, no authority declared — Unauthorized Additions check skipped."
 

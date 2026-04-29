@@ -479,4 +479,3 @@ override normative content.
   equivalent by rigorous test.
 - Do not embed absolute filesystem paths in any artifact body; use
   repo-relative paths (see Requirement 7).
-

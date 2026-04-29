@@ -10,6 +10,7 @@ When to Use:
 Use when unsure which sub-skill owns task, or want auto-routing. If domain known, dispatch sub-skill directly.
 
 How It Works:
+
 1. Parse task → identify domain.
 2. Domain unclear → ask caller before proceeding.
 3. Load + invoke domain sub-skill, follow its instructions.

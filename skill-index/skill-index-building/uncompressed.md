@@ -161,4 +161,3 @@ Mitigation: Preserve shortcut entries verbatim across all runs.
 - `skill-index-auditing` — validates the cascade and writes the stamp; run after building
 - `skill-index-crawling` — consumes the artifacts produced here
 - `compression` — compression pass required for overlay before write
-

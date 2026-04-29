@@ -65,5 +65,3 @@ One line only:
 - `pruned: <count>` — orphans deleted.
 - `dry-run: <count>` — orphans found; nothing deleted.
 - `ERROR: <reason>` — pre-execution failure (e.g., `repo_root` not found, path-traversal rejected).
-
-

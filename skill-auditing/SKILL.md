@@ -58,4 +58,3 @@ Branch on stdout:
 - `FAIL: <report_path>` -> surface and stop.
 - `ERROR: <reason>` -> stop, surface reason.
 - `MISS: <abs-path>` -> executor failed to write report; surface `ERROR: executor did not write report at <report_path>`, stop.
-

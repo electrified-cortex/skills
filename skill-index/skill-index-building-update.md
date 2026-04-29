@@ -63,9 +63,12 @@ Raw Index Format (`skill.index`):
 Each entry is three lines, followed by one blank line before the next entry:
 
 ```
+
 ## <key> [op|self]
+
 triggers: <phrase> | <phrase> | <phrase>
 path: <relative-path-to-SKILL.md>
+
 ```
 
 Key line: `## <key> <marker>`. Key is child dir name (no path prefix, no extension). Marker is `[op]` for operator-triggered skills or `[self]` for agent-self-triggered skills. Exactly one marker per entry.
@@ -93,13 +96,17 @@ Phrases are lower-case; no trailing period. Phrases describe when an operator or
 Example entries:
 
 ```
+
 ## spawn-worker [op]
+
 triggers: spawn a worker | no workers available | queue is backed up | add capacity | fleet is empty | worker is dead or stuck
 path: ../../skills/- fleet/spawn-worker/SKILL.md
 
 ## scan-tasks [self]
+
 triggers: idle cycle start | before verification pass | any tasks done | what is pending | check queue depth
 path: ../../skills/task-engine/scan-tasks/SKILL.md
+
 ```
 
 Metadata Overlay Format (`skill.index.md`):

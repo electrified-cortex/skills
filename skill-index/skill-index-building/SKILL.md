@@ -5,8 +5,6 @@ description: Dispatch skill. Creates or updates skill.index and skill.index.md a
 
 Dispatch skill. Creates or updates two index artifacts at every indexed dir in a skill tree: `skill.index` (raw index) and `skill.index.md` (metadata overlay). Integrity stamp (`skill.index.sha256`) written by auditor after PASS — not builder.
 
-
-
 Artifacts:
 
 Every indexed dir gets exactly two files from builder:
@@ -19,8 +17,6 @@ Every indexed dir gets exactly two files from builder:
 Absent stamp = unaudited since last build, not needs-rebuild.
 
 Invocation:
-
-
 
 Use Dispatch agent (zero context): "Read and follow `instructions.txt` (in this dir). Input: `root=<path> [--dot-allow <name,...>] [--rebuild]`"
 
@@ -59,6 +55,7 @@ Sort: byte-lexicographic on full UTF-8 key (excluding marker). `.` always first.
 Marker Assignment:
 
 To determine the marker for each skill entry at build time:
+
 1. Check the skill's SKILL.md frontmatter for a `trigger-mode: op` or `trigger-mode: self` field. If present, use it.
 2. If absent, infer from the skill name and description: skills whose primary invocation is explicit operator request (name contains 'spawn', 'merge', 'review', 'deploy', etc.) default to `[op]`; skills whose primary invocation is agent workflow state (name contains 'scan', 'verify', 'compress', 'crawl', 'audit', etc.) default to `[self]`.
 3. When inference is ambiguous, emit `[op]` as the conservative default and add a `# TODO: verify marker` comment in the raw index entry.
@@ -87,8 +84,6 @@ path: ../../skills/task-engine/scan-tasks/SKILL.md
 
 Metadata Overlay Format (`skill.index.md`):
 
-
-
 H1: dir's identifying title plus " — skill index" suffix. Example: `# Overseer — skill index`.
 Optional preamble (at most two sentences) between H1 and first section. Preferred phrasing: "Match the operator's words (or your current situation) to an entry below, then load that skill." Do not describe index mechanics.
 One `## name [marker]` section per entry key in same order as raw index. Self entry's section uses dir's own name, not `.`. Marker (`[op]` or `[self]`) must appear on every section heading.
@@ -105,11 +100,10 @@ Must pass full compression pass before builder writes. Compression fails → bui
 
 Build Logic:
 
-
-
 Incremental Mode (default):
 
 For each node:
+
 1. Compute mechanical portion: self entry (combo node — manifest + at least one indexable child) + direct-child entries.
 2. Merge with preserved shortcut entries from existing `skill.index`.
 3. Sort combined list per sort rule.
@@ -203,6 +197,7 @@ Doesn't modify files outside two artifact classes (raw index and overlay).
 Backward Compatibility:
 
 Indexes built with the previous format (single `agent:` field, comma-separated keywords, no markers, single timestamp) remain readable but are considered legacy. The builder, when invoked on a directory containing a legacy index:
+
 1. Detects legacy format by absence of `triggers:` lines or presence of `agent:` instead of `role:`.
 2. Rebuilds fully in the new format.
 3. Logs a `[rebuilt from legacy]` notice in the header comment.

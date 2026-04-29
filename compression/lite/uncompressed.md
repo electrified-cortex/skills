@@ -18,6 +18,7 @@ Lite-tier compression is for human-facing content where readability is paramount
 ### Remove List
 
 All of the following must be explicitly covered:
+
 - Filler phrases: `in order to`, `it is worth noting`, `it should be noted`, `please note`, `as mentioned above`
 - Hedging: `arguably`, `somewhat`, `in some cases`, `it could be said`, `might possibly`
 - Pleasantries: `feel free to`, `don't hesitate to`, `of course`, `certainly`, `we hope that`
@@ -26,6 +27,7 @@ All of the following must be explicitly covered:
 ### Keep List
 
 Lite explicitly preserves what Ultra removes:
+
 - Articles: `a`, `an`, `the`
 - Full sentences and professional grammar
 - Connectives: `and`, `but`, `because`, `so`, `however`, `therefore`
@@ -40,6 +42,7 @@ Lite explicitly preserves what Ultra removes:
 ### Preserve List (Never Modify)
 
 The following must never be altered:
+
 - Code blocks and inline code
 - URLs, file paths, commands
 - Technical terms and proper nouns
@@ -58,6 +61,7 @@ If compression of any phrase would introduce ambiguity or change meaning, keep t
 ### Pass Order
 
 Compression must follow this sequence:
+
 1. Preserve scan — identify all protected content; mark as untouchable
 2. Remove — strip filler, hedging, pleasantries, verbose phrasing
 3. Transform — apply readability improvements; add vertical structure where helpful
@@ -78,6 +82,7 @@ The `rules.txt` itself must be Lite-compressed (applying the rules it describes)
 ## Audit Checklist
 
 Verifying rules.txt against spec:
+
 - [ ] Self-contained — agent needs only rules.txt to apply Lite
 - [ ] Remove section covers filler, hedging, pleasantries, verbose phrasing
 - [ ] Keep section explicitly preserves articles, sentences, grammar, connectives

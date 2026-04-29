@@ -25,6 +25,7 @@ Verdicts:
 Walk order: depth-first from invocation root, parents before children. Parent-level failure halts before descending into potentially invalid subtrees. Dot-folders skipped; `--dot-allow` overrides. Symlinks not followed. Shortcut entries resolved by path-walk at declaring node, subject to loop detection.
 
 Fail-fast checks (halt on first failure → `rebuild-needed`):
+
 1. Stamp present: each raw index must have `skill.index.sha256`.
 2. Stamp matches: SHA-256 of raw index bytes must equal stored stamp.
 3. Entry targets resolve: every entry resolves to on-disk target within node's subtree. Plain entry → leaf-skill dir. Descent-marked → descendant dir with own `skill.index`. Combo → satisfies both. Shortcut entries (multi-segment keys) resolved by path-walk from current node. Missing or out-of-subtree → `rebuild-needed`.
@@ -36,6 +37,7 @@ Fail-fast checks (halt on first failure → `rebuild-needed`):
 8. No reference loops: on every resolution path, track full ordered set of nodes visited. Step landing on already-visited node → `rebuild-needed`. Auditor is primary enforcer per root spec.
 
 Continue-past checks (record, don't halt):
+
 1. Orphans: `skill.index.sha256` or `skill.index.md` with no corresponding `skill.index`. Janitorial; doesn't trigger `rebuild-needed` alone.
 2. Malformed lines: raw index line with missing key, missing colon, or forbidden chars. Recorded without halting. Any finding raises verdict to `rebuild-needed` after clean fail-fast walk.
 3. Phantom indexes: `skill.index` in invocation root's subtree not reachable from root cascade. Janitorial; doesn't trigger `rebuild-needed` alone.
@@ -53,18 +55,21 @@ On non-PASS (`rebuild-needed` or `inconclusive`), mustn't write any stamp. Exist
 Stamp write is only file-write auditor ever performs.
 
 Audit report fields:
+
 - `verdict`: `ok` | `rebuild-needed` | `inconclusive`
 - `reason`: reason string when verdict isn't `ok`
 - `failing_node`: path to first failing node (when fail-fast check failed)
 - `continue_past_findings`: list of orphan, malformed-line, and phantom index findings
 
 Error handling:
+
 - Invocation root unreadable → `inconclusive` with reason, halt.
 - Per-subtree unreadable → `inconclusive` for subtree, continue siblings.
 - Audit report not producible → non-zero exit; don't silently succeed.
 - Stamp write failure after PASS → downgrade to `inconclusive`, list failed nodes in report, non-zero exit. Partial stamp state unacceptable — incomplete sign-off = no sign-off.
 
 Precedence:
+
 1. `rebuild-needed` takes precedence over `ok`. Single fail-fast failure downgrades otherwise-ok cascade.
 2. `inconclusive` takes precedence over `ok` but not `rebuild-needed`.
 3. Fail-fast failures take precedence over continue-past findings in report.
@@ -77,6 +82,7 @@ F4: Judges shortcut placement. Correctness only — subtree containment (check 3
 F5: Loop detection skipped under shortcut resolution. Track visited nodes on every step of every resolution path, regardless of descent kind.
 
 Don'ts:
+
 - Doesn't rebuild.
 - Doesn't modify any file except writing `skill.index.sha256` on PASS. Non-PASS → no files modified, not even pre-existing stale stamps.
 - Doesn't invoke builder.
@@ -85,6 +91,7 @@ Don'ts:
 - Doesn't judge curator intent, optimality, or aesthetic choices.
 
 Related:
+
 - `skill-index` — root spec and toolkit overview
 - `skill-index-building` — invoke after `rebuild-needed` verdict
 - `skill-index-crawling` — consumer that benefits from validated cascade

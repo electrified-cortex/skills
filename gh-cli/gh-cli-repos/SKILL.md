@@ -26,6 +26,7 @@ Fork Sync: `gh repo sync [--branch branch] [--force]`
 `--force` overwrites local changes to match upstream.
 
 Edit Metadata:
+
 ```bash
 gh repo edit --description "new" --homepage https://example.com
 gh repo edit --visibility private
@@ -37,6 +38,7 @@ Archive: `gh repo archive` / `gh repo unarchive`
 Delete: `gh repo delete owner/repo --yes`
 
 List:
+
 ```bash
 gh repo list [owner] --limit 50 --json name,visibility,owner --jq '.[].name'
 ```
