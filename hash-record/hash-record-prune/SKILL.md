@@ -9,9 +9,9 @@ Dispatch isolated agent (Dispatch agent, zero context): "Read and follow `instru
 - `--dry-run` (flag, optional): list orphaned hash dirs without deleting. Default: delete.
 - `--limit <N>` (integer, optional): cap hash dirs deleted per invocation. Default: unlimited.
 
-Validity uses all active worktrees (main + linked via `git worktree list --porcelain`):
-- Manifest records: re-derive manifest hash from `file_paths` (search all worktree roots for each file; orphaned if any missing or hash changes).
-- Non-manifest records: check `<full-hash>` against union blob-hash set from all worktree scans (each scan excludes `.worktrees/` paths and submodule directory paths).
+Validity scoped to `repo_root` (active worktree only):
+- Manifest records: re-derive manifest hash from `file_paths` under `repo_root`; orphaned if any file missing or hash changes.
+- Non-manifest records: check `<full-hash>` against blob-hash set from `repo_root` scan (excludes `.worktrees/` paths and submodule directory paths).
 
 Returns: `CLEAN` | `pruned: <count>` | `dry-run: <count>` | `ERROR: <reason>`
 
