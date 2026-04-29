@@ -1,4 +1,4 @@
-﻿# Hash Stamp — Stamp Spec
+# Hash Stamp — Stamp Spec
 
 Normative spec for the stamp sub-skill. Writes or updates SHA-256 companion files alongside target files.
 

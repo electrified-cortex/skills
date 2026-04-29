@@ -1,4 +1,4 @@
-﻿# hash-stamping - skill index
+# hash-stamping - skill index
 
 ## hash-stamping
 

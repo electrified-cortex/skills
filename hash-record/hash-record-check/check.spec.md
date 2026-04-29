@@ -60,7 +60,7 @@ causes an ERROR output and non-zero exit.
    `op_kind` or `record_filename`):
    emit `ERROR: <reason>`, exit non-zero.
 
-## Output contract
+## Output
 
 All stdout output is one line, no trailing whitespace, LF terminator.
 Forward slashes in paths on every platform.

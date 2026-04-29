@@ -60,7 +60,7 @@ All three are required. Fewer than three positional groups -> ERROR + exit non-z
 
 8. On any error: emit `ERROR: <reason>`, exit 1.
 
-## Output contract
+## Output
 
 All stdout output is one line, no trailing whitespace, LF terminator. Forward slashes in paths on every platform.
 

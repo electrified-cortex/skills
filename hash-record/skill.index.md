@@ -1,4 +1,4 @@
-﻿# hash-record - skill index
+# hash-record - skill index
 
 ## hash-record
 
