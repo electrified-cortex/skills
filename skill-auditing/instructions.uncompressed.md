@@ -69,7 +69,11 @@
    ```
 
    Body: open with `# Result` H1, state verdict, list findings (with phase and check references).
-11. **Output** `PATH: <audit_cache_dir>report.md` and stop.
+11. **Output** — after all narrative / report-related output, emit a final line containing ONLY one of:
+    - `PATH: <absolute-path-to-record.md>` (success)
+    - `ERROR: <reason>` (pre-write failure)
+
+    The final line MUST be the last line of stdout. Nothing follows it. The line MUST start at column 0 — no indentation, no quoting, no list-marker prefix. The caller parses the last line of stdout to extract the return value.
 12. If `--fix` is active **and** the verdict is exactly NEEDS_REVISION, enter the Fix Mode procedure below. PASS → nothing to fix; FAIL → fix mode is skipped and defects are reported for author action. Fix mode is single-pass; the auditor does not re-audit or recompress.
 
 ## When to audit which artifact

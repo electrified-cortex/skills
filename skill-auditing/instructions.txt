@@ -42,7 +42,10 @@ Procedure:
     WRONG (singular multi-file):
     file_path: skill-auditing/SKILL.md
 Body: # Result H1, state verdict, list findings (phase + check refs).
-11. Output PATH: <audit_cache_dir>report.md. Stop.
+11. Output — after all narrative/report output, emit a final line containing ONLY one of:
+   PATH: <absolute-path-to-record.md>  (success)
+   ERROR: <reason>  (pre-write failure)
+   Final line = last line of stdout. Nothing follows it. Line MUST start at column 0 — no indentation, no quoting, no list-marker prefix. Caller parses last line of stdout to extract return value.
 12. --fix active + verdict == NEEDS_REVISION -> Fix Mode. PASS -> done. FAIL -> skip fix; report for author. Single-pass; no re-audit/recompress.
 
 Artifact Selection:
