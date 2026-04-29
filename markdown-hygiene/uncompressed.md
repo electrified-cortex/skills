@@ -55,6 +55,6 @@ Max 3 iterations. Still findings after 3rd -> stop, report last `<report_path>`.
 
 `<tier>` = `standard`
 `<description>` = `Fixing Markdown Hygiene: <markdown_file_path>`
-`<prompt>` = `For this <markdown_file_path>, read <report_path> and fix any issues.`
+`<prompt>` = `For this <markdown_file_path>, read <report_path> and fix any issues in reverse order (bottom to top) to help keep line numbers accurate while fixing.`
 
 Follow `dispatch` skill (same as Inspect). Then loop from "Inline result check".

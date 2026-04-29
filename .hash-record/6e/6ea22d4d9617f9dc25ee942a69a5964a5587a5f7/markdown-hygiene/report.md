@@ -1,0 +1,9 @@
+---
+file_path: iteration-safety/SKILL.md
+operation_kind: markdown-hygiene
+result: pass
+---
+
+# Result
+
+CLEAN
