@@ -3,21 +3,22 @@ name: hash-record-manifest
 description: Compute a manifest hash for a set of files. Triggers — compute manifest hash, multi-file cache key, hash-record manifest, manifest hash, bundle file hashes, cache key for directory.
 ---
 
-Compute a deterministic manifest hash for a set of files. The manifest hash is the multi-file cache key used by hash-record consumers (skill audits, code reviews on a directory, anything that bundles multiple sources into a single result).
+Compute deterministic manifest hash for set of files. Manifest hash = multi-file cache key for hash-record consumers (skill audits, dir code reviews, anything bundling multiple sources into single result).
 
-Without reading `instructions.txt` yourself, spawn a zero-context, haiku-class sub-agent in the background:
+Input:
+`repo_root` (required): abs path to repo root. Computes repo-relative paths for manifest text.
+`files` (required): paths to include. Abs or repo-relative; skill normalizes all to repo-relative against `repo_root`.
 
-**Claude Code:** `Agent` tool. Pass: `"Read and follow instructions.txt here. Input: repo_root=<abs-path> files=<comma-or-newline-separated-list>"`
+Dispatch:
+Variables:
+`<instructions>` = `instructions.txt` (this folder; NEVER READ THIS FILE)
+`<instructions-abspath>` = abs path to `<instructions>`
+`<input-args>` = `repo_root=<abs-path> files=<comma-or-newline-separated-list>`
+`<tier>` = `fast-cheap`
+`<description>` = `Computing manifest hash: <repo_root>`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
-**VS Code / Copilot:** `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow instructions.txt in <skill_dir>. Input: repo_root=<abs-path> files=<list>")`
-
-Don't read `instructions.txt` yourself.
-
-- `repo_root` (required): absolute path to the repository root. Used to compute repo-relative paths for the manifest text.
-- `files` (required): paths to include. May be absolute or repo-relative; the skill normalizes all to repo-relative against `repo_root`.
-
-Returns: `manifest: <40-char-hash>` on success, `ERROR: <reason>` on failure.
-
-NEVER READ OR INTERPRET `instructions.txt` YOURSELF. Let the sub-agent do the work.
+Follow `dispatch` skill. See `../../dispatch/SKILL.md`.
+Returns: `manifest: <40-char-hash>` | `ERROR: <reason>`
 
 Related: `hash-record`, `hash-record-index`, `hash-record-prune`

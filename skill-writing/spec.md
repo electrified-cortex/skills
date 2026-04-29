@@ -155,23 +155,32 @@ name: <skill-name>
 description: <one-line description>
 ---
 
-# <Skill Name>
+Input: `<param>` — <description>
 
-<One sentence: what this does.>
+## Dispatch
 
-Dispatch an isolated agent (use Dispatch agent or Agent tool with no
-system context): "Read and follow `<path-to-instruction-file>`. Input:
-`<param1> <param2>`"
+Variables:
 
-Parameters:
-- `param1` (string, required): <description>
-- `param2` (string, optional, default: "X"): <description>
+`<instructions>` = `instructions.txt` (this folder; NEVER READ THIS FILE)
+`<instructions-abspath>` = absolute path to `<instructions>`
+`<input-args>` = `<param> [<optional-param>]`
+`<tier>` = `fast-cheap`
+`<description>` = `<Action>: <param>`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
+Follow `dispatch` skill. See `<path-to-dispatch>/SKILL.md`.
 Returns: <what the agent reports back — specify format>
 ```
 
-The routing card is ~10-15 lines. All procedure lives in the dispatch
-instruction file.
+The routing card is ~10-15 lines. The caller binds `<prompt>` in the
+Variables block and delegates spawning to the `dispatch` skill.
+`dispatch/SKILL.md` is the canonical for all spawn mechanics. All
+procedure lives in the dispatch instruction file.
+
+The prompt-only model: the consumer composes `<prompt>` (including the
+instructions path and input args); `dispatch` sends it verbatim to a
+zero-context sub-agent. This separates prompt construction (caller) from
+agent spawning (dispatch).
 
 ### Dispatch Instruction File
 
@@ -332,11 +341,15 @@ here propagates into discovery downstream.
 ### For dispatch skills specifically
 
 - Dispatch instruction file must be in the same directory or a known path
+- The canonical spawn primitive is `dispatch/SKILL.md` — all consumers
+  invoke it via the Variables block pattern (prompt-only model)
 - Use the Dispatch agent for zero-context isolation (preferred over
   background agent with host context)
-- Parameters documented with types, required/optional, and defaults
+- Consumer composes `<prompt>` (instructions path + input args); dispatch
+  sends verbatim — no template construction inside dispatch
 - Output format specified so the caller knows what to expect
-- The exemplar is `compression/SKILL.md` — study it
+- The exemplar is `compression/SKILL.md` — study it alongside
+  `dispatch/SKILL.md` for the full pattern
 
 ### Quality criteria (for auditing)
 
@@ -584,7 +597,11 @@ are exempt — those are runtime addresses, not artifact body content.
 
 - **spec-writing**: Governs how to write the companion spec
 - **spec-auditing**: Verifies companion specs meet quality bar
-- **compression**: Exemplar for the dispatch pattern
+- **dispatch**: Canonical primitive for spawning zero-context sub-agents.
+  All dispatch skill consumers reference `dispatch/SKILL.md` via the
+  Variables block (prompt-only model)
+- **compression**: Exemplar for the dispatch pattern; uses prompt-only
+  dispatch shape
 - See `dispatch` as the canonical example of footgun catalogue
   in a skill body.
 
