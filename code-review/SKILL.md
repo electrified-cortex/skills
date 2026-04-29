@@ -1,12 +1,19 @@
 ---
 name: code-review
-description: Tiered code review on a change set. Read-only — never modifies code. Triggers — review this diff, code review, smoke pass, substantive pass, check this PR, review change set.
+description: Tiered code review on a change set. Read-only — never modifies code. Triggers — security, correctness, code-quality, change-review, architectural-risk.
 ---
 
-Don't read `instructions.txt` yourself — use Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory).
-Input: `change_set=<form> tier=<smoke|substantive> [prior_findings=<json>] [focus=<csv>] [context_pointer=<path>]`"
+Without reading `instructions.txt` yourself, spawn zero-context, haiku-class sub-agent:
 
-Do NOT run code review inline. Inline execution: shallow/inconsistent results, caller context bleeds into judgment.
+Claude Code: `Agent` tool. Pass: "Read and follow `instructions.txt` here. Input: `change_set=<form> tier=<smoke|substantive> [prior_findings=<json>] [focus=<csv>] [context_pointer=<path>]`"
+
+VS Code / Copilot: `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow `instructions.txt` in this directory. Input: `change_set=<form> tier=<smoke|substantive> [prior_findings=<json>] [focus=<csv>] [context_pointer=<path>]`")`
+
+Don't read `instructions.txt` yourself.
+
+Returns: `{tier, pass_index, verdict, findings[]}` per pass. Verdict: `clean`, `findings`, `error`. Severity: `blocker`, `major`, `minor`, `nit`.
+
+NEVER READ OR INTERPRET `instructions.txt` YOURSELF. Let sub-agent do the work.
 
 ## Tier vocabulary
 
@@ -21,42 +28,5 @@ Tier substitution is prohibited.
 `prior_findings` (substantive only, required): all prior-pass findings forwarded unmodified.
 `focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `blocker` and `major` outside focus must still surface.
 `context_pointer` (optional): path to CLAUDE.md, README, or style guide for local conventions.
-
-Returns (per pass): `{tier, pass_index, verdict, findings[]}`. Verdict: `clean`, `findings`, `error`. Severity: `blocker`, `major`, `minor`, `nit`.
-
-One skill per invocation. Each pass is separate dispatch. Smoke always runs before substantive. Two-pass policy applies regardless of change-set size — no size threshold permits single-pass review.
-
-## Procedure
-
-Calling agent orchestrates:
-1. Smoke pass — dispatch fast-cheap agent with `tier=smoke`.
-2. Caller acts (optional) — read smoke findings; act on any; edits are caller's, not review agent's.
-3. Substantive pass — dispatch standard agent with `tier=substantive` and all prior-pass findings unmodified.
-4. Iterate standard-only (optional) — if findings warrant re-review, dispatch another standard pass. Forward all prior findings unmodified. Never re-introduce fast-cheap.
-5. Sign-off — most recent standard pass is authoritative. Record its report.
-
-Empty change set: skip all passes; return empty-result aggregate.
-
-## Aggregated Result
-
-Calling agent assembles after all passes:
-`passes`: per-pass reports in dispatch order.
-`sign_off_pass_index`: index of most recent successful standard pass; `null` when empty change set or only failed passes exist.
-`severity_aggregate`: finding counts by severity in sign-off pass only (zero per bucket when null or clean).
-`verdict`: `clean`, `findings`, or `error`.
-`preserved_contradictions`: smoke findings sign-off contradicted, each paired with contradicting commentary.
-
-## Calling Agent Rules
-
-Never treat smoke-only as authoritative. Skipping substantive pass is prohibited.
-Forward prior-pass findings unmodified — no annotations, dispute flags, or reordering.
-Don't communicate caller disputes about smoke findings to substantive pass.
-Don't modify change set during a pass. Edits happen between passes only.
-Record sign-off so downstream consumers can verify review occurred.
-
-## When to Use
-
-Reviewing change set of executable or compilable code: source files, build scripts, CI config, IaC manifests.
-For non-code artifacts (specs, skills, docs), use `spec-auditing` or `skill-auditing` — different tier policy.
 
 Related: `spec-auditing`, `skill-auditing`, `dispatch`, `compression`

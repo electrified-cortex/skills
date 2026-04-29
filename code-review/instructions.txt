@@ -1,6 +1,4 @@
-﻿# Code Review Pass
-
-Read change set, produce findings report. Read-only — never edit, commit, push, stage. Reporting and fixing are separate concerns.
+﻿Read change set, produce findings report. Read-only — never edit, commit, push, stage. Reporting and fixing are separate concerns.
 
 Params:
 `change_set` (required): inline diff text, absolute file paths, or git ref/range. Resolve form received.
