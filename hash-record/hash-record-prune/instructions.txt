@@ -10,12 +10,23 @@ Procedure (each step named tool):
 2. Collect: Bash `find "<repo_root>/.hash-record" -mindepth 2 -maxdepth 2 -type d ! -name '.prune' ! -name '.*'`
    Extract basename (full-hash). None = `CLEAN`, stop.
 
-3. Valid-hash set (prefer manifest):
-   • Manifest: per dir test `<repo_root>/.hash-record/<shard>/<full-hash>/manifest.yaml`; read, extract `file_paths`; `git hash-object` each file; accumulate.
-   • Fallback: once for missing manifests. Bash `cd "<repo_root>" && git ls-files --cached --others --exclude-standard`; `git hash-object` each.
-   Valid: hash in effective set.
+3. Validity per hash dir (choose by manifest presence):
 
-4. Orphan: hash not in valid set.
+   Manifest present (`<full-hash>/manifest.yaml` exists) — re-derive manifest hash:
+   a. Read `file_paths` list from manifest YAML.
+   b. Any path under `.worktrees/` → ORPHANED (active worktree scope only).
+   c. Resolve each to absolute path under `repo_root`; any missing → ORPHANED.
+   d. `git hash-object <abs-path>` each; collect (repo-relative-path, blob-hash) pairs.
+   e. Sort pairs lexically by path.
+   f. Build manifest text: `<path> <blob-hash>\n` per line (final line also ends `\n`).
+   g. Write to temp file; `git hash-object <tempfile>`. Result == dir name → VALID; else ORPHANED.
+
+   No manifest — blob-hash fallback (build once; share across all non-manifest dirs):
+   `cd "<repo_root>" && git ls-files --cached --others --exclude-standard`
+   Filter out any paths starting with `.worktrees/`. `git hash-object` each remaining file; accumulate set.
+   Hash in set → VALID; else ORPHANED.
+
+4. Orphan: all hash dirs marked ORPHANED in step 3.
 
 5. `--dry-run` → output `dry-run: <count>`, stop.
 

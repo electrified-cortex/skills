@@ -14,8 +14,9 @@ Does NOT delete records whose hash currently matches a workspace file. Does NOT 
 
 ## Definitions
 
-- **Orphaned record**: a record whose `<full-hash>` key does not match the git blob hash of any current file in the repository working tree (tracked OR untracked, excluding ignored).
-- **Valid-hash set**: the set of git blob hashes computed from every non-ignored file in the working tree at the moment the prune pass begins.
+- **Orphaned record**: a record whose hash can no longer be re-derived from the active working tree. For **non-manifest records** (no `manifest.yaml`): `<full-hash>` does not match the git blob hash of any current file in the active working tree (tracked OR untracked, excluding gitignored and excluding `.worktrees/`). For **manifest records** (has `manifest.yaml`): re-computing the manifest hash from the current `file_paths` yields a different value — because one or more listed files are missing, changed, or under `.worktrees/`.
+- **Valid-hash set**: for non-manifest records — the set of git blob hashes computed from every file in the active working tree (tracked OR untracked, excluding gitignored and excluding `.worktrees/`) at the moment the prune pass begins.
+- **Active working tree**: the main worktree rooted at `repo_root`. Linked worktrees (under `.worktrees/`) are excluded from all validity checks — the prune scope is the main checkout only.
 - **Hash directory**: the path `.hash-record/<shard>/<full-hash>/`. Pruning operates at this granularity — an entire hash directory and all its descendants are removed when the hash is orphaned.
 - **Administrative directory**: a dot-prefixed directory directly under `.hash-record/` that is NOT a shard directory (e.g., any dot-prefixed dirs). Administrative directories are excluded from the hash-directory walk and MUST NOT be deleted.
 - **Dry-run**: a mode that reports what would be deleted without modifying the filesystem.
@@ -31,12 +32,18 @@ Does NOT delete records whose hash currently matches a workspace file. Does NOT 
 ### Procedure
 
 1. Resolve `repo_root` and verify `<repo_root>/.hash-record/` exists. If absent, output `CLEAN` and stop — nothing to prune.
-2. Build the **valid-hash set** using one of two strategies, chosen per hash directory:
-   - **Manifest-preferred** (when `<repo_root>/.hash-record/<shard>/<full-hash>/manifest.yaml` exists, produced by `hash-record-index`): read `file_paths` from the manifest, run `git hash-object` on each listed path, accumulate those hashes. This is faster and avoids a full workspace walk.
-   - **Full-workspace fallback** (when `manifest.yaml` is absent): enumerate every file in the working tree using `git ls-files --cached --others --exclude-standard`, compute `git hash-object <file>` for each, accumulate hashes into a set.
-   The manifest-preferred strategy is used when a manifest is present; the fallback is used otherwise. The full-workspace set need only be built once if multiple hash directories lack a manifest.
-3. Walk every hash directory under `.hash-record/<shard>/<full-hash>/`. For each, check whether `<full-hash>` is in the valid-hash set.
-4. Each hash directory whose hash is NOT in the valid-hash set is **orphaned** — record it for deletion.
+2. Determine validity for each hash directory via the appropriate strategy:
+   - **Manifest strategy** (when `<repo_root>/.hash-record/<shard>/<full-hash>/manifest.yaml` exists): the directory name is a **manifest hash** (not a file blob hash) — it must be re-derived, not looked up:
+     1. Read `file_paths` from the manifest YAML.
+     2. Reject any path under `.worktrees/` — linked worktree paths are outside the active working tree scope. Mark ORPHANED and stop.
+     3. For each listed path, resolve to an absolute path under `repo_root`. If any file is missing or unreadable, mark ORPHANED and stop.
+     4. Run `git hash-object <abs-path>` for each file. Collect (repo-relative-path, blob-hash) pairs.
+     5. Sort pairs lexically by repo-relative path.
+     6. Build manifest text: one line per pair in format `<repo-relative-path> <blob-hash>`, each ending with `\n` (including the final line).
+     7. Run `git hash-object --stdin` (or equivalent via temp file) on the manifest text. If the result equals `<full-hash>`, mark VALID; otherwise mark ORPHANED.
+   - **Full-workspace fallback** (when `manifest.yaml` is absent): the directory name is a single-file blob hash. Build the valid-hash set once (shared across all non-manifest directories): enumerate every file in the active working tree via `git ls-files --cached --others --exclude-standard`, filter out any paths under `.worktrees/`, run `git hash-object <file>` for each, accumulate hashes into a set. If `<full-hash>` is in the set, mark VALID; otherwise mark ORPHANED.
+3. Walk every hash directory under `.hash-record/<shard>/<full-hash>/`. Apply step 2 to each. Collect all directories marked ORPHANED.
+4. Each ORPHANED hash directory is a candidate for deletion.
 5. If `--dry-run` is set, skip deletion and output `dry-run: <count>`; stop.
 6. Otherwise, delete each orphan hash directory via `rm -rf` (or equivalent) — the entire directory and all leaf records inside it. Stop if `--limit` is reached.
 7. After deletion, prune any now-empty `<shard>/` parent directory.
@@ -54,7 +61,7 @@ Stdout return (one line):
 ## Constraints
 
 - `repo_root` MUST NOT contain `..` or shell metacharacters. The skill MUST reject such values before any filesystem operation.
-- The skill MUST NOT delete any record under a hash that is currently in the valid-hash set, even if the record is for an unused operation-kind, model, or version.
+- The skill MUST NOT delete any record under a hash that is currently valid (in the valid-hash set for non-manifest records, or whose manifest hash re-derives correctly for manifest records), even if the record is for an unused operation-kind, model, or version.
 - The skill MUST NOT delete the `.hash-record/` directory itself or any non-hash-keyed administrative directory.
 - The skill MUST scope deletions to descendants of `<repo_root>/.hash-record/`. Paths that resolve outside this tree (via symlink or otherwise) MUST be rejected.
 - The skill MUST compute the valid-hash set ATOMICALLY before any deletion begins. Any file changes during the prune pass do not affect the current invocation's deletion list.
