@@ -21,6 +21,7 @@ S6. Arbitrator. After all member outputs collected, dispatch single sonnet-class
 
 - Obvious actions: 2+ members flagged same concern, or self-evident from artifact. Each: description + source personality indices + evidence cite.
 - Critical actions: would block shipping or require arch change regardless of agreement count. Each: description + source personality indices + evidence cite + severity rationale.
+
 No speculative, low-confidence, or duplicate items. If empty: state "No actionable findings".
 
 S7. Aggregate. Collect findings from arbitrator's action list. Record per item: personality indices, summary, evidence. Identify disagree set: items where arbitrator flagged contradictory conclusions from different members on same point.

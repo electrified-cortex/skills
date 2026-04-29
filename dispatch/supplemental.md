@@ -18,6 +18,26 @@ Implication: don't waste tokens repeating project conventions in every prompt. T
 
 Both claims may drift between Claude Code releases. Re-verify if behavior seems off.
 
+## System-Prompt Pollution
+
+A heavy `CLAUDE.md` (or any project-level system prompt) reduces dispatch effectiveness in ways that aren't immediately obvious from the runtime card.
+
+The Dispatch sub-agent inherits project context automatically (see "Project context IS inherited" above). That includes the workspace and project-scoped `CLAUDE.md` files. Every line in those files becomes part of the dispatched agent's system prompt — the cleanest "zero-context" sub-agent still carries that weight.
+
+Implications:
+
+- **Bias.** Strong opinions in `CLAUDE.md` (style preferences, role framings, narrative voice) bias the dispatched agent's output even when the task has nothing to do with them. A markdown linter dispatched under a "be concise and stoic" `CLAUDE.md` returns terser fix lines than the same dispatch under a neutral system prompt.
+- **Token cost.** Every dispatch pays the `CLAUDE.md` token cost up front, before any task work begins. Heavier `CLAUDE.md` = more cost per dispatch with no benefit when the task doesn't intersect.
+- **Contamination across roles.** A `CLAUDE.md` written for one role (e.g. operator-facing Curator behavior) leaks into dispatches that should be role-agnostic (e.g. mechanical detection tasks).
+
+Mitigations:
+
+- Keep `CLAUDE.md` minimal at the workspace level. Reserve it for genuinely cross-role conventions.
+- Push role-specific framing into the role's agent root, not into shared context.
+- For dispatch-heavy workflows, periodically audit `CLAUDE.md` for content that doesn't earn its dispatch-time cost.
+
+Empirically untested under formal conditions but widely observed: dispatches under lean project context produce more focused output than dispatches under heavy project context for the same task.
+
 ## Subagent Type Dimensions
 
 Types differ on three axes:
