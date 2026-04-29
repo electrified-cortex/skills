@@ -1,59 +1,29 @@
 # Skill Auditing Instructions
 
-## Dispatch Parameters
+## Inputs
 
-- `skill_path` (required): Absolute path to SKILL.md to audit
-- `spec_path` (optional): Path to companion spec if not beside SKILL.md
-- `--fix` (optional flag): Enable single-pass fix mode against the skill's
-  authoritative source files (`uncompressed.md` and `instructions.uncompressed.md`,
-  siblings of `skill_path`). Runs only on a NEEDS_REVISION verdict. Refused on
-  any candidate with pending git changes (untracked, unstaged, staged, or
-  merge-conflicted) and on any path that escapes the skill directory. The
-  companion `spec.md`, the `README.md`, and the compiled runtime files
-  (`SKILL.md`, `instructions.txt`) are never modified.
-- `--uncompressed` (optional flag): Audit the uncompressed source files
-  (`uncompressed.md`, `instructions.uncompressed.md`) instead of the compiled
-  runtime (`SKILL.md`, `instructions.txt`).
+`skill_dir` (positional, required) — absolute path to the skill folder being audited.
+`--report-path <abs-path>` (required) — absolute path to write the report. Missing -> `ERROR: --report-path required`, stop. Existing file at `<report_path>` is overwritten.
+`--uncompressed` (optional flag) — switches Phase 1/2/3 audit focus to SOURCE artifacts. Default (absent): audit COMPILED artifacts.
+
+**Hard prohibition:** do NOT author scripts (`.ps1`, `.sh`, `.py`, etc.), helper files, or any file other than `<report_path>`. Source files in `skill_dir` are read-only. Use Read/Bash/Grep only for inspection.
 
 ## Procedure
 
-1. **Read** the target skill directory listing (Glob or ls on the skill dir containing `skill_path`).
-2. **Identify source files** — typically `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` if present. Skip `SKILL.md` and `instructions.txt` — those are compressed artifacts derived from the source.
-3. **Run** `git hash-object <file>` on each source file. Collect `(filename, blob-hash)` pairs.
-4. **Build manifest:** sort pairs lexically by filename. Write one `<filename> <hash>` line per pair to a temp string. Run `git hash-object --stdin` on that text. Save the 40-char result as `<manifest_hash>`.
-4a. **Resolve repo root** from `skill_path` (use the Bash tool):
-
-    ```bash
-    target_dir=$(dirname "<skill_path>")
-    repo_root=$(git -C "$target_dir" rev-parse --show-toplevel 2>/dev/null)
-    # Fallback: no .git/ found → place .hash-record/ adjacent to the skill directory
-    [ -z "$repo_root" ] && repo_root="$target_dir"
-    ```
-
-    Save `<repo_root>` for all subsequent cache path construction.
-5a. **Compute the cache path.** The record filename is hardcoded as `report.md`. Path shape:
-
-   ```text
-   <repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.2/report.md
-   ```
-
-   The `v1.2` segment is mandatory for skill-auditing records. The version is declared in `spec.md` and MUST match the version embedded in this instructions file. If they ever drift, that's a defect — surface and stop.
-
-5b. **Probe the cache.** Run `test -f <path-from-5a>` (use the Bash tool).
-
-- **HIT** (file exists): output `PATH: <abs-path-to-that-file>` and stop. Do not re-run the audit.
-- **MISS** (file does not exist): save `<repo-root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v1.2/` as `<audit_cache_dir>` and continue.
-
-6. **Read the skill** at `skill_path`. Determine type: inline or dispatch. Locate companion spec — check `spec_path` if provided, otherwise `spec.md` co-located with `skill_path`. If not found: simple inline skills (<30 lines) may skip Phase 1; dispatch or complex inline → record an error verdict, write the record, output `PATH:`, and stop.
-8. **Run Phase 1 → Phase 2 → Phase 3** (stop on first failure). Assign verdict. Map to `result` field: PASS → `pass`; PASS_WITH_FINDINGS / NEEDS_REVISION / FAIL → `findings`; error → `error`.
-9. **Scrub absolute paths from record body.** Before writing, scan the rendered body for any absolute filesystem path (Windows drive-letter prefix `<letter>:\...` or `<letter>:/...`, or Unix root-anchored paths under `/Users/`, `/home/`, `/d/`, etc.). For each hit, replace it with its repo-relative form — the same relative path used in `file_paths:` frontmatter (e.g., body should read `skill-auditing`, never the full absolute form). The body MUST NOT contain absolute paths.
-10. **Write audit record** at `<audit_cache_dir>report.md`. `mkdir -p <audit_cache_dir>` first. Frontmatter: `hash: <manifest_hash>`, `file_paths: <YAML list of repo-relative paths>` (one entry per source file from step 3, sorted lexically; each path is relative to `<repo-root>` resolved from `skill_path` — compute via `git ls-files --full-name <file>` or strip `<repo-root>/` from each absolute path), `operation_kind: skill-auditing`, `model: <executing-model-class>` (the agent records its own model class at write time — e.g. `claude-haiku`, `claude-sonnet`, `claude-opus`), `result: <mapped value>`.
+1. **Determine audit mode** from the presence of `--uncompressed`:
+   - **Default (compiled mode):** Phase 1/2/3 targets `SKILL.md` + `instructions.txt`. These are the runtime contract — what agents read.
+   - **`--uncompressed` mode:** Phase 1/2/3 targets `uncompressed.md` + `instructions.uncompressed.md` + `spec.md`. These are the source artifacts.
+2. **Enumerate files for the selected mode.** Collect whichever exist. Skip files belonging to the other mode (e.g., in compiled mode, skip `uncompressed.md`; in `--uncompressed` mode, skip `SKILL.md` and `instructions.txt`).
+3. **Read each file.** Determine skill type: inline or dispatch. Locate companion spec — `spec.md` co-located with `skill_dir`. If not found: simple inline skills (<30 lines) may skip Phase 1; dispatch or complex inline → record an error verdict, write the report, return `ERROR: spec.md not found`, and stop.
+4. **Run Per-file basic checks** (always run, regardless of mode — see section below). Accumulate findings into a separate "Per-file" section of the report. Per-file findings do NOT block Phase 1/2/3.
+5. **Run Phase 1 → Phase 2 → Phase 3** (stop on first phase failure). Assign verdict. Map to `result` field: PASS → `pass`; PASS_WITH_FINDINGS / NEEDS_REVISION / FAIL → `findings`; error → `error`.
+6. **Scrub absolute paths from the entire report — frontmatter `file_paths`, Notes columns, Findings, ALL prose.** This includes paths quoted as evidence from the audited source, even when citing line numbers. Forbidden tokens: any Windows drive-letter path (`<letter>:[/\\]`), any POSIX root-anchored path (`/Users/`, `/home/`, `/d/`, `/c/`, `/mnt/`, `/tmp/`, `/var/`). When citing evidence that contains such a path, describe it abstractly ("hardcoded drive-letter path on line N", "POSIX root path under `/Users/`") rather than quoting the literal path. The report body MUST be safe to share publicly. Use **repo-relative paths** (relative to the git repo root identified in step 7) for any path referenced in Findings.
+7. **Write report** at `<report_path>` (overwrite if present). `mkdir -p $(dirname <report_path>)` first. Frontmatter: `file_paths: <YAML list of repo-relative paths>` (one entry per source file enumerated in step 2, sorted lexically). **"Repo-relative" means: paths relative to the git repo that owns the cache record being written.** Resolve via `git -C <dir-containing-the-target-files> rev-parse --show-toplevel` and strip that prefix from each absolute path. The same repo root governs the cache directory layout (`<repo-root>/.hash-record/...`), so the report's `file_paths:` and the cache location are always under the same root. `operation_kind: skill-auditing`. `model:` MUST be one of `haiku-class`, `sonnet-class`, or `opus-class` — the executor's tier in semantic terms. NEVER write a literal model identifier (e.g. `claude-sonnet-4-6`) — model ids drift; class labels are stable cache keys. `result: <mapped value>`.
 
    ```yaml
    # Correct:
    file_paths:
      - skill-auditing/instructions.uncompressed.md
-     - skill-auditing/SKILL.md
      - skill-auditing/spec.md
      - skill-auditing/uncompressed.md
 
@@ -69,27 +39,36 @@
    ```
 
    Body: open with `# Result` H1, state verdict, list findings (with phase and check references).
-11. **Output** — after all narrative / report-related output, emit a final line containing ONLY one of:
-    - `PATH: <absolute-path-to-record.md>` (success)
-    - `ERROR: <reason>` (pre-write failure)
+8. **Return** the literal string `done` on success. On any failure, return `ERROR: <reason>`.
 
-    The final line MUST be the last line of stdout. Nothing follows it. The line MUST start at column 0 — no indentation, no quoting, no list-marker prefix. The caller parses the last line of stdout to extract the return value.
-12. If `--fix` is active **and** the verdict is exactly NEEDS_REVISION, enter the Fix Mode procedure below. PASS → nothing to fix; FAIL → fix mode is skipped and defects are reported for author action. Fix mode is single-pass; the auditor does not re-audit or recompress.
+## Per-file Basic Checks
 
-## When to audit which artifact
+Always run against ALL files in `<skill_dir>`, regardless of `--uncompressed` mode. Enumerate recursively; skip any file whose path passes through a dot-prefixed directory component (`.hash-record/`, `.tests/`, `.worktrees/`, or any directory whose name starts with `.`).
 
-**Default — audit the compressed runtime (`SKILL.md`, `instructions.txt`)
-against `spec.md`.** This is the regression / smoke check: does the shipped
-artifact match the spec? The compressed runtime is what actually runs.
+For each file encountered apply the relevant checks below. Findings accumulate into the Per-file section of the report and do NOT block Phase 1/2/3.
 
-**Build / iteration mode — pass `--uncompressed`.** Audits the source
-artifacts (`uncompressed.md`, `instructions.uncompressed.md`) instead. Apply
-fixes to the source. Iterate until the source passes cleanly. Only then
-recompile and run a final default-mode pass on the compressed result.
+### `.md` files
 
-Pick the mode by intent: regression check → default. Building or revising →
-`--uncompressed` until source converges, then default for the final pass. The
-host agent chooses the mode based on what it is doing.
+- **Not empty** — file must contain non-whitespace content. Empty → HIGH.
+- **Frontmatter where required** — `SKILL.md` and `agent.md` MUST have YAML frontmatter (`---` block at line 1). Missing frontmatter on these files → HIGH.
+- **No absolute-path leaks** — body must not contain Windows-style (`<letter>:\` or `<letter>:/`) or Unix root-anchored paths (`/Users/`, `/home/`, `/d/`). Any found → HIGH.
+
+### `.sh` files
+
+- **Shebang present** — first line must be `#!/...`. Missing → HIGH.
+- **`--help` / `-h` handling** — script must contain a branch that handles `--help` or `-h` and prints usage. Missing → MEDIUM.
+- **ASCII-strict output** — scan for non-ASCII characters in output strings (echo/printf literals). Any found → MEDIUM. Brief sanity check only — deep tool audit is out of scope.
+
+### `.ps1` files
+
+- **`-help` / `--help` handling** — script must contain a branch or param block that handles `-help` or `--help` and prints usage. Missing → MEDIUM.
+- **ASCII-strict output** — scan for non-ASCII characters in Write-Host/Write-Output/echo literals. Any found → MEDIUM. Brief sanity check only.
+
+### `*.spec.md` files (tool spec files — files whose name ends in `.spec.md`)
+
+- **Purpose section present** — must contain a `## Purpose` or `# Purpose` heading. Missing → HIGH.
+- **Parameters section present** — must contain a `## Parameters` or `# Parameters` heading. Missing → HIGH.
+- **Output section present** — must contain a `## Output` or `# Output` heading. Missing → HIGH.
 
 ## Phase 1 — Spec Gate
 
@@ -244,8 +223,6 @@ Ends with related skills/topics. References are valid (targets exist). No
 stale references.
 
 ### Cost analysis (dispatch only)
-
-**`--uncompressed` mode: SKIP.**
 
 Uses Dispatch agent (zero-context isolation). Instruction file right-sized
 (<500 lines). Sub-skills referenced by pointer, not inlined. Single dispatch
@@ -430,49 +407,6 @@ These checks extend Phase 3. Violations recorded in the Phase 3 findings table u
   issues. List fixes.
 - **FAIL**: Any phase fails, or Phase 3 has critical issues.
 
-## Fix Mode (`--fix`, single-pass, source-first)
-
-Fix mode targets the skill's authoritative source files — not the compiled
-runtime. The compiled runtime (`SKILL.md`, `instructions.txt`) is regenerated
-by the caller via the `compression` skill after the auditor exits. This
-preserves the repo's source-of-truth chain (`spec.md` → `uncompressed.md` →
-`SKILL.md`).
-
-1. **Eligibility gate.** Enter fix mode only when verdict == NEEDS_REVISION.
-   PASS → nothing to fix. FAIL (any phase) → fix mode is skipped; defects are
-   reported for author action.
-2. **Preflight report path writability.** Compute report path via the hash-record manifest path (`<audit_cache_dir>report.md`). If unwritable, STOP fix mode and exit without modifying anything.
-3. **Identify writable candidates.** Only `uncompressed.md` and
-   `instructions.uncompressed.md` co-located with `skill_path` are eligible.
-   - Reject any candidate path that resolves outside the skill directory
-     → STOP `refusing to fix: <path> escapes skill directory`.
-   - If neither candidate exists, STOP `no writable source files; fix mode
-     unavailable`.
-   - Never modify `spec.md`, `README.md`, `SKILL.md`, or `instructions.txt`.
-4. **Git-clean check.** For each candidate, verify git status:
-   - Untracked, unstaged, staged-but-uncommitted, or merge-conflicted on
-     any candidate → STOP `refusing to fix: <path> has pending git changes`.
-   - Skill not under git control → STOP `refusing to fix: skill is not under
-     git control`.
-   - The read-only audit report is still written in either case.
-5. **Write the read-only audit report** to the computed path first; this is the
-   commit point. Any fix-pass failure after this leaves the report intact.
-6. **Apply fixes** to writable source files only, in severity order:
-   1. Critical Phase 3 issues: coverage, contradictions, unauthorized
-      additions.
-   2. Non-critical Phase 3 issues: conciseness, breadcrumbs, cost analysis,
-      dispatch refs, spec breadcrumbs.
-7. **Never auto-fix:** Phase 1 (spec) defects, defects whose root cause is in
-   `spec.md` or `README.md` or a compiled artifact, defects requiring author
-   judgment. Surface them as findings.
-8. **Append a Fix Mode Addendum** to the report:
-   - `Files Modified` — relative paths of every file the auditor wrote.
-   - `Fixes Applied` — per file, what changed and which finding it resolves.
-   - `Not Auto-Fixed` — defects deferred to the author.
-   - `Next Steps` — re-audit until PASS.
-9. **Single-pass only.** The auditor does not re-audit and does not invoke
-   compression. Multi-pass convergence is the caller's responsibility
-   (fix → recompress → re-audit).
 
 ## Report Format
 
@@ -480,18 +414,17 @@ Frontmatter (required):
 
 ```yaml
 ---
-hash: <manifest-hash>
 file_paths:
   - <repo-relative path to first source file>
   - <repo-relative path to second source file>
   ...
 operation_kind: skill-auditing
-model: <executing-model-class>
+model: haiku-class  # or sonnet-class or opus-class — NEVER a literal model id
 result: pass | findings | error | skipped
 ---
 ```
 
-`file_paths` MUST be a YAML list of repo-relative path strings — one per source file from the manifest, sorted lexically. Repo-relative = relative to the git root containing `.hash-record/`. NOT absolute paths, NOT a directory-only string, NOT a singular `file_path` key.
+`file_paths` MUST be a YAML list of repo-relative path strings — one per source file from the manifest, sorted lexically. **"Repo-relative" means: relative to the git repo that owns the cache record being written** (resolve via `git -C <dir> rev-parse --show-toplevel`, strip that prefix). NOT absolute paths, NOT a directory-only string, NOT a singular `file_path` key.
 
 Body (required):
 
@@ -503,7 +436,6 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 ## Skill Audit: <skill-name>
 
 **Verdict:** PASS | NEEDS_REVISION | FAIL
-**Mode:** uncompressed  ← include only when --uncompressed is active; omit in standard mode
 **Type:** inline | dispatch
 **Path:** <path>
 **Failed phase:** <1 | 2 | 3 | none>
@@ -560,6 +492,22 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 | No substrate duplication (DS-5) | PASS/FAIL/N/A | |
 | No overbuilt sub-skill dispatch (DS-6) | PASS/FAIL/N/A | |
 
+### Per-file Basic Checks
+
+| File | Check | Result | Notes |
+| --- | --- | --- | --- |
+| `<filename>` | Not empty | PASS/FAIL | |
+| `<filename>` | Frontmatter (if required) | PASS/FAIL/N/A | |
+| `<filename>` | No abs-path leaks | PASS/FAIL | |
+| `<filename>` | Shebang (.sh) | PASS/FAIL/N/A | |
+| `<filename>` | --help handling | PASS/FAIL/N/A | |
+| `<filename>` | ASCII-strict output | PASS/FAIL/N/A | |
+| `<filename>` | Purpose section (.spec.md) | PASS/FAIL/N/A | |
+| `<filename>` | Parameters section (.spec.md) | PASS/FAIL/N/A | |
+| `<filename>` | Output section (.spec.md) | PASS/FAIL/N/A | |
+
+Omit rows that are N/A for the given file type. Add one row group per file checked. Files with no findings may be collapsed to a single "all checks pass" row.
+
 ### Issues
 
 - <issue and fix>
@@ -572,14 +520,8 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 
 ## Rules
 
-- Read-only by default. Never modify any file unless `--fix` is active and the
-  verdict is exactly NEEDS_REVISION.
-- With `--fix`: modify only `uncompressed.md` and `instructions.uncompressed.md`
-  co-located with `skill_path`. Never `spec.md`, `README.md`, `SKILL.md`, or
-  `instructions.txt`. Never any file with pending git changes. Never paths
-  outside the skill directory.
-- Single-pass only — no in-process re-audit, no recompression. Caller drives
-  the next cycle.
+- Read-only. Never modify any source file in `skill_dir`. Write only `<report_path>`.
+- Single-pass only — no in-process re-audit, no recompression. Caller drives the next cycle.
 - One skill per dispatch.
 - Evidence-based verdicts.
 - When in doubt, NEEDS_REVISION over PASS.

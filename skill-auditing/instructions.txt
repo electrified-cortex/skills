@@ -15,8 +15,8 @@ Hard prohibition: do NOT author scripts (`.ps1`, `.sh`, `.py`, etc.), helper fil
 3. Read each file. Determine skill type: inline or dispatch. Locate companion spec — `spec.md` co-located with `skill_dir`. If not found: simple inline skills (<30 lines) may skip Phase 1; dispatch or complex inline → record error verdict, write report, return `ERROR: spec.md not found`, stop.
 4. Run Per-file basic checks (always run, regardless of mode — see section below). Accumulate findings into separate "Per-file" section of report. Per-file findings do NOT block Phase 1/2/3.
 5. Run Phase 1 → Phase 2 → Phase 3 (stop on first phase failure). Assign verdict. Map to `result` field: PASS → `pass`; PASS_WITH_FINDINGS / NEEDS_REVISION / FAIL → `findings`; error → `error`.
-6. Scrub absolute paths from report body. Before writing, scan rendered body for any absolute filesystem path (Windows drive-letter prefix `<letter>:\...` or `<letter>:/...`, or Unix root-anchored paths under `/Users/`, `/home/`, `/d/`, etc.). Replace each with repo-relative form — same relative path used in `file_paths:` frontmatter (e.g., body should read `skill-auditing`, never full absolute form). Body MUST NOT contain absolute paths.
-7. Write report at `<report_path>` (overwrite if present). `mkdir -p $(dirname <report_path>)` first. Frontmatter: `file_paths: <YAML list of repo-relative paths>` (one entry per source file enumerated in step 2, sorted lexically; each path relative to git root containing `skill_dir` — compute via `git ls-files --full-name <file>` or strip `<repo_root>/`), `operation_kind: skill-auditing`, `model: <executing-model-class>` (agent records own model class at write time — e.g. `claude-haiku`, `claude-sonnet`, `claude-opus`), `result: <mapped value>`.
+6. Scrub absolute paths from entire report — frontmatter `file_paths`, Notes columns, Findings, ALL prose. Includes paths quoted as evidence from audited source even when citing line numbers. Forbidden tokens: Windows drive-letter paths (`<letter>:[/\\]`), POSIX root-anchored paths (`/Users/`, `/home/`, `/d/`, `/c/`, `/mnt/`, `/tmp/`, `/var/`). When citing evidence containing such a path, describe abstractly ("hardcoded drive-letter path on line N", "POSIX root path under `/Users/`") — never quote literal. Body MUST be safe to share publicly. Use repo-relative paths (git root from step 7) in Findings.
+7. Write report at `<report_path>` (overwrite if present). `mkdir -p $(dirname <report_path>)` first. Frontmatter: `file_paths: <YAML list of repo-relative paths>` (one entry per source file enumerated in step 2, sorted lexically). Repo-relative = relative to git repo owning the cache record. Resolve: `git -C <dir> rev-parse --show-toplevel`, strip that prefix. Same root governs `.hash-record/` layout. `operation_kind: skill-auditing`. `model:` MUST be `haiku-class`, `sonnet-class`, or `opus-class` — NEVER a literal model id (e.g. `claude-sonnet-4-6`); ids drift, class labels are stable cache keys. `result: <mapped value>`.
 
    ```yaml
    # Correct:
@@ -333,12 +333,12 @@ file_paths:
   - <repo-relative path to second source file>
   ...
 operation_kind: skill-auditing
-model: <executing-model-class>
+model: haiku-class  # or sonnet-class or opus-class — NEVER a literal model id
 result: pass | findings | error | skipped
 ---
 ```
 
-`file_paths` MUST be YAML list of repo-relative path strings — one per source file from manifest, sorted lexically. Repo-relative = relative to git root containing `.hash-record/`. NOT absolute paths, NOT directory-only string, NOT singular `file_path` key.
+`file_paths` MUST be YAML list of repo-relative path strings — one per source file from manifest, sorted lexically. Repo-relative = relative to git repo owning cache record (resolve via `git -C <dir> rev-parse --show-toplevel`, strip prefix). NOT absolute paths, NOT directory-only string, NOT singular `file_path` key.
 
 Body (required):
 
