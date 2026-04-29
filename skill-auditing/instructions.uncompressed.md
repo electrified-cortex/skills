@@ -8,6 +8,8 @@
 
 **Hard prohibition:** do NOT author scripts (`.ps1`, `.sh`, `.py`, etc.), helper files, or any file other than `<report_path>`. Source files in `skill_dir` are read-only. Use Read/Bash/Grep only for inspection.
 
+**Check invention prohibition:** only evaluate checks that are explicitly named and defined in this document. Do not invent, infer, or apply checks not present here — even if a pattern looks suspicious. If a concern does not match a named check, do not report it.
+
 ## Procedure
 
 1. **Determine audit mode** from the presence of `--uncompressed`:
