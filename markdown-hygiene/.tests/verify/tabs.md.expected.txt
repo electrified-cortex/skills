@@ -1,0 +1,2 @@
+MD010 line 3: hard tab in non-code content
+Fix: replace tab character on line 3 with spaces

@@ -1,88 +1,59 @@
 # Markdown Hygiene
 
-The following instructs you how to detect markdownlint violations in a `.md` file.
-Produce a report with imperative `Fix:` instructions if there are findings. Detect-only — never modifies the target.
-
 ## Inputs
 
-Input shape: `<markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
-
-- `<markdown_file_path>` (required): absolute path to the `.md` file to verify. DON'T READ until instructed.
-- `--ignore <RULE>[,<RULE>...]` (optional): rules to skip — not flagged.
-- Adaptive: if the first non-blank line is `---` (YAML frontmatter), MD041 is auto-suppressed.
-
-The host MAY have run a markdown linter with auto-fix before dispatching, applying mechanical fixes upstream. This skill does NOT depend on that — it always verifies the file as it stands NOW. If the host pre-fixed cleanly, this skill returns `CLEAN`. If anything remains, this skill records it.
-
-Hash record filename is fixed: `report.md`.
+`<markdown_file_path>` (required) — absolute path to the `.md` file.
+`--report-path <report_path>` (required) — absolute path to write the report. Missing -> `ERROR: --report-path required`, stop. Existing file at `<report_path>` is overwritten.
+`--ignore <RULE>[,<RULE>...]` (optional) — rules to skip.
 
 ## Procedure
 
-You are the executor, not a planner. Run each step's tool calls. Produce a record file and output its absolute path.
+**Hard prohibition:** do NOT author scripts (`.ps1`, `.sh`, `.py`, etc.), helper files, or any file other than `<report_path>`. The target file is read-only. Use Read/Bash/Grep only for inspection.
 
-**Hard prohibition:** do NOT author scripts (`.ps1`, `.sh`, `.py`, etc.), helper files, workspace artifacts, or "fix" files outside the single cache-record write in step 5. The only file this skill creates is `<cache_dir>/report.md`. If you find yourself reaching for Write or Edit tools to produce ANY other file, stop — you are off-script. Use Read/Bash/Grep only for inspection. The target file is read-only.
+1. **Run verify**, whichever your runtime has:
+   - Bash: `bash <skill-dir>/verify.sh <markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
+   - PS7: `pwsh <skill-dir>/verify.ps1 <markdown_file_path> [-Ignore <RULE>[,<RULE>...]]`
 
-Cache-first ordering: hash and cache-check before reading the file. A cache HIT short-circuits with no Read tool call.
-
-1. **Cache check.** Invoke the `hash-record-check` skill with `<markdown_file_path> markdown-hygiene report.md`. See `hash-record/hash-record-check/SKILL.md` for invocation.
-
-   Branch on the tool's one-line stdout:
-   - `HIT: <abs-path>` -> read the file. Frontmatter `result: pass` -> output `CLEAN`, stop. Otherwise -> output `findings: <abs-path>`, stop.
-   - `MISS: <abs-path>` -> save as `<record_path>`, continue to step 2. (This is the path you write to in step 5.)
-   - `ERROR: <reason>` -> output `ERROR: <reason>`, stop.
-
-2. **Scan** `<markdown_file_path>` for residual violations. Order of preference:
-   1. Available markdown linter — `markdownlint` CLI, the VS Code/Cursor markdown extension, or any equivalent your runtime exposes. Read its output to build the findings list.
-   2. If no linter is available: read the file (Read tool) and apply rule-knowledge from the reference list (step 4) directly. Cross-check each suspected finding against the actual line — drop any finding you cannot point at on a specific verified line.
-   Skip rules in `--ignore`. The verification covers EVERY rule in step 4, including all four table rules (MD055/MD056/MD058/MD060) — tables are high-frequency residual violators after auto-fix passes.
-3. **Adaptive MD041:** read the first non-blank line of `<markdown_file_path>` (small Bash slice, e.g. `head -n 5`). If it is `---` (YAML frontmatter), drop any MD041 finding from the list and record `adaptive: MD041 suppressed`.
-4. **Reference rule list** (the universe of rules this skill verifies; use to compose `Fix:` imperatives):
+   Verify lists every rule it determined and the result. Take its output and include it in the report findings. You (LLM) are responsible for everything verify did not determine — covered in step 2.
+2. **Scan** `<markdown_file_path>` for the remaining rules. Read the file (Read tool) and apply rule-knowledge from step 3. Cross-check each finding against the actual line; drop any you cannot point at on a verified line. Skip rules in `--ignore`. Cover every rule in step 3, including all four table rules (MD055/MD056/MD058/MD060).
+3. **Reference rule list** (use to compose `Fix:` imperatives for rules verify did not determine):
 
    - MD001 — heading levels increment by one (H1 to H3 violates).
-   - MD003 — heading style consistent (atx `#` vs setext `===`/`---`); flag headings differing from the first.
-   - MD004 — list markers consistent (`-`, `*`, `+`); flag items using a different marker than the first in the list.
-   - MD009 — trailing spaces; flag lines ending with 1+ spaces (except two-space line-break).
-   - MD010 — hard tabs; flag tabs in non-code content.
-   - MD012 — multiple consecutive blanks; flag runs of 2+.
+   - MD003 — heading style consistent (atx `#` vs setext `===`/`---`).
+   - MD004 — list markers consistent (`-`, `*`, `+`).
    - MD022 — headings need blank before AND after (except start/end).
    - MD023 — headings must not have leading whitespace.
    - MD024 — duplicate heading text among siblings.
-   - MD025 — only one H1 per file; flag every H1 after the first.
+   - MD025 — only one H1 per file.
    - MD026 — headings must not end with `.`, `!`, `?`, `:`, `,`, `;`.
-   - MD029 — ordered list prefixes consistent (all `1.` or strictly incrementing).
+   - MD029 — ordered list prefixes consistent.
    - MD031 — fenced code blocks need blanks before AND after.
    - MD032 — lists need blanks before AND after.
    - MD033 — no inline HTML outside fenced blocks.
    - MD034 — bare URLs (not in angle brackets, backticks, or links).
    - MD040 — fenced code blocks need a language identifier.
-   - MD041 — first non-blank line must be H1 (suppressed for frontmatter or `--ignore MD041`).
-   - MD047 — file must end with exactly one newline.
    - MD055 — table pipe style consistent across rows.
    - MD056 — all rows in a table same number of cells.
    - MD058 — tables need blanks before AND after.
    - MD060 — table cell separators need a space on each side of the dash run.
-5. **Write record** at `<cache_dir>/report.md`:
-   - `mkdir -p <cache_dir>` (Bash).
+4. **Write report** at `<report_path>` (overwrite if present):
+   - `mkdir -p $(dirname <report_path>)` first.
    - Frontmatter (open `---`, close `---`):
-     - `hash: <hash>`
-     - `file_path: <repo-relative path>` — repo-relative string, NOT absolute, NOT directory-only. Compute via `git ls-files --full-name <file>` or strip `<repo_root>/` from the absolute path.
+     - `file_path: <repo-relative path>` — repo-relative, NOT absolute. Compute via `git ls-files --full-name <markdown_file_path>` or strip `<repo_root>/` from the absolute path.
      - `operation_kind: markdown-hygiene`
      - `result: pass` (no violations) or `result: findings` (violations)
    - Body:
-     - No violations: `# Result\n\nCLEAN`. Output `CLEAN`, stop.
+     - No violations: `# Result\n\nCLEAN`.
      - Violations: `# Result\n\nFINDINGS\n\n- <list>`. Each entry is two lines:
-       - The finding line: `MD0XX line N: <description>`
-       - An indented `Fix: <imperative instruction>` line — complete and standalone. The fix-stage agent will apply this literally with no markdown-rule knowledge.
-   - Output `findings: <cache_dir>/report.md`, stop.
-
-## Return
-
-`CLEAN` (no violations or cache HIT pass) | `findings: <abs-path-to-record.md>` | `ERROR: <reason>`.
+       - `MD0XX line N: <description>`
+       - Indented `Fix: <imperative instruction>` — complete, standalone, byte-precise.
+5. **Return** the literal string `done`. On any failure, return `ERROR: <reason>`.
 
 ## Report Format
 
 Record body always opens with `# Result` H1.
 
-CLEAN (no violations):
+CLEAN:
 
 ```text
 # Result
@@ -90,7 +61,7 @@ CLEAN (no violations):
 CLEAN
 ```
 
-FINDINGS (violations found):
+FINDINGS:
 
 ```text
 # Result
@@ -111,18 +82,16 @@ Each entry is two lines: the finding line (`MD0XX line N: <description>`), then 
 
 ### Fix line philosophy
 
-The `Fix:` line is a complete, standalone imperative. The fix-stage agent applies it literally — no markdown-rule knowledge, no rule-name interpretation. Two tests: would a human applying only the `Fix:` line (without the finding line, without the rule code) produce a correct result? Would two different agents produce identical edits?
+The `Fix:` line is a complete, standalone imperative applied verbatim by a downstream agent with no markdown-rule knowledge. Two tests: would a human applying only the `Fix:` line (without the finding line, without the rule code) produce a correct result? Would two different agents produce identical edits?
 
-If either test fails, the `Fix:` line is too vague. Rewrite it with explicit content (what bytes to insert, what bytes to remove, what cell count to enforce, what column to align).
-
-Bad: `Fix: fix the table` — no rule knowledge transferred to the agent; ambiguous.
+Bad: `Fix: fix the table` — ambiguous.
 Bad: `Fix: enforce MD058` — assumes rule knowledge.
 Good: `Fix: insert blank line before line 23` — explicit, byte-precise.
 Good: `Fix: split the cell on line 31 into two cells; ensure all rows have exactly 3 cells` — explicit, no rule knowledge needed.
 
 ### Table fix examples
 
-Tables (MD055/MD056/MD058/MD060) are high-frequency violators that markdown linters flag but agents often miscorrect. Worked examples per rule:
+Tables (MD055/MD056/MD058/MD060) are high-frequency violators agents often miscorrect.
 
 ```text
 - MD058 line 23: table missing blank line before
@@ -141,4 +110,4 @@ Tables (MD055/MD056/MD058/MD060) are high-frequency violators that markdown lint
   Fix: replace line 29 with `| --- | --- | --- |` — exactly one space on each side of every dash run
 ```
 
-Critical: every table `Fix:` line names the exact column count, the exact separator format, or the exact line numbers. Generic instructions like "fix the table" or "make rows consistent" will fail the apply test.
+Every table `Fix:` line names the exact column count, the exact separator format, or the exact line numbers. Generic instructions will fail the apply test.

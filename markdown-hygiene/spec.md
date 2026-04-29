@@ -137,7 +137,29 @@ Branch on the skill's one-line stdout:
 The executor does NOT compute the git blob hash or build the cache path inline —
 that is hash-record-check's responsibility.
 
-**Step 2 — Scan** `<markdown_file_path>` for violations. Order of preference:
+**Step 2 — Run verify (if available).**
+
+Look for `verify.sh` or `verify.ps1` in the same directory as `instructions.txt`
+(the skill folder). If found:
+
+- Bash: `bash <skill-dir>/verify.sh <markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
+- PS7: `pwsh <skill-dir>/verify.ps1 <markdown_file_path> [-Ignore <RULE>[,<RULE>...]]`
+
+Parse stdout:
+
+- `CLEAN` — verify found no violations. Seed findings list as empty; skip to
+  Step 3 for adaptive suppression check then Step 5.
+- Violation pairs — each pair is two lines (rule line + Fix line). Seed the
+  findings list from all pairs. Continue to Step 3.
+- If verify is absent or returns an error — skip this step silently. Proceed
+  as if verify was not run.
+
+Rules covered by verify: MD009, MD010, MD012, MD041, MD047. The executor MUST
+NOT re-check these rules in Step 3 unless verify was skipped or returned an
+error. Doing so may produce duplicate findings.
+
+**Step 3 — Scan** `<markdown_file_path>` for violations **not already covered
+by verify**. Order of preference:
 
 1. Available markdown linter (`markdownlint` CLI, VS Code/Cursor extension, or
    equivalent). Read its output to build the findings list.
@@ -149,11 +171,11 @@ that is hash-record-check's responsibility.
 Skip rules in `--ignore`. Cover every rule in step 3, including all four table
 rules (MD055/MD056/MD058/MD060) — tables are high-frequency residual violators.
 
-**Step 3 — Adaptive MD041.** Read the first non-blank line (e.g. `head -n 5`).
+**Step 4 — Adaptive MD041.** Read the first non-blank line (e.g. `head -n 5`).
 If it is `---` (YAML frontmatter), drop any MD041 finding and record
 `adaptive: MD041 suppressed` in the cache record.
 
-**Step 4 — Write record** at `<record_path>` (path from step 1):
+**Step 5 — Write record** at `<record_path>` (path from step 1):
 
 - `mkdir -p <cache_dir>` (Bash).
 - Frontmatter fields (between `---` delimiters):

@@ -1,0 +1,2 @@
+MD012 line 5: multiple consecutive blank lines
+Fix: remove blank line 5 (keep only one blank line between paragraphs)

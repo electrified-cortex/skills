@@ -1,0 +1,2 @@
+MD041 line 1: first non-blank line is not an H1 heading
+Fix: add a top-level heading (# Title) as the first non-blank line of the file

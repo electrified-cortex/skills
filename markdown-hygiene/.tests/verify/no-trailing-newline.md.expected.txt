@@ -1,0 +1,2 @@
+MD047: file lacks trailing newline
+Fix: append a single newline at end of file

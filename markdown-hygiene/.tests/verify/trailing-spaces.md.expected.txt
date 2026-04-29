@@ -1,0 +1,2 @@
+MD009 line 3: trailing spaces
+Fix: remove trailing whitespace from line 3
