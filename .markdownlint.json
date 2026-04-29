@@ -1,5 +1,6 @@
 {
   "MD013": false,
   "MD029": false,
-  "MD038": false
+  "MD038": false,
+  "MD041": { "front_matter_title": "^\\s*(title|name)\\s*[:=]" }
 }
