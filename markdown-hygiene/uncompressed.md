@@ -23,9 +23,13 @@ Otherwise -> emit stdout verbatim, stop.
 
 ## Preparation
 
-If your runtime has a markdown linter, run its auto-fix pass on `<markdown_file_path>`. Don't install one if absent.
+If your runtime has a markdown linter, run its auto-fix pass on `<markdown_file_path>`.
+Don't install one if absent.
 Ignore any MD041 warnings if the target file is a SKILL.md.
 NEVER lint before result check as it will invalidate cached results.
+
+If no linter, skip to "Inspect".
+If a lint fix was applied, the hash may have changed: go back up to "Inline result check" but if a `MISS` a second time skip "Preparation".
 
 ## Inspect
 

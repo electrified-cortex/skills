@@ -25,6 +25,9 @@ If runtime has markdown linter, run auto-fix on `<markdown_file_path>`. Don't in
 Ignore MD041 warnings if target file: SKILL.md.
 NEVER lint before result check as it will invalidate cached results.
 
+No linter: skip to Inspect.
+If lint fix applied, hash may have changed: go back to "Inline result check"; on 2nd MISS skip Preparation.
+
 ## Inspect
 
 Variables:

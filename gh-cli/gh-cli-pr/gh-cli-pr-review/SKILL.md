@@ -51,7 +51,7 @@ gh pr edit 123 --add-reviewer user
 
 ```
 
-Covered by `gh-cli-prs-create`, not this skill.
+Covered by `gh-cli-pr-create`, not this skill.
 
 Resolve Threads:
 No `gh pr` command. Use `resolveReviewThread` GraphQL via `gh-cli-api`:

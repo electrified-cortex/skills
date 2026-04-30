@@ -41,10 +41,11 @@ Sub-skills:
 
 | Sub-skill | Handles |
 | --- | --- |
-| gh-cli-prs-create/ | Open PRs, convert drafts to ready |
-| gh-cli-prs-review/ | Approve, request changes, dismiss reviews |
-| gh-cli-prs-comments/ | Add, edit, delete PR comments |
-| gh-cli-prs-merge/ | Merge, update branch, revert, close |
+| gh-cli-pr-create/ | Open PRs, convert drafts to ready |
+| gh-cli-pr-review/ | Approve, request changes, dismiss reviews |
+| gh-cli-pr-comments/ | Add, edit, delete general PR comments |
+| gh-cli-pr-inline-comments/ | Post, edit, delete inline diff comments |
+| gh-cli-pr-merge/ | Merge, update branch, revert, close |
 
 Notes:
 Use `--repo owner/name` when not in local clone of target repo.
