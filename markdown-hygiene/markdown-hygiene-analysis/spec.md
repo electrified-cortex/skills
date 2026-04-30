@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Semantic advisory scan of a `.md` file against SA001–SA038 rules. Reads the existing `lint.md` from the lint phase, evaluates all SA rules, and writes two output files: `analysis.md` (advisory findings) and `report.md` (index combining lint and analysis results). The target file is never modified.
+Semantic advisory scan of a `.md` file against SA001–SA038 rules. Reads the existing `lint.md` from the lint phase, evaluates all SA rules, and writes `analysis.md` (advisory findings). The host aggregates `lint.md` and `analysis.md` into `report.md`. The target file is never modified.
 
 ## Model Tier
 
@@ -16,18 +16,15 @@ Sonnet-class or GPT-5.4 (`standard`). Semantic reasoning required — SA rules i
 
 `--analysis-path <analysis_path>` (required) — absolute path to write `analysis.md`. Missing → `ERROR: --analysis-path required`, stop.
 
-`--report-path <report_path>` (required) — absolute path to write `report.md`. Missing → `ERROR: --report-path required`, stop.
-
 `--ignore <RULE>[,<RULE>...]` (optional) — SA rule codes to suppress for this run.
 
 ## Procedure
 
 1. **Read `<lint_path>`** — extract `result` field (`clean` or `fail`) and count FINDINGS entries.
 2. **Evaluate SA001–SA038** — read `<markdown_file_path>` and apply every SA rule. Skip rules in `--ignore`. SA032 and SA038 are LLM-detected; flag only when clearly and unambiguously evident.
-3. **Determine overall result** from lint_result and advisory count (see Result Logic below).
+3. **Determine result** from lint_result and advisory count (see Result Logic below).
 4. **Write `<analysis_path>`** — overwrite if present.
-5. **Write `<report_path>`** — overwrite if present.
-6. **Return** the literal string `done`.
+5. **Return** `clean` (no advisories, lint clean), `pass: <analysis_path>` (advisories present, lint clean), or `findings: <analysis_path>` (lint fail).
 
 ## SA Rule Reference
 
@@ -35,8 +32,8 @@ SA001–SA038 are defined in the parent skill's `spec.md` (markdown-hygiene/spec
 
 ## Result Logic
 
-| lint_result | advisory_count | overall |
-|-------------|---------------|---------|
+| lint_result | advisory_count | result |
+|-------------|---------------|--------|
 | `fail` | any | `fail` |
 | `clean` | > 0 | `pass` |
 | `clean` | 0 | `clean` |
@@ -48,7 +45,7 @@ SA001–SA038 are defined in the parent skill's `spec.md` (markdown-hygiene/spec
 ```yaml
 file_path: <repo-relative path>
 operation_kind: markdown-hygiene-analysis
-result: clean | pass
+result: clean | pass | fail
 ```
 
 ### analysis.md body — CLEAN
@@ -74,47 +71,15 @@ CLEAN
 
 Each finding is exactly two lines: SA line, then indented `Note:` line (observation, not imperative).
 
-### report.md frontmatter
-
-```yaml
-file_path: <repo-relative path>
-operation_kind: markdown-hygiene
-result: clean | fail | pass
-lint_result: clean | fail
-analysis_result: clean | pass
-```
-
-### report.md body — overall clean
-
-```text
-# Result
-
-CLEAN
-```
-
-### report.md body — with findings
-
-```text
-# Result
-
-## Lint
-
-See `lint.md` — <N> violation(s).
-
-## Analysis
-
-See `analysis.md` — <N> observation(s).
-```
-
-(Omit the `Lint` section if lint_result is clean. Omit the `Analysis` section if no advisories.)
-
 ### Return value
 
-`done` — always on success.
+`clean` — lint clean, no advisories.
+`pass: <analysis_path>` — lint clean, advisories present.
+`findings: <analysis_path>` — lint fail (advisory count does not affect this).
 `ERROR: <reason>` — on any failure.
 
 ## Constraints
 
-- Hard prohibition: do NOT author scripts (`.ps1`, `.sh`, etc.) or write any file other than `<analysis_path>` and `<report_path>`.
+- Hard prohibition: do NOT author scripts (`.ps1`, `.sh`, etc.) or write any file other than `<analysis_path>`.
 - Target file is read-only.
 - Advisory entries use `Note:` (observation), never `Fix:` (imperative) — the host decides whether to act.

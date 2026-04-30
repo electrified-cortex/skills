@@ -5,12 +5,11 @@
 `<markdown_file_path>` (required) — absolute path to the `.md` file to analyze.
 `--lint-path <lint_path>` (required) — absolute path to existing `lint.md` from the lint phase (read-only). Missing → `ERROR: --lint-path required`, stop.
 `--analysis-path <analysis_path>` (required) — absolute path to write `analysis.md`. Missing → `ERROR: --analysis-path required`, stop.
-`--report-path <report_path>` (required) — absolute path to write `report.md` (index). Missing → `ERROR: --report-path required`, stop.
 `--ignore <RULE>[,<RULE>...]` (optional) — SA rule codes to skip.
 
 ## Constraints
 
-Hard prohibition: do NOT author scripts, helper files, or any file other than `<analysis_path>` and `<report_path>`. Use Read/Bash/Grep tools only for inspection.
+Hard prohibition: do NOT author scripts, helper files, or any file other than `<analysis_path>`. Use Read/Bash/Grep tools only for inspection.
 
 ## Procedure
 
@@ -72,28 +71,14 @@ Hard prohibition: do NOT author scripts, helper files, or any file other than `<
    - Frontmatter (open `---`, close `---`):
      - `file_path: <repo-relative path>` — via `git ls-files --full-name <markdown_file_path>` or strip `<repo_root>/`.
      - `operation_kind: markdown-hygiene-analysis`
-     - `result: clean` (no advisories) or `result: pass` (advisories present).
+     - `result: clean` (no advisories, lint clean), `result: pass` (advisories present, lint clean), or `result: fail` (lint fail).
    - Body:
-     - No advisories: `# Result\n\nCLEAN`.
+     - No advisories, lint clean: `# Result\n\nCLEAN`.
      - Advisories: `# Result\n\n## Advisory\n\n- <list>`. Each entry is two lines:
        - `SA0XX [SEVERITY] line N: <description>` (omit line N for document-level observations)
        - Indented `Note: <observation>` — plain English, no imperative.
 
-6. **Write `<report_path>`** (index, overwrite if present):
-   - `mkdir -p $(dirname <report_path>)` first.
-   - Frontmatter (open `---`, close `---`):
-     - `file_path: <repo-relative path>`
-     - `operation_kind: markdown-hygiene`
-     - `result: <overall>` (`clean`, `fail`, or `pass`)
-     - `lint_result: <lint_result>` (`clean` or `fail`)
-     - `analysis_result: <clean|pass>`
-   - Body:
-     - overall clean: `# Result\n\nCLEAN`.
-     - otherwise: `# Result\n\n` followed by applicable sections:
-       - If lint fail: `## Lint\n\nSee \`lint.md\` — <N> violation(s).\n\n`
-       - If advisories: `## Analysis\n\nSee \`analysis.md\` — <N> observation(s).`
-
-7. **Return** the literal string `done`. On any failure, return `ERROR: <reason>`.
+6. **Return** `clean` (no advisories, lint clean), `pass: <analysis_path>` (advisories present, lint clean), or `findings: <analysis_path>` (lint fail). On any failure, return `ERROR: <reason>`.
 
 ## Output Format
 
