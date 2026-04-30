@@ -13,7 +13,7 @@ a deterministic checklist.
 
 Skill auditing finds rule violations. Skill optimize finds missed
 opportunities. The optimizer reads the skill holistically and asks these
-(but not not limited to) structural questions:
+(but not limited to) structural questions:
 
 1. Is the execution pattern (dispatch vs inline) the right choice?
 2. Should this skill use a hash record to avoid redundant work?
@@ -23,12 +23,52 @@ Each finding must be grounded in the skill's actual content and purpose —
 not applied mechanically. A suggestion without a clear reason tied to the
 skill's intent is not a valid finding.
 
+**The auditing/optimizing boundary:**
+
+When a specific, deterministic technique is identified (e.g., "trigger
+words in the description field improve skill invocation reliability"),
+that technique belongs in **skill-auditing** — a checklist check that
+Haiku can verify on every skill. Skill-optimize is for broader, harder-to-
+decipher assessments: architectural patterns, structural tradeoffs, and
+judgment calls that require understanding what a skill is trying to do.
+The test: if the check can be expressed as a rule with a binary pass/fail
+and Haiku can apply it without judgment, it belongs in auditing. If it
+requires weighing tradeoffs specific to the skill's purpose, it belongs
+here.
+
 ## Scope
 
 Applies when analyzing an existing skill for architectural and structural
 improvement. The optimizer reads, reasons, and recommends — it does not
 modify files and does not gate on pass/fail. Every invocation produces
 findings (which may be empty if no improvements apply).
+
+## Architecture Direction (Planned)
+
+This spec is itself a candidate for the COMPOSITION pattern it defines.
+As the category set grows, the optimal structure is:
+
+1. **This file** becomes a routing index — a table of categories with
+   one-line descriptions and links to per-category sub-specs.
+2. **Per-category sub-specs** (e.g., `dispatch.spec.md`,
+   `composition.spec.md`) contain the detailed analysis instructions.
+   An invocation that only needs to evaluate DISPATCH loads only
+   `dispatch.spec.md` — not this entire file.
+3. **Per-category agents** may be dispatched to different models. Some
+   analysis types are better on specific models (GPT 5.4 for certain
+   reasoning patterns, Claude Opus for deep structural analysis). The
+   routing layer checks what's available and falls back gracefully if
+   a preferred model or agent is unavailable.
+4. **Swarm mode**: for high-thoroughness optimization runs, all topic
+   categories can be dispatched in parallel to specialized agents and
+   results merged — similar to the swarm skill pattern.
+
+This spec dogfoods itself: its final architecture should demonstrate
+COMPOSITION (routing + sub-skills), DISPATCH (isolated category agents),
+MODEL SELECTION (per-category tier calibration), LESS IS MORE (index
+stays lean; detail is in sub-files), and CHAIN OF THOUGHT (analysis
+sub-agents reason before finding). When that refactor happens, this
+spec becomes a live example of the principles it defines.
 
 This is a **dispatch skill** — it must run in an isolated agent at
 Sonnet-class or higher. `fast-cheap` (haiku-class) is not permitted;
@@ -46,12 +86,18 @@ change in a way that invalidates prior records.
 - **Optimization finding**: A concrete, reasoned suggestion to improve the
   skill's architecture or structure. Each finding belongs to exactly one
   category.
-- **Category**: One of DISPATCH_PATTERN, HASH_RECORD, or DETERMINISM
-  (see Behavior).
+- **Category**: Any topic defined in `./topics/`. The canonical category
+  set is the set of `.spec.md` files in that directory. Each topic file
+  defines the signals, finding criteria, and when-not-to-apply guidance
+  for its category. New categories are added by adding a topic file.
 - **Dispatch skill**: A skill that invokes a sub-agent (Dispatch pattern)
   to perform its work in an isolated context.
 - **Inline skill**: A skill whose instructions execute directly in the
   host agent's context without spawning a sub-agent.
+- **Routing skill**: A parent skill that only indexes and routes to
+  sub-skills — no execution logic, no `instructions.txt`. Its SKILL.md
+  is a minimal sub-skill table or index. It is neither dispatch nor
+  inline: it is a navigation hub.
 - **Hash record**: A content-addressed cache (`.hash-record/`) used to
   avoid re-running expensive operations on unchanged inputs.
 - **Deterministic step**: A step whose output is fully determined by its
@@ -66,8 +112,9 @@ change in a way that invalidates prior records.
 1. The optimizer **must** read all available skill source files before
    producing any finding: `spec.md`, `uncompressed.md`, `SKILL.md`,
    `instructions.txt`, and `instructions.uncompressed.md` if present.
-2. The optimizer **must** evaluate all three optimization categories
-   (DISPATCH_PATTERN, HASH_RECORD, DETERMINISM) for every invocation.
+2. The optimizer **must** evaluate all optimization categories defined in
+   `./topics/` for every invocation. Each `.spec.md` file in that
+   directory is a required analysis category.
 3. Each finding **must** include: category, severity, reasoning (grounded
    in the skill's content), and a concrete recommendation.
 4. The optimizer **must** produce no finding for a category when no
@@ -95,14 +142,42 @@ change in a way that invalidates prior records.
 11. The record body **must not** contain absolute filesystem paths.
     All paths in the body **must** be repo-relative.
 
+12. The optimizer **should** be structured for multi-pass convergence.
+    The recommended execution pattern is: run lightweight (Haiku-class)
+    passes repeatedly until no new findings are produced — then escalate
+    to a standard (Sonnet-class) pass for a deeper review, and optionally
+    to a deep (Opus-class) pass for final refinement. Convergence is when
+    a full pass produces zero net-new findings. Each pass should cache its
+    own result. The caller controls how many passes to run; the optimizer
+    does not self-iterate — it is stateless per invocation.
+
+13. **Pre-flight audit awareness**: Before deep analysis, the optimizer
+    **should** note whether the skill passes basic structural checks
+    (per skill-auditing). Optimization findings are more meaningful on
+    structurally sound skills. If the skill has auditing failures, the
+    optimizer should note them as context but still produce optimization
+    findings — the two are complementary.
+
+14. **Audit-candidate findings**: When the optimizer identifies a pattern
+    that is deterministic and universally applicable (not specific to this
+    skill), it **should** flag it as an audit-candidate. These are findings
+    that, once validated, could be promoted to skill-auditing as a
+    deterministic rule — widening the auditing net. Label them:
+    `audit-candidate: <description>` in the finding body.
+
 ## Constraints
 
 - **One skill per invocation**: each invocation optimizes exactly one
   skill; multi-skill runs are separate invocations.
 - **Read-only**: the optimizer never writes to skill files. It writes
   only to the hash-record.
-- **Sonnet or higher required**: Haiku is not permitted for this skill.
-  The caller is responsible for model selection.
+- **Convergence-based multi-pass**: the optimizer may run in multiple
+  passes across escalating model tiers (see R12). A single pass is valid;
+  multi-pass until convergence is the optimal pattern.
+- **Minimum Sonnet for standard pass**: Haiku may be used for initial fast
+  passes; Sonnet is required for the standard pass; Opus is recommended
+  for deep or final refinement passes. The caller is responsible for tier
+  selection.
 - **No fabrication**: findings must be grounded in the actual skill
   content. Generic suggestions not tied to the specific skill are not
   permitted.
@@ -111,7 +186,9 @@ change in a way that invalidates prior records.
 
 ## Behavior
 
-The optimizer executes as a single-pass analysis with no hard-gate phases.
+The optimizer executes as a stateless single-pass analysis per invocation.
+Multi-pass convergence (calling it repeatedly until findings stop growing)
+is the optimal usage pattern and is owned by the caller — see R12.
 
 ### Entry and Cache Check
 
@@ -124,96 +201,40 @@ On a cache hit, emit `PATH: <existing-record>` and stop.
 
 On a miss, proceed with the full analysis.
 
-### Pattern 1 — DISPATCH
+## Topics
 
-Assess whether the skill's execution pattern (dispatch vs inline) is the
-right choice for its purpose.
+Each topic is a `.spec.md` file in `./topics/`. Topics define the
+analysis criteria for one optimization category. See a topic file to
+understand its signals, when-not-to-apply guidance, and finding criteria.
 
-**Signal for dispatch (scope isolation needed):**
+| Topic | Category | Focus |
+| --- | --- | --- |
+| `dispatch.spec.md` | DISPATCH | Dispatch vs. inline execution pattern; tool call vs. text substitution |
+| `caching.spec.md` | HASH RECORD | Hash-record cache usage to avoid redundant work |
+| `determinism.spec.md` | DETERMINISM | Replacing LLM steps with deterministic tools |
+| `composition.spec.md` | COMPOSITION | Skill decomposition, routing, context efficiency |
+| `model-selection.spec.md` | MODEL SELECTION | Tier calibration; instruction quality as cost lever |
+| `compressability.spec.md` | COMPRESSIBILITY | Token overhead in instruction and output files |
+| `wording.spec.md` | WORDING | Guard clauses, ordering, attention positioning |
+| `less-is-more.spec.md` | LESS IS MORE | Subtraction pass; complexity inflation; specs vs. instructions |
+| `reuse.spec.md` | REUSE | Shared procedures; tool conversion; dispatch adoption |
+| `output-format.spec.md` | OUTPUT FORMAT | Explicit output schema to reduce variance |
+| `examples.spec.md` | EXAMPLES | Few-shot examples for calibration |
+| `chain-of-thought.spec.md` | CHAIN OF THOUGHT | Reasoning elicitation for judgment tasks |
+| `tool-signatures.spec.md` | TOOL SIGNATURES | Tool/function description quality |
+| `self-critique.spec.md` | SELF CRITIQUE | Within-turn self-review for judgment outputs |
+| `convergence.spec.md` | CONVERGENCE | Multi-pass convergence; adversarial review loops |
+| `iteration-safety.spec.md` | ITERATION SAFETY | Loop design; hard caps; oscillation detection |
+| `progressive-optimization.spec.md` | PROGRESSIVE OPT | Impact tiers; per-topic tracking; menu mode |
+| `antipatterns.spec.md` | ANTI-PATTERNS | Cross-topic tensions; per-category foot guns |
+| `error-handling.spec.md` | ERROR HANDLING | Error paths; fail-fast; silent failure |
+| `interface-clarity.spec.md` | INTERFACE CLARITY | Invocation contract; input/output documentation |
+| `observability.spec.md` | OBSERVABILITY | Decision transparency; audit trail quality |
+| `temporal-decay.spec.md` | TEMPORAL DECAY | Version-pinned references; staleness risk |
+| `context-sensitivity.spec.md` | CONTEXT SENSITIVITY | Parameterization; environment portability |
+| `autonomy-level.spec.md` | AUTONOMY LEVEL | Interactive vs. autonomous; confirmation calibration |
 
-- The skill performs a long, multi-step procedure that would pollute the
-  host agent's context with intermediate state.
-- The skill's work is context-independent — it needs no shared state with
-  the calling agent.
-- The skill's instructions contain a complete executor procedure that would
-  consume significant tokens in the host agent.
-
-**Signal for inline (host agent context needed):**
-
-- The skill uses or modifies shared state in the calling agent's session
-  (e.g., operator communication context, active task tracking, live memory).
-- The skill is a brief procedure (a few steps) where dispatch overhead
-  would dominate the work and extra tool calls would just mean more cost.
-- The skill writes a file-based artifact that the host agent immediately
-  references in the same turn.
-- The skill is meant to teach the host agent a behavior pattern — the
-  instructions are the behavior, not a program to delegate.
-
-Produce a finding only when the current pattern is a poor fit. A skill
-using dispatch correctly (or inline correctly) requires no finding.
-
-### Pattern 2 — HASH RECORD
-
-Assess whether the skill would benefit from a hash record to avoid
-redundant processing on unchanged inputs.
-
-**Strong signal for hash record:**
-
-- The skill operates on one or more files and produces a deterministic
-  output or verdict given the same files.
-- The skill is expensive — it invokes LLMs, runs build tools, or processes
-  large file sets.
-- The skill is called repeatedly (audit loops, hygiene pipelines, CI).
-- The skill already has logic to check "was this already done?" — if so,
-  that logic should be formalized as a hash record.
-
-**Weak or no signal:**
-
-- The skill is short and cheap enough that caching provides negligible
-  benefit.
-- The skill's output depends on external state (network, time, system
-  config) that changes independently of the input files.
-- The skill is invoked at most once per session.
-
-Produce a finding only when the benefit is clear and the skill lacks a
-hash record. If the skill already uses a hash record, verify it is being
-applied to the right scope; if misapplied, produce a finding.
-
-### Pattern 3 — DETERMINISM
-
-Assess whether any LLM-dependent step in the skill could be replaced with
-a deterministic tool, script, or structured algorithm.
-
-**Signal for deterministic replacement:**
-
-- The step is pattern-matching on well-defined formats (frontmatter,
-  regex, YAML structure) where an LLM is used but a parser would suffice.
-- The step counts, lists, or enumerates artifacts — pure file-system or
-  git operations.
-- The step applies a fixed transformation (normalize whitespace, sort
-  entries, strip comments) where the rule is fully specified.
-- The step checks for the presence or absence of specific strings or
-  structures — grep or AST traversal would be cheaper and more reliable.
-
-**Weak or no signal:**
-
-- The step requires semantic understanding that cannot be expressed as
-  a fixed rule (e.g., "does this prose convey intent clearly?").
-- The step must handle unbounded variation in inputs that would require
-  an exhaustive rule set to cover.
-- The deterministic alternative would be as expensive or more complex
-  than the LLM call.
-
-Produce a finding only when a realistic, concrete tool replacement exists.
-Do not suggest vague "use a script instead" findings without specifying
-what the script would do.
-
-Be concervative about tool use as it can create unforseen complexity that
-an LLM can do on it's own.  Creating one or two useful tools to help with
-deterministic processes is probably a win.  Creating a tool for every
-excecution is probably an anti-pattern.
-
-### Output — Findings Record
+## Output — Findings Record
 
 Write findings to `.hash-record/<hash[0:2]>/<hash>/skill-optimize/v1.0/report.md`
 with this structure:
@@ -232,6 +253,12 @@ file_paths:
 ## Summary
 
 <1-3 sentence overall assessment.>
+
+**Concentration analysis:** If findings cluster in one category across
+the skill (multiple HIGH/MEDIUM from the same category), note it —
+it signals a systemic issue, not a one-off. If findings are sparse and
+distributed, the skill is architecturally sound with minor tune-ups needed.
+(Pattern from IACDM coverage matrix analysis, Moreira 2026)
 
 ## Findings
 
@@ -255,3 +282,51 @@ No optimization opportunities identified.
 ```
 
 Emit `PATH: <abs-path-to-record>` as the final stdout line.
+
+## Evidence Base
+
+The optimization categories in this spec are grounded in the following
+research and operational references:
+
+- **Reflexion / Self-Refine** — Shinn, N. et al. (2023). *Reflexion: Language
+  Agents with Verbal Reinforcement Learning.* arXiv:2303.11366.
+  Madaan, A. et al. (2023). *Self-Refine: Iterative Refinement with
+  Self-Feedback.* arXiv:2303.17651. Basis for SELF CRITIQUE category.
+
+- **Function calling / tool description quality** — Patil, S. et al. (2024).
+  *Gorilla: Large Language Model Connected with Massive APIs.* arXiv:2305.15334.
+  Empirical basis for TOOL SIGNATURES category.
+
+- **IACDM** — Moreira, J. (2026). *IACDM: Interactive Adversarial Convergence
+  Development Methodology.* arXiv:2604.16399.
+  Repository: <https://github.com/jasminemoreira/Versus>
+  Key contributions: context efficiency model (E = I₀/C), complexity
+  inflation antipattern, cost-tier switch point, granularization principle,
+  validation theater, convergence-loop stopping criteria.
+
+- **"Lost in the middle"** — Liu, N.F. et al. (2023). *Lost in the Middle:
+  How Language Models Use Long Contexts.* arXiv:2307.03172.
+  Establishes that model retrieval performance degrades for content
+  positioned mid-context. Used in COMPOSITION (partitioning) and WORDING
+  (attention positioning).
+
+- **Chain-of-Thought Prompting** — Wei, J. et al. (2022). *Chain-of-Thought
+  Prompting Elicits Reasoning in Large Language Models.* arXiv:2201.11903.
+  Establishes that reasoning elicitation (step-by-step) produces 5–20%
+  accuracy improvement on reasoning tasks. Basis for CHAIN OF THOUGHT category.
+
+- **In-context learning / few-shot** — Brown, T. et al. (2020). *Language
+  Models are Few-Shot Learners.* arXiv:2005.14165.
+  Establishes that including labeled examples in the prompt (few-shot)
+  dramatically anchors model output behavior. Basis for EXAMPLES category.
+
+- **Dispatch pattern** — Internal. `dispatch/dispatch-pattern.md`.
+  Foundational rationale for scope isolation via dispatch as a
+  context-saving primitive. Used in DISPATCH and REUSE.
+
+- **Compression tiers** — Internal. `docs/compression-tiers.md`.
+  Governs text brevity conventions. Informs COMPRESSIBILITY targets.
+
+Empirical claims marked "(author calibration, N=1)" or "empirical: unverified"
+are pending broader external measurement. Flag all unverified recommendations
+with that label when producing findings.
