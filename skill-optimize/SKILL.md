@@ -180,7 +180,7 @@ No log → create using header from Step 2.
 
 5b: Write report to `<skill-path>/.optimization/<topic-slug>.md`:
 
-```
+```md
 # <TOPIC> — <date>
 
 **Severity:** HIGH | MEDIUM | LOW
