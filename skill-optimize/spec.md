@@ -142,12 +142,16 @@ change in a way that invalidates prior records.
 4. The optimizer **must** produce no finding for a category when no
    meaningful improvement applies — empty categories are valid and
    preferred over low-confidence suggestions.
-5. The optimizer **must** cache results using the hash-record manifest
-   procedure: compute a manifest hash over the skill's source files,
-   probe the cache, and on a hit return `PATH: <existing-record>` and
-   stop. On a miss, write the findings record before returning.
+5. The optimizer **must** track progress using an optimize log at
+   `<skill-path>/optimize-log.md`. On entry, read the log and exclude
+   topics with status `clean`, `rejected`, or `acted` from the active
+   candidate set. Append a row on completion of each topic pass.
+   Optionally, a content-addressed hash record (`.hash-record/`) may be
+   used by callers as a full-skip cache for unchanged inputs — but this
+   is caller-controlled, not optimizer-internal. The log is the primary
+   iteration state.
 6. The optimizer **must** return exactly one final stdout line in the
-   form `PATH: <abs-path-to-record.md>` on success or
+   form `TOPIC: <slug> | FINDINGS: <N> | LOG: <path>` on success or
    `ERROR: <reason>` on failure. This line **must** be last, at column 0,
    with no indentation, quoting, or list-marker prefix.
 7. Findings **must** be grounded in evidence from the skill files.
@@ -159,8 +163,10 @@ change in a way that invalidates prior records.
    direct benefit with minimal downside; MEDIUM requires a likely but
    context-dependent benefit; LOW is reserved for edge cases or minor
    gains.
-10. The optimizer **must** respect the single-worktree scope for hash
-    record reads and writes — it must not enumerate other worktrees.
+10. The optimizer **must** operate within the scope of the provided
+    skill path — it must not traverse sibling skills or other worktrees.
+    The optimize log at `<skill-path>/optimize-log.md` is local to the
+    target skill.
 11. The record body **must not** contain absolute filesystem paths.
     All paths in the body **must** be repo-relative.
 
@@ -237,12 +243,13 @@ ordered by natural priority. The qualifier scans the list in order and
 returns the first topic it determines to be applicable.
 
 Each qualifier receives:
+
 - All skill source files
 - The ordered topic list (slugs + one-line descriptions, not full specs)
 
 The qualifier returns:
 
-```
+```text
 TOPIC: <SLUG>
 APPLICABLE: yes | maybe
 REASON: <one sentence>
@@ -367,54 +374,49 @@ verify by re-running the skill and checking output quality holds."
 | `verification-strategy.spec.md` | VERIFICATION STRATEGY | Evidentiary standard; primary source; acceptance criteria |
 | `evaluation-harness.spec.md` | EVALUATION HARNESS | Benchmark inputs; regression cases; before/after comparison |
 
-## Output — Findings Record
+## Output
 
-Write findings to `.hash-record/<hash[0:2]>/<hash>/skill-optimize/v1.0/report.md`
-with this structure:
+The optimizer produces two outputs per invocation:
+
+**1. Primary return line** — emitted as the final stdout line:
+
+```
+TOPIC: <TOPIC-SLUG> | FINDINGS: <N> | LOG: <repo-relative path to optimize-log.md>
+```
+
+`N` is the count of findings (0 if clean). This line must be last, at
+column 0, with no indentation, quoting, or list-marker prefix.
+
+On failure: `ERROR: <reason>` as the final line instead.
+
+**2. Optimize log entry** — the optimizer appends to
+`<skill-path>/optimize-log.md`. Each topic entry includes:
+
+- Summary table row: `| TOPIC | date | model | N findings | status |`
+- A full findings section under `## <TOPIC> — <date>` with:
+  - Finding text (or "CLEAN") from the dispatched topic analysis
+  - Action taken (what was changed, or "none" if deferred/clean)
+
+The optimize log is the persistent record. It survives across invocations
+and is the basis for the assessor's candidate set on the next pass.
+
+**Finding format** (in log and in sub-agent response):
 
 ```md
----
-skill: <repo-relative skill path>
-version: 1.0
-date: <ISO-8601 date>
-file_paths:
-  - <repo-relative path to each source file included in manifest>
----
+### <CATEGORY> — HIGH | MEDIUM | LOW
 
-# Skill Optimize Report: <skill name>
+**Signal:** <what was observed in the skill>
 
-## Summary
-
-<1-3 sentence overall assessment.>
-
-**Concentration analysis:** If findings cluster in one category across
-the skill (multiple HIGH/MEDIUM from the same category), note it —
-it signals a systemic issue, not a one-off. If findings are sparse and
-distributed, the skill is architecturally sound with minor tune-ups needed.
-(Pattern from IACDM coverage matrix analysis, Moreira 2026)
-
-## Findings
-
-### <CATEGORY> — <SEVERITY>
-
-**Reasoning:** <grounded in specific skill content>
+**Reasoning:** <grounded in specific content from the skill files>
 
 **Recommendation:** <concrete, actionable>
-
----
-(repeat for each finding)
 ```
 
-If no findings exist in a category, omit that section entirely. If all
-categories have no findings, replace the Findings section with:
+Severity:
 
-```md
-## Findings
-
-No optimization opportunities identified.
-```
-
-Emit `PATH: <abs-path-to-record>` as the final stdout line.
+- HIGH — clear benefit, direct evidence, minimal downside
+- MEDIUM — likely benefit, context-dependent
+- LOW — minor or edge-case gain; or audit-candidate for future promotion
 
 ## Evidence Base
 

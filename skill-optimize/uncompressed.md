@@ -6,10 +6,11 @@ Analyzes a single skill for architectural and structural improvement
 opportunities. Produces findings organized by category. Never modifies
 skill files. Records work in an optimize-log.
 
-**Execution pattern:** Inline routing. The host agent reads all content
-directly and works through one topic per invocation. Topics are spec files
-in `./topics/`; the host agent reads them as needed — no sub-agent dispatch
-in the base pattern.
+**Execution pattern:** Hybrid dispatch. The host agent handles routing,
+log management, and output inline. Topic analysis (Step 4) is dispatched
+to a Sonnet-class sub-agent to keep intermediate state out of the host
+context. The Haiku qualifier (Step 3a) is dispatched for lightweight
+topic selection.
 
 **Iteration model:** One invocation = one topic analyzed. The caller
 (operator or coordinator) decides whether to run again. This keeps each
@@ -108,7 +109,7 @@ Dispatch one Haiku-class qualifier agent. Give it:
 
 Prompt:
 
-```
+```text
 Read the skill files below.
 Scan the following topic list in order.
 Return the FIRST topic that applies to this skill.
@@ -163,39 +164,61 @@ Skip 3a. Read the skill and use these heuristics directly:
 
 ---
 
-## Step 4 — Topic Analysis
+## Step 4 — Topic Analysis (Dispatched)
 
-Load the topic spec file:
-`<skill-optimize-root>/topics/<topic-slug>.spec.md`
+Dispatch a Sonnet-class topic analysis sub-agent. This step runs in an
+isolated context — do not execute topic analysis inline in the host.
 
-Read it fully. Then analyze the skill (from Step 1) against that topic's
-criteria.
+**Pass to the sub-agent:**
 
-Produce findings using this format:
+- All skill source files (from Step 1): spec.md, uncompressed.md, SKILL.md,
+  instructions.txt, and any others that exist
+- The selected topic spec file:
+  `<skill-optimize-root>/topics/<topic-slug>.spec.md`
+- The executable topic assessment file (if it exists):
+  `<skill-optimize-root>/topics/<topic-slug>.md`
+- Instruction: "Read the skill files and the topic spec. Apply the topic
+  assessment. Return findings in the standard format, or confirm clean."
 
-```markdown
-### <CATEGORY> — <SEVERITY>
+**Sub-agent prompt:**
+
+```md
+You are a skill optimizer running a focused topic analysis.
+
+Topic: <SLUG>
+
+Skill files:
+<attach all source files>
+
+Topic spec:
+<attach topic spec>
+
+<If executable topic .md exists:>
+Topic assessment guide:
+<attach topic .md>
+
+Apply the topic assessment criteria to this skill.
+Produce findings in this format, or confirm clean:
+
+### <CATEGORY> — HIGH | MEDIUM | LOW
 
 **Reasoning:** <grounded in specific content from the skill files>
 
 **Recommendation:** <concrete, actionable>
+
+Severity:
+- HIGH: clear benefit, direct evidence, minimal downside
+- MEDIUM: likely benefit, context-dependent
+- LOW: minor or edge-case gain
+
+If no finding applies, respond: CLEAN
+
+Flag any finding that would apply universally (not just this skill) as:
+audit-candidate: <description>
 ```
 
-Severity scale:
-
-- HIGH — clear benefit, minimal downside, evidence is direct
-- MEDIUM — likely benefit, context-dependent
-- LOW — minor or edge-case benefit
-
-If no finding applies for this topic, note it as `clean` and do not force
-a finding. Clean is good.
-
-Each finding must be traceable to specific content in the skill files. A
-finding not grounded in the actual skill content is not a valid finding.
-
-Flag any finding that is deterministic and universally applicable (not
-specific to this skill) as `audit-candidate: <description>` — these
-patterns may be promoted to skill-auditing.
+**Collect the sub-agent's response.** If the response is CLEAN, record it
+as `clean` in the log. If findings are returned, record them.
 
 ---
 
@@ -205,16 +228,10 @@ Append one row to `<skill-path>/optimize-log.md`:
 
 | `<TOPIC>` | `<today's date>` | `<model if known>` | `<N findings>` | `pending` or `clean` |
 
-If the log does not exist, create it with the header:
+Also append a detail entry under `## <TOPIC> — <date>` with the full
+finding text (or "CLEAN") and action taken.
 
-```markdown
-# Optimize Log: <skill-name>
-
-## Topics Analyzed
-
-| Topic | Date | Model | Findings | Status |
-| ----- | ---- | ----- | -------- | ------ |
-```
+If the log does not exist, create it using the header format from Step 2.
 
 Set initial status:
 
@@ -227,7 +244,7 @@ Set initial status:
 
 Emit a one-line summary as the final output:
 
-```
+```text
 TOPIC: <TOPIC-SLUG> | FINDINGS: <N> | LOG: <repo-relative path to optimize-log.md>
 ```
 
