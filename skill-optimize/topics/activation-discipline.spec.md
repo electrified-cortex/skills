@@ -81,6 +81,7 @@ and discoverability are not in tension if the description is well-written.
 ## Finding criteria
 
 Produce a finding when:
+
 - **HIGH**: The skill has no documented trigger criteria — it can be invoked
   in any context without guidance on when it is appropriate.
 - **HIGH**: The skill has broad trigger criteria that would cause it to run

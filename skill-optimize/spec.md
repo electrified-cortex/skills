@@ -389,16 +389,24 @@ column 0, with no indentation, quoting, or list-marker prefix.
 
 On failure: `ERROR: <reason>` as the final line instead.
 
-**2. Optimize log entry** — the optimizer appends to
-`<skill-path>/optimize-log.md`. Each topic entry includes:
+**2. Optimize log entry** — the optimizer appends one row to
+`<skill-path>/optimize-log.md`:
 
-- Summary table row: `| TOPIC | date | model | N findings | status |`
-- A full findings section under `## <TOPIC> — <date>` with:
-  - Finding text (or "CLEAN") from the dispatched topic analysis
-  - Action taken (what was changed, or "none" if deferred/clean)
+```
+| TOPIC | date | model | N findings | status | one-line action summary |
+```
 
-The optimize log is the persistent record. It survives across invocations
-and is the basis for the assessor's candidate set on the next pass.
+Status values: `acted`, `deferred`, `rejected`, `clean`, `audit-candidate`.
+
+**3. Report file** — the optimizer writes the full finding to
+`<skill-path>/.optimization/<slug>.md`:
+
+- Severity, signal, reasoning, recommendation
+- Action taken (what changed, or "none")
+
+The optimize log is the scan surface — read it to build the candidate list.
+The `.optimization/` reports are the detail layer — read a specific report
+only when you need to understand a prior finding.
 
 **Finding format** (in log and in sub-agent response):
 

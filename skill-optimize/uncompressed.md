@@ -17,6 +17,10 @@ topic selection.
 pass focused and avoids spending context budget on topics that become
 irrelevant after earlier changes are made.
 
+**Autonomy model:** Fully autonomous — all writes are new or append-only
+(log row, report file). Source file modifications based on findings are
+the caller's responsibility.
+
 ---
 
 ## Inputs
@@ -90,8 +94,9 @@ Status values:
 
 Goal: pick the best topic to analyze next.
 
-Skip this step if `<topic>` was explicitly provided — go to Step 4 with
-that topic.
+Skip this step if `<topic>` was explicitly provided. First verify
+`<skill-path>/topics/<topic>.md` exists. If not found, stop:
+`ERROR: topic file not found at topics/<topic>.md`. Then go to Step 4.
 
 **Assessor model:** Sonnet-class (standard). The assessor makes the final
 pick — it does not read topic specs itself. It reads qualifier signals and
@@ -125,13 +130,17 @@ If none apply: TOPIC: none
 
 One dispatch call. One result. Move to 3b.
 
-To find a second candidate (after acting on the first), run another
-qualifier starting from the topic after the previously returned slug.
+To find a second candidate (after acting on the first), run at most one
+additional qualifier call, starting from the topic after the previously
+returned slug. Do not chain more qualifier calls in a single invocation.
 
 ### 3b — Assessor Decision
 
 Review qualifier results. From topics marked `yes` or `maybe`, pick the
 single topic most likely to yield a HIGH finding.
+
+If qualifier returned `TOPIC: none`, stop and emit:
+`No applicable topics found — all topics already logged or none apply to this skill.`
 
 Tie-breaking priority:
 
@@ -215,28 +224,44 @@ If no finding applies, respond: CLEAN
 
 Flag any finding that would apply universally (not just this skill) as:
 audit-candidate: <description>
+
+Before finalizing: review your finding. Does it hold under the evidence?
+Is the severity calibrated correctly — not over- or under-rated? If the
+verdict is CLEAN, confirm no signal was missed. Revise before outputting.
 ```
 
 **Collect the sub-agent's response.** If the response is CLEAN, record it
 as `clean` in the log. If findings are returned, record them.
 
+If the response is not in the standard finding format (missing `### CATEGORY`
+heading or `**Reasoning:**` field), record `ERROR: unexpected analysis format`
+in the log and stop. Do not attempt to parse or use a malformed response.
+
 ---
 
-## Step 5 — Update the Optimize Log
+## Step 5 — Record Results
 
-Append one row to `<skill-path>/optimize-log.md`:
+**5a — Append one row** to `<skill-path>/optimize-log.md`:
 
-| `<TOPIC>` | `<today's date>` | `<model if known>` | `<N findings>` | `pending` or `clean` |
+| `<TOPIC>` | `<today's date>` | `<model>` | `<N findings>` | `<status>` | `<one-line action summary>` |
 
-Also append a detail entry under `## <TOPIC> — <date>` with the full
-finding text (or "CLEAN") and action taken.
+Status: `acted` | `deferred` | `rejected` | `clean` | `audit-candidate`
 
 If the log does not exist, create it using the header format from Step 2.
 
-Set initial status:
+**5b — Write report file** to `<skill-path>/.optimization/<topic-slug>.md`:
 
-- `clean` if N = 0
-- `pending` if N > 0 (owner needs to review)
+```
+# <TOPIC> — <date>
+
+**Severity:** HIGH | MEDIUM | LOW
+
+**Finding:** <what was observed>
+
+**Action taken:** <what changed, or "No change."> 
+```
+
+If clean: write a single line `CLEAN — no findings.` instead.
 
 ---
 
@@ -246,6 +271,14 @@ Emit a one-line summary as the final output:
 
 ```text
 TOPIC: <TOPIC-SLUG> | FINDINGS: <N> | LOG: <repo-relative path to optimize-log.md>
+```
+
+If all tier-1 and tier-2 topics in the log show `clean`, `acted`, or
+`deferred`, also emit a convergence signal:
+
+```text
+CONVERGENCE: tier-1+2 topics complete — <N acted>, <M clean>, <K deferred>
+Next: re-run with higher model tier to verify.
 ```
 
 Then stop. The caller decides whether to run again.

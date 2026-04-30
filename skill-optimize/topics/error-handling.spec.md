@@ -96,6 +96,7 @@ is the right design — explicit about the contract, not paranoid at runtime.
 ## Finding criteria
 
 Produce a finding when:
+
 - **HIGH**: The skill processes external or user-provided inputs with no
   error handling — silent failure on malformed inputs.
 - **HIGH**: The skill has no exit path for missing required inputs.

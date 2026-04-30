@@ -75,7 +75,7 @@ Signals of non-idempotency:
 
 **Finding format:**
 
-```
+```md
 ### HASH RECORD — HIGH | MEDIUM | LOW
 
 **Signal:** <what you observed>

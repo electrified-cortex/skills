@@ -87,7 +87,7 @@ reliability or correctness.
 
 **Finding format:**
 
-```
+```md
 ### DISPATCH — HIGH | MEDIUM | LOW
 
 **Signal:** <what you observed in the skill>
@@ -131,7 +131,7 @@ in the host. For a skill that may analyze a 29-topic index with large spec
 files, Step 4 alone loads the topic spec + skill files and produces
 structured findings — all accumulating in the host context.
 
-**Severity: MEDIUM**
+Severity: **MEDIUM**
 
 The qualifier dispatch (Step 3a) is correctly scoped. The mismatch is in
 Step 4 (topic analysis): this step is the core work, is context-independent

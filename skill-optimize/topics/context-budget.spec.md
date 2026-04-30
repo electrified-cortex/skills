@@ -65,6 +65,7 @@ held context.
 
 When a skill passes work to a sub-agent or downstream skill, the handoff
 context should be:
+
 - **Minimal** — only what the downstream skill needs.
 - **Explicit** — structured rather than narrative where possible.
 - **Fresh** — re-derived from source if the original context may be stale.
@@ -83,6 +84,7 @@ specific example type is needed).
 ## Finding criteria
 
 Produce a finding when:
+
 - **HIGH**: The skill passes the full parent context to sub-agents without
   pruning — sub-agents receive context irrelevant to their task.
 - **HIGH**: Required vs. optional context is not distinguished — the skill
