@@ -16,7 +16,7 @@ parent compression rules.txt or other tiers.
 - **Remove list:** Every category of content to strip — all 11 categories (see Audit Checklist)
 - **Transform list:** Synonym rules, abbreviation patterns, fragment handling, pattern template, scope directive
 - **Preserve list:** Content that must never be modified — includes technical content (code, URLs, paths, commands, terms, proper nouns, dates, versions, env vars), logic/modality words (not/never/only/unless/must/may), actors + permissions (who does what), ordered steps/counts/thresholds, exact-match strings (labels, branch names, config keys, frontmatter values), and structural markdown sub-list
-- **Structural vs non-structural markdown:** Clear distinction between what to keep and strip
+- **Structural vs non-structural markdown:** Clear distinction between what to keep and strip. Includes ALL CAPS exception: bold on constraint/imperative terms (e.g. `**never**`, `**must**`) converts to ALL CAPS rather than being stripped — preserves emphasis signal in plain-text output. Applies to inline emphasis only, not label-style bold.
 - **Scope/usage directive:** Where and when Ultra applies (agent files, agent thinking, etc.)
 - **Ambiguity stop rule:** Explicit instruction — if compression adds ambiguity, keep original
 - **Pass order:** Defined sequence for compression passes (preserve scan → remove → transform → ambiguity check)
@@ -44,7 +44,7 @@ The skill uses `label:` format — sections are labeled lines, not `##` hash hea
 ## Audit Checklist
 
 - [ ] Self-contained — agent needs only this file to apply Ultra
-- [ ] Remove section covers all 11 categories: articles, filler, pleasantries, hedging, connective fluff, imperative softeners, redundant phrasing, unnecessary punctuation, non-structural markdown, excess heading depth, judgment-based markdown removal
+- [ ] Remove section covers all 11 categories: articles, filler, pleasantries, hedging, connective fluff, imperative softeners, redundant phrasing, unnecessary punctuation, non-structural markdown (with ALL CAPS exception for constraint/imperative terms), excess heading depth, judgment-based markdown removal
 - [ ] Transform section covers: synonyms, fragments, arrows (`X → Y`), abbreviations list, merge redundant bullets, one example per pattern, `[thing] [action] [reason]` pattern template, scope directive (agent thinking)
 - [ ] Preserve section complete: code blocks, inline code, URLs, paths, commands, terms, proper nouns, dates, versions, env vars; logic words (not/never/only/unless/must/may); actors + permissions; ordered steps/counts/thresholds; exact-match strings (labels, branch names, config keys, frontmatter values); structural markdown sub-list (headings, lists, tables, code fences, frontmatter, definition lists)
 - [ ] Structural vs non-structural markdown distinction clear

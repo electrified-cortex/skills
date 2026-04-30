@@ -13,7 +13,7 @@ has everything needed to apply Full compression. No dependencies on other tiers.
 
 ### Must Include
 
-- **Remove list:** Articles, filler, hedging, pleasantries, verbose phrasing
+- **Remove list:** Articles, filler, hedging, pleasantries, verbose phrasing, non-structural markdown — with ALL CAPS exception: bold on constraint/imperative terms converts to ALL CAPS rather than being stripped (e.g. `**never**` → `NEVER`). Inline emphasis only, not label-style bold.
 - **Transform list:** Synonyms, fragments, merging bullets
 - **Keep list:** What Full preserves that Ultra doesn't (punctuation, formatting when structural)
 - **Preserve list:** Content that must never be modified — includes technical content, logic words, actors + permissions, ordered steps/counts/thresholds, exact-match strings
