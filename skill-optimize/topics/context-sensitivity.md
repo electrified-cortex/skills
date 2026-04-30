@@ -1,4 +1,4 @@
-# Context Sensitivity — Assessment Procedure
+﻿# Context Sensitivity — Assessment Procedure
 
 ## What to assess
 
@@ -47,23 +47,3 @@ working directories, and input variations?
   edge-case handling on optional inputs.
 - **CLEAN**: Fully parameterized, no hardcoded constants, paths are relative to
   caller-supplied `<skill-path>`.
-
-## Current state (2026-04-30)
-
-`<skill-path>` is caller-provided — all file paths derive from it. No hardcoded
-paths, model names (model tier is described qualitatively: "Haiku-class", "Sonnet-
-class" — left for caller to resolve), or task IDs. No platform-specific path
-handling. All reads and writes are relative to `<skill-path>`.
-
-Optional inputs (`<topic>`, `<mode>`) have defined fallback behavior: if `<topic>`
-is absent, proceed to qualifier; if `<mode>` is absent, use default (assess+analyze).
-
-The one undocumented edge case: an invalid `<topic>` slug (not in the topics/
-directory). Step 3a handles "TOPIC: none" from the qualifier, but the direct
-`<topic>` bypass path (skipping Step 3) does not define behavior for an invalid
-slug passed directly.
-
-**Finding: LOW** — skill is correctly parameterized and platform-portable. Minor
-gap: direct `<topic>` input path has no defined behavior for an invalid/missing
-slug. Add guard: if `<topic>` is provided but `topics/<topic>.md` does not exist,
-stop with `ERROR: topic file not found at topics/<topic>.md`.

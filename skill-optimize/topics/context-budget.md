@@ -1,4 +1,4 @@
-# Context Budget — Assessment Procedure
+﻿# Context Budget — Assessment Procedure
 
 ## What to assess
 
@@ -46,12 +46,3 @@ intermediate state, and what it passes to sub-agents?
 - **LOW**: Budget is acceptable but there is a specific prunable element.
 - **CLEAN**: Context is correctly scoped — minimal for qualifier, sufficient for
   analyzer, no history leakage.
-
-## Current state (2026-04-30)
-
-Qualifier gets lean context (topic descriptions only). Analyzer gets source files —
-justified by the need for primary-source analysis. No full history is passed to
-either sub-agent. Per-invocation re-read (Step 1) prevents stale context.
-
-**Finding: CLEAN** — context budget is correctly managed. The two-tier dispatch
-(lean qualifier, targeted analyzer) is the right design for this skill's cost profile.

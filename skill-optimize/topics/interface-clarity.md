@@ -1,4 +1,4 @@
-# INTERFACE CLARITY — Executable Assessment
+﻿# INTERFACE CLARITY — Executable Assessment
 
 Assess whether the skill clearly documents its invocation contract: what
 inputs it requires, what it returns on success and failure, and what its
@@ -75,43 +75,3 @@ documented with enough specificity for a caller to invoke the skill
 without reading `uncompressed.md`.
 
 ---
-
-## Application to skill-optimize
-
-**Observed interface documentation:**
-
-`uncompressed.md` Step 1: "Read all skill source files" — describes what
-the skill reads internally, not what the caller provides. No explicit
-`## Inputs` section. No `SKILL.md` exists yet.
-
-`spec.md` Requirements: R1 specifies which files to read; R6 specifies
-the output line format (`PATH: <path>` or `ERROR: <reason>`). But R6 was
-designed for the hash-record era — the current output format per
-`uncompressed.md` Step 6 is `TOPIC: <slug> | FINDINGS: <N> | LOG: <path>`.
-
-**Conflicts observed:**
-
-- R6 output format (`PATH: <path>`) conflicts with actual output in Step 6
-  (`TOPIC: <slug> | FINDINGS: <N> | LOG: <path>`)
-- No documented input contract: how does the caller tell the skill which
-  skill to analyze? Assumed from context.
-- No `SKILL.md` yet (needed before this is invokable as a dispatched skill)
-
-**Finding: MEDIUM**
-
-The invocation contract has two gaps:
-
-1. R6 output format is stale — the skill emits `TOPIC:...|FINDINGS:...|LOG:...`
-   not `PATH: <path>`. The spec's R6 needs updating.
-2. The input contract (which skill to analyze, where to find it) is
-   undocumented. A caller invoking this as a sub-agent needs to know how
-   to pass the target skill path.
-
-**Recommendations:**
-
-1. Update R6 in spec.md to reflect the current output format.
-2. Add a brief `## Inputs` note to `uncompressed.md` Step 1: "The skill
-   being analyzed must be passed as a directory path. The optimizer reads
-   all source files it finds there."
-3. Creating `SKILL.md` (the compressed invocation surface) is the natural
-   fix — it is the canonical contract document. (Pending separately.)

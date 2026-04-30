@@ -1,4 +1,4 @@
-# DETERMINISM — Executable Assessment
+﻿# DETERMINISM — Executable Assessment
 
 Assess whether any LLM-dependent step in the skill could be replaced with
 a deterministic tool, script, or structured algorithm — and whether any
@@ -86,45 +86,3 @@ returns, how it replaces the LLM step>
 judgment, and deterministic work is already handled by tools.
 
 ---
-
-## Application to skill-optimize
-
-**Observed LLM-dependent steps in uncompressed.md:**
-
-1. Step 2 — Check optimize log: reads the log file. This is a file read +
-   table parse. Currently described as "check for prior work" — an LLM
-   reads the file and determines which topics are done.
-
-2. Step 3a — Qualifier dispatch: builds the ordered candidate list by
-   excluding log entries. The exclusion logic (filter rows by status) is
-   purely deterministic.
-
-3. Step 3b — Assessor decision: picks the topic from qualifier results.
-   This is genuine judgment. LLM needed.
-
-4. Step 4 — Topic analysis (now dispatched): genuine judgment. LLM needed.
-
-5. Step 5 — Update log: append a row. Deterministic write.
-
-6. Step 6 — Output: emit a formatted line. Deterministic format.
-
-**Findings:**
-
-DETERMINISM: LOW
-
-Steps 2 and 5 (log read and log write) describe deterministic file
-operations but do not specify tool calls — the model reads and writes the
-log inline. In isolation this is a LOW finding: the log is small, the
-operation is cheap, and one-off file I/O doesn't warrant a dedicated tool.
-
-However, as the iterate-until-converged pattern grows (dozens of passes),
-the log read/write pattern recurs every invocation. Flag as `audit-candidate`:
-if this skill is run in a tight loop by a coordinator agent, a deterministic
-log-read tool would reduce token cost per iteration.
-
-**Confirm clean on:** Steps 3b (assessor judgment), Step 4 (topic analysis
-dispatch — already addressed in DISPATCH topic).
-
-**audit-candidate:** Log table parse (read optimize-log.md, return array
-of `{topic, status}` rows) — suitable for promotion to a deterministic
-tool if skill-optimize is used in high-frequency iteration loops.

@@ -1,4 +1,4 @@
-# OUTPUT FORMAT — Executable Assessment
+﻿# OUTPUT FORMAT — Executable Assessment
 
 Assess whether the skill specifies its output format explicitly enough to
 produce consistent, parseable results. Two outputs to check: the primary
@@ -73,56 +73,3 @@ produce? Stale spec output descriptions are a common drift point.
   is consumed by a model, not code
 
 ---
-
-## Application to skill-optimize
-
-**Primary return:** Step 6 in `uncompressed.md`:
-
-```
-TOPIC: <TOPIC-SLUG> | FINDINGS: <N> | LOG: <repo-relative path>
-```
-
-Explicit template. **CLEAN.**
-
-**Sub-agent return (Step 4):** The dispatch prompt specifies:
-
-```
-### <CATEGORY> — HIGH | MEDIUM | LOW
-**Reasoning:** ...
-**Recommendation:** ...
-...or: CLEAN
-```
-
-Explicit format in the prompt. **CLEAN.**
-
-**Secondary output — Findings record:** The spec's `## Output — Findings
-Record` section describes writing to:
-`.hash-record/<hash[0:2]>/<hash>/skill-optimize/v1.0/report.md`
-
-This is the old hash-record-era output. The current `uncompressed.md`
-does NOT write a findings file anywhere. The sub-agent returns findings
-as text; the host records only a summary row in the optimize-log. The
-full findings text (reasoning + recommendation) has no defined persistent
-location.
-
-**Finding: MEDIUM**
-
-The spec's Output section is stale — it describes a hash-record findings
-file that is no longer written. The new design returns findings as sub-
-agent response text. This creates two problems:
-
-1. The spec is misleading — callers might expect a file they can read back.
-2. Detailed findings are ephemeral — after the invocation, only the count
-   and status survive in the optimize-log.
-
-**Recommendation:**
-
-1. Update spec.md `## Output — Findings Record` section: remove the
-   hash-record path; describe the new design (sub-agent returns findings
-   text in-context; host logs summary row in optimize-log).
-2. Decision needed: should the optimize-log be extended to include full
-   finding text per topic (not just count + status)? Or is in-context
-   findings text sufficient (caller acts on it immediately, no persistence
-   needed)? The current dogfood loop suggests the latter — findings are
-   acted on immediately and logged as "acted." Lean toward: log the full
-   finding text in the optimize-log under each topic section.

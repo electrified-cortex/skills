@@ -1,4 +1,4 @@
-# CACHING (HASH RECORD) — Executable Assessment
+﻿# CACHING (HASH RECORD) — Executable Assessment
 
 Assess whether the skill correctly applies a hash record for caching, and
 whether the chosen iteration-tracking approach is sound.
@@ -97,41 +97,3 @@ Signals of non-idempotency:
 spec and instructions are aligned, and the skill is idempotent.
 
 ---
-
-## Application to skill-optimize
-
-**Observed caching mechanisms:**
-
-- `spec.md` R5: mandates hash-record manifest procedure — "compute a
-  manifest hash... probe the cache at `.hash-record/...`"
-- `uncompressed.md` Step 2: checks `optimize-log.md` for prior topic work
-- The old Behavior section (now replaced) also described hash-record entry
-
-**Assessment:**
-
-The spec still contains R5 (hash-record mandate). The instructions now use
-an optimize-log for iteration tracking. These are not contradictory in
-intent — they serve different purposes — but the spec does not reflect the
-new design.
-
-**Finding:** MEDIUM
-
-R5 requires a full hash-record cache probe on every entry. The current
-`uncompressed.md` uses only the optimize-log (per-topic tracking). For a
-skill designed for iterative single-topic passes, the optimize-log approach
-is correct. A full hash-record would short-circuit on unchanged inputs
-even if new topics are pending analysis — which defeats the iteration model.
-
-**Recommendation:**
-
-1. Update R5 in spec.md to reflect the new design: replace the hash-record
-   mandate with the optimize-log approach as the primary tracking mechanism.
-   Note that a hash-record could optionally be added as a full-skip cache
-   for callers who want "same inputs = skip entirely," but the default is
-   the log.
-2. Clarify in uncompressed.md that the optimize-log is the authoritative
-   iteration state, and a hash-record full-cache is optional (not default).
-
-**Idempotency:** The optimize-log check in Step 2 excludes topics already
-marked `clean`/`acted`/`rejected`. This makes the skill idempotent at the
-topic level. No idempotency finding.

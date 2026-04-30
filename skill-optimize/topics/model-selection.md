@@ -1,4 +1,4 @@
-# MODEL SELECTION — Executable Assessment
+﻿# MODEL SELECTION — Executable Assessment
 
 Assess whether each execution role in the skill is using the right model
 tier, and whether instruction quality is the real barrier preventing a
@@ -61,48 +61,3 @@ and no eval exists, flag it.
 ```
 
 ---
-
-## Application to skill-optimize
-
-**Roles identified:**
-
-| Role | Current tier | Task |
-| ---- | ------------ | ---- |
-| Host (orchestrator) | Sonnet | Routing, log read, dispatch calls, output line |
-| Qualifier | Haiku | Scan topic list in order, return first applicable |
-| Topic analysis | Sonnet | Assess skill against topic criteria, produce finding |
-
-**Qualifier (Haiku):** Topic is a list scan with short-circuit — "iterate
-in order, return FIRST that applies." Output is structured: `TOPIC: <SLUG> /
-APPLICABLE: yes|maybe / REASON: <1 sentence>`. The task is essentially a
-classification scan over a bounded list. Haiku-class is correct. **CLEAN.**
-
-**Topic analysis (Sonnet):** The task is genuine structured judgment —
-reading a skill holistically, applying multi-dimensional assessment criteria,
-producing grounded findings with reasoning. The topic specs are reasonably
-explicit (they define signals, patterns, and severity criteria), but the
-core task requires weighing evidence and forming an assessment. Sonnet-class
-is appropriate. **CLEAN.**
-
-**Host (Sonnet):** The host does: read files, check log, dispatch qualifier,
-dispatch analyzer, write log row, write report file, emit output line. These
-are all deterministic or near-deterministic operations. The only judgment
-call is Step 3b (assessor decision — picking the single best topic from
-qualifier results). That step has explicit tie-breaking rules. The rest is
-mechanical.
-
-**Finding: LOW**
-
-The host is running at Sonnet-class but most of its work is deterministic
-file I/O and dispatch calls. The one judgment step (assessor tie-breaking in
-Step 3b) has explicit rules and could run on Haiku if the tie-breaking table
-were tightened. However, the host and topic analysis are currently bundled
-— a host downgrade requires splitting the host from the analysis dispatch,
-which SKILL.md creation (from COMPRESSIBILITY) already anticipates. The
-path to Haiku host is: create SKILL.md with host-only instructions →
-confirm Haiku can follow them → downgrade.
-
-**Recommendation:** No change now. When SKILL.md is created, test host
-execution on Haiku. The tie-breaking rules in Step 3b are the only
-ambiguous step; if those are made table-driven, the host becomes
-fully deterministic and Haiku-eligible.

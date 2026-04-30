@@ -1,4 +1,4 @@
-# EXAMPLES — Executable Assessment
+﻿# EXAMPLES — Executable Assessment
 
 Assess whether the skill's output format or judgment calibration would
 benefit materially from 1-3 targeted concrete examples.
@@ -53,55 +53,3 @@ example gap.
 ```
 
 ---
-
-## Application to skill-optimize
-
-**Format outputs:**
-
-1. **Finding format block** — the template is explicit:
-   ```
-   ### <CATEGORY> — HIGH | MEDIUM | LOW
-   **Reasoning:** ...
-   **Recommendation:** ...
-   ```
-   No concrete filled-in example exists in `uncompressed.md`. The topic
-   `.md` files serve as de facto examples — each ends with an actual
-   finding applied to the skill itself. A caller running the skill cold
-   has those as reference.
-
-2. **Log row** — the optimize-log contains 11 populated rows now. This IS
-   the example set. Any caller that reads the log gets concrete rows
-   showing the format in use. **Gap closed by existing log.**
-
-3. **Report file** — the `.optimization/` folder now has 11 files. Same
-   as above — they serve as format examples. **Gap closed by existing reports.**
-
-4. **Qualifier output** — `TOPIC: <SLUG> / APPLICABLE: yes|maybe / REASON: <1 sentence>`.
-   No filled-in example in `uncompressed.md`. The format is simple and
-   templated, but "yes vs. maybe" calibration is done only by prose
-   description ("yes = direct match; maybe = adjacent, worth exploring").
-   A two-line example would help: one "yes" and one "maybe" case.
-
-**Judgment-calibration outputs:**
-
-The severity scale (HIGH / MEDIUM / LOW) is defined with abstract criteria.
-Looking at the actual topic `.md` files, each contains an applied finding
-— these function as calibration examples. A Sonnet model running analysis
-has access to all prior topic `.md` findings in context if the skill passes
-them, but the current Step 4 dispatch only passes: source files + topic spec
-+ topic `.md`. It does NOT pass prior topic outputs as calibration examples.
-
-**Finding: LOW**
-
-The log and `.optimization/` files provide de facto format examples for
-the recording outputs. The main gap is qualifier output calibration ("yes"
-vs. "maybe") — a trivial fix. Severity calibration is addressed by the
-per-topic `.md` files which show applied examples, though they aren't
-explicitly passed to each sub-agent invocation. This is a genuine gap
-but LOW priority: Sonnet models parse abstract severity definitions well,
-and the self-critique step (just added) provides a review pass that
-catches miscalibration.
-
-**Recommendation:** Add two example rows to the qualifier prompt in
-`uncompressed.md` to calibrate `yes` vs. `maybe`. Defer severity example
-injection into sub-agent context — low payoff given the self-critique gate.

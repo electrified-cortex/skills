@@ -1,4 +1,4 @@
-# COMPRESSIBILITY — Executable Assessment
+﻿# COMPRESSIBILITY — Executable Assessment
 
 Assess whether the skill's instruction file is tighter than it needs to
 be. Match instruction style to the actual cognitive demand of the task.
@@ -85,56 +85,3 @@ vs. load-bearing>
   a simple skill
 
 ---
-
-## Application to skill-optimize
-
-**Cognitive demand classification:**
-
-- Step 1 (read files): deterministic. A list of paths. Clean.
-- Step 2 (check log): deterministic — read and parse. Has 1 paragraph of
-  context + log format example + status values list. The paragraph is
-  borderline load-bearing (explains the WHY for skipping analyzed topics).
-  The format block is necessary. The status values list is useful lookup.
-  Judgment: acceptable for a new-caller experience.
-- Step 3 (assessor): judgment. The Haiku prompt is load-bearing. The
-  tie-breaking rules are deterministic — would benefit from tighter form.
-  The fallback table is a large inline heuristic for an infrequent path.
-- Step 4 (topic analysis): dispatch. The sub-agent prompt is load-bearing.
-  Large, but necessary.
-- Step 5 (log update): deterministic. Has the log header format AGAIN —
-  same format block from Step 2, this time for the create-if-not-exists
-  branch.
-- Step 6 (output): 1-line format template. Clean.
-
-**Duplicate format block:** The log header format appears in both Step 2
-(reading the log) and Step 5 (creating the log). One reference, one
-authoritative location.
-
-**SKILL.md:** Does not exist. This is a skill that dispatches sub-agents,
-has embedded prompts, and a topic index table. The full instructions are
-verbose. Every invocation loads ~300 lines of instruction prose, including
-sub-agent prompts that the host reads but doesn't execute directly.
-
-Finding: MEDIUM
-
-Two issues:
-
-1. **SKILL.md missing.** The compressed surface hasn't been created.
-   Every invocation loads the full verbose `uncompressed.md` — including
-   the full sub-agent prompt templates (which the host passes through but
-   doesn't need to reason about itself), the large topic index table, and
-   the orientation prose. A SKILL.md would strip these to references
-   and keep only the host's decision logic.
-
-2. **Duplicate log format.** The log header/format appears in both Step 2
-   and Step 5. Remove the format block from Step 5; replace with "If no
-   log exists, create it with the header format in Step 2."
-
-**Recommendation:**
-
-- Create SKILL.md: host-only instructions (routing, log check, dispatch
-  calls, output line). Sub-agent prompts become "dispatch as specified in
-  uncompressed.md Step 3a/4." Topic index becomes a single-column slug
-  list.
-- In Step 5, remove the duplicate format block; add cross-reference to
-  Step 2.

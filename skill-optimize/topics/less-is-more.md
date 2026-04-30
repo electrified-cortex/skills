@@ -1,4 +1,4 @@
-# LESS IS MORE — Executable Assessment
+﻿# LESS IS MORE — Executable Assessment
 
 Assess whether the skill's instruction file (`uncompressed.md`, `SKILL.md`,
 `instructions.txt`) contains non-load-bearing content — sentences, sections,
@@ -92,58 +92,3 @@ sentences. The overhead should be meaningful relative to file size.
 bearing — removing it would cause a model to produce wrong output.
 
 ---
-
-## Application to skill-optimize
-
-**Assessed file:** `uncompressed.md`
-
-Scanning each section:
-
-- **"What This Skill Does"** — 3 short paragraphs: purpose, execution
-  pattern, iteration model. These orient the model. Judgment: load-bearing
-  for a dispatch skill that needs to understand its own execution mode.
-  Keep.
-
-- **"Inputs"** — Required and optional inputs listed. Load-bearing for
-  callers. Keep.
-
-- **Steps 1-2** — File read and log check. Procedural. Load-bearing.
-
-- **Step 3 — Qualifier dispatch block** — Includes an inline prompt
-  template for the Haiku qualifier. Scan: the prompt says "Read the skill
-  files below. Scan the following topic list in order. Return the FIRST
-  topic that applies." This is a sub-agent prompt — load-bearing.
-
-- **Step 3b fallback** — "When qualifier dispatch is unavailable, the
-  assessor applies inline heuristics in the topic priority table." The
-  topic priority table below (8 tiers, 3 columns, 8 rows) is the heuristic.
-  Load-bearing for the fallback path.
-
-- **Topic Index table** — Large table in the middle of the instruction
-  file. Signals for each topic (10+ rows) with prose descriptions. For an
-  instruction file, this is borderline — it's guidance for the fallback
-  assessor heuristic, not a procedure step.
-
-- **Step 4 sub-agent prompt** — A full prompt template embedded in the
-  instructions. Load-bearing (it IS the dispatch instruction). But the
-  prompt is verbose: severity scale, format specification, and audit-
-  candidate flagging instructions could be in the topic spec instead.
-
-Finding: LOW
-
-The inline heuristics table (fallback assessor signals per topic) is
-detailed enough to be considered partial spec content inside an instruction
-file. It's present to handle the "qualifier dispatch unavailable" case —
-a fallback that will rarely fire. If/when qualifier dispatch is always
-available (the normal path), this table becomes dead weight loaded on
-every invocation.
-
-**Recommendation:** Move the detailed fallback heuristics table to a
-separate appendix section at the end of the file (or to a
-`./topics/fallback-heuristics.md`), referenced as "see fallback table
-below" from Step 3b. The main instruction flow stays clean; the table is
-only read when the fallback fires.
-
-This is LOW because the file is still reasonably focused and the table
-IS used for the fallback path. Flag for future pass when the dispatch
-pattern matures and the fallback becomes a true edge case.

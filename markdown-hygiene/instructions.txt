@@ -1,6 +1,4 @@
-﻿Markdown Hygiene
-
-Inputs:
+﻿Inputs:
 `<markdown_file_path>` (required) — absolute path to `.md` file.
 `--report-path <report_path>` (required) — absolute path to write report. Missing -> `ERROR: --report-path required`, stop. Existing file overwritten.
 `--ignore <RULE>[,<RULE>...]` (optional) — rules to skip.

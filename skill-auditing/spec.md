@@ -138,7 +138,7 @@ The auditor reads the skill at `skill_path`, determines type (inline or dispatch
 
 After all narrative or report-related output, the auditor **must** emit exactly one final line of stdout. That line **must** be the last line of stdout — nothing may follow it. The line **must** start at column 0 with no indentation, no quoting, and no list-marker prefix.
 
-```
+```text
 Right:  PATH: <abs-prefix>/.hash-record/ab/abcdef.../skill-auditing/v1.2/report.md
 Wrong:  Verdict: PASS. Wrote record to: PATH: <abs-prefix>/...
 ```

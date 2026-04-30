@@ -1,4 +1,4 @@
-# DISPATCH — Executable Assessment
+﻿# DISPATCH — Executable Assessment
 
 Assess whether the skill uses the right execution pattern: dispatch (isolated
 sub-agent context) or inline (runs in the host agent's context). Wrong
@@ -113,39 +113,3 @@ dispatched sub-agent. Pass [list] as inputs. Return findings record.">
 - All tool calls interact with external state or centralize shared logic
 
 ---
-
-## Application to skill-optimize
-
-Running this assessment against `skill-optimize` (self):
-
-**Observed pattern:** Hybrid. The spec declares skill-optimize "a dispatch
-skill." `uncompressed.md` implements:
-
-- Steps 1-2: inline (read files, check log) — correct, host context needed
-- Step 3a: dispatches a Haiku qualifier — correct scope
-- Steps 3b-6: inline (assessor decision, topic analysis, log update,
-  output) — potentially misaligned with the dispatch declaration
-
-**Signal:** The assessor step (3b) and topic analysis (Step 4) run inline
-in the host. For a skill that may analyze a 29-topic index with large spec
-files, Step 4 alone loads the topic spec + skill files and produces
-structured findings — all accumulating in the host context.
-
-Severity: **MEDIUM**
-
-The qualifier dispatch (Step 3a) is correctly scoped. The mismatch is in
-Step 4 (topic analysis): this step is the core work, is context-independent
-(no shared state needed), and produces intermediate findings that pollute
-the host. As topic specs grow in size, inline analysis compounds the
-context cost.
-
-**Recommendation:** Extract Step 4 (topic analysis) into a dispatched
-sub-agent per topic. The host passes: skill source files + the selected
-topic spec. The sub-agent returns the findings record. Steps 3b, 5, and 6
-(assessor decision, log update, output) remain inline — they are brief and
-need the host context.
-
-This aligns with the Architecture Direction in spec.md §"Architecture
-Direction (Planned)" which already anticipates per-topic dispatch agents.
-The finding validates that direction as a MEDIUM-priority architectural
-improvement, not just a future optimization.

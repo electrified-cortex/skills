@@ -1,4 +1,4 @@
-# Autonomy Level — Assessment Procedure
+﻿# Autonomy Level — Assessment Procedure
 
 ## What to assess
 
@@ -41,20 +41,3 @@ what it will do autonomously vs. what requires confirmation?
   autonomy model is undocumented — callers may incorrectly assume the skill
   makes destructive edits.
 - **CLEAN**: Autonomy model is appropriate and documented.
-
-## Current state (2026-04-30)
-
-Writes are append-only (log row) and create-only (report file). No existing source
-files are modified by the skill itself. The "acted" label in the log means the host
-agent applies changes — the skill is a recommendation engine, not a modifier.
-
-However, this distinction is not stated anywhere in the skill's description or
-instructions. A caller reading the skill could reasonably assume it modifies
-skill files based on its findings. The autonomy model should be explicitly
-documented.
-
-**Finding: LOW** — write operations are safe (append + create only); autonomy
-calibration is correct. Gap: the skill does not state its autonomy model or
-clarify that "acted" changes are applied by the host, not the skill. Add one
-sentence to the description: "Skill is fully autonomous — all writes are new or
-append-only. Source file modifications are the caller's responsibility."

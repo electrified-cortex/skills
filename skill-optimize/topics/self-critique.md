@@ -1,4 +1,4 @@
-# SELF CRITIQUE — Executable Assessment
+﻿# SELF CRITIQUE — Executable Assessment
 
 Assess whether the skill includes a verification pass for its own judgment
 outputs. For assessment-heavy skills, a within-turn self-review reduces
@@ -54,49 +54,3 @@ Consider:
 ```
 
 ---
-
-## Application to skill-optimize
-
-**Judgment outputs from the Sonnet topic analysis:**
-
-1. **Severity rating** (HIGH / MEDIUM / LOW / CLEAN) — if miscalibrated,
-   either triggers unnecessary changes (false alarm) or misses a real issue.
-2. **Finding text** — if wrong, the action taken records a misleading
-   rationale.
-3. **Action recommendation** — if wrong, the skill's own output becomes a
-   defect in the file it's supposed to improve.
-
-**Existing verification pass?**
-
-Looking at the topic procedure format: each topic `.md` file ends with
-"Produce finding or confirm clean" with a template. There is no explicit
-"review your finding before writing it" instruction in the template or in
-`uncompressed.md` Step 4.
-
-The Sonnet analysis prompt (Step 4 in `uncompressed.md`) says "follow the
-procedure in `<topic>.md` and produce a finding" — no self-review step.
-
-**Downstream trust:** The skill writes its findings to `.optimization/` and
-the log. Currently there is no adversarial review agent checking the
-assessor's verdict. The Curator reads the log; it's essentially trusted
-output.
-
-**Finding: MEDIUM**
-
-The skill produces judgment outputs (severity ratings, findings) without a
-within-turn review pass. Given that it's self-assessing its own files, there's
-a systematic blind-spot risk — the same model that wrote the skill is assessing
-it. A within-turn review instruction adds minimal tokens but would catch
-severity miscalibration (common: flagging LOW as MEDIUM) and prevent "clean"
-calls where a real issue was overlooked.
-
-**Recommendation:** Add a verification step to the Sonnet topic analysis
-prompt in `uncompressed.md` Step 4:
-
-After the initial finding is drafted, append:
-> "Review: does this finding hold under the evidence in the files? Is the
-> severity calibrated correctly (not over- or under-rated)? If there is a
-> 'CLEAN' verdict, confirm no signal was missed. If recalibration is needed,
-> revise before producing the final output."
-
-This is within-turn — no extra dispatch, negligible cost overhead.

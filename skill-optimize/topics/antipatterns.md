@@ -1,4 +1,4 @@
-# ANTI-PATTERNS — Executable Assessment
+﻿# ANTI-PATTERNS — Executable Assessment
 
 Assess whether systemic failures are present — ones no primary topic fully
 owns, or ones emerging from topic interaction. Primary topics own their
@@ -47,41 +47,3 @@ Only produce a finding if a systemic pattern is present that no primary
 topic addressed.
 
 ---
-
-## Application to skill-optimize
-
-**Prior findings review (from optimize-log):**
-
-Checking 16 analyzed topics for cross-topic tensions:
-
-- COMPRESSIBILITY + OUTPUT FORMAT: Output format was fixed (spec.md Output
-  section rewritten). No compression vs. format conflict detected.
-- REUSE + LESS IS MORE: REUSE confirmed CLEAN (no extractable blocks). No
-  oscillation risk — the two topics never produced opposing recommendations.
-- COMPOSITION + COMPRESSIBILITY: Both deferred to SKILL.md creation. They
-  converged on the same root fix, not opposing recommendations. No conflict.
-- CONVERGENCE fix (Step 6 convergence signal) + LESS IS MORE: The Step 6
-  addition adds ~5 lines. LESS IS MORE would not flag 5 lines as bloat.
-  No conflict.
-
-**Validation theater check:**
-
-The self-critique instruction added (SELF CRITIQUE finding) says: "does this
-finding hold under the evidence? Is the severity calibrated correctly?"
-This asks the model to verify against evidence in the source files — not
-open-ended self-assessment. Observable criteria: the source files. Not
-validation theater. ✓
-
-**Systemic anti-patterns?**
-
-No oscillation between primary topics found. No validation theater.
-No topic interaction that produced a regression. The multiple deferred
-LOW findings (COMPOSITION, MODEL SELECTION, EXAMPLES, PROGRESSIVE OPTIMIZATION)
-all defer to the SAME downstream fix (SKILL.md creation). This is a
-healthy dependency chain, not a systemic anti-pattern.
-
-Finding: CLEAN
-
-No systemic anti-patterns present. Primary topics covered their domains
-without oscillation or conflict. Deferred findings converge on a single
-known root cause (SKILL.md creation).

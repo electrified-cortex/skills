@@ -1,4 +1,4 @@
-# Activation Discipline — Assessment Procedure
+﻿# Activation Discipline — Assessment Procedure
 
 ## What to assess
 
@@ -45,17 +45,3 @@ the conditions under which it should not?
   is implicitly always-available without stating this as a design decision.
 - **CLEAN**: Activation criteria documented or the skill is simple enough that
   absence of documentation is not a risk.
-
-## Current state (2026-04-30)
-
-The `uncompressed.md` Inputs section lists parameters but defines no trigger
-criteria. No positive triggers ("invoke when..."), no negative triggers ("do not
-invoke when..."), no confidence threshold, no activation mode declaration. The
-skill is implicitly default (always available) without documenting that as a
-design decision.
-
-**Finding: LOW** — activation model undocumented. No over-triggering risk is
-present in practice (skill is specific enough that callers will know when to
-invoke it), but documenting negative triggers (e.g., do not invoke when the
-skill is under active revision; do not re-invoke topics already logged clean
-in this session) would prevent waste in batch contexts.
