@@ -66,7 +66,9 @@ corroboration is required:
 The skill's output should have acceptance criteria that can be checked
 without re-running the skill. "The output is a valid findings report"
 is not testable. "The output is a markdown document containing a
+
 ## Findings section with at least one entry per category, each entry
+
 containing a severity label (HIGH/MEDIUM/LOW) and a sentence of
 rationale" is testable.
 
@@ -85,6 +87,7 @@ may not match the skill designer's intent.
 ## Finding criteria
 
 Produce a finding when:
+
 - **HIGH**: The skill produces verdicts without specifying what evidence
   standard those verdicts are based on — the evidentiary basis is
   implicit or absent.

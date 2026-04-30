@@ -9,6 +9,13 @@ require judgment — asking "given what this skill is trying to do, is it
 structured optimally?" This is Sonnet-class work and cannot be reduced to
 a deterministic checklist.
 
+**Skills are engineered, not written.** A writer asks "what should I say?"
+An engineer asks "what contract am I fulfilling, and what is the minimum
+that satisfies it?" The optimizer applies that engineering lens: contract
+first, failure paths before the happy path, complexity as a smell, and
+proof that the change was worth it. If a skill was written but not
+engineered, the optimizer finds where that distinction shows.
+
 ## Design Goal — Intelligence Over Rules
 
 Skill auditing finds rule violations. Skill optimize finds missed
