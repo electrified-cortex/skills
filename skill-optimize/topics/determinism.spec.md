@@ -23,11 +23,23 @@ a deterministic tool, script, or structured algorithm.
 - The deterministic alternative would be as expensive or more complex
   than the LLM call.
 
+**Debuggability benefit:** Deterministic tools are unit-testable, loggable,
+and auditable in a way LLM steps are not. A wrong LLM step looks like a
+different answer; a wrong deterministic tool produces a traceable, reproducible
+error. This compounds over time: a tool that's wrong can be fixed once and
+the fix holds; an LLM step that's wrong may behave differently on every run.
+
+**Hybrid pattern:** A useful middle path is LLM for intent detection, tool
+for execution. The LLM identifies *what* needs to happen (judgment, ambiguity
+resolution), the tool applies it precisely (execution, transformation). This
+preserves LLM value where it's needed and removes it where it's not.
+
 Produce a finding only when a realistic, concrete tool replacement exists.
 Do not suggest vague "use a script instead" findings without specifying
 what the script would do.
 
 Be conservative about tool use as it can create unforeseen complexity that
-an LLM can do on its own. Creating one or two useful tools to help with
-deterministic processes is probably a win. Creating a tool for every
-execution is probably an anti-pattern.
+an LLM can do on its own. A rough signal: if the deterministic step recurs
+across many invocations or is meaningfully expensive in latency or tokens,
+a tool is worth it. If it's a one-off in a single skill, the LLM handling
+it inline is usually fine. Creating a tool for every execution is an anti-pattern.

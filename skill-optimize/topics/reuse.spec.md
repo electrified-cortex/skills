@@ -16,11 +16,19 @@ pattern into a force multiplier.
 **Signal for sub-skill extraction:**
 
 - A multi-step block inside this skill also appears (or is likely to appear)
-  in other skills. Repeated procedure = extraction candidate.
+  in other skills. Repeated procedure = extraction candidate. Rough signal:
+  if the same block appears in 2+ existing skills or is expected to appear
+  in skills on the immediate roadmap, extraction is likely worth it.
 - The block is self-contained: it has a clear input, a clear output, and no
   dependency on the surrounding skill's state. It could be called independently.
 - The block is long enough that duplicating it adds meaningful overhead to
-  every consumer skill.
+  every consumer skill. A 2-line conditional is not worth extracting; the
+  sub-skill overhead would exceed any token savings.
+
+**Versioning friction:** Extracted sub-skills become shared dependencies.
+  A breaking change to a sub-skill requires auditing all dependent skills.
+  Only extract when the sub-skill is stable or when the value of sharing
+  outweighs the coordination cost of versioning it.
 
 **Signal for tool conversion:**
 
@@ -41,3 +49,10 @@ Produce a finding when a reuse or extraction opportunity is clear and the
 benefit outweighs the overhead of introducing a new dependency. Do not
 produce speculative findings — only when the repeated or extractable block
 is evident in the current skill's instructions.
+
+**Dependency minimization:** Alongside reuse, assess whether the skill's
+existing dependencies are necessary. A skill that depends on five sub-skills
+where two would do the job has unnecessary coupling. Circular dependencies
+(Skill A depends on B, which depends on A) are always a finding. A dependency
+that can be eliminated without replacing it — because the dependent step
+can be inlined cheaply — is a LESS IS MORE candidate, not just a reuse one.

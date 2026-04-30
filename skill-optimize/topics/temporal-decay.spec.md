@@ -31,7 +31,16 @@ specific quirks are temporally fragile.
 
 **Environmental assumptions** — Assumptions about directory structure,
 tool availability, environment variables, or platform behavior. These
-are implicit version dependencies on the environment.
+are implicit version dependencies on the environment: if the environment
+changes, the skill breaks the same way it would if a pinned dependency
+had a breaking update.
+
+**Transitive decay** — A skill may not hardcode a dependency directly
+but rely on behavior of something that does. If the skill instructs
+"use the JSON output from X" and X changes its JSON schema, the skill
+is affected without itself changing. Transitive dependencies are harder
+to track but equally fragile. When identifying decay risks, consider
+not just what the skill hardcodes but what it depends on.
 
 **"Current" references** — Instructions that reference "the current
 directory," "the active task," or "the latest version" without specifying
@@ -55,12 +64,18 @@ stable; the pointed-to value changes.
 **Expiry markers** — A comment or frontmatter field noting when this
 skill should be reviewed: `review-by: 2027-01` or `review-when: model
 version changes`. Not all skills need this — only those with known
-expiry triggers.
+expiry triggers. Note that a review-when marker with no enforcement
+mechanism is just a comment: the skill will continue running past its
+review date unless the team has a process to surface and act on these
+markers.
 
 **Test-based decay detection** — If the skill has an eval or test
 harness, model drift and environment changes will surface as test
 failures before they surface as production failures. This is the ideal
-decay detector.
+decay detector. Without a test harness, decay signals include: the skill
+producing different results on previously stable inputs; downstream users
+reporting unexpected behavior; manual re-runs revealing changed output.
+All three are late signals — tests catch decay earliest.
 
 ## Review cadence signal
 

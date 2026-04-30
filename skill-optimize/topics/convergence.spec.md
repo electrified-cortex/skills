@@ -48,9 +48,10 @@ introduce regressions. The original optimizer then responds to the critique.
 The loop terminates when the adversarial agent finds nothing new to
 challenge. This is the convergence criterion for the adversarial variant.
 
-Relevant to R12 in the main spec: multi-pass convergence is already required.
-The adversarial variant is an enhancement where the "next pass" is an
-adversarial agent, not just a higher-tier re-run.
+Relevant to R12 in the main spec (the multi-pass convergence requirement
+that mandates skill-optimize itself be run until findings stabilize): multi-pass
+convergence is already required. The adversarial variant is an enhancement
+where the "next pass" is an adversarial agent, not just a higher-tier re-run.
 
 ## Automated convergence (APO / DSPy direction)
 
@@ -85,6 +86,10 @@ skills with known findings, to verify its own recommendations are stable.
 - **False convergence**: no new findings, but the skill is simply too vague
   for findings to be producible. Fix: check that DETERMINISM and WORDING
   produce findings before declaring convergence.
+- **Budget exhaustion**: the loop hits token or cost limits before reaching
+  convergence. This is not failure — accept the findings produced so far,
+  note that convergence was not reached, and treat it as a partial run.
+  Do not discard partial findings.
 
 ## Calibration via known-good references
 

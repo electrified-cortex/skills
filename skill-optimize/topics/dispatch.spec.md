@@ -16,7 +16,7 @@ in `dispatch/dispatch-pattern.md`; the summary below covers the key signals.
   whose intermediate state should not persist in the host's context window.
 
 Scope isolation via dispatch has compounding long-term value: every token
-not loaded into the host context is permanently saved — and the host's
+not loaded into the host context is permanently avoided — and the host's
 context stays cleaner for longer, reducing context pollution that would
 otherwise force earlier compaction or degraded reasoning at context limits.
 

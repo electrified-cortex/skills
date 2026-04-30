@@ -29,7 +29,11 @@ whole — not the execution pattern of a single invocation.
 **Signal for grouping:**
 
 - Related standalone skills that are always used together should be grouped
-  under a parent router, improving discoverability.
+  under a parent router, improving discoverability. Caution: "always used
+  together" is a strong criterion. Forced grouping where the coupling is
+  incidental rather than natural creates navigation overhead without benefit
+  — the agent must traverse a hierarchy to reach the skill it already knew
+  it needed.
 - A skill that is always invoked as a chain (A → B → C) may benefit from
   a composite wrapper that orchestrates the chain once rather than requiring
   callers to know the sequence.

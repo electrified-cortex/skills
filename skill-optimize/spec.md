@@ -23,6 +23,21 @@ Each finding must be grounded in the skill's actual content and purpose —
 not applied mechanically. A suggestion without a clear reason tied to the
 skill's intent is not a valid finding.
 
+**Stable audit sequence (orientation):** A useful mental model for
+approaching any skill, before diving into the per-topic checklist:
+
+1. Should this skill exist at all?
+2. When should it activate?
+3. What contract does it fulfill?
+4. What context does it require?
+5. What failure modes and variance must it control?
+6. How do we prove the optimized version is better?
+
+These are not additional topics — they are the framing questions that
+prevent the topic checklist from becoming a taste test. If the answers
+are unclear, the findings will be shallow regardless of how many topics
+are evaluated.
+
 **The auditing/optimizing boundary:**
 
 When a specific, deterministic technique is identified (e.g., "trigger
@@ -233,6 +248,11 @@ understand its signals, when-not-to-apply guidance, and finding criteria.
 | `temporal-decay.spec.md` | TEMPORAL DECAY | Version-pinned references; staleness risk |
 | `context-sensitivity.spec.md` | CONTEXT SENSITIVITY | Parameterization; environment portability |
 | `autonomy-level.spec.md` | AUTONOMY LEVEL | Interactive vs. autonomous; confirmation calibration |
+| `activation-discipline.spec.md` | ACTIVATION DISCIPLINE | Trigger criteria; negative triggers; over-triggering |
+| `context-budget.spec.md` | CONTEXT BUDGET | Minimum viable context; pruning; handoff format |
+| `failure-mode.spec.md` | FAILURE MODE | Semantic failures; confidence labeling; must-stop vs. degrade |
+| `verification-strategy.spec.md` | VERIFICATION STRATEGY | Evidentiary standard; primary source; acceptance criteria |
+| `evaluation-harness.spec.md` | EVALUATION HARNESS | Benchmark inputs; regression cases; before/after comparison |
 
 ## Output — Findings Record
 

@@ -21,8 +21,12 @@ they should have stopped.
 The order instructions are given can affect which interpretation dominates.
 Key heuristics:
 
-- State what to do before explaining caveats. Caveats after the action
-  are less likely to override it than caveats before.
+- Guard clauses (stop conditions, early exits) come first — before the
+  main action. This is not in tension with "main path first" below:
+  guard clauses remove non-cases before the main path begins.
+- State the main action before non-stopping caveats and qualifications.
+  Caveats after the action are less likely to override it than caveats
+  before. Caveats before the action can cause the model to hesitate.
 - Put the most common path first; edge cases and exceptions last.
 - Group related instructions together; interleaved concerns create
   ambiguity about what applies when.
@@ -49,10 +53,11 @@ allow early exit before the model loads the rest.
 Validation theater (IACDM antipattern 1): instructions that ask the
 model to self-evaluate ("is this output good?", "verify your work")
 without providing external observable criteria fall into this pattern.
-A model cannot determine whether what it generated is correct without
-feedback from outside itself (Moreira 2026, Section 2.1). Effective
+A model can validate format, structural consistency, and constraint
+satisfaction — but cannot determine semantic correctness or output
+quality without external criteria (Moreira 2026, Section 2.1). Effective
 verification criteria specify observable outputs — file presence, line
-count, structured verdict format — not self-assessment prompts.
+count, structured verdict format — not open-ended self-assessment prompts.
 
 **Model-specific considerations:**
 

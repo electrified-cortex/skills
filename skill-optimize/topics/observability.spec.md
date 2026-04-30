@@ -20,10 +20,13 @@ trustworthy over time.
 ## Dimensions of observability
 
 **Decision transparency** — Does the output explain why key decisions
-were made? "No finding for DISPATCH" is less observable than "No finding
-for DISPATCH — skill is a 3-step inline procedure where dispatch overhead
-would dominate; current inline pattern is correct." A reviewer can verify
-the second; they can only trust the first.
+were made? "No finding for DISPATCH" (the dispatch/inline routing decision)
+is less observable than "No finding for DISPATCH — skill is a 3-step
+inline procedure where dispatch overhead would dominate; current inline
+pattern is correct." A reviewer can verify the second; they can only
+trust the first. Any skill that produces a verdict (approved/rejected,
+finding/no-finding, HIGH/MEDIUM/LOW) requires reasoning — a bare verdict
+with no rationale is not auditable.
 
 **Intermediate state surfacing** — For multi-step skills, does the output
 surface enough intermediate state to verify correctness? A findings

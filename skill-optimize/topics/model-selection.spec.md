@@ -1,7 +1,7 @@
 # Model Selection
 
 Assess the appropriate model tier for this skill's executor and whether
-instruction quality is the limiting factor preventing a lower-tier execution.
+instruction quality is the limiting factor that prevents lower-tier execution.
 
 **Model tier signals:**
 
@@ -20,6 +20,8 @@ instruction quality is the limiting factor preventing a lower-tier execution.
   architectural analysis, tasks requiring the model to hold many competing
   constraints simultaneously. Reserve for genuinely hard problems — most
   things that feel like Opus are actually Sonnet with better instructions.
+  This is not a license to downgrade everything; some tasks genuinely need
+  Opus-class reasoning. Use evidence — test with the cheaper tier first.
 
 **The instruction-quality lever:**
 

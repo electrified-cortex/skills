@@ -31,9 +31,12 @@ degenerate loop that never converges and wastes infinite tokens.
 
 **Hard iteration cap** — Always specify a maximum number of iterations.
 "Repeat up to N times OR until no new findings — whichever comes first."
-N should be derived from the problem, not arbitrary. For multi-pass
-optimization, 3-5 iterations captures most convergence paths; beyond that,
-gains are marginal and costs compound.
+N should be derived from the problem: for multi-pass optimization, typically
+3-5 iterations captures most convergence paths — beyond that, gains are
+marginal and costs compound. For a judgment-heavy skill with low error
+tolerance, N = 5 may be appropriate; for a simple structural check, N = 2
+is usually enough. Arbitrary N (a round number with no rationale) is a
+finding.
 
 **State tracking** — The loop must track what was found and changed in
 previous passes. If the current pass finds the same issues as the previous
@@ -69,6 +72,12 @@ that needs to be made (keep the block? remove it entirely?) that the loop
 is unable to make because the skill doesn't specify the deciding criterion.
 
 ## Practical loop structures for skills
+
+**Token budget awareness** — For skills with known token ceilings, the
+loop should track cumulative spend and exit before the budget is exhausted.
+Leave a buffer: if a full pass costs ~X tokens, stop when remaining budget
+is less than X. Partial passes at the end of a budget are worse than clean
+early exits — they produce incomplete findings without convergence signal.
 
 **Fixed-N iteration:**
 ```

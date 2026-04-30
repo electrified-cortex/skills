@@ -41,6 +41,13 @@ external API calls with side effects. Interactive or confirmation-required.
 The model should not autonomously execute high-risk irreversible actions
 without explicit documentation that this is intended.
 
+**Constructive vs. destructive distinction** — Creating a file and
+deleting a file are not symmetric. Creation is reversible (delete the
+new file); deletion of an existing file may not be. Overwriting an
+existing file is riskier than creating a new one. Skills that mix
+creation and deletion in the same invocation should require confirmation
+before the destructive step even if the constructive steps are autonomous.
+
 ## The confirmation anti-pattern
 
 Confirming things that don't need confirmation is as much a failure as
@@ -61,6 +68,10 @@ The skill should explicitly state its autonomy model:
 - What it will pause and confirm before doing
 - Under what conditions it will stop and request operator input
 - Whether it is designed for attended or unattended execution
+- **For multi-step skills: which steps have different autonomy levels.**
+  A skill can run autonomously for steps 1-3, pause for step 4 (destructive
+  or irreversible), and resume for step 5. Document this per-step rather
+  than as a single overall level when the steps differ meaningfully.
 
 Without this, callers cannot safely integrate the skill into a pipeline
 (a fully autonomous skill in a batch pipeline will not pause to confirm

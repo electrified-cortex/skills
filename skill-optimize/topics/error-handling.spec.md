@@ -51,6 +51,14 @@ that proceeds and fails halfway through.
 Pattern: precondition block at entry → explicit `ERROR:` output →
 stop. No analysis after the error block.
 
+**Error messages should be actionable.** `ERROR: missing required file`
+is less useful than `ERROR: missing required file SKILL.md — expected
+at skills/my-skill/SKILL.md. Create it or pass --input-path to specify
+a different location.` The second version tells the caller what went
+wrong and what to do. Skills that produce diagnostic-only errors are
+following the floor; skills that produce recovery-suggesting errors are
+exceeding it.
+
 ## Silent failures are HIGH severity
 
 A skill with no error handling is not "clean" — it is silently broken
