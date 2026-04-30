@@ -23,7 +23,7 @@ Hard prohibition: do NOT author scripts, helper files, or any file other than `<
    - `MISS: <abs-path>` → rebind `<lint_path>` = `<abs-path>`, continue.
    - Anything else → return that output verbatim, stop.
 
-4. **Run verify** — `verify.sh` / `verify.ps1` co-located in this folder. Covers MD009, MD010, MD012, MD041, MD047.
+4. **Run verify** — `verify.sh` / `verify.ps1` co-located in this folder. Covers MD010, MD041 (MD009, MD012, MD047 already fixed by lint tool).
    - Bash: `bash <skill-dir>/verify.sh <markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
    - PS7: `pwsh <skill-dir>/verify.ps1 <markdown_file_path> [-Ignore <RULE>[,<RULE>...]]`
    Include its output in findings. Do not re-check covered rules unless verify was skipped or errored.

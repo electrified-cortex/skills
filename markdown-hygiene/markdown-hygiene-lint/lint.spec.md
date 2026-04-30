@@ -17,6 +17,7 @@ possible baseline.
 | MD047 | Ensure file ends with exactly one LF |
 
 Does NOT fix:
+
 - MD010 (hard tabs): converting tabs to spaces requires knowing indentation
   width — invasive without context.
 - MD041 (missing H1): adding a heading is semantic, not mechanical.

@@ -9,18 +9,16 @@ with a stable, versioned tool whose output is reproducible and testable.
 ## Scope
 
 Covers the following markdownlint rules via pure shell logic (no external
-packages):
+packages). MD009, MD012, and MD047 are handled by the co-located `lint` tool
+and are NOT re-checked here.
 
 | Rule | Description |
 | --- | --- |
-| MD009 | Trailing spaces (any line, including inside code blocks) |
 | MD010 | Hard tabs outside fenced code blocks |
-| MD012 | Multiple consecutive blank lines (flags 2nd blank in any run) |
 | MD041 | First non-blank line must be H1 (auto-suppressed for frontmatter) |
-| MD047 | File must end with exactly one newline (LF) |
 
-Does NOT cover: MD001, MD003, MD004, MD022, MD023, MD024, MD025, MD026,
-MD029, MD031, MD032, MD033, MD034, MD040, MD055, MD056, MD058, MD060.
+Does NOT cover: MD001, MD003, MD004, MD009, MD012, MD022, MD023, MD024, MD025, MD026,
+MD029, MD031, MD032, MD033, MD034, MD040, MD047, MD055, MD056, MD058, MD060.
 Those remain the responsibility of the executor's LLM rule-knowledge pass.
 
 ## Interface

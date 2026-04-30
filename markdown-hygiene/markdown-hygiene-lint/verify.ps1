@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 # verify.ps1 — deterministic markdown hygiene check
-# Covered rules: MD009, MD010, MD012, MD041, MD047
+# Covered rules: MD010, MD041
 # Usage: verify.ps1 <file> [-Ignore RULE[,RULE...]]
 # Output: CLEAN | violation pairs (rule line + Fix line per violation), LF-terminated
 # Exit: 0 on success; 1 on usage/file error (errors to stderr)
@@ -30,8 +30,6 @@ if ($Ignore) {
 
 function Skip([string]$rule) { return $skip.ContainsKey($rule) }
 
-# Read raw bytes for MD047 check, and text for line analysis
-$rawBytes = [System.IO.File]::ReadAllBytes($FilePath)
 $rawText  = [System.Text.Encoding]::UTF8.GetString($rawBytes)
 
 # Split on LF; handle CRLF by stripping CR from each line
@@ -72,22 +70,12 @@ for ($i = 0; $i -lt $N; $i++) {
         $inFence = -not $inFence
     }
 
-    # MD009 — trailing spaces (applies everywhere including code blocks)
-    if (-not (Skip 'MD009') -and $L -match '\s$') {
-        Add-Finding "MD009 line ${LN}: trailing spaces" "Fix: remove trailing whitespace from line ${LN}"
-    }
-
     # MD010 — hard tabs outside fenced code blocks (skip fence delimiter lines)
     if (-not (Skip 'MD010') -and (-not $inFence) -and (-not $isFence) -and $L -match "`t") {
         Add-Finding "MD010 line ${LN}: hard tab in non-code content" `
                     "Fix: replace tab character on line ${LN} with spaces"
     }
 
-    # MD012 — multiple consecutive blank lines (flag 2nd blank in any run)
-    if (-not (Skip 'MD012') -and $i -gt 0 -and $L -match '^\s*$' -and $lines[$i - 1].TrimEnd("`r") -match '^\s*$') {
-        Add-Finding "MD012 line ${LN}: multiple consecutive blank lines" `
-                    "Fix: remove blank line ${LN} (keep only one blank line between paragraphs)"
-    }
 }
 
 # MD041 — first non-blank line must be H1 (suppressed when frontmatter detected)
@@ -101,15 +89,6 @@ if (-not (Skip 'MD041') -and -not $hasFm) {
         }
         break
     }
-}
-
-# MD047 — file must end with single newline (0x0A)
-if (-not (Skip 'MD047') -and $rawBytes.Length -gt 0) {
-    if ($rawBytes[-1] -ne 0x0A) {
-        Add-Finding "MD047: file lacks trailing newline" `
-                    "Fix: append a single newline at end of file"
-    }
-}
 
 # Output with explicit LF line endings (byte-identical with verify.sh on same platform)
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
