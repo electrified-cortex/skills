@@ -1,9 +1,0 @@
----
-file_path: hash-record/hash-record-manifest/instructions.uncompressed.md
-operation_kind: markdown-hygiene
-result: pass
----
-
-# Result
-
-CLEAN
