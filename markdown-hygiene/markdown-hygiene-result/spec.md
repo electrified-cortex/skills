@@ -25,7 +25,7 @@ Wraps `hash-record-check` for `markdown-hygiene` and translates a HIT into the c
 HIT translation depends on the `result:` value in the cached record's frontmatter:
 
 | `result:` value | Output |
-|-----------------|--------|
+| --- | --- |
 | `clean` | `clean: <abs-path>` |
 | `fail` | `findings: <abs-path>` |
 | `pass` | `pass: <abs-path>` |
@@ -34,7 +34,7 @@ HIT translation depends on the `result:` value in the cached record's frontmatte
 Special case: `report` records with `result: clean` emit `CLEAN` (no path) for host ergonomics.
 
 | Condition | Output | Exit |
-|-----------|--------|------|
+| --- | --- | --- |
 | HIT — result: clean (`report` filename) | `CLEAN` | 0 |
 | HIT — result: clean (other filename) | `clean: <abs-path>` | 0 |
 | HIT — result: fail | `findings: <abs-path>` | 0 |
