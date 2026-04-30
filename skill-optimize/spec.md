@@ -265,16 +265,19 @@ from its reading of the skill.
 
 #### Assessor Decision
 
-The assessor reviews qualifier results and selects the single topic most
-likely to yield a HIGH finding. Tie-breaking order:
+The assessor builds the candidate topic list by reading the optimize log,
+excluding topics already marked `clean`, `rejected`, or `acted`, and
+ordering the remainder by natural priority (Tier 1 first — see table).
 
-1. `yes` signals over `maybe`
-2. Structural/architectural topics over stylistic topics
-3. Topic natural priority order (see table below)
-4. Shortest topic spec (lower analysis cost for equivalent expected yield)
+That ordered list goes to the qualifier. The qualifier returns the first
+applicable topic. The assessor accepts the result and proceeds to Topic
+Analysis.
 
-**Natural priority order** — the default sequence when signals are tied
-or qualifier dispatch is unavailable:
+If the qualifier returns `TOPIC: none`, there are no remaining applicable
+topics. The assessor reports completion and stops.
+
+**Natural priority order** — the ordering the assessor applies to the
+candidate list before passing it to the qualifier:
 
 | Tier | Topics | Rationale |
 | ---- | ------ | --------- |
