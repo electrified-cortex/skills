@@ -1,4 +1,7 @@
-# OUTPUT FORMAT
+﻿# OUTPUT FORMAT
+
+## Purpose
+
 
 Assess whether the skill specifies its output format explicitly enough to
 produce consistent, parseable results across invocations. Implicit format
@@ -55,3 +58,12 @@ instructions file.
 **Do not produce a finding when:** the output is explicitly specified in
 the instructions with a template or field schema, OR the output is
 genuinely unstructured and consumed by a context that handles variance.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.

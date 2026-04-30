@@ -1,6 +1,6 @@
 ---
 name: markdown-hygiene
-description: Fix markdownlint violations in a .md file. Triggers — lint markdown, scan markdown, MD violations, markdownlint pass, fix markdown.
+description: Fix markdownlint violations and analyze semantic quality in a .md file. Triggers — lint markdown, scan markdown, MD violations, markdownlint pass, fix markdown, analyze markdown, semantic hygiene.
 ---
 
 ## Input
@@ -16,7 +16,10 @@ Run `result` tool (in this folder), whichever your runtime has. DON'T READ the s
 
 (Note: the terminal output might wrap)
 
-If stdout is `MISS: <abs-path>` -> bind `<report_path>` = `<abs-path>`, continue.
+If stdout is `MISS: <abs-path>` -> bind `<report_path>` = `<abs-path>`, derive siblings:
+  `<lint_path>` = `$(dirname <report_path>)/lint.md`
+  `<analysis_path>` = `$(dirname <report_path>)/analysis.md`
+  Continue.
 Otherwise -> emit stdout verbatim, stop.
 
 ## Preparation
@@ -25,19 +28,34 @@ If runtime has markdown linter, run auto-fix on `<markdown_file_path>`. Don't in
 Ignore MD041 warnings if target file: SKILL.md.
 NEVER lint before result check as it will invalidate cached results.
 
-No linter: skip to Inspect.
+No linter: skip to Phase 1.
 If lint fix applied, hash may have changed: go back to "Inline result check"; on 2nd MISS skip Preparation.
 
-## Inspect
+## Phase 1 — Lint (Haiku-class)
 
 Variables:
 
-`<instructions>` = `instructions.txt` (NEVER READ)
-`<instructions-abspath>` = absolute path to `<instructions>`
-`<input-args>` = `<markdown_file_path> --report-path <report_path> [--ignore <RULE>[,<RULE>...]]`
+`<lint-instructions>` = `markdown-hygiene-lint/instructions.txt` (NEVER READ)
+`<lint-instructions-abspath>` = absolute path to `<lint-instructions>`
+`<input-args>` = `<markdown_file_path> --lint-path <lint_path> [--ignore <RULE>[,<RULE>...]]`
 `<tier>` = `fast-cheap`
-`<description>` = `Inspecting Markdown Hygiene: <markdown_file_path>`
-`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+`<description>` = `Linting Markdown: <markdown_file_path>`
+`<prompt>` = `Read and follow <lint-instructions-abspath>; Input: <input-args>`
+
+Follow `dispatch` skill. See `../dispatch/SKILL.md`.
+If returns `ERROR: <reason>` -> stop, surface reason.
+Bind phase 1 result: `clean` or `findings: <lint_path>`.
+
+## Phase 2 — Analysis (Sonnet-class)
+
+Variables:
+
+`<analysis-instructions>` = `markdown-hygiene-analysis/instructions.txt` (NEVER READ)
+`<analysis-instructions-abspath>` = absolute path to `<analysis-instructions>`
+`<input-args>` = `<markdown_file_path> --lint-path <lint_path> --analysis-path <analysis_path> --report-path <report_path> [--ignore <RULE>[,<RULE>...]]`
+`<tier>` = `standard`
+`<description>` = `Analyzing Markdown Quality: <markdown_file_path>`
+`<prompt>` = `Read and follow <analysis-instructions-abspath>; Input: <input-args>`
 
 Follow `dispatch` skill. See `../dispatch/SKILL.md`.
 If returns `ERROR: <reason>` -> stop, surface reason.
@@ -54,8 +72,15 @@ Otherwise -> emit stdout verbatim, stop.
 
 Max 3 iterations. Still findings after 3rd -> stop, report last `<report_path>`.
 
-`<tier>` = `standard`
-`<description>` = `Fixing Markdown Hygiene: <markdown_file_path>`
-`<prompt>` = `For this <markdown_file_path>, read <report_path> and fix any issues in reverse order (bottom to top) to help keep line numbers accurate while fixing.`
+**Lint-only re-run** (host applied fixes from `lint.md`):
 
-Follow `dispatch` skill (same as Inspect). Then loop from "Inline result check".
+`<tier>` = `fast-cheap`
+`<description>` = `Re-linting Markdown: <markdown_file_path>`
+`<prompt>` = `Read and follow <lint-instructions-abspath>; Input: <markdown_file_path> --lint-path <lint_path> [--ignore ...]`
+
+Follow `dispatch` skill (same as Phase 1). Then check `lint.md` result. If lint now clean, re-run Phase 2 to refresh `analysis.md` and `report.md`. Then loop from "Inline result check".
+
+**Full re-run** (host applied changes from `analysis.md` suggestions):
+
+Re-run Phase 1 then Phase 2 in sequence. Then loop from "Inline result check".
+

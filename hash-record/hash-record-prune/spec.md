@@ -10,6 +10,8 @@ This is a maintenance sub-skill of `hash-record`. It does not write records; it 
 
 Applies to any record under `<repo-root>/.hash-record/<shard>/<hash>/...`. Operates per-repository — invocations are scoped to a single `.hash-record/` tree.
 
+May be further scoped to a subset of hash directories via `--target <glob>`: only hash directories whose associated source file path(s) match the glob are candidates. Hash directories outside the target are not examined or deleted.
+
 Does NOT delete records whose hash currently matches a workspace file. Does NOT delete records based on age, model, or operation-kind alone — only orphan status.
 
 ## Definitions
@@ -19,6 +21,8 @@ Does NOT delete records whose hash currently matches a workspace file. Does NOT 
 - **Active worktree**: the worktree rooted at `repo_root`. Prune is scoped to this worktree only. Linked worktrees stored under `.worktrees/` are excluded from all scans — each worktree is responsible for pruning its own records independently.
 - **Hash directory**: the path `.hash-record/<shard>/<full-hash>/`. Pruning operates at this granularity — an entire hash directory and all its descendants are removed when the hash is orphaned.
 - **Administrative directory**: a dot-prefixed directory directly under `.hash-record/` that is NOT a shard directory (e.g., any dot-prefixed dirs). Administrative directories are excluded from the hash-directory walk and MUST NOT be deleted.
+- **Associated paths**: the set of repo-relative file paths linked to a hash directory. For manifest records: the `file_paths` list read from `manifest.yaml`. For non-manifest records: the `file_path` value read from the frontmatter of any one readable leaf `.md` file found by walking the hash directory (all leaf records under the same hash directory should share the same `file_path`, since they describe the same content; the first readable one is sufficient). A hash directory whose associated paths cannot be read (no readable manifest and no readable leaf records) is treated as having no associated paths.
+- **Target glob**: a glob pattern matched against repo-relative file paths, supplied via `--target`. Uses standard `**`-capable glob syntax (`*` matches within a single path segment; `**` matches any sequence of segments; `?` matches one character). Matched against each associated path as a repo-relative string (no leading slash). When no `--target` is given, all hash directories are candidates.
 - **Dry-run**: a mode that reports what would be deleted without modifying the filesystem.
 
 ## Requirements
@@ -26,13 +30,15 @@ Does NOT delete records whose hash currently matches a workspace file. Does NOT 
 ### Input
 
 - `repo_root` (string, required): absolute path to the repository root containing the `.hash-record/` directory to prune.
+- `--target <glob>` (string, optional): a glob pattern matched against repo-relative file paths. When provided, only hash directories whose **associated paths** include at least one match are considered as candidates. Hash directories with no matching associated path are skipped entirely — they are neither validated nor deleted, regardless of orphan status. Must not be an absolute path. Default: all hash directories (no filter).
 - `--dry-run` (flag, optional): list orphaned hash directories without deleting. Default behavior is to delete.
 - `--limit <N>` (integer, optional): cap the number of hash directories deleted in one invocation. Default unlimited. Useful for incremental pruning during heavy load.
 
 ### Procedure
 
 1. Resolve `repo_root` and verify `<repo_root>/.hash-record/` exists. If absent, output `CLEAN` and stop — nothing to prune.
-2. Determine validity for each hash directory via the appropriate strategy:
+2. **Collect and filter candidates.** Walk `.hash-record/` two levels deep to enumerate all hash directories (skipping administrative dot-prefixed directories and symlinks). If `--target <glob>` is provided, filter the enumerated set: for each hash directory, resolve its **associated paths** — for manifest records, read `file_paths` from `manifest.yaml`; for non-manifest records, find and parse the frontmatter `file_path` field from any one readable leaf `.md` file by recursing into the hash directory. If at least one associated path matches the glob, retain the candidate; otherwise skip it. Hash directories with no readable associated paths are skipped when `--target` is active (conservative — do not prune what cannot be attributed). If `--target` is not provided, all enumerated hash directories are retained.
+3. Determine validity for each candidate hash directory via the appropriate strategy:
    - **Manifest strategy** (when `<repo_root>/.hash-record/<shard>/<full-hash>/manifest.yaml` exists): the directory name is a **manifest hash** (not a file blob hash) — it must be re-derived:
      1. Read `file_paths` from the manifest YAML.
      2. For each listed path, check if the file exists under `repo_root`. If missing, mark ORPHANED and stop.
@@ -40,12 +46,12 @@ Does NOT delete records whose hash currently matches a workspace file. Does NOT 
      4. Sort pairs lexically by repo-relative path.
      5. Build manifest text: one line per pair in format `<repo-relative-path> <blob-hash>`, each ending with `\n` (including the final line).
      6. Run `git hash-object --stdin` (or equivalent via temp file) on the manifest text. If the result equals `<full-hash>`, mark VALID; otherwise mark ORPHANED.
-   - **Full-workspace fallback** (when `manifest.yaml` is absent): the directory name is a single-file blob hash. Build the **valid-hash set** once (shared across all non-manifest directories): enumerate files in `repo_root` via `git ls-files --cached --others --exclude-standard`, filter out any paths under `.worktrees/` and any submodule paths, run `git hash-object <file>` for each, and collect hashes into a set. If `<full-hash>` is in the set, mark VALID; otherwise mark ORPHANED.
-3. Collect all hash directories marked ORPHANED in step 2.
-4. If `--dry-run` is set, skip deletion and output `dry-run: <count>`; stop.
-5. Otherwise, delete each orphan hash directory via `rm -rf` (or equivalent) — the entire directory and all leaf records inside it. Stop if `--limit` is reached.
-6. After deletion, prune any now-empty `<shard>/` parent directory.
-7. Output the result.
+   - **Full-workspace fallback** (when `manifest.yaml` is absent): the directory name is a single-file blob hash. Build the **valid-hash set** once (shared across all non-manifest candidates, always from the full worktree regardless of `--target`): enumerate files in `repo_root` via `git ls-files --cached --others --exclude-standard`, filter out any paths under `.worktrees/` and any submodule paths, run `git hash-object <file>` for each, and collect hashes into a set. If `<full-hash>` is in the set, mark VALID; otherwise mark ORPHANED.
+4. Collect all candidate hash directories marked ORPHANED in step 3.
+5. If `--dry-run` is set, skip deletion and output `dry-run: <count>`; stop.
+6. Otherwise, delete each orphan hash directory via `rm -rf` (or equivalent) — the entire directory and all its descendants are removed when the hash is orphaned. Stop if `--limit` is reached.
+7. After deletion, prune any now-empty `<shard>/` parent directory.
+8. Output the result.
 
 ### Output
 
@@ -59,6 +65,9 @@ Stdout return (one line):
 ## Constraints
 
 - `repo_root` MUST NOT contain `..` or shell metacharacters. The skill MUST reject such values before any filesystem operation.
+- `--target`, when provided, MUST be a relative glob pattern. An absolute path (starting with `/` or a drive letter on Windows) MUST be rejected with `ERROR: --target must be a relative glob pattern`.
+- `--target` filtering is applied before validity checking. It narrows the candidate set but does not change the validity criterion. A candidate that matches the target glob is still only deleted if its hash is orphaned per the full-worktree valid-hash set.
+- When `--target` is active, the valid-hash set is ALWAYS built from the full worktree (not restricted to matching files). A hash that is still valid for any file in the repo — including files outside the target glob — is VALID and MUST NOT be deleted.
 - The skill MUST NOT delete any record under a hash that is currently valid (in the valid-hash set for non-manifest records, or whose manifest hash re-derives correctly for manifest records), even if the record is for an unused operation-kind, model, or version.
 - The skill MUST NOT delete the `.hash-record/` directory itself or any non-hash-keyed administrative directory.
 - The skill MUST scope deletions to descendants of `<repo_root>/.hash-record/`. Paths that resolve outside this tree (via symlink or otherwise) MUST be rejected.

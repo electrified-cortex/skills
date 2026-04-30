@@ -1,9 +1,21 @@
-# Verification Strategy
+﻿# Verification Strategy
+
+## Purpose
+
 
 Assess whether the skill defines *what counts as correct* — not just
 whether the model reviewed its own output (self-critique.spec.md), but
 the actual evidentiary standard the skill applies when producing and
 validating its conclusions.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.
 
 ## Self-critique vs. verification strategy
 

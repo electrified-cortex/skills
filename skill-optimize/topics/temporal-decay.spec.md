@@ -1,8 +1,20 @@
-# Temporal Decay
+﻿# Temporal Decay
+
+## Purpose
+
 
 Assess whether the skill contains content that will become stale over
 time — version numbers, model names, external endpoints, date-referenced
 decisions, or assumptions about the environment that may change.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.
 
 ## Why skills rot
 

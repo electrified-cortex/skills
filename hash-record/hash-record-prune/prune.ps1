@@ -1,6 +1,6 @@
 #!/usr/bin/env pwsh
 # prune.ps1 — hash-record orphan pruner
-# Usage: prune.ps1 -repo_root <path> [-dry_run] [-limit <N>]
+# Usage: prune.ps1 -repo_root <path> [-target <glob>] [-dry_run] [-limit <N>]
 # Prunes orphaned hash directories from <repo_root>/.hash-record/.
 #
 # Requires PowerShell 7+ (Microsoft PowerShell, cross-platform).
@@ -9,6 +9,7 @@
 param(
     [Parameter(Position = 0)]
     [string]$repo_root,
+    [string]$target = '',
     [switch]$dry_run,
     [int]$limit = -1,
     [switch]$help,
@@ -21,7 +22,7 @@ $ErrorActionPreference = 'Continue'
 # Help
 # ---------------------------------------------------------------------------
 if ($help -or $h) {
-    $usage = "Usage: prune.ps1 -repo_root <path> [-dry_run] [-limit <N>]`n" +
+    $usage = "Usage: prune.ps1 -repo_root <path> [-target <glob>] [-dry_run] [-limit <N>]`n" +
         "`n" +
         "Prune orphaned entries from <repo_root>/.hash-record/.`n" +
         "A record is orphaned when no current file in the repo hashes to its key.`n" +
@@ -31,6 +32,9 @@ if ($help -or $h) {
         "                     Must not contain '..' or shell metacharacters.`n" +
         "`n" +
         "Flags:`n" +
+        "  -target <glob>     Relative glob pattern matched against repo-relative paths.`n" +
+        "                     Only hash directories with a matching associated path are`n" +
+        "                     candidates. Must not be an absolute path.`n" +
         "  -dry_run           Report orphan count without deleting.`n" +
         "  -limit <N>         Cap deletions at N per invocation.`n" +
         "  -help/-h           Print this help and exit 0.`n" +
@@ -78,6 +82,18 @@ if (-not ([System.IO.Path]::IsPathRooted($repo_root))) {
 $repo_root_fwd = $repo_root.TrimEnd('/', '\') -replace '\\', '/'
 $hash_record_dir = "$repo_root_fwd/.hash-record"
 $hash_record_literal = $repo_root.TrimEnd('/', '\') + [System.IO.Path]::DirectorySeparatorChar + '.hash-record'
+
+# ---------------------------------------------------------------------------
+# Validate --target
+# ---------------------------------------------------------------------------
+$use_target = $target -ne ''
+if ($use_target) {
+    # Reject absolute paths: POSIX absolute (/...) or Windows drive letter (C:\...)
+    if ($target -match '^/' -or $target -match '^[A-Za-z]:') {
+        [Console]::Out.Write("ERROR: --target must be a relative glob pattern: $target`n")
+        exit 1
+    }
+}
 
 # ---------------------------------------------------------------------------
 # CLEAN exit if .hash-record/ is absent
@@ -199,6 +215,93 @@ function Test-ManifestValid {
 }
 
 # ---------------------------------------------------------------------------
+# Glob match helper — matches a repo-relative path against a **-capable glob.
+# Uses PowerShell's -like operator for single-segment wildcards (* ?),
+# and handles ** by converting the glob to a regex for multi-segment matching.
+# ---------------------------------------------------------------------------
+function Test-GlobMatch {
+    param(
+        [string]$Path,
+        [string]$Glob
+    )
+    # Normalise to forward slashes
+    $p = $Path -replace '\\', '/'
+    $g = $Glob -replace '\\', '/'
+
+    # Convert glob to regex:
+    #   **  -> match any sequence (including path separators)
+    #   *   -> match any sequence within a single segment (no /)
+    #   ?   -> match one character (no /)
+    #   .   -> literal dot
+    $esc = [System.Text.RegularExpressions.Regex]::Escape($g)
+    # Un-escape the wildcards we care about after escaping
+    $esc = $esc -replace '\*\*', '{GLOBSTAR}'
+    $esc = $esc -replace '\*', '[^/]*'
+    $esc = $esc -replace '\?', '[^/]'
+    $esc = $esc -replace '\{GLOBSTAR\}', '.*'
+    $pattern = '^' + $esc + '$'
+    return [System.Text.RegularExpressions.Regex]::IsMatch($p, $pattern)
+}
+
+# ---------------------------------------------------------------------------
+# Target filter helper — returns $true if a hash directory has at least one
+# associated path matching $target, or if no $target is set.
+# ---------------------------------------------------------------------------
+function Test-TargetMatch {
+    param(
+        [string]$HashDirPath,
+        [string]$Glob
+    )
+    if (-not $Glob) { return $true }
+
+    $manifest = Join-Path $HashDirPath 'manifest.yaml'
+    if (Test-Path -LiteralPath $manifest -PathType Leaf) {
+        # Manifest record: check file_paths list
+        $in_fp = $false
+        $content = Get-Content -LiteralPath $manifest -ErrorAction SilentlyContinue
+        if ($null -eq $content) { return $false }
+        foreach ($line in $content) {
+            if ($line -match '^file_paths:') { $in_fp = $true; continue }
+            if ($in_fp) {
+                if ($line -match '^\s+-\s+(.+)') {
+                    $fpath = $Matches[1].TrimEnd()
+                    if ($fpath -ne '' -and (Test-GlobMatch -Path $fpath -Glob $Glob)) {
+                        return $true
+                    }
+                } elseif ($line -match '^\S') {
+                    break
+                }
+            }
+        }
+        return $false
+    }
+
+    # Non-manifest record: find first readable leaf .md and read file_path frontmatter
+    $leaf_files = Get-ChildItem -LiteralPath $HashDirPath -Recurse -Filter '*.md' -File -ErrorAction SilentlyContinue
+    foreach ($leaf in $leaf_files) {
+        if ($leaf.LinkType) { continue }
+        $in_front = $false
+        $front_done = $false
+        $lines = Get-Content -LiteralPath $leaf.FullName -ErrorAction SilentlyContinue
+        if ($null -eq $lines) { continue }
+        foreach ($line in $lines) {
+            if (-not $in_front -and $line -match '^---') { $in_front = $true; continue }
+            if ($in_front -and -not $front_done) {
+                if ($line -match '^---') { $front_done = $true; break }
+                if ($line -match '^file_path:\s*(.+)') {
+                    $fpath = $Matches[1].Trim()
+                    if ($fpath -ne '' -and (Test-GlobMatch -Path $fpath -Glob $Glob)) {
+                        return $true
+                    }
+                    break  # file_path found; only one per record
+                }
+            }
+        }
+    }
+    return $false
+}
+
+# ---------------------------------------------------------------------------
 # Walk .hash-record/ two levels deep and classify each hash directory
 # ---------------------------------------------------------------------------
 $orphans = [System.Collections.Generic.List[string]]::new()
@@ -214,6 +317,11 @@ foreach ($shard in $shard_dirs) {
     foreach ($hash_dir in $hash_dirs) {
         # Skip symlinks
         if ($hash_dir.LinkType) { continue }
+
+        # Apply --target filter before validity checking
+        if ($use_target -and -not (Test-TargetMatch -HashDirPath $hash_dir.FullName -Glob $target)) {
+            continue
+        }
 
         $hash_name = $hash_dir.Name
         $manifest = Join-Path $hash_dir.FullName 'manifest.yaml'

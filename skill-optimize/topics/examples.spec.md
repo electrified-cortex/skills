@@ -1,4 +1,7 @@
-# EXAMPLES
+﻿# EXAMPLES
+
+## Purpose
+
 
 Assess whether the skill could benefit from including one or more
 concrete input/output examples. Few-shot examples are one of the most
@@ -37,3 +40,12 @@ Produce a finding when: the skill's output format or judgment calibration
 would be materially improved by 1-3 targeted examples and none are present.
 Do not produce speculative findings — only when the gap is evident from
 the current instructions.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.

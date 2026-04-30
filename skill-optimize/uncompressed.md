@@ -1,28 +1,5 @@
 # Skill Optimize — Execution Instructions
 
-## What This Skill Does
-
-Analyzes a single skill for architectural and structural improvement
-opportunities. Produces findings organized by category. Never modifies
-skill files. Records work in an optimize-log.
-
-**Execution pattern:** Hybrid dispatch. The host agent handles routing,
-log management, and output inline. Topic analysis (Step 4) is dispatched
-to a Sonnet-class sub-agent to keep intermediate state out of the host
-context. The Haiku qualifier (Step 3a) is dispatched for lightweight
-topic selection.
-
-**Iteration model:** One invocation = one topic analyzed. The caller
-(operator or coordinator) decides whether to run again. This keeps each
-pass focused and avoids spending context budget on topics that become
-irrelevant after earlier changes are made.
-
-**Autonomy model:** Fully autonomous — all writes are new or append-only
-(log row, report file). Source file modifications based on findings are
-the caller's responsibility.
-
----
-
 ## Inputs
 
 Required:
@@ -74,10 +51,10 @@ If no log exists, proceed — this is the first pass.
 
 ## Topics Analyzed
 
-| Topic | Date | Model | Findings | Status |
-| ----- | ---- | ----- | -------- | ------ |
-| DISPATCH | 2026-04-29 | Sonnet | 1 | pending |
-| CACHING  | 2026-04-29 | Sonnet | 0 | clean   |
+| Topic | Date | Model | Findings | Status | Action |
+| ----- | ---- | ----- | -------- | ------ | ------ |
+| DISPATCH | 2026-04-29 | Sonnet | 1 | pending | — |
+| CACHING  | 2026-04-29 | Sonnet | 0 | clean   | No change. |
 ```
 
 Status values:
@@ -88,6 +65,15 @@ Status values:
 - `rejected` — finding reviewed and does not apply
 - `clean` — no findings for this topic
 
+Action values: free-text one-line summary of what was done (or `—` if none).
+
+---
+
+## Step 2a — Pre-flight Audit Check
+
+Run `pwsh result.ps1 <skill-path>` from the `skill-auditing/` directory.
+Note the verdict. Proceed regardless — this is informational only.
+
 ---
 
 ## Step 3 — Assessor Pass
@@ -95,7 +81,7 @@ Status values:
 Goal: pick the best topic to analyze next.
 
 Skip this step if `<topic>` was explicitly provided. First verify
-`<skill-path>/topics/<topic>.md` exists. If not found, stop:
+`<skill-optimize-root>/topics/<topic>.md` exists. If not found, stop:
 `ERROR: topic file not found at topics/<topic>.md`. Then go to Step 4.
 
 **Assessor model:** Sonnet-class (standard). The assessor makes the final
@@ -108,8 +94,11 @@ Dispatch one Haiku-class qualifier agent. Give it:
 
 - All skill source files (from Step 1)
 - The ordered candidate topic list — all unanalyzed topics not in the log
-  as `clean`/`rejected`/`acted`, sorted by natural priority tier (see
-  Topic Index below)
+  as `clean`/`rejected`/`acted`, sorted by natural priority tier. Priority
+  order: tier 1 (structural) — DISPATCH, CACHING, DETERMINISM, COMPOSITION,
+  MODEL-SELECTION; tier 2 (stylistic) — COMPRESSIBILITY, WORDING,
+  LESS-IS-MORE, REUSE, OUTPUT-FORMAT; tier 3 — all remaining. Full topic
+  list: read from `topics/` directory.
 - One-line descriptions only — not full topic specs
 
 Prompt:
@@ -282,68 +271,3 @@ Next: re-run with higher model tier to verify.
 ```
 
 Then stop. The caller decides whether to run again.
-
----
-
-## Topic Index
-
-| Topic slug | Category | Focus |
-| ---------- | -------- | ----- |
-| `dispatch` | DISPATCH | Dispatch vs. inline; sub-agent isolation decision |
-| `caching` | HASH RECORD | Hash-record cache usage to avoid redundant work |
-| `determinism` | DETERMINISM | Replace LLM steps with deterministic tools |
-| `composition` | COMPOSITION | Decomposition, routing, context efficiency |
-| `model-selection` | MODEL SELECTION | Tier calibration; instruction quality as cost lever |
-| `compressability` | COMPRESSIBILITY | Token overhead in instruction and output files |
-| `wording` | WORDING | Guard clauses, ordering, attention positioning |
-| `less-is-more` | LESS IS MORE | Subtraction pass; complexity inflation |
-| `reuse` | REUSE | Shared procedures; tool conversion; dispatch adoption |
-| `output-format` | OUTPUT FORMAT | Explicit output schema to reduce variance |
-| `examples` | EXAMPLES | Few-shot examples for calibration |
-| `chain-of-thought` | CHAIN OF THOUGHT | Reasoning scaffold for judgment tasks |
-| `tool-signatures` | TOOL SIGNATURES | Tool/function description quality |
-| `self-critique` | SELF CRITIQUE | Within-turn self-review for judgment outputs |
-| `convergence` | CONVERGENCE | Multi-pass stop conditions; stabilization evidence |
-| `iteration-safety` | ITERATION SAFETY | Loop design; hard caps; oscillation detection |
-| `progressive-optimization` | PROGRESSIVE OPT | Impact tiers; per-topic tracking |
-| `antipatterns` | ANTI-PATTERNS | Cross-topic tensions; per-category foot guns |
-| `error-handling` | ERROR HANDLING | Error paths; fail-fast; silent failure |
-| `interface-clarity` | INTERFACE CLARITY | Invocation contract; input/output documentation |
-| `observability` | OBSERVABILITY | Decision transparency; audit trail quality |
-| `temporal-decay` | TEMPORAL DECAY | Version-pinned references; staleness risk |
-| `context-sensitivity` | CONTEXT SENSITIVITY | Parameterization; environment portability |
-| `autonomy-level` | AUTONOMY LEVEL | Interactive vs. autonomous; confirmation calibration |
-| `activation-discipline` | ACTIVATION DISCIPLINE | Trigger criteria; negative triggers; over-triggering |
-| `context-budget` | CONTEXT BUDGET | Minimum viable context; pruning; handoff format |
-| `failure-mode` | FAILURE MODE | Semantic failures; confidence labeling |
-| `verification-strategy` | VERIFICATION STRATEGY | Evidentiary standard; primary source; acceptance criteria |
-| `evaluation-harness` | EVALUATION HARNESS | Benchmark inputs; regression cases; before/after comparison |
-
----
-
-## Notes on Context Budget
-
-If context budget is limited:
-
-- Prefer shorter topic specs (DISPATCH, CACHING, DETERMINISM are lean)
-- Stop after one topic rather than producing thin coverage on many
-- The assessor's priority order is designed to ensure the highest-value
-  topic is hit first even if you only get one pass
-
----
-
-## Implementation Notes
-
-**This spec is itself a candidate for optimization.** The intended
-long-term architecture is:
-
-- **Assessor** dispatched as a lightweight Haiku-class sub-agent — reads
-  the skill and the index, returns a ranked topic list
-- **Topic agents** dispatched in parallel once the order is known —
-  each loads only one topic spec, isolated context, model-tier matched
-- **Log maintenance** stays inline — the host agent writes the log
-  after collecting sub-agent results
-
-Start with everything inline. Extract to dispatch when you have evidence
-that a step benefits from isolation (expensive, parallel-friendly, or
-benefits from a different model tier).

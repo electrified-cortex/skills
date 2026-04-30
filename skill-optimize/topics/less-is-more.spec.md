@@ -1,8 +1,20 @@
-# Less Is More
+﻿# Less Is More
+
+## Purpose
+
 
 Assess whether the skill's instruction file contains content that is not
 pulling its weight — instructions the model doesn't need to produce correct
 output, or that exist to patch symptoms of a deeper wording problem.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.
 
 ## The subtraction test
 

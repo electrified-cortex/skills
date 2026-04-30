@@ -1,4 +1,7 @@
-# Composition
+﻿# Composition
+
+## Purpose
+
 
 Assess how a skill is structured and whether it should be decomposed,
 grouped, or re-shaped to reduce what any single invocation must load.
@@ -56,3 +59,12 @@ performance degrades for content positioned in the middle of long inputs
 model to scan mid-context to find its relevant section imposes this cost
 on every invocation. Observed degradation begins beyond ~50k tokens of
 accumulated context. (IACDM, Moreira 2026, Section 6)
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.

@@ -92,9 +92,18 @@ stays lean; detail is in sub-files), and CHAIN OF THOUGHT (analysis
 sub-agents reason before finding). When that refactor happens, this
 spec becomes a live example of the principles it defines.
 
-This is a **dispatch skill** — it must run in an isolated agent at
-Sonnet-class or higher. `fast-cheap` (haiku-class) is not permitted;
-the assessments require judgment.
+This is a **hybrid skill** — the host agent handles routing, log management, and
+output inline. Topic analysis (Step 4) dispatches to a Sonnet-class sub-agent.
+Sonnet-class or higher is required for standard passes; the topic assessments
+require judgment. Haiku-class may be used for initial qualifier passes only.
+
+## Parameters
+
+- `<skill-path>` — absolute path to the skill directory to analyze (required).
+- `<topic>` — topic slug (e.g. `dispatch`, `caching`). Optional. If provided,
+  skips the assessor phase and analyzes the named topic directly.
+- `<mode>` — `assess-only` (select topic but do not analyze) | default (assess
+  then analyze).
 
 ## Version
 
@@ -134,9 +143,12 @@ change in a way that invalidates prior records.
 1. The optimizer **must** read all available skill source files before
    producing any finding: `spec.md`, `uncompressed.md`, `SKILL.md`,
    `instructions.txt`, and `instructions.uncompressed.md` if present.
-2. The optimizer **must** evaluate all optimization categories defined in
-   `./topics/` for every invocation. Each `.spec.md` file in that
-   directory is a required analysis category.
+2. The optimizer **must** track all optimization categories defined in
+   `./topics/` across invocations using the optimize log, and **must not**
+   skip categories without logging a status (`clean`, `rejected`, `acted`,
+   or `deferred`). Each `.spec.md` file in that directory is a required
+   analysis category. Full coverage is achieved across multiple invocations,
+   not in a single pass.
 3. Each finding **must** include: category, severity, reasoning (grounded
    in the skill's content), and a concrete recommendation.
 4. The optimizer **must** produce no finding for a category when no
@@ -170,20 +182,20 @@ change in a way that invalidates prior records.
 11. The record body **must not** contain absolute filesystem paths.
     All paths in the body **must** be repo-relative.
 
-12. The optimizer **should** be structured for multi-pass convergence.
-    The recommended execution pattern is: run lightweight (Haiku-class)
-    passes repeatedly until no new findings are produced — then escalate
-    to a standard (Sonnet-class) pass for a deeper review, and optionally
-    to a deep (Opus-class) pass for final refinement. Convergence is when
-    a full pass produces zero net-new findings. Each pass should cache its
-    own result. The caller controls how many passes to run; the optimizer
+12. The optimizer **must** support multi-pass convergence. The recommended
+    execution pattern is: run lightweight (Haiku-class) passes repeatedly
+    until no new findings are produced — then escalate to a standard
+    (Sonnet-class) pass for a deeper review, and optionally to a deep
+    (Opus-class) pass for final refinement. Convergence is when a full
+    pass produces zero net-new findings. Each pass must cache its own
+    result. The caller controls how many passes to run; the optimizer
     does not self-iterate — it is stateless per invocation.
 
 13. **Pre-flight audit awareness**: Before deep analysis, the optimizer
-    **should** note whether the skill passes basic structural checks
+    **must** note whether the skill passes basic structural checks
     (per skill-auditing). Optimization findings are more meaningful on
     structurally sound skills. If the skill has auditing failures, the
-    optimizer should note them as context but still produce optimization
+    optimizer **must** note them as context but still produce optimization
     findings — the two are complementary.
 
 14. **Audit-candidate findings**: When the optimizer identifies a pattern
@@ -197,8 +209,10 @@ change in a way that invalidates prior records.
 
 - **One skill per invocation**: each invocation optimizes exactly one
   skill; multi-skill runs are separate invocations.
-- **Read-only**: the optimizer never writes to skill files. It writes
-  only to the hash-record.
+- **Read-only**: the optimizer never writes to skill source files. Write
+  targets are: `<skill-path>/optimize-log.md` (log rows) and
+  `<skill-path>/.optimization/<topic-slug>.md` (per-topic reports). Hash-record
+  writes (`.hash-record/`) are caller-controlled, not optimizer-internal.
 - **Convergence-based multi-pass**: the optimizer may run in multiple
   passes across escalating model tiers (see R12). A single pass is valid;
   multi-pass until convergence is the optimal pattern.

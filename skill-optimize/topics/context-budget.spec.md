@@ -1,10 +1,22 @@
-# Context Budget
+﻿# Context Budget
+
+## Purpose
+
 
 Assess whether the skill is responsible with the context it consumes and
 the context it passes on. Compressibility and Less Is More focus on the
 instruction file itself. Context budget addresses the full picture: what
 context the skill requires to run, what it passes to sub-agents, and what
 it leaves behind in the host's context window.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.
 
 ## Why context budget is distinct from compressibility
 

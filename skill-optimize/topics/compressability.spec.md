@@ -1,4 +1,7 @@
-# Compressability
+﻿# Compressability
+
+## Purpose
+
 
 Assess whether the skill's instructions can be made tighter and shorter
 while preserving accuracy. Compressibility is brevity in service of
@@ -47,3 +50,12 @@ Produce a finding when:
 
 Do not produce a finding when instruction length matches the genuine
 complexity and cognitive demands of the task.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.

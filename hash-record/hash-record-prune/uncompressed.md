@@ -5,11 +5,12 @@ description: Remove orphaned hash directories from a repository's .hash-record/ 
 
 # Hash Record Prune
 
-Dispatch an isolated agent (use Dispatch agent, zero context): "Read and follow `instructions.txt` (in this directory). Input: `repo_root=<absolute-path> [--dry-run] [--limit <N>]`"
+Dispatch an isolated agent (use Dispatch agent, zero context): "Read and follow `instructions.txt` (in this directory). Input: `repo_root=<absolute-path> [--target <glob>] [--dry-run] [--limit <N>]`"
 
 Parameters:
 
 - `repo_root` (string, required): absolute path to the repository root containing the `.hash-record/` directory to prune.
+- `--target <glob>` (string, optional): relative glob pattern matched against repo-relative file paths. When provided, only hash directories whose associated source path(s) include at least one match are candidates. Hash directories outside the target are skipped entirely — neither validated nor deleted. Must not be an absolute path.
 - `--dry-run` (flag, optional): list orphaned hash directories without deleting. Default behavior is to delete.
 - `--limit <N>` (integer, optional): cap the number of hash directories deleted in one invocation. Default unlimited.
 

@@ -1,10 +1,22 @@
-# Evaluation Harness
+﻿# Evaluation Harness
+
+## Purpose
+
 
 Assess whether the skill has a mechanism to verify that a proposed
 optimization actually improves it — and that improvements to one aspect
 don't introduce regressions in another. Without an evaluation harness,
 skill optimization is subjective: "this feels better" rather than "this
 is measurably better."
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.
 
 ## Why this matters for an optimize-skill skill
 

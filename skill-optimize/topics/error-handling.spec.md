@@ -1,8 +1,20 @@
-# Error Handling
+﻿# Error Handling
+
+## Purpose
+
 
 Assess whether the skill explicitly addresses what happens when things go
 wrong — missing inputs, malformed data, unexpected states, external tool
 failures, or inputs that fall outside the skill's intended scope.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.
 
 ## Why this matters
 

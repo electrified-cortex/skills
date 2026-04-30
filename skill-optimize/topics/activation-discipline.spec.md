@@ -1,10 +1,22 @@
-# Activation Discipline
+﻿# Activation Discipline
+
+## Purpose
+
 
 Assess whether the skill defines the conditions under which it should be
 invoked — and, equally important, the conditions under which it should not.
 A skill that is useful is not automatically a skill that should run. Every
 invocation has a context cost; a skill that triggers too broadly pollutes
 the calling agent's context as reliably as a skill with bloated instructions.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.
 
 ## Why this matters
 

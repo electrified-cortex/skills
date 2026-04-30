@@ -1,10 +1,22 @@
-# Failure Mode Design
+﻿# Failure Mode Design
+
+## Purpose
+
 
 Assess whether the skill explicitly catalogs the ways it can fail to
 produce useful output — not just runtime errors (which are covered by
 error-handling.spec.md), but the semantic failure modes where the skill
 executes without error and produces plausible-looking output that is
 wrong, incomplete, or not useful.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.
 
 ## Error handling vs. failure mode design
 

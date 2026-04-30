@@ -1,4 +1,7 @@
-# REUSE
+﻿# REUSE
+
+## Purpose
+
 
 Assess whether the skill contains procedure blocks that could be extracted,
 shared, or replaced with existing reusable components. A good skill library,
@@ -56,3 +59,12 @@ where two would do the job has unnecessary coupling. Circular dependencies
 (Skill A depends on B, which depends on A) are always a finding. A dependency
 that can be eliminated without replacing it — because the dependent step
 can be inlined cheaply — is a LESS IS MORE candidate, not just a reuse one.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.

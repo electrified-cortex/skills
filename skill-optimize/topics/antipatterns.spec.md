@@ -1,4 +1,7 @@
-# Anti-Patterns and Foot Guns
+﻿# Anti-Patterns and Foot Guns
+
+## Purpose
+
 
 > **Activation:** This topic fires only when a *systemic* failure is
 > present — one that no primary topic fully owns, or one that emerges from
@@ -20,6 +23,15 @@ Cross-cutting anti-patterns and tug-of-war tensions between optimization
 topics. Each topic file should also flag its own foot guns in context —
 this file collects the cross-topic ones and the most common per-topic
 mistakes for quick reference.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.
 
 ## Cross-topic tug-of-war tensions
 

@@ -1,4 +1,7 @@
-# SELF CRITIQUE
+﻿# SELF CRITIQUE
+
+## Purpose
+
 
 Assess whether the skill includes a verification or self-critique step
 for its own outputs. For judgment-heavy skills, instructing the model to
@@ -47,3 +50,12 @@ it can only check internal consistency, not factual grounding.
 Produce a finding when: the skill makes judgment calls without any
 internal verification pass, and errors in the output would have real
 downstream consequences.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.

@@ -1,4 +1,7 @@
-# Model Selection
+﻿# Model Selection
+
+## Purpose
+
 
 Assess the appropriate model tier for this skill's executor and whether
 instruction quality is the limiting factor that prevents lower-tier execution.
@@ -71,3 +74,12 @@ over-tiered. (IACDM, Moreira 2026, Section 8.3, model property 5)
 
 Do not produce a finding when the current model tier is appropriate and
 the instructions are as explicit as the task allows.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.

@@ -1,4 +1,7 @@
-# Caching (hash-record)
+﻿# Caching (hash-record)
+
+## Purpose
+
 
 Assess whether the skill would benefit from a hash record to avoid
 redundant processing on unchanged inputs.
@@ -48,3 +51,12 @@ that is a separate finding from the caching assessment.
 Produce a finding only when the benefit is clear and the skill lacks a
 hash record. If the skill already uses a hash record, verify it is being
 applied to the right scope; if misapplied, produce a finding.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.

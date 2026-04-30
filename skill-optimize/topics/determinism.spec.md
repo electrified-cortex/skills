@@ -1,4 +1,7 @@
-# Determinism
+﻿# Determinism
+
+## Purpose
+
 
 Assess whether any LLM-dependent step in the skill could be replaced with
 a deterministic tool, script, or structured algorithm.
@@ -43,3 +46,12 @@ an LLM can do on its own. A rough signal: if the deterministic step recurs
 across many invocations or is meaningfully expensive in latency or tokens,
 a tool is worth it. If it's a one-off in a single skill, the LLM handling
 it inline is usually fine. Creating a tool for every execution is an anti-pattern.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.

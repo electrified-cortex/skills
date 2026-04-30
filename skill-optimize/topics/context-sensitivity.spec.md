@@ -1,10 +1,22 @@
-# Context Sensitivity
+﻿# Context Sensitivity
+
+## Purpose
+
 
 Assess whether the skill correctly handles variation in its operating
 context — different callers, environments, inputs, and task states —
 without being either over-hardcoded (only works in one specific setup)
 or under-specified (works differently in different contexts with no
 documentation).
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.
 
 ## The parameterization spectrum
 

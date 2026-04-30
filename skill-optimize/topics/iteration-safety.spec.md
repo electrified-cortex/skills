@@ -1,7 +1,19 @@
-# Iteration Safety
+﻿# Iteration Safety
+
+## Purpose
+
 
 How to take advantage of iterative loops (convergence, self-critique,
 multi-pass) without runaway token spend or infinite recursion.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.
 
 ## The core tension
 

@@ -1,8 +1,20 @@
-# Observability
+﻿# Observability
+
+## Purpose
+
 
 Assess whether the skill produces enough signal for humans and downstream
 agents to understand what it did, why it decided what it decided, and
 what to do next.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.
 
 ## Why observability matters in skills
 

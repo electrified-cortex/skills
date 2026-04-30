@@ -25,28 +25,35 @@ Bash is the POSIX canonical implementation. PowerShell 7+ required
 
 ## Flags
 
-| Flag          | Type    | Default  | Description                                              |
-| ------------- | ------- | -------- | -------------------------------------------------------- |
-| `--dry-run`   | boolean | false    | Report orphan count without deleting.                    |
-| `--limit <N>` | integer | none     | Cap deletions at N per invocation. Must be non-negative. |
-| `--help`/`-h` | boolean | false    | Print usage synopsis to stdout and exit 0.               |
+| Flag              | Type    | Default  | Description                                              |
+| ----------------- | ------- | -------- | -------------------------------------------------------- |
+| `--target <glob>` | string  | none     | Glob pattern matched against repo-relative file paths. Only hash directories whose associated source path(s) match are candidates. Must be a relative pattern — absolute paths rejected. |
+| `--dry-run`       | boolean | false    | Report orphan count without deleting.                    |
+| `--limit <N>`     | integer | none     | Cap deletions at N per invocation. Must be non-negative. |
+| `--help`/`-h`     | boolean | false    | Print usage synopsis to stdout and exit 0.               |
 
 ## Procedure
 
 1. Validate `repo_root` — reject `..` or shell metacharacters; require
-   absolute path.
+   absolute path. Reject `--target` if it is an absolute path.
 2. Verify `<repo_root>/.hash-record/` exists. If absent: output `CLEAN`,
    exit 0.
 3. Walk `.hash-record/` two levels deep (`<shard>/<hash>` dirs). Skip
    dot-prefixed directories directly under `.hash-record/` (admin dirs).
-   Do not follow symlinks.
-4. Build valid-hash set (for non-manifest directories):
+   Do not follow symlinks. If `--target <glob>` is provided, filter
+   candidates: for each hash directory, read associated paths (manifest
+   records: `file_paths` from `manifest.yaml`; non-manifest records:
+   `file_path` from any one readable leaf `.md` frontmatter). Retain only
+   directories with at least one associated path matching the glob. Hash
+   directories with no readable associated paths are skipped.
+4. Build valid-hash set (for non-manifest directories, always from the
+   full worktree even when `--target` is active):
    - Collect submodule paths from `.gitmodules` (to exclude).
    - Run `git ls-files -z --cached --others --exclude-standard` in
      `repo_root`. For each file not under `.worktrees/` and not a
      submodule path: run `git hash-object <file>`, add hash to set.
    - Build set atomically before any deletion begins.
-5. Classify each hash directory:
+5. Classify each candidate hash directory:
    - **Manifest strategy** (when `manifest.yaml` exists inside the hash
      dir): re-derive the manifest hash from the listed `file_paths`.
      Read each path, hash each file, sort by repo-relative path, build

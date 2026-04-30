@@ -1,4 +1,7 @@
-# WORDING
+﻿# WORDING
+
+## Purpose
+
 
 Assess the instruction phrasing, ordering, and structural patterns that
 influence how a model interprets and executes the skill. This category
@@ -78,3 +81,12 @@ Produce a finding when:
 
 Do not produce findings based on speculation alone. Label uncertain
 recommendations as "empirical: unverified for this model tier."
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.

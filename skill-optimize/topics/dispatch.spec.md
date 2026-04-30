@@ -1,4 +1,7 @@
-# Dispatch
+﻿# Dispatch
+
+## Purpose
+
 
 Assess whether the skill's execution pattern (dispatch vs inline) is the
 right choice for its purpose. Full rationale for the dispatch primitive is
@@ -65,3 +68,12 @@ Signal to keep the tool call:
 Produce a finding when a tool call is present whose behavior could be
 replaced by a small inline instruction with no loss of reliability or
 correctness, and where the replacement would reduce latency or cost.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.

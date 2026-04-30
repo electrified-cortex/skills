@@ -3,6 +3,7 @@
 ## Dispatch Parameters
 
 - `repo_root` (required): absolute path to the repository root containing `.hash-record/`.
+- `--target <glob>` (optional): relative glob pattern matched against repo-relative file paths. When provided, only hash directories whose associated source path(s) match are candidates. Must not be an absolute path. Default: all hash directories.
 - `--dry-run` (optional): list orphans without deleting. Default: delete.
 - `--limit <N>` (optional): maximum hash directories to delete per invocation. Default: unlimited.
 
@@ -10,7 +11,7 @@
 
 Run every step with the named tool. Do not summarize or plan.
 
-1. **Validate `repo_root`.** Reject immediately if `repo_root` contains `..` or any shell metacharacter (`` ` ``, `$`, `(`, `)`, `{`, `}`, `;`, `|`, `&`, `>`, `<`). Output `ERROR: invalid repo_root` and stop. Then use the Bash tool: `test -d "<repo_root>/.hash-record"`. If absent, output `CLEAN` and stop.
+1. **Validate `repo_root`.** Reject immediately if `repo_root` contains `..` or any shell metacharacter (`` ` ``, `$`, `(`, `)`, `{`, `}`, `;`, `|`, `&`, `>`, `<`). Output `ERROR: invalid repo_root` and stop. If `--target` is provided, reject it if it begins with `/` or a Windows drive letter (`[A-Za-z]:`); output `ERROR: --target must be a relative glob pattern` and stop. Then use the Bash tool: `test -d "<repo_root>/.hash-record"`. If absent, output `CLEAN` and stop.
 
 2. **Collect hash directories.** Use the Bash tool:
 
@@ -21,6 +22,13 @@ Run every step with the named tool. Do not summarize or plan.
    ```
 
    Each result is a path of the form `<repo_root>/.hash-record/<shard>/<full-hash>`. Extract `<full-hash>` (the basename) from each. If none found, output `CLEAN` and stop.
+
+2b. **Apply `--target` filter (skip if no `--target` provided).** For each collected hash directory:
+
+   - Check whether `<hash-dir>/manifest.yaml` exists (Bash `test -f`). If yes: read `file_paths` from the manifest YAML (same YAML parsing as step 3a). If at least one listed path matches the glob (`fnmatch`-style, `**` supported), retain the candidate; otherwise skip it.
+   - If no `manifest.yaml`: recurse into the hash directory to find any readable leaf `.md` file (use `find "<hash-dir>" -name '*.md' -type f` and take the first result). Read its frontmatter and extract `file_path:`. If the value matches the glob, retain the candidate; otherwise skip it. If no readable `.md` file is found, skip the candidate (conservative).
+
+   Proceed only with retained candidates in steps 3a/3b.
 
 3a. **Determine validity — manifest records.** For each hash directory, check whether `<repo_root>/.hash-record/<shard>/<full-hash>/manifest.yaml` exists (Bash `test -f`). If it exists, re-derive the manifest hash:
 

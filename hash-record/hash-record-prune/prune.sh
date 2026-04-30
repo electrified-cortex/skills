@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # prune.sh — hash-record orphan pruner
-# Usage: prune.sh <repo_root> [--dry-run] [--limit <N>]
+# Usage: prune.sh <repo_root> [--target <glob>] [--dry-run] [--limit <N>]
 # Prunes orphaned hash directories from <repo_root>/.hash-record/.
 set -e
 
@@ -9,7 +9,7 @@ set -e
 # ---------------------------------------------------------------------------
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   cat <<'USAGE'
-Usage: prune.sh <repo_root> [--dry-run] [--limit <N>]
+Usage: prune.sh <repo_root> [--target <glob>] [--dry-run] [--limit <N>]
 
 Prune orphaned entries from <repo_root>/.hash-record/.
 A record is orphaned when no current file in the repo hashes to its key.
@@ -19,6 +19,9 @@ Arguments:
                   Must not contain '..' or shell metacharacters.
 
 Flags:
+  --target <glob> Relative glob pattern matched against repo-relative paths.
+                  Only hash directories with a matching associated path are
+                  candidates. Must not be an absolute path.
   --dry-run       Report orphan count without deleting.
   --limit <N>     Cap deletions at N per invocation (non-negative integer).
   --help/-h       Print this help and exit 0.
@@ -42,12 +45,21 @@ fi
 REPO_ROOT=""
 DRY_RUN=0
 LIMIT=-1
+TARGET=""
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --dry-run)
       DRY_RUN=1
       shift
+      ;;
+    --target)
+      if [ -z "$2" ]; then
+        echo "ERROR: --target requires a value"
+        exit 1
+      fi
+      TARGET="$2"
+      shift 2
       ;;
     --limit)
       if [ -z "$2" ]; then
@@ -111,6 +123,16 @@ case "$REPO_ROOT" in
     exit 1
     ;;
 esac
+
+# Validate --target: must not be an absolute path
+if [ -n "$TARGET" ]; then
+  case "$TARGET" in
+    /*|[A-Za-z]:*)
+      echo "ERROR: --target must be a relative glob pattern: $TARGET"
+      exit 1
+      ;;
+  esac
+fi
 
 HASH_RECORD_DIR="${REPO_ROOT}/.hash-record"
 
@@ -238,6 +260,88 @@ check_manifest() {
 }
 
 # ---------------------------------------------------------------------------
+# Glob match helper
+# Usage: glob_match <path> <glob>
+# Returns 0 (match) or 1 (no match). Supports * ? and ** (any path depth).
+# Matching is done against repo-relative paths (no leading slash).
+# ---------------------------------------------------------------------------
+glob_match() {
+  local path="$1"
+  local glob="$2"
+
+  # Use bash's extglob + recursive case matching via a recursive helper.
+  # Strategy: convert ** to a sentinel, split on /, match segment by segment.
+  # Simpler approach: use Python-free fnmatch via a recursive bash function.
+
+  # Expand ** by trying all possible depths (0..N path segments).
+  # We do this by converting the glob to a regex in pure bash.
+  local regex
+  regex=$(printf '%s' "$glob" | sed \
+    -e 's/[.^$+{}|()\\]/\\&/g' \
+    -e 's/\*\*/.*/g' \
+    -e 's/\*\([^.]*\)/[^\/]*/g' \
+    -e 's/?/[^\/]/g')
+  # Anchor full path
+  regex="^${regex}$"
+  [[ "$path" =~ $regex ]]
+}
+
+# ---------------------------------------------------------------------------
+# Target match helper
+# Returns 0 if the hash directory has at least one associated path matching
+# $TARGET, or if TARGET is empty (no filter). Returns 1 to skip.
+# ---------------------------------------------------------------------------
+check_target_match() {
+  local hash_dir="$1"
+  local glob="$2"
+
+  [ -z "$glob" ] && return 0
+
+  local manifest="${hash_dir}/manifest.yaml"
+  if [ -f "$manifest" ]; then
+    # Manifest record: check file_paths list
+    local in_fp=0
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in file_paths:*) in_fp=1; continue ;; esac
+      if [ "$in_fp" = "1" ]; then
+        if [[ "$line" =~ ^[[:space:]]*-[[:space:]]+(.+) ]]; then
+          local fpath="${BASH_REMATCH[1]%$'\r'}"
+          if [ -n "$fpath" ] && glob_match "$fpath" "$glob"; then
+            return 0
+          fi
+        elif [[ "$line" =~ ^[^[:space:]] ]]; then
+          break
+        fi
+      fi
+    done < "$manifest"
+    return 1
+  fi
+
+  # Non-manifest: find first readable leaf .md and check file_path frontmatter
+  local leaf
+  while IFS= read -r -d '' leaf; do
+    local in_front=0 front_done=0
+    while IFS= read -r line || [ -n "$line" ]; do
+      if [ "$in_front" = "0" ] && [[ "$line" =~ ^--- ]]; then
+        in_front=1; continue
+      fi
+      if [ "$in_front" = "1" ] && [ "$front_done" = "0" ]; then
+        if [[ "$line" =~ ^--- ]]; then front_done=1; break; fi
+        if [[ "$line" =~ ^file_path:[[:space:]]*(.+) ]]; then
+          local fpath="${BASH_REMATCH[1]%$'\r'}"
+          fpath="${fpath## }" ; fpath="${fpath%% }"
+          if [ -n "$fpath" ] && glob_match "$fpath" "$glob"; then
+            return 0
+          fi
+          break  # file_path found; only one per record
+        fi
+      fi
+    done < "$leaf"
+  done < <(find "$hash_dir" -name '*.md' -type f -print0 2>/dev/null)
+  return 1
+}
+
+# ---------------------------------------------------------------------------
 # Walk .hash-record/ two levels deep and classify each hash directory
 # ---------------------------------------------------------------------------
 while IFS= read -r -d '' shard_dir; do
@@ -249,6 +353,11 @@ while IFS= read -r -d '' shard_dir; do
     hash_name=$(basename "$hash_dir")
     manifest="${hash_dir}/manifest.yaml"
     result=""
+
+    # Apply --target filter before validity checking
+    if [ -n "$TARGET" ]; then
+      check_target_match "$hash_dir" "$TARGET" || continue
+    fi
 
     if [ -f "$manifest" ]; then
       # Manifest strategy: re-derive the manifest hash and compare

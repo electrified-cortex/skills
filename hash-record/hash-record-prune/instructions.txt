@@ -1,14 +1,19 @@
 Params:
 `repo_root`: repo root w/ `.hash-record/`.
+`--target <glob>`: relative glob matched against repo-relative paths; only matching hash dirs are candidates (skip others entirely). Absolute path rejected.
 `--dry-run`: list orphans; no delete (default: delete).
 `--limit <N>`: max hash dirs deleted/invocation.
 
 Procedure (each step named tool):
 
-1. Verify: Bash `test -d "<repo_root>/.hash-record"` → absent = `CLEAN`, stop.
+1. Verify: reject `repo_root` w/ `..` or shell chars. Reject `--target` if absolute path. Bash `test -d "<repo_root>/.hash-record"` → absent = `CLEAN`, stop.
 
 2. Collect: Bash `find "<repo_root>/.hash-record" -mindepth 2 -maxdepth 2 -type d ! -name '.prune' ! -name '.*' ! -path "<repo_root>/.hash-record/.*/*"`
    Extract basename (full-hash). None = `CLEAN`, stop.
+
+2b. Target filter (only when `--target` provided): for each hash dir:
+   Manifest present → read `file_paths` from `manifest.yaml`; if any path matches glob → retain; else skip.
+   No manifest → find first readable leaf `.md` in hash dir; read frontmatter `file_path:`; if matches glob → retain; else skip. No readable `.md` → skip (conservative).
 
 3. Validity per hash dir (choose by manifest presence):
 

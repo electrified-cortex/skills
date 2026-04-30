@@ -1,7 +1,19 @@
-# Progressive Optimization and Tracking
+﻿# Progressive Optimization and Tracking
+
+## Purpose
+
 
 Ideas for how skill-optimize can track its own work over time, avoid
 redundant analysis, and prioritize the highest-impact work first.
+
+## Parameters
+
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+
+## Output
+
+Finding in standard format (### CATEGORY — HIGH | MEDIUM | LOW with **Reasoning:** and **Recommendation:**), or CLEAN if no issues apply.
 
 ## Topic prioritization by impact tier
 
@@ -51,6 +63,9 @@ skill: <repo-relative skill path>
 ---
 
 # Optimization Log
+
+## Purpose
+
 
 | Topic | Topic version | Last run | Model | Findings | Record |
 | --- | --- | --- | --- | --- | --- |
