@@ -29,7 +29,7 @@ Variables:
 `<description>` = `Analysis: <markdown_file_path>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
-Follow `dispatch` skill. See `../dispatch/SKILL.md`.
+Follow `dispatch` skill. See `../../dispatch/SKILL.md`.
 
 Should return: `clean` | `pass: <analysis_path>` | `findings: <analysis_path>` | `ERROR: <reason>`
 

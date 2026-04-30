@@ -19,7 +19,10 @@ Run inline result check for `report`. See `markdown-hygiene-result/SKILL.md`.
 
 ## Step 2 — Preparation
 
-If a markdown linter is available, run auto-fix on `<markdown_file_path>`. Re-run the result check for `report`. On 2nd MISS, continue.
+If a markdown linter is available, run auto-fix on `<markdown_file_path>`. Re-run the result check for `report`.
+
+- `MISS: <abs-path>` — rebind `<report_path>`. Continue.
+- Otherwise: stop here, return result to caller.
 
 ## Step 3 — Result check (lint)
 

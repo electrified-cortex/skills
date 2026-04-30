@@ -31,7 +31,7 @@ Variables:
 
 Follow `dispatch` skill. See `../../dispatch/SKILL.md`.
 
-Shoud return: `clean` | `findings: <lint_path>` | `ERROR: <reason>`
+Should return: `clean` | `findings: <lint_path>` | `ERROR: <reason>`
 
 ## Result
 

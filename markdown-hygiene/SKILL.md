@@ -17,7 +17,10 @@ Run inline result check for `report`. See `markdown-hygiene-result/SKILL.md`.
 
 ## Step 2 — Preparation
 
-If a markdown linter is available, run auto-fix on `<markdown_file_path>`. Re-run the result check for `report`. On 2nd MISS, continue.
+If a markdown linter is available, run auto-fix on `<markdown_file_path>`. Re-run the result check for `report`.
+
+- `MISS: <abs-path>` — rebind `<report_path>`. Continue.
+- Otherwise: stop here, result to caller.
 
 ## Step 3 — Result check (lint)
 
@@ -52,7 +55,7 @@ Input: `<markdown_file_path> --lint-path <lint_path> --analysis-path <analysis_p
 
 Analysis executor writes `analysis.md`. It does NOT write `report.md`.
 
-- `clean`, `pass: <analysis_path>`, or `findings: <analysis_path>` — continue to Step 7.
+- `clean: <analysis_path>`, `pass: <analysis_path>`, or `findings: <analysis_path>` — continue to Step 7.
 - `ERROR: <reason>` — stop, surface reason.
 
 ## Step 7 — Host aggregate

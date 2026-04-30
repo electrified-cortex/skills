@@ -30,7 +30,7 @@ Sonnet-class (or GPT-5.4). Semantic reasoning. It:
 
 - Reads `<lint_path>` to extract the lint result and violation count.
 - Evaluates SA001–SA038 advisory rules against the target file.
-- Writes `analysis.md` at `<analysis_path>` with `operation_kind: markdown-hygiene-analysis` and `result: clean|pass|fail`.
+- Writes `analysis.md` at `<analysis_path>` with `operation_kind: markdown-hygiene-analysis` and `result: clean|pass`.
 - Returns `clean`, `pass: <analysis_path>`, or `findings: <analysis_path>` to its dispatch caller.
 - Never modifies the target file. Hard prohibition on script authoring.
 
@@ -41,7 +41,7 @@ Sonnet-class (or GPT-5.4). Semantic reasoning. It:
 The host is the agent that reads `SKILL.md` and drives the full workflow. It:
 
 1. **Result check — `report` mode.** Run `result <markdown_file_path> report`. MISS → bind `<report_path>`, continue. Otherwise → return result to caller, stop.
-2. **Preparation.** If a markdown linter is available, run auto-fix on `<markdown_file_path>`. Repeat result check — `report` mode — after the fix; on 2nd MISS continue.
+2. **Preparation.** If a markdown linter is available, run auto-fix on `<markdown_file_path>`. Repeat result check — `report` mode — after the fix. MISS → rebind `<report_path>`, continue. Otherwise → return result to caller, stop.
 3. **Result check — `lint` mode.** Run `result <markdown_file_path> lint`. HIT → bind `<lint_path>`, skip Phase 1, jump to Step 5. MISS → bind `<lint_path>`, run Phase 1.
 4. **Phase 1 — Lint** (`fast-cheap` / Haiku). Dispatch lint executor with `--lint-path <lint_path>`. On return, re-run `result lint` → bind confirmed `<lint_path>`. On error, stop.
 5. **Result check — `analysis` mode.** Run `result <markdown_file_path> analysis`. HIT → bind `<analysis_path>`, skip Phase 2, jump to Step 7. MISS → bind `<analysis_path>`, run Phase 2.
@@ -78,6 +78,7 @@ pwsh result.ps1 <markdown_file_path> <mode>
 | `analysis` | `analysis.md` | `clean: <path>` (result: clean), `pass: <path>` (result: pass), or `findings: <path>` (result: fail) | `MISS: <abs-path>` |
 
 **Rules:**
+
 - Mode is required. Missing mode → `ERROR: missing mode argument`, exit 1.
 - Unrecognized mode → `ERROR: unrecognized mode: <value>`, exit 1.
 - Each mode resolves its target file as a sibling of `report.md` in the hash-record cache directory — same directory, different filename.
@@ -483,12 +484,15 @@ Two statements in the document directly contradict each other (e.g. "Always log 
 
 **Analysis executor returns to dispatch caller** (one line only):
 
-- `done` — analysis and report index written successfully
+- `clean` — no advisories found
+- `pass: <analysis_path>` — advisories found
+- `findings: <analysis_path>` — analysis executor error (non-fatal; host may continue)
 - `ERROR: <reason>` — failure before record write
 
 **Host returns to its own caller** after the iteration loop completes (one line only):
 
-- `CLEAN` — final result pass returned clean
+- `CLEAN` — final result is clean
+- `pass: <report-path>` — analysis advisories present, no lint violations
 - `findings: <last-report-path>` — findings still present after the 3rd iteration
 - `ERROR: <reason>` — executor or fix pass returned an error
 
