@@ -30,6 +30,7 @@ if ($Ignore) {
 
 function Skip([string]$rule) { return $skip.ContainsKey($rule) }
 
+$rawBytes = [System.IO.File]::ReadAllBytes($FilePath)
 $rawText  = [System.Text.Encoding]::UTF8.GetString($rawBytes)
 
 # Split on LF; handle CRLF by stripping CR from each line
@@ -89,6 +90,7 @@ if (-not (Skip 'MD041') -and -not $hasFm) {
         }
         break
     }
+}
 
 # Output with explicit LF line endings (byte-identical with verify.sh on same platform)
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)

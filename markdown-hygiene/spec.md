@@ -40,11 +40,11 @@ Sonnet-class (or GPT-5.4). Semantic reasoning. It:
 
 The host is the agent that reads `SKILL.md` and drives the full workflow. It:
 
-1. **Result check — `report` mode.** Run `result <markdown_file_path> report`. HIT (any result) → emit cached output, stop. MISS → derive sibling paths and continue.
+1. **Result check — `report` mode.** Run `result <markdown_file_path> report`. MISS → bind `<report_path>`, continue. Otherwise → return result to caller, stop.
 2. **Preparation.** If a markdown linter is available, run auto-fix on `<markdown_file_path>`. Repeat result check — `report` mode — after the fix; on 2nd MISS continue.
-3. **Result check — `lint` mode.** Run `result <markdown_file_path> lint`. HIT → skip Phase 1, jump to Step 5. MISS → run Phase 1.
-4. **Phase 1 — Lint** (`fast-cheap` / Haiku). Dispatch lint executor. On error, stop.
-5. **Result check — `analysis` mode.** Run `result <markdown_file_path> analysis`. HIT → skip Phase 2, jump to Step 7. MISS → run Phase 2.
+3. **Result check — `lint` mode.** Run `result <markdown_file_path> lint`. HIT → bind `<lint_path>`, skip Phase 1, jump to Step 5. MISS → bind `<lint_path>`, run Phase 1.
+4. **Phase 1 — Lint** (`fast-cheap` / Haiku). Dispatch lint executor with `--lint-path <lint_path>`. On return, re-run `result lint` → bind confirmed `<lint_path>`. On error, stop.
+5. **Result check — `analysis` mode.** Run `result <markdown_file_path> analysis`. HIT → bind `<analysis_path>`, skip Phase 2, jump to Step 7. MISS → bind `<analysis_path>`, run Phase 2.
 6. **Phase 2 — Analysis** (`standard` / Sonnet or GPT-5.4). Dispatch analysis executor. Writes `analysis.md`. On error, stop.
 7. **Host aggregate.** Read `lint.md` and `analysis.md` results. Derive aggregate result:
    - Either result is `fail` → aggregate is `fail`.
@@ -53,9 +53,10 @@ The host is the agent that reads `SKILL.md` and drives the full workflow. It:
    Write `report.md` at `<report_path>`: `operation_kind: markdown-hygiene`, aggregate result, links to `lint.md` and `analysis.md`.
 8. **Iteration check.** Read `report.md` result. Max 3 full iterations (Steps 2–8).
    - `clean` → stop.
-   - `pass` → stop. Surface `analysis.md` to the user; no automatic loop.
+   - `pass` → stop. Surface `analysis.md` to caller; no automatic loop.
    - `fail` → dispatch fix pass targeting findings, then **restart from Preparation** (step 2).
 9. Still `fail` after 3rd iteration → stop, return last `<report_path>`.
+10. **Prune.** Run `hash-record-prune repo_root=<repo_root> --target <repo-relative-path>`. Removes orphaned hash directories accumulated across iterations.
 
 ### Result Check Tool
 
@@ -71,7 +72,7 @@ pwsh result.ps1 <markdown_file_path> <mode>
 **Modes:**
 
 | Mode | Target file | HIT → output | MISS → output |
-|------|-------------|--------------|---------------|
+| ------ | ------------- | -------------- | -------------- |
 | `report` | `report.md` | `CLEAN` (result: clean), `pass: <path>` (result: pass), or `findings: <path>` (result: fail) | `MISS: <abs-path>` |
 | `lint` | `lint.md` | `clean: <path>` (result: clean) or `findings: <path>` (result: fail) | `MISS: <abs-path>` |
 | `analysis` | `analysis.md` | `clean: <path>` (result: clean), `pass: <path>` (result: pass), or `findings: <path>` (result: fail) | `MISS: <abs-path>` |
@@ -81,13 +82,14 @@ pwsh result.ps1 <markdown_file_path> <mode>
 - Unrecognized mode → `ERROR: unrecognized mode: <value>`, exit 1.
 - Each mode resolves its target file as a sibling of `report.md` in the hash-record cache directory — same directory, different filename.
 - `MISS` path always points to the target file for that mode (e.g. `lint` MISS path = `<cache_dir>/lint.md`).
-- The `MISS` path from `report` mode is the authoritative cache directory anchor. Sibling paths are derived from it.
+- Each MISS path is the write target to pass to the corresponding executor.
 
-**Path derivation** (host, after `report` MISS):
+**Path acquisition** (host):
+
 ```text
-<report_path>   = MISS path from report check
-<lint_path>     = dirname(<report_path>) + /lint.md
-<analysis_path> = dirname(<report_path>) + /analysis.md
+<report_path>   = MISS path from `result report`
+<lint_path>     = MISS path from `result lint`; re-confirmed via second `result lint` call after lint phase
+<analysis_path> = MISS path from `result analysis`
 ```
 
 ### Dispatch Surface
@@ -245,10 +247,18 @@ The record filename is hardcoded `report.md`. It is not configurable.
 
 After each full cycle (lint → analysis → aggregate), the host branches on `report.md`:
 
-- `CLEAN` → stop. Return `CLEAN` to caller.
-- `pass: <report-path>` → stop. Return `pass: <report-path>` to caller. Surface `analysis.md` findings for review; no automatic re-run.
+- `CLEAN` → stop. Run prune, return `CLEAN` to caller.
+- `pass: <report-path>` → stop. Run prune, return `pass: <report-path>` to caller. Surface `analysis.md` findings for review; no automatic re-run.
 - `findings: <report-path>` (result: fail) → dispatch fix pass, then re-run the full cycle (Preparation onward).
 - `ERROR` → stop. Surface `ERROR: <reason>` to caller.
+
+**On terminal stop** (any branch except `fail`), run `hash-record-prune`:
+
+- Skill: `hash-record-prune`
+- Input: `repo_root=<repo_root> --target <repo-relative-path>`
+- `<repo-relative-path>` is `<markdown_file_path>` with the `<repo_root>/` prefix stripped.
+- Removes orphaned hash directories accumulated across fail iterations.
+- Prune errors are non-fatal — log and continue.
 
 **Detect pass dispatch:**
 

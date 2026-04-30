@@ -14,13 +14,8 @@ description: Full markdown hygiene pass on a .md file — lint fixes, MD rule sc
 
 Run inline result check for `report`. See `markdown-hygiene-result/SKILL.md`.
 
-- `CLEAN` — stop, already clean.
-- `pass: <abs-path>` — stop, surface path to user.
-- `findings: <abs-path>` — stop, surface path to user.
-- `MISS: <abs-path>` — bind `<report_path>`. Derive siblings:
-  - `<lint_path>` = dirname(`<report_path>`) + `/lint.md`
-  - `<analysis_path>` = dirname(`<report_path>`) + `/analysis.md`
-  - Continue. Do NOT use these paths yet — lint will modify the file and the hash will change.
+- `MISS: <abs-path>` — bind `<report_path>`. Jump to Step 2.
+- Otherwise: stop here, return result to caller.
 
 ## Step 2 — Preparation
 
@@ -31,7 +26,7 @@ If a markdown linter is available, run auto-fix on `<markdown_file_path>`. Re-ru
 Run inline result check for `lint`. See `markdown-hygiene-result/SKILL.md`.
 
 - `clean: <lint_path>` or `findings: <lint_path>` — bind `<lint_path>`, skip to Step 5.
-- `MISS` — run Phase 1 (Step 4).
+- `MISS: <abs-path>` — bind `<lint_path>`, run Phase 1 (Step 4).
 
 ## Step 4 — Phase 1: Lint
 
@@ -39,7 +34,9 @@ Dispatch `markdown-hygiene-lint`. See `markdown-hygiene-lint/SKILL.md`.
 
 Input: `<markdown_file_path> --lint-path <lint_path> [--ignore <RULE>[,<RULE>...]]`
 
-- `clean` or `findings: <lint_path>` — continue to Step 5.
+On return, run `result lint` again:
+
+- `clean: <lint_path>` or `findings: <lint_path>` — bind confirmed `<lint_path>`. Continue to Step 5.
 - `ERROR: <reason>` — stop, surface reason.
 
 ## Step 5 — Result check (analysis)
@@ -47,7 +44,7 @@ Input: `<markdown_file_path> --lint-path <lint_path> [--ignore <RULE>[,<RULE>...
 Run inline result check for `analysis`. See `markdown-hygiene-result/SKILL.md`.
 
 - `clean: <analysis_path>`, `pass: <analysis_path>`, or `findings: <analysis_path>` — bind `<analysis_path>`, skip to Step 7.
-- `MISS` — run Phase 2 (Step 6).
+- `MISS: <abs-path>` — bind `<analysis_path>`, run Phase 2 (Step 6).
 
 ## Step 6 — Phase 2: Analysis
 
@@ -75,5 +72,11 @@ Write `report.md` at `<report_path>`: frontmatter `operation_kind: markdown-hygi
 Read `report.md` result.
 
 - `clean` — stop.
-- `pass` — stop. Surface `<analysis_path>` to the user.
+- `pass` — stop. Surface `<analysis_path>` to caller.
 - `fail` — dispatch fix pass targeting findings, then restart from Step 2. If this is the 3rd fail iteration, stop and return `findings: <report_path>` instead.
+
+## Step 9 — Prune
+
+Run `hash-record-prune` with `repo_root=<repo_root> --target <repo-relative-path>` where `<repo-relative-path>` is `<markdown_file_path>` stripped of the repo root prefix.
+
+This removes orphaned hash directories for the target file accumulated across iterations.

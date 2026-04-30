@@ -5,13 +5,20 @@ description: MD rule violation scan for a .md file. Fixes known safe rules in-pl
 
 # Markdown Hygiene — Lint
 
-## Inputs
+## Cached Result check (lint)
+
+Run inline result check for `lint`. See `../markdown-hygiene-result/SKILL.md`.
+
+- `MISS: <abs-path>` — bind `<lint_path>`. Jump to Step 2.
+- Otherwise: stop here, return result to caller.
+
+## Dispatch
+
+Inputs:
 
 `<markdown_file_path>` — absolute path to the `.md` file to scan.
 `<lint_path>` — absolute path to write `lint.md`.
 `--ignore <RULE>[,<RULE>...]` (optional) — rule codes to suppress.
-
-## Dispatch
 
 Variables:
 
@@ -22,5 +29,13 @@ Variables:
 `<description>` = `Lint: <markdown_file_path>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
-Follow `dispatch` skill. See `../dispatch/SKILL.md`.
-Returns: `clean` | `findings: <lint_path>` | `ERROR: <reason>`
+Follow `dispatch` skill. See `../../dispatch/SKILL.md`.
+
+Shoud return: `clean` | `findings: <lint_path>` | `ERROR: <reason>`
+
+## Result
+
+If `ERROR:` stop here and return the result to the caller.
+Otherwise rerun the result check for `lint`.
+If that result is a `MISS: <abs-path>` then something is wrong and report it as: `ERROR: Expected lint report at <abs-path>. None found.`
+Otherwise return the result to the caller.

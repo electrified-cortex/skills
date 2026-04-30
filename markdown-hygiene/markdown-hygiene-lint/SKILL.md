@@ -5,6 +5,8 @@ description: MD rule violation scan for a .md file. Fixes known safe rules in-pl
 
 # Markdown Hygiene — Lint
 
+If a markdown linter is available, run auto-fix on `<markdown_file_path>`. Re-run the result check for `report`. On 2nd MISS, continue.
+
 ## Inputs
 
 `<markdown_file_path>` — absolute path to the `.md` file to scan.
