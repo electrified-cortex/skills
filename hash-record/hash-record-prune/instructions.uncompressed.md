@@ -59,11 +59,9 @@ Run every step with the named tool. Do not summarize or plan.
 
    Do NOT follow symlinks. Do NOT delete any path that resolves outside `<repo_root>/.hash-record/`. Stop when `--limit` is reached; remaining orphans are left for the next invocation.
 
-7. **Prune empty shard directories.** After deletions, for each shard directory that now contains no subdirectories, run:
+7. **Prune empty directories.** Walk all directories under `.hash-record/` deepest-first (bottom-up). Remove any empty directory, skipping dot-prefixed admin directories directly under `.hash-record/`. This cleans empty shard dirs, empty hash dirs, and any other nested empty structures in one pass.
 
-   ```bash
-   rmdir "<repo_root>/.hash-record/<shard>" 2>/dev/null || true
-   ```
+   Bash: `find "<repo_root>/.hash-record" -mindepth 1 -depth -type d -empty -print0` then `rmdir` each, skipping admin dirs.
 
 8. **Output result.** Print one line to stdout:
    - If no orphans found: `CLEAN`

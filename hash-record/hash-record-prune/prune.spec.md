@@ -64,7 +64,7 @@ Bash is the POSIX canonical implementation. PowerShell 7+ required
      in the valid-hash set: VALID; else ORPHANED.
 6. If `--dry-run`: output `dry-run: <count>`, exit 0.
 7. Delete each orphan directory (entire tree) up to `--limit`.
-8. Prune now-empty shard directories.
+8. Prune empty directories bottom-up: walk all dirs under `.hash-record/` deepest-first, remove any that are empty. Skip dot-prefixed admin dirs directly under `.hash-record/`.
 9. Output result.
 
 See `spec.md` in this directory for the full canonical procedure and

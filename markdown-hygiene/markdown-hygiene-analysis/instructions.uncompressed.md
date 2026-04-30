@@ -3,16 +3,14 @@
 ## Inputs
 
 `<markdown_file_path>` (required) — absolute path to the `.md` file to analyze.
-`--lint-path <lint_path>` (required) — absolute path to the existing `lint.md` produced by the lint phase (read-only reference). If missing, return `ERROR: --lint-path required` and stop.
-`--analysis-path <analysis_path>` (required) — absolute path to write `analysis.md`. If missing, return `ERROR: --analysis-path required` and stop.
-`--report-path <report_path>` (required) — absolute path to write `report.md` (the index). If missing, return `ERROR: --report-path required` and stop.
-`--ignore <RULE>[,<RULE>...]` (optional) — SA rule codes to skip for this run.
+`--lint-path <lint_path>` (required) — absolute path to existing `lint.md` from the lint phase (read-only). Missing → `ERROR: --lint-path required`, stop.
+`--analysis-path <analysis_path>` (required) — absolute path to write `analysis.md`. Missing → `ERROR: --analysis-path required`, stop.
+`--report-path <report_path>` (required) — absolute path to write `report.md` (index). Missing → `ERROR: --report-path required`, stop.
+`--ignore <RULE>[,<RULE>...]` (optional) — SA rule codes to skip.
 
 ## Constraints
 
-**Hard prohibition:** do NOT author scripts (`.ps1`, `.sh`, etc.), helper files, or any file other than `<analysis_path>` and `<report_path>`. The target file is read-only. Use Read/Bash/Grep tools only for inspection.
-
-This executor is Sonnet-class (or GPT-5.4). It performs semantic reasoning over the document — the SA rules below require understanding intent, structure, and instruction quality, not just pattern matching.
+Hard prohibition: do NOT author scripts, helper files, or any file other than `<analysis_path>` and `<report_path>`. Use Read/Bash/Grep tools only for inspection.
 
 ## Procedure
 

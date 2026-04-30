@@ -12,7 +12,7 @@ Haiku-class (`fast-cheap`). No semantic reasoning — deterministic pattern-matc
 
 `<markdown_file_path>` (positional, required) — absolute path to the `.md` file to scan.
 
-`--lint-path <lint_path>` (required) — absolute path to write `lint.md`. Missing → `ERROR: --lint-path required`, stop.
+`--lint-path <lint_path>` (optional) — absolute path to write `lint.md`. If omitted, derived in step 3 via result check.
 
 `--ignore <RULE>[,<RULE>...]` (optional) — comma-separated rule codes to suppress for this run.
 

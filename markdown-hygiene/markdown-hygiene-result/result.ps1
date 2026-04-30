@@ -48,7 +48,7 @@ $FilePath = $args[0]
 # Locate sibling check.ps1 (hash-record-check)
 # ---------------------------------------------------------------------------
 $ScriptDir = Split-Path -Parent $PSCommandPath
-$CheckPs1 = Join-Path $ScriptDir '../hash-record/hash-record-check/check.ps1'
+$CheckPs1 = Join-Path $ScriptDir '../../hash-record/hash-record-check/check.ps1'
 
 if (-not (Test-Path $CheckPs1)) {
     [Console]::Out.Write("ERROR: cannot locate hash-record-check at: $CheckPs1`n")

@@ -1,86 +1,77 @@
 ---
 name: markdown-hygiene
-description: Fix markdownlint violations and analyze semantic quality in a .md file. Triggers — lint markdown, scan markdown, MD violations, markdownlint pass, fix markdown, analyze markdown, semantic hygiene.
+description: Full markdown hygiene pass on a .md file — lint fixes, MD rule scan, semantic advisory analysis. Triggers — lint markdown, fix markdown, MD violations, markdownlint pass, hygiene check.
 ---
 
 ## Input
 
-`<markdown_file_path>` — path to target file
+`<markdown_file_path>` — absolute path to the `.md` file to process.
+`--ignore <RULE>[,<RULE>...]` (optional) — MD or SA rule codes to suppress across all phases.
 
-## Inline result check
+## Step 1 — Result check (report)
 
-Run `result` tool (in this folder), whichever your runtime has. DON'T READ the script source at any point — before, during, or after invocation. Run it, branch on stdout, move on.
+Run inline result check for `report`. See `markdown-hygiene-result/SKILL.md`.
 
-- Bash: `bash result.sh <markdown_file_path>`
-- PS7: `pwsh result.ps1 <markdown_file_path>`
+- `CLEAN` — stop, already clean.
+- `pass: <abs-path>` — stop, surface path to user.
+- `findings: <abs-path>` — stop, surface path to user.
+- `MISS: <abs-path>` — bind `<report_path>`. Derive siblings:
+  - `<lint_path>` = dirname(`<report_path>`) + `/lint.md`
+  - `<analysis_path>` = dirname(`<report_path>`) + `/analysis.md`
+  - Continue. Do NOT use these paths yet — lint will modify the file and the hash will change.
 
-(Note: the terminal output might wrap)
+## Step 2 — Preparation
 
-If stdout is `MISS: <abs-path>` -> bind `<report_path>` = `<abs-path>`, derive siblings:
-  `<lint_path>` = `$(dirname <report_path>)/lint.md`
-  `<analysis_path>` = `$(dirname <report_path>)/analysis.md`
-  Continue.
-Otherwise -> emit stdout verbatim, stop.
+If a markdown linter is available, run auto-fix on `<markdown_file_path>`. Re-run the result check for `report`. On 2nd MISS, continue.
 
-## Preparation
+## Step 3 — Result check (lint)
 
-If runtime has markdown linter, run auto-fix on `<markdown_file_path>`. Don't install if absent.
-Ignore MD041 warnings if target file: SKILL.md.
-NEVER lint before result check as it will invalidate cached results.
+Run inline result check for `lint`. See `markdown-hygiene-result/SKILL.md`.
 
-No linter: skip to Phase 1.
-If lint fix applied, hash may have changed: go back to "Inline result check"; on 2nd MISS skip Preparation.
+- `clean: <lint_path>` or `findings: <lint_path>` — bind `<lint_path>`, skip to Step 5.
+- `MISS` — run Phase 1 (Step 4).
 
-## Phase 1 — Lint (Haiku-class)
+## Step 4 — Phase 1: Lint
 
-Variables:
+Dispatch `markdown-hygiene-lint`. See `markdown-hygiene-lint/SKILL.md`.
 
-`<lint-instructions>` = `markdown-hygiene-lint/instructions.txt` (NEVER READ)
-`<lint-instructions-abspath>` = absolute path to `<lint-instructions>`
-`<input-args>` = `<markdown_file_path> --lint-path <lint_path> [--ignore <RULE>[,<RULE>...]]`
-`<tier>` = `fast-cheap`
-`<description>` = `Linting Markdown: <markdown_file_path>`
-`<prompt>` = `Read and follow <lint-instructions-abspath>; Input: <input-args>`
+Input: `<markdown_file_path> --lint-path <lint_path> [--ignore <RULE>[,<RULE>...]]`
 
-Follow `dispatch` skill. See `../dispatch/SKILL.md`.
-If returns `ERROR: <reason>` -> stop, surface reason.
-Bind phase 1 result: `clean` or `findings: <lint_path>`.
+- `clean` or `findings: <lint_path>` — continue to Step 5.
+- `ERROR: <reason>` — stop, surface reason.
 
-## Phase 2 — Analysis (Sonnet-class)
+## Step 5 — Result check (analysis)
 
-Variables:
+Run inline result check for `analysis`. See `markdown-hygiene-result/SKILL.md`.
 
-`<analysis-instructions>` = `markdown-hygiene-analysis/instructions.txt` (NEVER READ)
-`<analysis-instructions-abspath>` = absolute path to `<analysis-instructions>`
-`<input-args>` = `<markdown_file_path> --lint-path <lint_path> --analysis-path <analysis_path> --report-path <report_path> [--ignore <RULE>[,<RULE>...]]`
-`<tier>` = `standard`
-`<description>` = `Analyzing Markdown Quality: <markdown_file_path>`
-`<prompt>` = `Read and follow <analysis-instructions-abspath>; Input: <input-args>`
+- `clean: <analysis_path>`, `pass: <analysis_path>`, or `findings: <analysis_path>` — bind `<analysis_path>`, skip to Step 7.
+- `MISS` — run Phase 2 (Step 6).
 
-Follow `dispatch` skill. See `../dispatch/SKILL.md`.
-If returns `ERROR: <reason>` -> stop, surface reason.
+## Step 6 — Phase 2: Analysis
 
-## Inline result check (post-execute)
+Dispatch `markdown-hygiene-analysis`. See `markdown-hygiene-analysis/SKILL.md`.
 
-You (the host) run `result` again directly — do NOT dispatch it.
-Same invocation as first Inline result check.
-Output is always exactly one line starting with a prefix. Long paths may visually wrap in terminal display — ignore the wrap, match from the start of the full output string.
-If stdout is `findings: <report_path>` -> continue to Iteration loop.
-Otherwise -> emit stdout verbatim, stop.
+Input: `<markdown_file_path> --lint-path <lint_path> --analysis-path <analysis_path> [--ignore <RULE>[,<RULE>...]]`
 
-## Iteration loop
+Analysis executor writes `analysis.md`. It does NOT write `report.md`.
 
-Max 3 iterations. Still findings after 3rd -> stop, report last `<report_path>`.
+- `clean`, `pass: <analysis_path>`, or `findings: <analysis_path>` — continue to Step 7.
+- `ERROR: <reason>` — stop, surface reason.
 
-**Lint-only re-run** (host applied fixes from `lint.md`):
+## Step 7 — Host aggregate
 
-`<tier>` = `fast-cheap`
-`<description>` = `Re-linting Markdown: <markdown_file_path>`
-`<prompt>` = `Read and follow <lint-instructions-abspath>; Input: <markdown_file_path> --lint-path <lint_path> [--ignore ...]`
+Read `lint.md` and `analysis.md` results. Derive aggregate:
 
-Follow `dispatch` skill (same as Phase 1). Then check `lint.md` result. If lint now clean, re-run Phase 2 to refresh `analysis.md` and `report.md`. Then loop from "Inline result check".
+- Either is `fail` → aggregate `fail`.
+- Lint `clean`, analysis `pass` → aggregate `pass`.
+- Both `clean` → aggregate `clean`.
 
-**Full re-run** (host applied changes from `analysis.md` suggestions):
+Write `report.md` at `<report_path>`: frontmatter `operation_kind: markdown-hygiene`, aggregate result, refs to `lint.md` and `analysis.md`.
 
-Re-run Phase 1 then Phase 2 in sequence. Then loop from "Inline result check".
+## Step 8 — Iteration check
 
+Read `report.md` result.
+
+- `clean` — stop.
+- `pass` — stop. Surface `<analysis_path>` to the user.
+- `fail` — dispatch fix pass targeting findings, then restart from Step 2. If this is the 3rd fail iteration, stop and return `findings: <report_path>` instead.

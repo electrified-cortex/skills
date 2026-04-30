@@ -425,14 +425,18 @@ while IFS= read -r odir || [ -n "$odir" ]; do
 done < "$ORPHANS_FILE"
 
 # ---------------------------------------------------------------------------
-# Prune now-empty shard directories
+# Prune empty directories — bottom-up (-depth) so parents are cleaned after
+# children. Skips dot-prefixed admin dirs directly under .hash-record/.
 # ---------------------------------------------------------------------------
-while IFS= read -r -d '' shard_dir; do
-  shard_name=$(basename "$shard_dir")
-  case "$shard_name" in .*) continue ;; esac
-  # rmdir succeeds only if empty; failure is expected and ignored
-  rmdir "$shard_dir" 2>/dev/null || true
-done < <(find "$HASH_RECORD_DIR" -maxdepth 1 -mindepth 1 -type d -print0 2>/dev/null)
+while IFS= read -r -d '' empty_dir; do
+  # Never remove admin dirs (dot-prefixed directly under .hash-record/)
+  parent_dir=$(dirname "$empty_dir")
+  dir_name=$(basename "$empty_dir")
+  if [ "$parent_dir" = "$HASH_RECORD_DIR" ]; then
+    case "$dir_name" in .*) continue ;; esac
+  fi
+  rmdir "$empty_dir" 2>/dev/null || true
+done < <(find "$HASH_RECORD_DIR" -mindepth 1 -depth -type d -empty -print0 2>/dev/null)
 
 # ---------------------------------------------------------------------------
 # Output

@@ -389,15 +389,22 @@ foreach ($odir in $orphans) {
 }
 
 # ---------------------------------------------------------------------------
-# Prune now-empty shard directories
+# Prune empty directories — bottom-up walk so parents are cleaned after children.
+# Skips dot-prefixed admin dirs directly under .hash-record/.
 # ---------------------------------------------------------------------------
-$remaining_shards = Get-ChildItem -LiteralPath $hash_record_literal -Directory -ErrorAction SilentlyContinue
-foreach ($shard in $remaining_shards) {
-    if ($shard.LinkType) { continue }
-    if ($shard.Name.StartsWith('.')) { continue }
-    $children = Get-ChildItem -LiteralPath $shard.FullName -ErrorAction SilentlyContinue
+$all_dirs = Get-ChildItem -LiteralPath $hash_record_literal -Recurse -Directory -ErrorAction SilentlyContinue `
+    | Where-Object { -not $_.LinkType } `
+    | Sort-Object -Property FullName -Descending  # deepest first = bottom-up
+
+foreach ($dir in $all_dirs) {
+    # Never remove admin dirs (dot-prefixed directly under .hash-record/)
+    $parent = Split-Path $dir.FullName -Parent
+    $is_direct_child = ($parent -replace '\\','/' ) -eq ($hash_record_literal -replace '\\','/')
+    if ($is_direct_child -and $dir.Name.StartsWith('.')) { continue }
+
+    $children = Get-ChildItem -LiteralPath $dir.FullName -ErrorAction SilentlyContinue
     if ($null -eq $children -or $children.Count -eq 0) {
-        Remove-Item -LiteralPath $shard.FullName -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $dir.FullName -Force -ErrorAction SilentlyContinue
     }
 }
 

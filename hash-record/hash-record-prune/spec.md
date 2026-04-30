@@ -50,7 +50,7 @@ Does NOT delete records whose hash currently matches a workspace file. Does NOT 
 4. Collect all candidate hash directories marked ORPHANED in step 3.
 5. If `--dry-run` is set, skip deletion and output `dry-run: <count>`; stop.
 6. Otherwise, delete each orphan hash directory via `rm -rf` (or equivalent) — the entire directory and all its descendants are removed when the hash is orphaned. Stop if `--limit` is reached.
-7. After deletion, prune any now-empty `<shard>/` parent directory.
+7. After deletion, prune empty directories bottom-up: walk all directories under `.hash-record/` deepest-first and remove any that are empty. Skip dot-prefixed admin directories directly under `.hash-record/`. This handles empty hash dirs, empty shard dirs, and any other nested empty structures in one pass.
 8. Output the result.
 
 ### Output

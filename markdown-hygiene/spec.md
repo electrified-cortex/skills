@@ -22,7 +22,7 @@ Haiku-class. Deterministic pattern-matching only. It:
 - Never modifies the target file. Hard prohibition on script authoring.
 - This layer is unchanged by iteration logic — always a single detect pass.
 
-`lint.md` acts as the **gate mechanism** for the host: if lint is `fail`, the host may apply fixes before dispatching the analysis phase, or may re-run lint in a loop until clean.
+`lint.md` feeds the host aggregate step alongside `analysis.md`. The aggregate result — not `lint.md` alone — determines whether the iteration loop fires.
 
 ### Analysis Executor (`markdown-hygiene-analysis/instructions.txt`)
 
@@ -30,29 +30,32 @@ Sonnet-class (or GPT-5.4). Semantic reasoning. It:
 
 - Reads `<lint_path>` to extract the lint result and violation count.
 - Evaluates SA001–SA038 advisory rules against the target file.
-- Writes `analysis.md` at `<analysis_path>` with `operation_kind: markdown-hygiene-analysis` and `result: clean|pass`.
-- Writes `report.md` at `<report_path>` as the index: `operation_kind: markdown-hygiene`, `result: clean|fail|pass`, linking to both `lint.md` and `analysis.md`.
-- Returns `done`.
+- Writes `analysis.md` at `<analysis_path>` with `operation_kind: markdown-hygiene-analysis` and `result: clean|pass|fail`.
+- Returns `clean`, `pass: <analysis_path>`, or `findings: <analysis_path>` to its dispatch caller.
 - Never modifies the target file. Hard prohibition on script authoring.
+
+`analysis.md` feeds the host aggregate step. The host — not the analysis executor — writes `report.md`.
 
 ### Host Orchestration Layer (`SKILL.md`)
 
 The host is the agent that reads `SKILL.md` and drives the full workflow. It:
 
 1. **Result check — `report` mode.** Run `result <markdown_file_path> report`. HIT (any result) → emit cached output, stop. MISS → derive sibling paths and continue.
-2. **Preparation.** If a markdown linter is available, run auto-fix on `<markdown_file_path>`. Repeat result check — `report` mode — after the fix; on 2nd MISS skip Preparation.
-3. **Result check — `lint` mode.** Run `result <markdown_file_path> lint`. HIT → skip Phase 1, jump to Phase 2. MISS → run Phase 1.
+2. **Preparation.** If a markdown linter is available, run auto-fix on `<markdown_file_path>`. Repeat result check — `report` mode — after the fix; on 2nd MISS continue.
+3. **Result check — `lint` mode.** Run `result <markdown_file_path> lint`. HIT → skip Phase 1, jump to Step 5. MISS → run Phase 1.
 4. **Phase 1 — Lint** (`fast-cheap` / Haiku). Dispatch lint executor. On error, stop.
-5. **Result check — `analysis` mode.** Run `result <markdown_file_path> analysis`. HIT → skip Phase 2, jump to write report. MISS → run Phase 2.
-6. **Phase 2 — Analysis** (`standard` / Sonnet or GPT-5.4). Dispatch analysis executor. On error, stop. Analysis executor writes `analysis.md` and `report.md`.
-7. **Iteration loop.** Read `report.md` result. Max 3 full iterations.
+5. **Result check — `analysis` mode.** Run `result <markdown_file_path> analysis`. HIT → skip Phase 2, jump to Step 7. MISS → run Phase 2.
+6. **Phase 2 — Analysis** (`standard` / Sonnet or GPT-5.4). Dispatch analysis executor. Writes `analysis.md`. On error, stop.
+7. **Host aggregate.** Read `lint.md` and `analysis.md` results. Derive aggregate result:
+   - Either result is `fail` → aggregate is `fail`.
+   - Lint `clean`, analysis `pass` → aggregate is `pass`.
+   - Both `clean` → aggregate is `clean`.
+   Write `report.md` at `<report_path>`: `operation_kind: markdown-hygiene`, aggregate result, links to `lint.md` and `analysis.md`.
+8. **Iteration check.** Read `report.md` result. Max 3 full iterations (Steps 2–8).
    - `clean` → stop.
-   - `findings: <report_path>` (lint fail) → dispatch fix pass targeting `lint.md`, then **restart from Preparation** (step 2). Lint fix may change the file — Preparation must re-run.
-   - `findings: <report_path>` (lint clean, analysis pass) → present `analysis.md` to host for decision. If host applies any changes based on analysis suggestions, **restart from Preparation** (step 2). Analysis changes modify the file — new lint violations may be introduced and the linter must run before analysis can be re-evaluated.
-8. Still findings after 3rd iteration → stop, return last `<report_path>`.
-
-**Why Preparation must repeat after any analysis-driven change:**
-Analysis suggestions (SA rules) can produce edits that introduce new MD violations. For example: SA026 recommends replacing `---` HR dividers with headings — adding a `## Heading` without surrounding blank lines violates MD022. SA009 recommends converting list items to sections — new headings and lists may violate MD001, MD022, MD032. The linter must always run after any file modification, regardless of what drove it.
+   - `pass` → stop. Surface `analysis.md` to the user; no automatic loop.
+   - `fail` → dispatch fix pass targeting findings, then **restart from Preparation** (step 2).
+9. Still `fail` after 3rd iteration → stop, return last `<report_path>`.
 
 ### Result Check Tool
 
@@ -69,9 +72,9 @@ pwsh result.ps1 <markdown_file_path> <mode>
 
 | Mode | Target file | HIT → output | MISS → output |
 |------|-------------|--------------|---------------|
-| `report` | `report.md` | `CLEAN` (result: clean) or `findings: <path>` (result: fail/pass) | `MISS: <abs-path>` |
+| `report` | `report.md` | `CLEAN` (result: clean), `pass: <path>` (result: pass), or `findings: <path>` (result: fail) | `MISS: <abs-path>` |
 | `lint` | `lint.md` | `clean: <path>` (result: clean) or `findings: <path>` (result: fail) | `MISS: <abs-path>` |
-| `analysis` | `analysis.md` | `clean: <path>` (result: clean) or `pass: <path>` (result: pass) | `MISS: <abs-path>` |
+| `analysis` | `analysis.md` | `clean: <path>` (result: clean), `pass: <path>` (result: pass), or `findings: <path>` (result: fail) | `MISS: <abs-path>` |
 
 **Rules:**
 - Mode is required. Missing mode → `ERROR: missing mode argument`, exit 1.
@@ -100,7 +103,7 @@ The `dispatch` skill takes a single `<prompt>` — a verbatim string sent to the
 **Analysis phase prompt** — host-composed variables:
 
 - `<analysis-instructions-abspath>` = absolute path to `markdown-hygiene-analysis/instructions.txt`
-- `<input-args>` = `<markdown_file_path> --lint-path <lint_path> --analysis-path <analysis_path> --report-path <report_path> [--ignore ...]`
+- `<input-args>` = `<markdown_file_path> --lint-path <lint_path> --analysis-path <analysis_path> [--ignore ...]`
 - `<prompt>` = `Read and follow <analysis-instructions-abspath>; Input: <input-args>`
 
 **Fix pass prompt** — host-composed variables:
@@ -240,18 +243,19 @@ The record filename is hardcoded `report.md`. It is not configurable.
 
 ### Host Iteration Loop
 
-After each detect dispatch, the host branches:
+After each full cycle (lint → analysis → aggregate), the host branches on `report.md`:
 
-- `CLEAN` -> stop. Return `CLEAN` to caller.
-- `ERROR` -> stop. Surface `ERROR: <reason>` to caller.
-- `findings: <report-path>` -> dispatch fix pass, then re-invoke detect.
+- `CLEAN` → stop. Return `CLEAN` to caller.
+- `pass: <report-path>` → stop. Return `pass: <report-path>` to caller. Surface `analysis.md` findings for review; no automatic re-run.
+- `findings: <report-path>` (result: fail) → dispatch fix pass, then re-run the full cycle (Preparation onward).
+- `ERROR` → stop. Surface `ERROR: <reason>` to caller.
 
 **Detect pass dispatch:**
 
 - Skill: `dispatch`
 - Tier: `fast-cheap`
 - Description: `Inspecting Markdown Hygiene: <markdown_file_path>`
-- Prompt (host-composed): `Read and follow <instructions-abspath>; Input: <markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
+- Prompt (host-composed): `Read and follow <lint-instructions-abspath>; Input: <markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
 
 **Fix pass dispatch** (separate from executor):
 
@@ -266,8 +270,7 @@ Both passes go through the same `dispatch` primitive. The dispatch primitive rec
 only `<prompt>` — it does not perform template substitution. The host is the only
 party that constructs prompt strings.
 
-**Max 3 detect iterations.** If findings remain after the 3rd detect pass, stop
-and return `findings: <last-report-path>` to caller.
+**Max 3 fail iterations.** Only `fail` counts toward the iteration limit. If findings remain after the 3rd fail cycle, stop and return `findings: <last-report-path>` to caller.
 
 ### Advisory Rules (SA series)
 

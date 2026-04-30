@@ -3,7 +3,7 @@
 ## Inputs
 
 `<markdown_file_path>` (required) — absolute path to the `.md` file to scan.
-`--lint-path <lint_path>` (required) — absolute path to write `lint.md`. Missing → `ERROR: --lint-path required`, stop.
+`--lint-path <lint_path>` (optional) — absolute path to write `lint.md`. If omitted, derived in step 3 via result check.
 `--ignore <RULE>[,<RULE>...]` (optional) — rules to suppress for this run.
 
 ## Constraints
@@ -50,9 +50,7 @@ Hard prohibition: do NOT author scripts, helper files, or any file other than `<
 - MD001 — heading levels increment by one.
 - MD003 — heading style consistent (atx `#` vs setext).
 - MD004 — list markers consistent (`-`, `*`, `+`).
-- MD009 — trailing spaces (fixed by lint tool).
 - MD010 — hard tabs in non-code content (covered by verify).
-- MD012 — multiple consecutive blank lines (fixed by lint tool).
 - MD022 — headings need blank line before AND after (except file start/end).
 - MD023 — headings must not have leading whitespace.
 - MD024 — duplicate heading text among siblings.
@@ -65,7 +63,7 @@ Hard prohibition: do NOT author scripts, helper files, or any file other than `<
 - MD034 — bare URLs (not in angle brackets, backticks, or links).
 - MD040 — fenced code blocks need a language identifier.
 - MD041 — first non-blank line must be H1 (suppressed for frontmatter; covered by verify).
-- MD047 — file must end with exactly one newline (fixed by lint tool).
+- MD047 — file must end with exactly one newline. Fixed by lint tool — verify it ran; don't re-scan.
 - MD055 — table pipe style consistent across rows.
 - MD056 — all rows in a table have the same number of cells.
 - MD058 — tables need blanks before AND after.
@@ -85,15 +83,6 @@ FINDINGS:
 
 ```text
 # Result
-
-FINDINGS
-
-- MD022 line 7: blank line missing before heading "Configuration"
-  Fix: insert blank line before line 7
-- MD047: file lacks trailing newline
-  Fix: append a single newline at end of file
-```
-
 
 FINDINGS
 

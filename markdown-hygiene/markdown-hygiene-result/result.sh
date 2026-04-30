@@ -51,7 +51,7 @@ FILE_PATH="$1"
 # Locate sibling check.sh (hash-record-check)
 # ---------------------------------------------------------------------------
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-CHECK_SH="${SCRIPT_DIR}/../hash-record/hash-record-check/check.sh"
+CHECK_SH="${SCRIPT_DIR}/../../hash-record/hash-record-check/check.sh"
 
 if [ ! -f "$CHECK_SH" ]; then
   echo "ERROR: cannot locate hash-record-check at: $CHECK_SH"
