@@ -1,95 +1,70 @@
-# Full Compression — Uncompressed Reference
+# Full Compression Rules
 
-Companion reference for `full/rules.txt`. This file is for auditors comparing the runtime rules against the spec. Agents load `rules.txt` only.
+This document describes the rules for Full-tier compression in full prose. It is the uncompressed source that `full/rules.txt` is derived from. When you apply Full compression to this file, you get `rules.txt`. This file is never itself compressed.
 
-## Purpose
+Full-tier compression sits between Lite (human-readable, articles preserved) and Ultra (telegraphic, maximum density). A reader with domain knowledge should find Full-compressed text clear and scannable. Full drops articles and strips filler aggressively, but keeps full punctuation and sentence structure where they aid clarity. Unlike Ultra, it does not use abbreviations, arrow notation, or telegraphic fragments.
 
-Full-tier compression sits between Lite (human-readable, articles preserved) and Ultra (telegraphic, maximum density). A reader with domain knowledge should find Full-compressed text clear and scannable. Full drops articles and light filler but keeps full punctuation and sentence structure where it aids clarity.
+## What to Remove
 
-## Key Distinction
+Full compression removes content from the following categories:
 
-- Unlike Ultra: no abbreviations, no arrow notation (`->`), no telegraphic fragments.
-- Unlike Lite: articles (`a`, `an`, `the`) are removed. Filler and hedging stripped aggressively.
-- Full output reads like well-edited technical prose without articles.
+**Articles:** Remove all articles — "a", "an", and "the" — throughout the document.
 
-## What the rules.txt Must Include
+**Filler words:** Remove filler words that add length without meaning: just, really, basically.
 
-### Remove List
+**Hedging language:** Remove hedging phrases that soften statements: "might be worth," "could consider."
 
-All of the following must be explicitly covered:
+**Pleasantries:** Remove conversational pleasantries: "sure," "certainly," "happy to."
 
-- Articles: `a`, `an`, `the`
-- Filler phrases: `in order to`, `it is worth noting`, `it should be noted`, `please note`, `as mentioned`
-- Hedging: `arguably`, `somewhat`, `in some cases`, `it could be said`
-- Pleasantries: `feel free to`, `don't hesitate to`, `of course`, `certainly`
-- Verbose phrasing that can be compressed to a single word
+**Verbose phrasing:** Replace verbose multi-word constructions with concise equivalents. Example: "in order to" becomes "to."
 
-### Transform List
+**Connective fluff:** Remove transitional phrases that do not carry logical meaning.
 
-- Synonyms to shorter equivalents (e.g., `utilize` -> `use`, `demonstrate` -> `show`)
-- Fragments acceptable where meaning is unambiguous
-- Merge redundant bullets covering the same point
+**Non-structural markdown:** Remove markdown formatting that serves decorative or tonal purposes only — decorative bold, italics, emphasis, and blockquotes. Exception: when bold is applied to a constraint or imperative term (for example, **never**, **must**, or **do not**), convert it to ALL CAPS (NEVER, MUST, DO NOT) rather than stripping it entirely. This preserves the emphasis signal in plain-text output where markdown is not rendered. This exception applies to inline emphasis on individual terms only, not to label-style bold.
 
-### Keep List
+## What to Transform
 
-Full preserves where Ultra does not:
+**Synonyms:** Replace longer words with shorter equivalents where meaning is fully preserved. Examples: "utilize" becomes "use"; "demonstrate" becomes "show."
 
-- Full punctuation (periods, commas, colons, semicolons) where they aid clarity
-- Sentence structure when the logical relationship between clauses would be lost without it
-- Connectives that carry logical meaning (`but`, `because`, `unless`, `however`)
+**Fragments:** Sentence fragments are acceptable when meaning is unambiguous. Unlike Ultra, do not use telegraphic `[thing] [action] [reason]` patterns; preserve enough sentence structure for clarity.
 
-### Preserve List Never Modify
+**Merge bullets:** When multiple bullet points cover the same idea, merge them into a single bullet.
 
-The following must never be altered regardless of compression tier:
+## What to Keep
+
+Full compression preserves what Ultra removes:
+
+- **Full punctuation** — periods, commas, colons, and semicolons are kept where they aid clarity.
+- **Structural markdown** — headings, lists, tables, code fences, and frontmatter are all preserved.
+- **Sentence structure** — logical relationships between clauses are preserved when connectives carry meaning (but, because, unless, however).
+
+## What to Preserve
+
+The following content must never be altered under any circumstances:
 
 - Code blocks and inline code
-- URLs, file paths, commands
+- URLs, file paths, and shell commands
 - Technical terms and proper nouns
 - Dates and version numbers
 - Environment variable names
-- Logic/modality words: `not`, `never`, `only`, `unless`, `must`, `may`
-- Actors + permissions (who does what)
-- Ordered steps, counts, thresholds (sequence and numbers must be exact)
-- Exact-match strings: labels, branch names, config keys, frontmatter values
+- Logic and modality words: not, never, only, unless, must, may
+- Actors and their permissions — who does what, who may not do what
+- Ordered steps, counts, and thresholds — sequence and numbers must be exact
+- Exact-match strings: labels, branch names, configuration keys, frontmatter values
 
-### Ambiguity Stop
+## Ambiguity Stop
 
-If compression of any phrase would introduce ambiguity or change meaning, keep the original unchanged.
+If compressing any phrase would introduce ambiguity or change the meaning of the content, keep the original unchanged. Compression never takes priority over accuracy.
 
-### Pass Order
+## Pass Order
 
-Compression must follow this sequence:
+Apply compression in the following sequence:
 
-1. Preserve scan — identify all protected content; mark as untouchable
-2. Remove — strip articles, filler, hedging, pleasantries, verbose phrasing
-3. Transform — apply synonyms, fragment where safe, merge redundant bullets
-4. Ambiguity check — verify no compressed phrase is ambiguous; restore originals where needed
+1. Preserve scan — identify all protected content and mark it as untouchable before making any changes.
+2. Remove — strip articles, filler, hedging, pleasantries, verbose phrasing, connective fluff, and non-structural markdown (with the ALL CAPS exception applied).
+3. Transform — apply synonym replacements, introduce fragments where safe, and merge redundant bullets.
+4. Ambiguity check — review every compressed phrase; restore any that introduced ambiguity or changed meaning.
 
-## Size Target
+## Contractions
 
-Under 40 lines of content in the rules.txt (excluding frontmatter). Full has a moderate rule set.
-
-## Self-Containment Requirement
-
-An agent loading only `rules.txt` must have everything needed to apply Full compression. No dependency on other tiers, the parent compression rules.txt, or this uncompressed.md.
-
-## Dog-Fooding
-
-The `rules.txt` itself must be Full-compressed (applying the rules it describes). This spec file (`uncompressed.md`) is never compressed.
-
-## Audit Checklist
-
-Verifying rules.txt against spec:
-
-- [ ] Self-contained — agent needs only rules.txt to apply Full
-- [ ] Remove section covers articles, filler, hedging, pleasantries, verbose phrasing
-- [ ] Transform section covers synonyms, fragments, bullet merging
-- [ ] Keep section preserves punctuation and structural formatting
-- [ ] Preserve section complete (code, paths, URLs, commands, terms, proper nouns, dates, versions, env vars, logic words, actors + permissions, ordered steps/counts/thresholds, exact-match strings, frontmatter values)
-- [ ] Ambiguity stop present
-- [ ] Pass order defined (preserve scan, remove, transform, ambiguity check)
-- [ ] No abbreviation rules (Ultra only)
-- [ ] No arrow notation (Ultra only)
-- [ ] No overlap with Lite or Ultra tier content
-- [ ] Size under 40 lines of content
-- [ ] rules.txt is itself Full-compressed
+Convert multi-word negations to contractions: "do not" becomes "don't"; "must not" becomes "mustn't"; "will not" becomes "won't." Prefer "cannot" over "can't" — "cannot" is a stronger imperative and is typically a single token in common BPE tokenizers.

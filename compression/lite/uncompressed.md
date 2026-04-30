@@ -1,95 +1,65 @@
-# Lite Compression — Uncompressed Reference
+# Lite Compression Rules
 
-Companion reference for `lite/rules.txt`. This file is for auditors comparing the runtime rules against the spec. Agents load `rules.txt` only.
+This document describes the rules for Lite-tier compression in full prose. It is the uncompressed source that `lite/rules.txt` is derived from. When you apply Lite compression to this file, you get `rules.txt`. This file is never itself compressed.
 
-## Purpose
+Lite-tier compression is intended for human-facing content where readability is paramount. A non-technical human should be able to read Lite-compressed text comfortably. The output should read like well-edited professional prose — complete sentences, proper grammar, and clear structure. Unlike Full and Ultra, Lite keeps articles and does not use abbreviations, arrow notation, or telegraphic fragments.
 
-Lite-tier compression is for human-facing content where readability is paramount. A non-technical human should be able to read Lite-compressed text comfortably. Lite keeps articles, full sentences, and professional grammar. The output reads like well-edited professional prose.
+## What to Remove
 
-## Key Distinction
+Lite compression removes content from the following categories:
 
-- Unlike Ultra and Full: articles (`a`, `an`, `the`) are kept.
-- Unlike Ultra: no abbreviations, no arrow notation, no fragments, no telegraphic shorthand.
-- Lite removes filler, hedging, and pleasantries, but preserves sentence structure and grammar.
-- Vertical structure (bullets, lists) preferred over dense paragraphs for readability.
+**Filler words and phrases:** Remove words and phrases that add length without adding meaning: "just," "really," "basically," "actually," "simply," "in order to" (replace with "to"), "it is worth noting," "please note," "as mentioned."
 
-## What the rules.txt Must Include
+**Hedging language:** Remove phrases that soften statements without providing information: "arguably," "somewhat," "in some cases," "it could be said," "might possibly."
 
-### Remove List
+**Pleasantries:** Remove conversational pleasantries and social softeners: "feel free to," "don't hesitate to," "of course," "certainly," "we hope that."
 
-All of the following must be explicitly covered:
+**Qualifiers:** Remove personal hedges that reduce confidence unnecessarily: "I think," "I believe."
 
-- Filler phrases: `in order to`, `it is worth noting`, `it should be noted`, `please note`, `as mentioned above`
-- Hedging: `arguably`, `somewhat`, `in some cases`, `it could be said`, `might possibly`
-- Pleasantries: `feel free to`, `don't hesitate to`, `of course`, `certainly`, `we hope that`
-- Verbose phrasing that adds length without adding meaning
+**Verbose phrasing:** Replace multi-word constructions with concise equivalents where no meaning is lost.
 
-### Keep List
+## What to Keep
 
-Lite explicitly preserves what Ultra removes:
+Lite compression explicitly preserves what Ultra and Full remove:
 
-- Articles: `a`, `an`, `the`
-- Full sentences and professional grammar
-- Connectives: `and`, `but`, `because`, `so`, `however`, `therefore`
-- Sentence-level punctuation (periods, commas, colons, semicolons)
+- **Articles** — "a," "an," and "the" are always kept.
+- **Full sentences and professional grammar** — do not fragment sentences into telegraphic shorthand.
+- **Connectives** — words that carry logical relationships are kept: "and," "but," "because," "so," "however," "therefore."
+- **Sentence-level punctuation** — periods, commas, colons, and semicolons are kept wherever they aid clarity.
+- **Meaningful markdown** — all markdown formatting that aids readability is preserved. Bold, italics, headings, lists, and tables are all kept when they serve a structural or emphasis purpose.
 
-### Formatting Guidance
+## Formatting Guidance
 
-- Prefer vertical structure: bullets and numbered lists over dense paragraphs
-- Readability over density — do not sacrifice clarity for compactness
-- Use headings to aid navigation in longer content
+Prefer vertical structure over dense paragraphs. Use bullets and numbered lists where they aid comprehension. Use headings to aid navigation in longer content. Prioritize readability over density — do not sacrifice clarity in pursuit of compactness.
 
-### Preserve List (Never Modify)
+## What to Preserve
 
-The following must never be altered:
+The following content must never be altered under any circumstances:
 
 - Code blocks and inline code
-- URLs, file paths, commands
+- URLs, file paths, and shell commands
 - Technical terms and proper nouns
 - Dates and version numbers
 - Environment variable names
-- Logic/modality words: `not`, `never`, `only`, `unless`, `must`, `may`
-- Actors + permissions (who does what)
-- Ordered steps, counts, thresholds (sequence and numbers must be exact)
-- Exact-match strings: labels, branch names, config keys, frontmatter values
-- Security warnings and irreversible confirmation language
+- Logic and modality words: not, never, only, unless, must, may
+- Actors and their permissions — who does what, who may not do what
+- Ordered steps, counts, and thresholds — sequence and numbers must be exact
+- Exact-match strings: labels, branch names, configuration keys, frontmatter values
+- Security warnings and language describing irreversible actions
 
-### Ambiguity Stop
+## Ambiguity Stop
 
-If compression of any phrase would introduce ambiguity or change meaning, keep the original unchanged.
+If compressing any phrase would introduce ambiguity or change the meaning of the content, keep the original unchanged. Compression never takes priority over accuracy.
 
-### Pass Order
+## Pass Order
 
-Compression must follow this sequence:
+Apply compression in the following sequence:
 
-1. Preserve scan — identify all protected content; mark as untouchable
-2. Remove — strip filler, hedging, pleasantries, verbose phrasing
-3. Transform — apply readability improvements; add vertical structure where helpful
-4. Ambiguity check — verify no compressed phrase is ambiguous; restore originals where needed
+1. Preserve scan — identify all protected content and mark it as untouchable before making any changes.
+2. Remove — strip filler, hedging, pleasantries, qualifiers, and verbose phrasing.
+3. Transform — apply readability improvements; introduce vertical structure where it helps comprehension.
+4. Ambiguity check — review every compressed phrase; restore any that introduced ambiguity or changed meaning.
 
-## Size Target
+## Contractions
 
-Under 40 lines of content in the rules.txt (excluding frontmatter). Lite has fewer rules than Ultra.
-
-## Self-Containment Requirement
-
-An agent loading only `rules.txt` must have everything needed to apply Lite compression. No dependency on other tiers, the parent compression rules.txt, or this uncompressed.md.
-
-## Dog-Fooding
-
-The `rules.txt` itself must be Lite-compressed (applying the rules it describes). This spec file (`uncompressed.md`) is never compressed.
-
-## Audit Checklist
-
-Verifying rules.txt against spec:
-
-- [ ] Self-contained — agent needs only rules.txt to apply Lite
-- [ ] Remove section covers filler, hedging, pleasantries, verbose phrasing
-- [ ] Keep section explicitly preserves articles, sentences, grammar, connectives
-- [ ] Formatting section addresses vertical structure and readability
-- [ ] Preserve section complete (code, paths, URLs, commands, terms, proper nouns, dates, versions, logic words, actors + permissions, ordered steps/counts/thresholds, exact-match strings, security warnings, irreversible confirmations)
-- [ ] Ambiguity stop present
-- [ ] Pass order defined (preserve scan, remove, transform, ambiguity check)
-- [ ] No overlap with Full or Ultra tier content
-- [ ] Size under 40 lines of content
-- [ ] rules.txt is itself Lite-compressed
+Convert multi-word negations to contractions: "do not" becomes "don't"; "must not" becomes "mustn't"; "will not" becomes "won't." Prefer "cannot" over "can't" — "cannot" is a stronger imperative and is typically a single token in common BPE tokenizers.
