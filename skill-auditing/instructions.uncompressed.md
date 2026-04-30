@@ -166,6 +166,31 @@ expected and not a violation (R-FM-3 sanctioned no-H1).
 Not duplicating existing capability. If similar exists, recommend merge or
 distinguish.
 
+### (A-FS-1) Orphan files
+
+Scan all files in `<skill_dir>` recursively. Skip dot-prefixed directories.
+For each file that is NOT a well-known role file (`spec.md`, `README.md`,
+`result.sh`, `result.ps1`, `verify.sh`, `verify.ps1`, `eval.txt`,
+`eval.uncompressed.md`, `SKILL.md`, `uncompressed.md`, `instructions.txt`,
+`instructions.uncompressed.md`, `*.spec.md`):
+
+- Check whether the file is referenced by name or relative path in any of:
+  `SKILL.md`, `uncompressed.md`, `instructions.uncompressed.md`.
+- If not referenced → flag LOW.
+
+Special case: `instructions.txt` present in a skill where
+file-system evidence shows it is NOT dispatch (no dispatch invocation in
+`SKILL.md` or `uncompressed.md`) → flag HIGH. Instructions file with no
+dispatch wiring is an orphan.
+
+### (A-FS-2) Missing referenced files
+
+Scan `SKILL.md`, `uncompressed.md`, and `instructions.uncompressed.md` for
+any explicit file-path pointer: `instructions.txt`, `result.sh`,
+`result.ps1`, `verify.sh`, `verify.ps1`, and any other filename literal
+that denotes a sibling file. For each found path, verify the file exists in
+`<skill_dir>`. If it does not exist on disk → flag HIGH.
+
 If any Phase 2 check fails → verdict FAIL, do not proceed to Phase 3.
 
 ## Phase 3 — Spec Compliance Audit

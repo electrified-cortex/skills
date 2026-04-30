@@ -245,6 +245,22 @@ Quick structural verification of the SKILL.md.
      covers H1 enforcement.
 5. **No duplication** — skill does not duplicate an existing capability.
    If similar skill exists, recommend merge or distinguish clearly.
+6. **(A-FS-1) Orphan files** — scan all files in the skill directory
+   and sub-directories. Any file that is not referenced directly or
+   indirectly from `SKILL.md`, `uncompressed.md`, or
+   `instructions.uncompressed.md` (by filename or relative path) and
+   has no well-known role (e.g. `spec.md`, `README.md`, `result.sh`,
+   `result.ps1`, `verify.sh`, `verify.ps1`, `eval.txt`,
+   `eval.uncompressed.md`) → flag LOW. An `instructions.txt` in a
+   skill that shows no evidence of being a dispatch skill (no
+   `instructions.txt` reference in `SKILL.md` or the
+   uncompressed source) is a HIGH example of this pattern.
+7. **(A-FS-2) Missing referenced files** — scan `SKILL.md`,
+   `uncompressed.md`, and `instructions.uncompressed.md` for any
+   file-path pointer (explicit `instructions.txt` reference,
+   `result.sh`, `result.ps1`, `verify.sh`, `verify.ps1`, or any other
+   path literal). Each referenced file MUST exist on disk. Missing file
+   → HIGH.
 
 If any smoke check fails, the verdict is FAIL. Do not proceed to
 Phase 3.

@@ -131,6 +131,20 @@ Stop gates in routing card (dispatch only): if SKILL.md contains refusal conditi
 
 Not duplicating existing capability. If similar exists, recommend merge or distinguish.
 
+### (A-FS-1) Orphan files
+
+Scan all files in `<skill_dir>` recursively. Skip dot-prefixed directories.
+For each file that is NOT a well-known role file (`spec.md`, `README.md`, `result.sh`, `result.ps1`, `verify.sh`, `verify.ps1`, `eval.txt`, `eval.uncompressed.md`, `SKILL.md`, `uncompressed.md`, `instructions.txt`, `instructions.uncompressed.md`, `*.spec.md`):
+
+- Check whether filename or relative path appears in `SKILL.md`, `uncompressed.md`, or `instructions.uncompressed.md`.
+- Not referenced → flag LOW.
+
+Special case: `instructions.txt` present but no dispatch invocation found in `SKILL.md` or `uncompressed.md` → flag HIGH.
+
+### (A-FS-2) Missing referenced files
+
+Scan `SKILL.md`, `uncompressed.md`, and `instructions.uncompressed.md` for filename literals denoting sibling files (`instructions.txt`, `result.sh`, `result.ps1`, `verify.sh`, `verify.ps1`, or any other filename literal). Each referenced file must exist in `<skill_dir>`. Missing → HIGH.
+
 If any Phase 2 check fails → verdict FAIL, don't proceed to Phase 3.
 
 ## Phase 3 — Spec Compliance Audit
