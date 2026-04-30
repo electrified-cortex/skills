@@ -379,7 +379,7 @@ foreach ($odir in $orphans) {
 
     # Safety: path must be under .hash-record/
     $odir_fwd = $odir -replace '\\', '/'
-    if (-not $odir_fwd.StartsWith($hash_record_prefix)) {
+    if (-not $odir_fwd.StartsWith($hash_record_prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
         [Console]::Error.WriteLine("skipping path outside .hash-record/: $odir")
         continue
     }

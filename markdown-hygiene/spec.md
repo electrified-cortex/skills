@@ -30,7 +30,7 @@ Sonnet-class (or GPT-5.4). Semantic reasoning. It:
 
 - Reads `<lint_path>` to extract the lint result and violation count.
 - Evaluates SA001–SA038 advisory rules against the target file.
-- Writes `analysis.md` at `<analysis_path>` with `operation_kind: markdown-hygiene-analysis` and `result: clean|pass`.
+- Writes `analysis.md` at `<analysis_path>` with `operation_kind: markdown-hygiene-analysis` and `result: clean|pass|fail`.
 - Returns `clean`, `pass: <analysis_path>`, or `findings: <analysis_path>` to its dispatch caller.
 - Never modifies the target file. Hard prohibition on script authoring.
 
@@ -111,7 +111,7 @@ The `dispatch` skill takes a single `<prompt>` — a verbatim string sent to the
 
 **Fix pass prompt** — host-composed variables:
 
-- `<prompt>` = `For this <markdown_file_path>, read <lint_path> and fix all lint violations in reverse line order (bottom to top) to preserve line numbers while fixing.`
+- `<prompt>` = `For this <markdown_file_path>, read <report_path> and fix all findings.`
 
 ## Scope
 
@@ -149,101 +149,6 @@ Input shape: `<markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
 
 There are no `--fix`, `--force`, `--source`, `--target`, or `--filename` flags.
 
-### Executor Procedure
-
-Cache-first ordering: hash check before reading the file. A cache HIT short-circuits
-with no file Read tool call.
-
-**Step 1 — Cache check.**
-
-Invoke the `hash-record-check` skill located at
-`electrified-cortex/hash-record/hash-record-check/` with:
-
-```text
-<markdown_file_path> markdown-hygiene report.md
-```
-
-Branch on the skill's one-line stdout:
-
-- `HIT: <abs-path>` — read the record. Frontmatter `result: clean` -> output `CLEAN`,
-  stop. Otherwise -> output `findings: <abs-path>`, stop.
-- `MISS: <abs-path>` — save as `<record_path>`; this is the path to write in step 4.
-  Continue to step 2.
-- `ERROR: <reason>` — output `ERROR: <reason>`, stop.
-
-The executor does NOT compute the git blob hash or build the cache path inline —
-that is hash-record-check's responsibility.
-
-**Step 2 — Run verify (if available).**
-
-Look for `verify.sh` or `verify.ps1` in the same directory as `instructions.txt`
-(the skill folder). If found:
-
-- Bash: `bash <skill-dir>/verify.sh <markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
-- PS7: `pwsh <skill-dir>/verify.ps1 <markdown_file_path> [-Ignore <RULE>[,<RULE>...]]`
-
-Parse stdout:
-
-- `CLEAN` — verify found no violations. Seed findings list as empty; skip to
-  Step 3 for adaptive suppression check then Step 5.
-- Violation pairs — each pair is two lines (rule line + Fix line). Seed the
-  findings list from all pairs. Continue to Step 3.
-- If verify is absent or returns an error — skip this step silently. Proceed
-  as if verify was not run.
-
-Rules covered by verify: MD009, MD010, MD012, MD041, MD047. The executor MUST
-NOT re-check these rules in Step 3 unless verify was skipped or returned an
-error. Doing so may produce duplicate findings.
-
-**Step 3 — Scan** `<markdown_file_path>` for violations **not already covered
-by verify**. Order of preference:
-
-1. Available markdown linter (`markdownlint` CLI, VS Code/Cursor extension, or
-   equivalent). Read its output to build the findings list.
-2. If no linter is available: read the file and apply rule-knowledge from the
-   reference list in step 3 directly. Cross-check each suspected finding against
-   the actual line — drop any finding that cannot be pointed at on a specific
-   verified line. Hallucinated findings are worse than missed findings.
-
-Skip rules in `--ignore`. Cover every rule in step 3, including all four table
-rules (MD055/MD056/MD058/MD060) — tables are high-frequency residual violators.
-
-**Step 4 — Adaptive MD041.** Read the first non-blank line (e.g. `head -n 5`).
-If it is `---` (YAML frontmatter), drop any MD041 finding and record
-`adaptive: MD041 suppressed` in the cache record.
-
-**Step 5 — Write record** at `<record_path>` (path from step 1):
-
-- `mkdir -p <cache_dir>` (Bash).
-- Frontmatter fields (between `---` delimiters):
-  - `hash: <hash>`
-  - `file_path: <repo-relative path>` — repo-relative string, NOT absolute, NOT
-    directory-only. Compute via `git ls-files --full-name <file>` or strip
-    `<repo_root>/` from the absolute path.
-  - `operation_kind: markdown-hygiene`
-  - `result: clean` (no violations, no advisories), `result: fail` (lint violations present),
-    or `result: pass` (no lint violations, but advisory observations present). If both
-    lint violations and advisories are present, use `result: fail`.
-- Body (see Body Format section):
-  - No violations, no advisories: output `CLEAN`, stop.
-  - Lint violations: output `findings: <record_path>`, stop.
-  - Advisory only: output `findings: <record_path>`, stop — host reads the Advisory section.
-
-`file_path` examples:
-
-```yaml
-# Correct:
-file_path: markdown-hygiene/instructions.uncompressed.md
-
-# WRONG (absolute path):
-file_path: /abs/path/to/markdown-hygiene/uncompressed.md
-
-# WRONG (directory only, no filename):
-file_path: markdown-hygiene/
-```
-
-The record filename is hardcoded `report.md`. It is not configurable.
-
 ### Host Iteration Loop
 
 After each full cycle (lint → analysis → aggregate), the host branches on `report.md`:
@@ -261,19 +166,12 @@ After each full cycle (lint → analysis → aggregate), the host branches on `r
 - Removes orphaned hash directories accumulated across fail iterations.
 - Prune errors are non-fatal — log and continue.
 
-**Detect pass dispatch:**
-
-- Skill: `dispatch`
-- Tier: `fast-cheap`
-- Description: `Inspecting Markdown Hygiene: <markdown_file_path>`
-- Prompt (host-composed): `Read and follow <lint-instructions-abspath>; Input: <markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
-
 **Fix pass dispatch** (separate from executor):
 
 - Skill: `dispatch`
 - Tier: `standard`
 - Description: `Fixing Markdown Hygiene: <markdown_file_path>`
-- Prompt (host-composed): `For this <markdown_file_path>, read <report-path> and fix any issues.`
+- Prompt (host-composed): `For this <markdown_file_path>, read <report_path> and fix all findings.`
 - This is a free-form agent prompt, not the executor instructions. The fix agent
   reads the report and edits `<markdown_file_path>` directly.
 
@@ -486,7 +384,7 @@ Two statements in the document directly contradict each other (e.g. "Always log 
 
 - `clean` — no advisories found
 - `pass: <analysis_path>` — advisories found
-- `findings: <analysis_path>` — analysis executor error (non-fatal; host may continue)
+- `findings: <analysis_path>` — at least one FAIL-severity advisory found
 - `ERROR: <reason>` — failure before record write
 
 **Host returns to its own caller** after the iteration loop completes (one line only):
@@ -499,7 +397,7 @@ Two statements in the document directly contradict each other (e.g. "Always log 
 **Three output files** — written into the same directory (derived from `<report_path>`):
 
 - `lint.md` — lint phase output; `operation_kind: markdown-hygiene-lint`; `result: clean|fail`
-- `analysis.md` — analysis phase output; `operation_kind: markdown-hygiene-analysis`; `result: clean|pass`
+- `analysis.md` — analysis phase output; `operation_kind: markdown-hygiene-analysis`; `result: clean|pass|fail`
 - `report.md` — index; `operation_kind: markdown-hygiene`; `result: clean|fail|pass`; `lint_result`; `analysis_result`
 
 **Required frontmatter fields — `lint.md`:**
@@ -513,7 +411,7 @@ Two statements in the document directly contradict each other (e.g. "Always log 
 
 - `file_path` — repo-relative path
 - `operation_kind: markdown-hygiene-analysis`
-- `result: clean` or `result: pass`
+- `result: clean`, `result: pass`, or `result: fail`
 
 **Required frontmatter fields — `report.md` (index):**
 
@@ -522,7 +420,7 @@ Two statements in the document directly contradict each other (e.g. "Always log 
 - `operation_kind: markdown-hygiene`
 - `result` — `clean`, `fail`, or `pass`
 - `lint_result` — `clean` or `fail`
-- `analysis_result` — `clean` or `pass`
+- `analysis_result` — `clean`, `pass`, or `fail`
 
 There is no `model` field in any frontmatter schema.
 
@@ -557,7 +455,7 @@ FINDINGS
 CLEAN
 ```
 
-`analysis.md` with advisories (`result: pass`):
+`analysis.md` with FAIL advisory (`result: fail`):
 
 ```text
 # Result
@@ -568,6 +466,19 @@ CLEAN
   Note: rephrase in sentence case or replace with a single bolded constraint term
 - SA014 [SUGGEST] line 22: "never" unemphasized in instruction document
   Note: consider bold or ALL CAPS to strengthen the constraint signal
+```
+
+`analysis.md` WARN/SUGGEST advisories only (`result: pass`):
+
+```text
+# Result
+
+## Advisory
+
+- SA014 [SUGGEST] line 22: "never" unemphasized in instruction document
+  Note: consider bold or ALL CAPS to strengthen the constraint signal
+- SA034 [WARN] line 45: directive modified by "generally" without specifying the exception condition
+  Note: either commit unconditionally or state the exact condition
 ```
 
 `report.md` CLEAN (`result: clean`):
@@ -613,10 +524,15 @@ Each advisory entry is two lines:
 
 - Lint clean, no advisories -> `clean`
 - Lint violations present -> `fail` (regardless of advisories)
-- Lint clean, advisory observations present -> `pass`
+- Lint clean, at least one FAIL advisory present -> `fail`
+- Lint clean, advisories present (worst is WARN or SUGGEST) -> `pass`
 
 `lint.md` `result` field values: `clean` or `fail` only.
-`analysis.md` `result` field values: `clean` or `pass` only.
+`analysis.md` `result` field values: `clean`, `pass`, or `fail`.
+
+- `clean` — no advisories
+- `pass` — advisories present, worst severity is WARN or SUGGEST
+- `fail` — at least one advisory with severity FAIL
 
 ### Fix Line Philosophy
 
@@ -664,8 +580,9 @@ consistent" will fail the apply test.
 
 - **Hard prohibition on script authoring (executor).** The executor MUST NOT author
   scripts (`.ps1`, `.sh`, `.py`, etc.), helper files, workspace artifacts, or "fix"
-  files outside the single cache-record write. The only file the executor creates is
-  `<cache_dir>/report.md`. If the executor reaches for Write or Edit tools to
+  files outside the single cache-record write. The lint executor creates only `<lint_path>`;
+  the analysis executor creates only `<analysis_path>`. The host creates `report.md` — no
+  executor writes `report.md`. If the executor reaches for Write or Edit tools to
   produce any other file, it is off-script. Read/Bash/Grep are for inspection only.
   The target file is read-only.
 - **Fix is NOT done by the executor.** The executor writes the report; the host
@@ -681,7 +598,7 @@ consistent" will fail the apply test.
 - Never modify content meaning — only formatting violations are in scope.
 - Preserve all technical strings, code blocks, and frontmatter.
 - Cache delegation is mandatory. The executor never computes the git blob hash or
-  constructs the cache path inline; hash-record-check owns that logic entirely.
+  constructs the cache path inline; `hash-record-check` owns that logic entirely.
 
 ## Integration
 
