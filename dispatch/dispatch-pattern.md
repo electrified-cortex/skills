@@ -1,7 +1,7 @@
 # Dispatch Pattern
 
 Design rationale for the `dispatch` primitive. Canonical envelope is in
-`dispatch/SKILL.md` and `dispatch/uncompressed.md` -- read those for the
+`dispatch/SKILL.md` and `dispatch/uncompressed.md` — read those for the
 operational spec.
 
 ## Why dispatch exists
@@ -21,8 +21,8 @@ caused:
 
 ## Variable substitution model
 
-The current pattern requires callers to bind variables -- including
-`<prompt>` -- in their own Variables block before calling dispatch.
+The current pattern requires callers to bind variables — including
+`<prompt>` — in their own Variables block before calling dispatch.
 Dispatch receives `<prompt>` verbatim and spawns the sub-agent.
 
 This is the "prompt-only" shape. The caller owns prompt construction;
@@ -40,12 +40,12 @@ Follow `dispatch` skill. See `../dispatch/SKILL.md`.
 
 Callers declare a tier (`fast-cheap`, `standard`, `deep`) instead of a
 model name. Dispatch resolves the tier to a concrete model per runtime.
-Model name changes require only one update (in dispatch/SKILL.md), not
+Model name changes require only one update (in `dispatch/SKILL.md`), not
 across every consumer skill.
 
 ## Zero-context isolation
 
-Dispatch agents start with no context -- only the prompt. The prompt tells
+Dispatch agents start with no context — only the prompt. The prompt tells
 them what file to read and what input to process. This prevents calling
 agent state from contaminating the sub-agent's reasoning.
 
@@ -60,6 +60,5 @@ installations.
 
 Prior to the prompt-only refactor, each dispatch skill embedded a verbatim
 opener (`Without reading instructions.txt yourself, spawn...`) and closer
-(`NEVER READ OR INTERPRET...`). This is the "envelope" pattern described in
-older spec files. The prompt-only pattern replaced it -- consumers now compose
-`<prompt>` themselves and delegate all spawning mechanics to dispatch/SKILL.md.
+(`NEVER READ OR INTERPRET...`). The prompt-only pattern replaced it — consumers now compose
+`<prompt>` themselves and delegate all spawning mechanics to `dispatch/SKILL.md`.

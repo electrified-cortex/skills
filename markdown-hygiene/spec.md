@@ -51,11 +51,12 @@ The host is the agent that reads `SKILL.md` and drives the full workflow. It:
    - Lint `clean`, analysis `pass` → aggregate is `pass`.
    - Both `clean` → aggregate is `clean`.
    Write `report.md` at `<report_path>`: `operation_kind: markdown-hygiene`, aggregate result, links to `lint.md` and `analysis.md`.
-8. **Iteration check.** Read `report.md` result. Max 3 full iterations (Steps 2–8).
-   - `clean` → stop.
-   - `pass` → stop. Surface `analysis.md` to caller; no automatic loop.
-   - `fail` → dispatch fix pass targeting findings, then **restart from Preparation** (step 2).
-9. Still `fail` after 3rd iteration → stop, return last `<report_path>`.
+8. **Iteration check.** Read `report.md` result.
+   - `clean` — skip to Step 10 (Prune).
+   - `fail` or `pass` — dispatch combined fix agent (standard tier). Agent fixes all FAIL-severity items and weighs each advisory: fix it or log "Skipped: `<reason>`" in `<report_path>`. Agent returns `fixed:` (changes applied) or `clean:` (only skips logged).
+     - `fixed:` — restart from Preparation (step 2); count as a fail iteration.
+     - `clean:` — skip to Step 10 (Prune).
+9. Still `fixed:` after 3rd iteration — stop, return `findings: <last-report-path>`.
 10. **Prune.** Run `hash-record-prune repo_root=<repo_root> --target <repo-relative-path>`. Removes orphaned hash directories accumulated across iterations.
 
 ### Result Check Tool
@@ -111,7 +112,7 @@ The `dispatch` skill takes a single `<prompt>` — a verbatim string sent to the
 
 **Fix pass prompt** — host-composed variables:
 
-- `<prompt>` = `For this <markdown_file_path>, read <report_path> and fix all findings.`
+- `<prompt>` = `For <markdown_file_path>: (a) read <lint_path> and fix every FAIL-severity item; (b) read <analysis_path> and for each advisory, either apply the fix or append "Skipped: <reason>" to the advisories section of <report_path>. Return \`fixed: <report_path>\` if any fixes were applied to <markdown_file_path>, or \`clean: <report_path>\` if only skipped entries were logged.`
 
 ## Scope
 
@@ -153,12 +154,27 @@ There are no `--fix`, `--force`, `--source`, `--target`, or `--filename` flags.
 
 After each full cycle (lint → analysis → aggregate), the host branches on `report.md`:
 
-- `CLEAN` → stop. Run prune, return `CLEAN` to caller.
-- `pass: <report-path>` → stop. Run prune, return `pass: <report-path>` to caller. Surface `analysis.md` findings for review; no automatic re-run.
-- `findings: <report-path>` (result: fail) → dispatch fix pass, then re-run the full cycle (Preparation onward).
+- `CLEAN` → run prune, return `CLEAN` to caller.
+- `fail` or `pass` → dispatch combined fix agent (see below), then branch on the agent's return.
 - `ERROR` → stop. Surface `ERROR: <reason>` to caller.
 
-**On terminal stop** (any branch except `fail`), run `hash-record-prune`:
+**Combined fix dispatch** (handles both `fail` and `pass`):
+
+- Skill: `dispatch`
+- Tier: `standard`
+- Description: `Fixing Markdown Hygiene: <markdown_file_path>`
+- Prompt (host-composed):
+  `For <markdown_file_path>: (a) read <lint_path> and fix every FAIL-severity item; (b) read <analysis_path> and for each advisory, either apply the fix or append "Skipped: <reason>" to the advisories section of <report_path>. Return \`fixed: <report_path>\` if any fixes were applied to <markdown_file_path>, or \`clean: <report_path>\` if only skipped entries were logged.`
+
+**On fix agent return:**
+
+- `fixed: <report_path>` — fixes applied to `<markdown_file_path>`. Re-run the full cycle (Preparation onward). Count as a fail iteration; after the 3rd, stop and return `findings: <report_path>` to caller.
+- `clean: <report_path>` — no file changes; only advisory skips logged. Run prune, return `pass: <report_path>` to caller.
+- `ERROR: <reason>` — stop. Surface `ERROR: <reason>` to caller.
+
+`fixed:` is an internal signal only. It is never written to any record file and never returned to the caller of this skill.
+
+**On terminal stop** (CLEAN or fix agent `clean:`), run `hash-record-prune`:
 
 - Skill: `hash-record-prune`
 - Input: `repo_root=<repo_root> --target <repo-relative-path>`
@@ -166,20 +182,11 @@ After each full cycle (lint → analysis → aggregate), the host branches on `r
 - Removes orphaned hash directories accumulated across fail iterations.
 - Prune errors are non-fatal — log and continue.
 
-**Fix pass dispatch** (separate from executor):
-
-- Skill: `dispatch`
-- Tier: `standard`
-- Description: `Fixing Markdown Hygiene: <markdown_file_path>`
-- Prompt (host-composed): `For this <markdown_file_path>, read <report_path> and fix all findings.`
-- This is a free-form agent prompt, not the executor instructions. The fix agent
-  reads the report and edits `<markdown_file_path>` directly.
-
 Both passes go through the same `dispatch` primitive. The dispatch primitive receives
 only `<prompt>` — it does not perform template substitution. The host is the only
 party that constructs prompt strings.
 
-**Max 3 fail iterations.** Only `fail` counts toward the iteration limit. If findings remain after the 3rd fail cycle, stop and return `findings: <last-report-path>` to caller.
+**Max 3 `fixed:` iterations.** If the fix agent keeps returning `fixed:` and lint keeps finding new issues, cap at 3 restart cycles, then stop and return `findings: <last-report-path>` to caller.
 
 ### Advisory Rules (SA series)
 
