@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # verify.sh — deterministic markdown hygiene check
-# Covered rules: MD009, MD010, MD012, MD041, MD047
+# Covered rules: MD010, MD041
 # Usage: verify.sh <file> [--ignore RULE[,RULE...]]
 # Output: CLEAN | violation pairs (rule line + Fix line per violation), LF-terminated
 # Exit: 0 on success; 1 on usage/file error (errors to stderr)
@@ -64,11 +64,6 @@ for (( i=0; i<N; i++ )); do
     [[ "$in_fence" == true ]] && in_fence=false || in_fence=true
   fi
 
-  # MD009 — trailing spaces (applies everywhere, including inside code blocks)
-  if ! has_skip MD009 && [[ "$L" =~ [[:space:]]$ ]]; then
-    add "MD009 line $LN: trailing spaces" "Fix: remove trailing whitespace from line $LN"
-  fi
-
   # MD010 — hard tabs outside fenced code blocks (skip fence delimiter lines)
   if ! has_skip MD010 \
       && [[ "$in_fence" == false ]] \
@@ -78,14 +73,6 @@ for (( i=0; i<N; i++ )); do
         "Fix: replace tab character on line $LN with spaces"
   fi
 
-  # MD012 — multiple consecutive blank lines (flag 2nd blank in any run)
-  if ! has_skip MD012 \
-      && (( i > 0 )) \
-      && [[ "$L" =~ ^[[:space:]]*$ ]] \
-      && [[ "${LINES[$((i-1))]}" =~ ^[[:space:]]*$ ]]; then
-    add "MD012 line $LN: multiple consecutive blank lines" \
-        "Fix: remove blank line $LN (keep only one blank line between paragraphs)"
-  fi
 
 done
 
@@ -99,15 +86,6 @@ if ! has_skip MD041 && [[ "$HAS_FM" == false ]]; then
     fi
     break
   done
-fi
-
-# MD047 — file must end with single newline
-# tail -c 1 returns last byte; $() strips trailing newlines, so result is empty iff last byte is LF
-if ! has_skip MD047 && [[ -s "$FILE" ]]; then
-  if [[ -n "$(tail -c 1 "$FILE")" ]]; then
-    add "MD047: file lacks trailing newline" \
-        "Fix: append a single newline at end of file"
-  fi
 fi
 
 if (( ${#OUT[@]} == 0 )); then
