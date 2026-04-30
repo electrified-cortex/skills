@@ -1,6 +1,6 @@
 Remove: articles (a/an/the), filler (just/really/basically), hedging, pleasantries,
 verbose phrasing ("in order to" → "to"), connective fluff,
-non-structural markdown (bold/italics/emphasis blockquotes).
+non-structural markdown (bold/italics/emphasis blockquotes). Exception: bold on constraint/imperative terms → ALL CAPS (e.g. `**never**` → `NEVER`, `**must**` → `MUST`).
 
 Transform: short synonyms, merge redundant bullets, fragments only when unambiguous.
 
