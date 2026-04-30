@@ -303,6 +303,38 @@ Each topic is a `.spec.md` file in `./topics/`. Topics define the
 analysis criteria for one optimization category. See a topic file to
 understand its signals, when-not-to-apply guidance, and finding criteria.
 
+### Topic Quality Standards
+
+Every topic spec must meet these three bars to be considered complete.
+Topics that fail these standards produce low-quality findings — too vague
+to act on, missing the context needed to apply them, or unprovable.
+
+**1. Operational trigger conditions**
+
+Silence and fire conditions must be specific enough to act on without
+judgment. Vague thresholds — "materially improved," "significant,"
+"likely," "when it seems warranted" — are not operational. Replace with
+observable signals: "fire when the instructions file has grown by more
+than 20% since the last subtraction review" or "fire when no `REASON:`
+justification is present on a finding." If you cannot write a test case
+for the trigger, it is not operational.
+
+**2. Required evaluator context declared**
+
+Each topic must state what context it needs to produce valid findings.
+Examples: "requires the caller invocation pattern," "requires prior
+findings or changelog to assess duplication rate," "requires the runtime
+environment to assess portability." Topics that silently assume context
+they are not given will produce incorrect or inapplicable findings.
+
+**3. Success criteria**
+
+Findings must be falsifiable. A finding that cannot be disproved after
+it is acted on is not useful. Each topic's finding section must describe
+what "acting on this finding" looks like and how you would verify it
+helped — even informally. Example: "acting means removing N sentences;
+verify by re-running the skill and checking output quality holds."
+
 | Topic | Category | Focus |
 | --- | --- | --- |
 | `dispatch.spec.md` | DISPATCH | Dispatch vs. inline execution pattern; tool call vs. text substitution |

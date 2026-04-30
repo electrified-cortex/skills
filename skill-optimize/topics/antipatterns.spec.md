@@ -1,5 +1,21 @@
 # Anti-Patterns and Foot Guns
 
+> **Activation:** This topic fires only when a *systemic* failure is
+> present — one that no primary topic fully owns, or one that emerges from
+> topic interaction. The cross-topic tensions and per-topic foot guns below
+> are **reference material** — they inform other topic analyses but do not
+> generate findings on their own. Findings come exclusively from the
+> **Systemic anti-patterns** section.
+>
+> **Required context before running:**
+>
+> - Topic set being applied to this skill
+> - Prior findings or changelog entries (to assess duplication rate)
+> - Any prior optimize log
+>
+> **Do not fire when:** a primary topic (LESS IS MORE, DISPATCH, EXAMPLES,
+> etc.) already owns the issue. This topic picks up only what falls through.
+
 Cross-cutting anti-patterns and tug-of-war tensions between optimization
 topics. Each topic file should also flag its own foot guns in context —
 this file collects the cross-topic ones and the most common per-topic
@@ -67,6 +83,7 @@ for self-critique.
 ## Per-topic foot guns
 
 ### DISPATCH
+
 - **Dispatching a tiny inline skill** — If the skill is 5 steps and the
   procedure fits in 10 lines, dispatch overhead (round-trip, context
   switch, schema) dominates the work. Inline it.
@@ -76,6 +93,7 @@ for self-critique.
   compounds.
 
 ### HASH RECORD
+
 - **Hashing a skill with always-different inputs** — If the skill's
   inputs are parameterized by a timestamp, a random ID, or any value that
   changes every run, the manifest hash will always miss. The overhead is
@@ -86,6 +104,7 @@ for self-critique.
   actually determine the output.
 
 ### DETERMINISM
+
 - **Determinizing a judgment that needs nuance** — replacing LLM judgment
   with a rigid rule when the edge cases genuinely vary by context. The
   tool will be correct on the common case and wrong on the edges.
@@ -94,6 +113,7 @@ for self-critique.
   wrong results when the model drifts.
 
 ### MODEL SELECTION
+
 - **Haiku for judgment + elaborate compensation instructions** — Writing
   a 500-word instruction file to make a cheap model "smart enough" for a
   judgment task. The extra tokens often cost more than just using Sonnet,
@@ -104,6 +124,7 @@ for self-critique.
   genuinely requires deep multi-constraint reasoning, Sonnet is sufficient.
 
 ### WORDING
+
 - **Emphatic repetition as a crutch** — Repeating a constraint three
   times to make it feel more binding ("always X", "remember: always X",
   "important: always X"). The model's attention budget is finite; three
@@ -114,6 +135,7 @@ for self-critique.
   tokens with no behavioral change and contribute to complexity inflation.
 
 ### LESS IS MORE
+
 - **Removing load-bearing context disguised as preamble** — A sentence
   that looks like context-setting ("you are analyzing a skill that may
   be called in isolation or as part of a pipeline") might be providing
@@ -124,6 +146,7 @@ for self-critique.
   making wrong inferences, you've removed too much. Find the floor.
 
 ### CHAIN OF THOUGHT
+
 - **CoT on deterministic lookups** — Telling the model to "think through"
   a file hash, a format check, or a rule lookup. These are not judgment
   tasks; CoT adds tokens and can introduce drift by giving the model
@@ -133,6 +156,7 @@ for self-critique.
   ("First assess X, then evaluate Y, then conclude Z").
 
 ### EXAMPLES
+
 - **Outlier examples** — Teaching the model an exceptional case instead
   of the representative case. The model anchors on the example. If the
   example is rare, normal inputs will be handled like the rare case.
@@ -141,12 +165,14 @@ for self-critique.
   unless examples are updated in sync.
 
 ### OUTPUT FORMAT
+
 - **Implicit "you'll know it when you see it" format** — Describing the
   output in prose without a template. The model produces different
   structures across runs. Even a simple markdown template anchors
   behavior more than 100 words of description.
 
 ### SELF CRITIQUE
+
 - **Self-critique on deterministic steps** — Asking the model to "verify
   your work" on a file hash, a line count, or a regex result. Use a tool
   for verification; self-critique is for judgment.
@@ -156,6 +182,7 @@ for self-critique.
   note issues, do not recurse."
 
 ### TOOL SIGNATURES
+
 - **Generic tool names in a large registry** — A tool named "process" or
   "analyze" in a registry of 30 tools will be called randomly. Specific,
   action-verb names ("hash_manifest", "compare_versions") are selected
@@ -165,6 +192,7 @@ for self-critique.
   read-only verification; the side effect is invisible and unexpected.
 
 ### REUSE
+
 - **Premature extraction** — Extracting a block that appears once into a
   shared tool "for future reuse." If it never gets reused, you've added
   architecture with no payoff and made the original skill harder to read.

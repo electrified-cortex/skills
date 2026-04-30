@@ -1,66 +1,57 @@
-# LESS IS MORE
+# OUTPUT FORMAT
 
-Assess whether the skill's instructions have grown beyond what they need
-to be. This is the final-pass mindset: after building up content, find
-what can be removed. Perfection is not achieved by what you add — it is
-achieved by what you remove.
+Assess whether the skill specifies its output format explicitly enough to
+produce consistent, parseable results across invocations. Implicit format
+descriptions cause variance — different structure, different keys, different
+ordering — that breaks downstream consumers.
 
-**The over-elaboration problem:**
+**Signal for output format:**
 
-Models generating skills write tomes. Brainstorming sessions produce
-rich context that accumulates into instruction files. This growth is
-natural during design but harmful at runtime. Every sentence a model
-does not need to read is a sentence that cannot cause an unexpected
-detour, an over-interpretation, or a miskeyed behavior. The more you
-give a model, the more surface area exists for it to latch onto the
-wrong thing.
+- The skill describes its expected output in prose without a schema,
+  template, or concrete example.
+- Different invocations of the same skill produce structurally different
+  outputs (different keys, different nesting, different markdown structure).
+- The skill's output is consumed by another tool, agent, or parser that
+  requires predictable structure.
+- The output format is described in the spec but not enforced in the
+  instructions file — the model must infer structure at runtime.
 
-**Specs are not instructions:**
+**Implementation pattern:**
 
-Spec files are for humans — they may be verbose, richly contextual, and
-explanatory. Instruction files are for models — they must be lean. If
-rationale, background, or design history has leaked from a spec into an
-instruction file, remove it. Models do not need to know why; they need
-to know what and how.
+Provide the minimum schema that anchors behavior. Options in ascending
+cost:
 
-**The subtraction check:**
+1. **Labeled fields** — `TOPIC: <slug>\nFINDINGS: <N>` — lowest cost,
+   good for structured but non-nested output
+2. **Markdown template** — a concrete example block the model fills in
+3. **Named sections** — `## Findings\n...\n## Recommendation\n...`
+4. **JSON schema** — only when a downstream parser requires it
 
-For every sentence in the instruction file, ask: if this sentence were
-absent, would a capable model still execute the skill correctly? If yes,
-it is a candidate for removal. This applies to:
+Choose the simplest form that prevents variance. A two-line labeled-field
+format is almost always sufficient for agent-to-agent communication. Full
+JSON schema is rarely warranted for skills — prefer it only when the output
+is consumed by code, not by another model.
 
-- Explanatory prose (why a step exists, what the skill is for)
-- Redundant restatements (the same instruction said twice with different words)
-- Edge cases already handled by the model's base behavior
-- Motivational or cautionary language that adds length without adding constraint
+**When schema is not needed:**
 
-**The growth signal:**
+- The output is free-form prose consumed by a human or a general-purpose
+  model that does not need to parse it programmatically.
+- The skill is exploratory / advisory and the consumer explicitly handles
+  variable structure.
+- A single one-sentence answer is the full output — no structure needed.
 
-If a skill's instruction file has grown after recent edits — more
-content was added but nothing removed — this category should produce a
-finding. Every addition should trigger a corresponding subtraction review.
-The size of an instruction file is not a measure of its quality; it is
-often inversely related to it.
+**Variance indicators (produce a finding):**
 
-**Complexity inflation (evidence):**
+- The instructions say "return your findings" with no format specification
+- The output has fields described in prose: "include the topic name, the
+  number of findings, and a summary" — without a template
+- The spec defines a format but the instructions file does not reproduce it
+- Prior invocations have produced different keys or structures
 
-IAICDM names "complexity inflation" as a primary antipattern: when
-critique reveals fragility, the instinct is to add components or
-caveats rather than simplify. The correct response is simplification.
-Growth in component count (or instruction count) without corresponding
-growth in required new behaviors is a signal of design failure, not
-progress. Each revision of a skill should maintain or reduce instruction
-complexity relative to the previous version; growth is only justified
-when a genuinely new behavioral requirement has been added. (IACDM,
-Moreira 2026, Section 9, antipattern 2)
+**Produce a finding when:** the skill has structured output consumed by
+a downstream agent or tool, and no explicit format is specified in the
+instructions file.
 
-Produce a finding when:
-
-- Instruction content is explanatory or contextual rather than procedural
-- Spec-level rationale is present inside the instruction file
-- The same constraint is stated more than once in slightly different words
-- The instruction file has grown significantly without a documented
-  subtraction review
-
-Do not produce a finding when every sentence is load-bearing — present
-because without it the model would produce meaningfully wrong output.
+**Do not produce a finding when:** the output is explicitly specified in
+the instructions with a template or field schema, OR the output is
+genuinely unstructured and consumed by a context that handles variance.
