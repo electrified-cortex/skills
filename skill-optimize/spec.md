@@ -208,20 +208,91 @@ change in a way that invalidates prior records.
 
 ## Behavior
 
-The optimizer executes as a stateless single-pass analysis per invocation.
-Multi-pass convergence (calling it repeatedly until findings stop growing)
-is the optimal usage pattern and is owned by the caller — see R12.
+The optimizer executes as a single-pass analysis per invocation. Each
+invocation covers one topic. Multi-pass coverage (running until all
+relevant topics are addressed) is owned by the caller or a coordinator
+agent.
 
-### Entry and Cache Check
+### Entry and Optimize Log Check
 
 On entry, identify the skill source files (`spec.md`, `uncompressed.md`,
-`SKILL.md`, `instructions.txt`, `instructions.uncompressed.md`), compute a
-manifest hash using the hash-record manifest procedure, and probe the cache
-at `.hash-record/<hash[0:2]>/<hash>/skill-optimize/v1.0/report.md`.
+`SKILL.md`, `instructions.txt`, `instructions.uncompressed.md`) and read
+all that exist.
 
-On a cache hit, emit `PATH: <existing-record>` and stop.
+Check for an optimize log at `<skill-path>/optimize-log.md`. If present,
+read it. Topics with status `clean`, `rejected`, or `acted` can be
+excluded from the active candidate set — they have already been handled.
 
-On a miss, proceed with the full analysis.
+### Assessor Pass
+
+The assessor selects the next topic to analyze. The assessor runs at
+Sonnet-class minimum — it requires judgment to weigh signals across the
+topic set.
+
+#### Qualifier Dispatch (Haiku-class, batched)
+
+Before the assessor decides, dispatch one Haiku-class qualifier agent with
+a *batch* of candidate topics — all unanalyzed / non-excluded topics,
+ordered by natural priority. The qualifier scans the list in order and
+returns the first topic it determines to be applicable.
+
+Each qualifier receives:
+- All skill source files
+- The ordered topic list (slugs + one-line descriptions, not full specs)
+
+The qualifier returns:
+
+```
+TOPIC: <SLUG>
+APPLICABLE: yes | maybe
+REASON: <one sentence>
+```
+
+The qualifier short-circuits: it returns as soon as it finds the first
+applicable topic. If none apply in the batch, it returns `TOPIC: none`.
+
+This batched approach is preferred over per-topic dispatch — it uses one
+call instead of N, and the natural priority order ensures the highest-value
+topic is found first.
+
+For a second opinion or to find the next candidate after acting on the
+first, run another batch qualifier starting from the topic after the
+previously returned one.
+
+**Fallback:** When qualifier dispatch is unavailable, the assessor applies
+the inline heuristics in the topic priority table (see below) directly
+from its reading of the skill.
+
+#### Assessor Decision
+
+The assessor reviews qualifier results and selects the single topic most
+likely to yield a HIGH finding. Tie-breaking order:
+
+1. `yes` signals over `maybe`
+2. Structural/architectural topics over stylistic topics
+3. Topic natural priority order (see table below)
+4. Shortest topic spec (lower analysis cost for equivalent expected yield)
+
+**Natural priority order** — the default sequence when signals are tied
+or qualifier dispatch is unavailable:
+
+| Tier | Topics | Rationale |
+| ---- | ------ | --------- |
+| 1 — Structural | DISPATCH, HASH RECORD, DETERMINISM | Wrong architectural pattern invalidates downstream topics |
+| 2 — Contract | INTERFACE CLARITY, TOOL SIGNATURES, OUTPUT FORMAT | Contract problems block useful invocation |
+| 3 — Efficiency | LESS IS MORE, COMPRESSIBILITY, COMPOSITION | Reduce waste once structure is sound |
+| 4 — Quality | SELF CRITIQUE, CHAIN OF THOUGHT, EXAMPLES, WORDING | Judgment and calibration improvements |
+| 5 — Safety | ITERATION SAFETY, ERROR HANDLING, FAILURE MODE, AUTONOMY LEVEL | Bounded, predictable behavior |
+| 6 — Lifecycle | TEMPORAL DECAY, CONVERGENCE, EVALUATION HARNESS, ACTIVATION DISCIPLINE | Long-term maintainability |
+| 7 — Context | CONTEXT BUDGET, CONTEXT SENSITIVITY, VERIFICATION STRATEGY | Portability and evidence |
+| 8 — Meta | REUSE, PROGRESSIVE OPT, OBSERVABILITY, ANTI-PATTERNS | Cross-cutting concerns last |
+
+### Topic Analysis
+
+Load the selected topic spec. Analyze the skill against its criteria.
+Produce findings or confirm clean. Update the optimize log.
+
+See `uncompressed.md` for the full execution procedure.
 
 ## Topics
 
