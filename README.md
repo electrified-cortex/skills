@@ -24,10 +24,11 @@ the full story.
 | [tool-auditing](tool-auditing/) | Audit tool scripts for companion spec, conventions, and error handling — lightweight, fast-cheap |
 | [tool-writing](tool-writing/) | Write tool scripts with companion specs — Bash default, PowerShell supported, spec-first discipline |
 
-| **Agent** | **Description** |
-| --- | --- |
-| [claude-dispatch](dispatch/agents/claude-dispatch.agent.md) | Minimal pass-through agent for Claude Code CLI — reads a target file, follows its instructions, returns the result |
-| [vscode-dispatch](dispatch/agents/vscode-dispatch.agent.md) | Minimal pass-through agent for Claude Code in VS Code — same behavior, VS Code tool names |
+| **Agent** | **Path** | **Description** |
+| --- | --- | --- |
+| [dispatch](dispatch/agents/) | `.claude/agents/dispatch.agent.md` | Minimal executor for Claude Code CLI — reads a target file, follows its instructions, returns the result |
+| [dispatch](dispatch/agents/) | `.github/agents/dispatch.agent.md` | Minimal executor for VS Code (GitHub Copilot) — same behavior, VS Code tool names |
+| [orchestrator](dispatch/agents/) | `.github/agents/orchestrator.agent.md` | Dispatch-first orchestrator for VS Code — delegates everything to the Dispatch agent |
 
 ## Quick Start
 
