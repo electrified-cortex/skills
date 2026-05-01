@@ -268,6 +268,24 @@ If clean: write the `# <TOPIC>` heading followed by a single line `CLEAN — no 
 
 ---
 
+## Step 5c — Apply Findings
+
+**This step is mandatory before advancing to the next pass.** Later topic analyses must run against updated source files — not the state that produced the findings.
+
+For each finding in the just-written `.optimization/<slug>.md` report:
+
+1. **Determine applicability:** Is the recommendation concrete, targeted, and safe to apply without operator judgment? Concrete = edits to specific lines or sections in skill source files. Safe = does not restructure the skill's external interface or contradict the spec.
+
+2. **If applicable:** Apply the edit to the relevant file in `<skill-path>` (typically `uncompressed.md`, `instructions.uncompressed.md`, `spec.md`, or `SKILL.md`). Update the `**Action taken:**` field in the report to describe what changed. Update the log row status from `pending` to `acted`.
+
+3. **If not applicable** (requires operator decision, architectural change, ambiguous tradeoff, or risk of breaking other skills): Leave the log row as `pending`. Set `**Action taken:**` to `pending — <one sentence explaining why it was not applied automatically>`.
+
+4. Never write to files outside `<skill-path>`. Never apply findings to the skill-optimize skill's own files.
+
+5. After applying (or explicitly deferring) all findings, re-read the modified source files into working memory before starting the next pass.
+
+---
+
 ## Step 6 — Output
 
 Emit a one-line summary as the final output:

@@ -140,6 +140,16 @@ Status: `qualified` | `acted` | `deferred` | `rejected` | `clean` | `audit-candi
 Multiple findings: use `## Findings` section header before the list, not `---` separators.
 Clean → single-line body under `# <TOPIC>`: `CLEAN — no findings.`
 
+5c: Apply findings before advancing.
+
+For each finding in the just-written report:
+- If the recommendation is **concrete and safe** (a targeted edit to the skill source files with no operator judgment required): apply it now, update `**Action taken:**` in the report, update log status to `acted`.
+- If it requires operator judgment (structural redesign, breaking change, ambiguous tradeoff): leave `pending`, set `**Action taken:**` to `pending — <why skipped>`.
+
+Apply only to files in `<skill-path>` (uncompressed.md, instructions.uncompressed.md, spec.md, SKILL.md). Never apply to the skill-optimize files themselves.
+
+**Do not advance to the next pass until 5c is complete.** Later analyses must run against the updated source files.
+
 Step 6 — Output:
 
 ```text
