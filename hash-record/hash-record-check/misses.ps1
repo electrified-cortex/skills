@@ -45,8 +45,7 @@ if (-not $files -or $files.Count -eq 0) { exit 0 }
 
 # Never process files inside the cache tree itself.
 $files = $files | Where-Object {
-    $normalized = $_.FullName.Replace('\\', '/').ToLowerInvariant()
-    -not $normalized.Contains('/.hash-record/')
+    $_.FullName -notmatch '[/\\]\.hash-record[/\\]'
 }
 if (-not $files -or $files.Count -eq 0) { exit 0 }
 
