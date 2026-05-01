@@ -43,6 +43,7 @@ Should return: `{ "status": "posted" | "duplicate" | "error", "comment_id": <id 
 ## Why This Is Complex
 
 GitHub requires:
+
 1. A fresh `commit_id` from the PR head — stale SHAs cause 422
 2. The target line must be visible in the diff — not all lines qualify
 3. `side` must match the line type: `RIGHT` for additions/context, `LEFT` for deletions
