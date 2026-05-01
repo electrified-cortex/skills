@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Deterministic scan of a `.md` file for MD rule violations. Runs a two-step preparation pass before scanning: the co-located `lint` tool unconditionally auto-fixes known safe rules, followed by any installed markdown linter for a broader auto-fix pass. Writes `lint.md` at the host-specified path with imperative `Fix:` instructions per finding. The target file is always modified by preparation; the scan pass then reads the post-fix file.
+Deterministic scan of a `.md` file for MD rule violations. Runs a two-step preparation pass before scanning: the co-located `lint` tool unconditionally auto-fixes known safe rules, followed by any installed markdown linter for a broader auto-fix pass. Writes `lint.md` at the host-specified path with imperative `Fix:` instructions per finding. Preparation always modifies the target file; the scan pass then reads the post-fix file.
 
 ## Model Tier
 
@@ -19,20 +19,20 @@ Haiku-class (`fast-cheap`). No semantic reasoning — deterministic pattern-matc
 ## Procedure
 
 1. **Run local lint tool** — `lint.sh` / `lint.ps1` co-located in this sub-skill folder. Fixes MD009, MD012, MD047 in-place. Unconditional — always runs, no availability check.
-2. **Run installed linter** — if the runtime already has a markdown linter available, run its auto-fix pass on `<markdown_file_path>`. Do not install one if absent. Ignore MD041 warnings if the target file is a `SKILL.md`. Best-effort.
+2. **Run installed linter** — if the runtime already has a markdown linter available, run its auto-fix pass on `<markdown_file_path>`. If absent, **do not** install one. If the target file is a `SKILL.md`, ignore MD041 warnings. Best-effort.
 3. **Re-run result check (`lint` mode)** — the file was modified by preparation; the hash has changed. Re-probe the cache to get the updated path. Branch on stdout:
    - `HIT: ...` → return that result verbatim to the caller, stop. The content was already scanned.
    - `MISS: <abs-path>` → bind as `<lint_path>` (replaces any previously bound value). Continue.
-4. **Run verify** — `verify.sh` / `verify.ps1` co-located in this sub-skill folder. Detects MD009, MD010, MD012, MD041, MD047. Include its output in findings; do not re-check covered rules unless verify was skipped or errored.
+4. **Run verify** — `verify.sh` / `verify.ps1` co-located in this sub-skill folder. Detects MD009, MD010, MD012, MD041, MD047. Include its output in findings; **do not** re-check covered rules unless verify was skipped or errored.
 5. **Scan** — read `<markdown_file_path>` and apply rule-knowledge for all remaining MD rules. Cross-check every suspected finding against the actual line; drop any not pointable to a verified line. Hallucinated findings are worse than missed findings.
 6. **Adaptive MD041 suppression** — if the first non-blank line of the file is `---` (YAML frontmatter), suppress MD041 regardless of `--ignore`.
-7. **Write `<lint_path>`** — overwrite if present.
+7. **Write `<lint_path>`** — if present, overwrite.
 8. **Return** `clean` (no violations) or `findings: <lint_path>` (violations present).
 
 ## MD Rule Reference
 
 | Rule | Description |
-|------|-------------|
+| --- | --- |
 | MD001 | Heading levels increment by one |
 | MD003 | Heading style consistent (atx vs setext) |
 | MD004 | List markers consistent (`-`, `*`, `+`) |
@@ -57,7 +57,7 @@ Haiku-class (`fast-cheap`). No semantic reasoning — deterministic pattern-matc
 | MD058 | Tables need blank lines before AND after |
 | MD060 | Table cell separators need space on each side of dash run |
 
-## verify Scripts
+## Verify Scripts
 
 `verify.sh` / `verify.ps1` are co-located in this sub-skill folder. They are deterministic shell scripts — no external packages required. They cover MD009, MD010, MD012, MD041, MD047. See `verify.spec.md` for full interface and output format.
 
@@ -103,5 +103,5 @@ Each finding is exactly two lines: rule line, then indented `Fix:` line.
 ## Constraints
 
 - Hard prohibition: do NOT author scripts (`.ps1`, `.sh`, etc.) or write any file other than `<lint_path>`.
-- Target file is read-only by this executor. Preparation auto-fix is the only permitted modification.
+- This executor must not modify the target file. Preparation auto-fix is the only permitted modification.
 - Haiku-class: no semantic reasoning. Drop any finding you cannot verify against a specific line.

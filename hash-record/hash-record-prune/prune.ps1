@@ -80,7 +80,6 @@ if (-not ([System.IO.Path]::IsPathRooted($repo_root))) {
 
 # Normalize to forward slashes for byte-identical stdout
 $repo_root_fwd = $repo_root.TrimEnd('/', '\') -replace '\\', '/'
-$hash_record_dir = "$repo_root_fwd/.hash-record"
 $hash_record_literal = $repo_root.TrimEnd('/', '\') + [System.IO.Path]::DirectorySeparatorChar + '.hash-record'
 
 # ---------------------------------------------------------------------------

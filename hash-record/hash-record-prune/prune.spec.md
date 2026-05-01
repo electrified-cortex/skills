@@ -19,18 +19,18 @@ Bash is the POSIX canonical implementation. PowerShell 7+ required
 
 ## Parameters
 
-| Positional   | Type   | Required | Description                                              |
-| ------------ | ------ | -------- | -------------------------------------------------------- |
-| `repo_root`  | string | yes      | Absolute path to the repository root containing `.hash-record/`. Must not contain `..` or shell metacharacters (`;`, `|`, `&`, `$`, `>`, `<`, `` ` ``, `(`, `)`, `{`, `}`). |
+| Positional | Type | Required | Description |
+| ------------ | ------ | -------- | --- |
+| `repo_root` | string | yes | Absolute path to the repository root containing `.hash-record/`. Must not contain `..` or shell metacharacters (`;`, pipe, `&`, `$`, `>`, `<`, `` ` ``, `(`, `)`, `{`, `}`). |
 
 ## Flags
 
-| Flag              | Type    | Default  | Description                                              |
-| ----------------- | ------- | -------- | -------------------------------------------------------- |
-| `--target <glob>` | string  | none     | Glob pattern matched against repo-relative file paths. Only hash directories whose associated source path(s) match are candidates. Must be a relative pattern — absolute paths rejected. |
-| `--dry-run`       | boolean | false    | Report orphan count without deleting.                    |
-| `--limit <N>`     | integer | none     | Cap deletions at N per invocation. Must be non-negative. |
-| `--help`/`-h`     | boolean | false    | Print usage synopsis to stdout and exit 0.               |
+| Flag | Type | Default | Description |
+| --- | --- | --- | --- |
+| `--target <glob>` | string | none | Glob pattern matched against repo-relative file paths. Only hash directories whose associated source path(s) match are candidates. Must be a relative pattern — absolute paths rejected. |
+| `--dry-run` | boolean | false | Report orphan count without deleting. |
+| `--limit <N>` | integer | none | Cap deletions at N per invocation. Must be non-negative. |
+| `--help`/`-h` | boolean | false | Print usage synopsis to stdout and exit 0. |
 
 ## Procedure
 

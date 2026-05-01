@@ -11,7 +11,7 @@ possible baseline.
 ## Scope
 
 | Rule | Fix applied |
-|------|-------------|
+| ---- | ----------- |
 | MD009 | Strip trailing whitespace from every line |
 | MD012 | Collapse runs of 2+ consecutive blank lines to exactly one blank line |
 | MD047 | Ensure file ends with exactly one LF |
@@ -30,8 +30,7 @@ lint.sh  <file>
 lint.ps1 <file>
 ```
 
-- `<file>` (positional, required): absolute or relative path to the `.md`
-  file to fix. Must exist and be writable.
+`<file>` (positional, required): absolute or relative path to the `.md` file to fix; must exist and be writable.
 
 No `--ignore` flag. These fixes are unconditional — if you don't want them,
 don't run the tool.
@@ -42,7 +41,7 @@ don't run the tool.
 - Idempotent: running twice on the same file produces the same result.
 - Always exits 0 on success, even if no changes were needed.
 - No stdout on success.
-- Errors (file not found, not writable) go to stderr, exit 1.
+- Errors (file not found, not writable) go to `stderr`, exit `1`.
 
 ## Output encoding
 
@@ -52,12 +51,12 @@ don't run the tool.
 ## Exit codes
 
 - `0`: success (file fixed or already clean).
-- `1`: usage error or file not found / not writable (message on stderr).
+- `1`: usage error or file not found / not writable (message on `stderr`).
 
 ## Requirements
 
 R1. Both scripts MUST produce byte-identical file content when run against
     the same input on the same platform.
-R2. No external packages or tools required — pure shell logic only.
+R2. Requires no external packages or tools — pure shell logic only.
 R3. After the tool runs, `verify` must report CLEAN for MD009, MD012, and
     MD047 on the same file.
