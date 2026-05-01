@@ -1,11 +1,15 @@
 Inputs: OWNER, REPO, PR_NUMBER, FILE_PATH, LINE_NUMBER, BODY, SIDE (default RIGHT), START_LINE (optional — multi-line only)
 
-1. Auth: gh auth status
-2. Fetch SHA: gh pr view {PR_NUMBER} --json headRefOid --jq '.headRefOid' → COMMIT_SHA
-3. Verify file: gh pr diff {PR_NUMBER} --name-only → FILE_PATH must appear; else stop.
-4. Verify line: gh pr diff {PR_NUMBER} -- {FILE_PATH} → LINE_NUMBER must be visible; else stop: "Line {LINE_NUMBER} not visible in diff".
+1. Auth: gh auth status 2>&1
+2. Fetch SHA: gh pr view {PR_NUMBER} --repo {OWNER}/{REPO} --json headRefOid --jq '.headRefOid' → COMMIT_SHA
+3. Verify file: gh pr diff {PR_NUMBER} --repo {OWNER}/{REPO} --name-only → FILE_PATH must appear; else stop.
+4. Verify line: gh pr diff {PR_NUMBER} --repo {OWNER}/{REPO} --patch | Select-String "diff --git|@@"
+   NOTE: `gh pr diff` accepts only ONE argument (the PR number). The syntax `gh pr diff {PR_NUMBER} -- {FILE_PATH}` is INVALID and fails with "accepts at most 1 arg".
+   Parse the output to locate the `diff --git a/{FILE_PATH}` section, then find its `@@ -OLD,LEN +NEW,LEN @@` hunk headers. For SIDE=RIGHT, valid lines are NEW to (NEW+LEN-1). For SIDE=LEFT, valid lines are OLD to (OLD+LEN-1). If LINE_NUMBER is outside all hunk ranges for the file, stop: "Line {LINE_NUMBER} not in diff for {FILE_PATH}".
+   Alternatively, skip pre-check and rely on the 422 response: a 422 with field="pull_request_review_thread.line" and message="could not be resolved" means the line is not commentable — surface this clearly.
 5. Dedup: gh api --paginate /repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments --jq '.[] | select(.path=="{FILE_PATH}" and .line=={LINE_NUMBER}) | {id,body}' → match → return {status:"duplicate", comment_id:<id>}
 6. Post (single): gh api --method POST /repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments --field body="{BODY}" --field commit_id="{COMMIT_SHA}" --field path="{FILE_PATH}" --field line={LINE_NUMBER} --field side="{SIDE}"
    Post (multi, START_LINE set): add --field start_line={START_LINE} --field start_side="RIGHT"; use side="RIGHT". Never use `position`.
 7. Return: { "status": "posted"|"duplicate"|"error", "comment_id": <id or null>, "message": "<one line>" }
-   On 422: diagnose from error body, surface to caller.
+   On 422 field=pull_request_review_thread.line message="could not be resolved": line is not in diff — report line not commentable.
+   On other 422: surface full error body to caller.

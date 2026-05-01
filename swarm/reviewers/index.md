@@ -9,9 +9,9 @@
   trigger: always
   required: true
   suggested_models: [sonnet-class, gpt-class]
-  suggested_backends: [dispatch-sonnet, copilot-cli]
+  suggested_backends: [dispatch-sonnet]
   scope: Challenge assumptions, surface what could go wrong, find blind spots in the artifact's reasoning. No constructive design suggestions — adversarial role only. Cite evidence per finding or retract.
-  vendor: anthropic
+  vendor: openai
 
 - name: Security Auditor
   trigger: problem touches authentication, user input, API endpoints, data access, secrets, network calls, file system writes, or process execution
@@ -26,5 +26,5 @@
   required: false
   suggested_models: [sonnet-class]
   suggested_backends: [dispatch-sonnet]
-  scope: Generated on-the-fly. Role and scope inferred from the problem domain. Body file does not exist; system prompt synthesized inline at dispatch time per swarm B10. Same read-only and evidence-citation constraints as registered personalities. One-shot — never persisted.
+  scope: Generated on-the-fly. Role and scope inferred from the problem domain. Body file does not exist; system prompt synthesized inline at dispatch time. Same read-only and evidence-citation constraints as registered personalities. One-shot — never persisted.
   vendor: anthropic

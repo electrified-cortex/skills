@@ -14,3 +14,12 @@ Input: OWNER, REPO, PR_NUMBER, FILE_PATH, LINE_NUMBER, BODY, SIDE (optional — 
 
 Follow dispatch skill: `../../../../dispatch/SKILL.md`
 Should return: `{ "status": "posted" | "duplicate" | "error", "comment_id": <id or null>, "message": "<one line>" }`
+
+## Known Gotchas (Verified Against Live API)
+
+| Gotcha | Symptom | Fix |
+| --- | --- | --- |
+| `gh pr diff {PR} -- {file}` is invalid | `accepts at most 1 arg(s), received 2` | `gh pr diff` takes only the PR number; no file-filter arg. Get full patch and parse hunk headers per file. |
+| Line not in diff | 422: `pull_request_review_thread.line` → `"could not be resolved"` | Line is outside all hunk ranges for the file. Check valid ranges from `@@ -OLD,LEN +NEW,LEN @@` headers. |
+| `--json` missing `--repo` on forked repos | `Could not resolve to a PullRequest` | Always pass `--repo {OWNER}/{REPO}` to `gh pr view` and `gh pr diff` when not in a local clone. |
+| `gh auth status` output goes to stderr | Command produces no stdout output | Use `gh auth status 2>&1` to capture. |

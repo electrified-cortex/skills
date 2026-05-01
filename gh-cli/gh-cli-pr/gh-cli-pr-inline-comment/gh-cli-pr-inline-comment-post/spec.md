@@ -42,7 +42,7 @@ fetch SHA → verify file in diff → verify line in diff → dedup check → PO
 
 1. Always fetch `commit_id` fresh from `gh pr view --json headRefOid`.
 2. Verify the target file appears in `gh pr diff --name-only` before posting.
-3. Confirm the target line is visible in `gh pr diff -- {path}`.
+3. Confirm the target line is in a hunk for the target file by parsing `gh pr diff --patch` output. **`gh pr diff {PR} -- {file}` is invalid** — `gh pr diff` accepts only one argument; the file-filter syntax fails with "accepts at most 1 arg". Get the full patch and locate `@@ -OLD,LEN +NEW,LEN @@` hunk headers for the file to determine valid line ranges. Alternatively, rely on the 422 response at POST time.
 4. Check for existing comments at the same file+line before posting (deduplication).
 5. Post with `body`, `commit_id`, `path`, `line`, `side`. Never use deprecated `position`.
 6. On 422: re-inspect diff, diagnose cause, surface to caller — do not silently retry.
@@ -51,10 +51,16 @@ fetch SHA → verify file in diff → verify line in diff → dedup check → PO
 
 | Error | Cause | Recovery |
 | ----- | ----- | -------- |
-| 422 `line is not part of the pull request` | Line not in diff; wrong `side`; stale SHA | Re-fetch SHA; view diff; correct params |
+| 422 field=`pull_request_review_thread.line` message=`could not be resolved` | Line not in any hunk for this file; wrong `side`; stale SHA | Re-fetch SHA; check hunk ranges in `--patch`; correct params |
 | 422 `position` rejected | Deprecated param used | Replace with `line` + `side` |
 | 404 | Wrong repo or PR number | Verify owner/repo |
 | 403 | No write access | Check auth |
+
+## Verified Gotchas
+
+- `gh pr diff {PR_NUMBER} -- {FILE_PATH}` fails: "accepts at most 1 arg(s), received 2". File-scoped diffs are not supported by `gh pr diff`. Use `--patch` and parse.
+- `gh auth status` output goes to stderr. Capture with `2>&1`.
+- Always pass `--repo {OWNER}/{REPO}` to `gh pr view` and `gh pr diff` when not running inside a local clone.
 
 ## Constraints
 

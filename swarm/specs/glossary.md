@@ -1,6 +1,6 @@
 # swarm — Glossary
 
-Terms used in the swarm skill. See `uncompressed.md` for normative rules.
+Terms used in the swarm skill. See `spec.md` for normative rules.
 
 - **Review packet**: self-contained brief assembled from the artifact. Fields: Goal, Approach, Key decisions, Artifacts (actual content), Files affected, Blast radius, Conventions. Omit fields not applicable.
 - **Availability gate**: probe confirming a personality's required backend is reachable before dispatch. Only required for non-`dispatch-*` backends.

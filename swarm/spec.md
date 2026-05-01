@@ -1,10 +1,10 @@
-# swarm-protocol spec
+# swarm spec
 
 ## Purpose
 
-Define the `swarm-protocol` skill: a generic multi-personality review and analysis infrastructure skill. Given any input artifact, the skill selects applicable reviewer personalities from a registry, gates each on availability, dispatches the surviving set in parallel, aggregates their findings, tracks disagreements, and returns a synthesized verdict with a confidence rating.
+Define the `swarm` skill: a generic multi-personality review and analysis infrastructure skill. Given any input artifact, the skill selects applicable reviewer personalities from a registry, gates each on availability, dispatches the surviving set in parallel, aggregates their findings, tracks disagreements, and returns a synthesized verdict with a confidence rating.
 
-`swarm-protocol` is infrastructure. It does not perform reviews itself. Consumer skills (e.g., `code-review`) call into it with a problem and an optional personality filter. The skill is not a code-review skill; the two have a strict consumer-service relationship.
+`swarm` is infrastructure. It does not perform reviews itself. Consumer skills (e.g., `code-review`) call into it with a problem and an optional personality filter. The skill is not a code-review skill; the two have a strict consumer-service relationship.
 
 ## Scope
 
@@ -26,7 +26,7 @@ Does NOT cover:
 
 **Personality**: a named reviewer role with a defined trigger condition, preferred model class, backend type, and scope limiter. Personalities are loaded lazily; their full prompts are not present at selection time.
 
-**Personality registry**: the built-in ordered table of personalities defined in this skill. Extended at call time by a caller-supplied custom menu.
+**Personality registry**: the set of reviewer personalities available at runtime, determined by crawling the `reviewers/` directory. The built-in personalities are documented in the Personality Registry table (informative). Callers may extend the runtime registry with a custom menu for the current invocation.
 
 **Custom menu**: a caller-supplied list of additional personalities appended to the registry for the current invocation only. Does not persist between invocations.
 
@@ -36,13 +36,13 @@ Does NOT cover:
 
 **Swarm**: the surviving set of personalities after selection and availability gating.
 
-**Dispatch skill**: `electrified-cortex/dispatch` — the authoritative agent-launching mechanism. `swarm-protocol` delegates all sub-agent launches to this skill; it must not reinvent the launch primitive.
+**Dispatch skill**: `electrified-cortex/dispatch` — the authoritative agent-launching mechanism. `swarm` delegates all sub-agent launches to this skill; it must not reinvent the launch primitive.
 
 **Disagree set**: the subset of swarm findings where two or more personalities reached contradictory conclusions on the same point.
 
 **Confidence rating**: a three-value scalar (High / Medium / Low) attached to the synthesis output. Reflects reviewer agreement, evidence quality, and scope coverage.
 
-**model class**: an abstract tier identifier: `haiku-class` (shallow, mechanical), `sonnet-class` (moderate reasoning, default for most personalities), `opus-class` (heavy architectural reasoning). No bare model names may appear anywhere in the skill.
+**model class**: an abstract tier identifier: `haiku-class` (shallow, mechanical), `sonnet-class` (moderate reasoning, default for most personalities), `opus-class` (heavy architectural reasoning), `gpt-class` (alias for GPT-family models of roughly sonnet-class capability). No bare model names may appear anywhere in the skill.
 
 **Caller override**: a caller-supplied `model_overrides` map that pins one or more personalities to a specific model class for the current invocation.
 
@@ -52,7 +52,7 @@ Does NOT cover:
 
 ## Personality Registry
 
-The registry is normative. All built-in personalities must appear in this table. Trigger conditions are evaluated against problem traits. Multiple triggers may be satisfied; all matching personalities are included unless filtered by `personality_filter`.
+The following table is informative — it documents the built-in personalities and their default properties for reference. The authoritative runtime registry is the `reviewers/` directory, crawled at invocation time. The integer index in this table is informative only; runtime index is assigned by alphabetical crawl (1-based). Trigger conditions are evaluated against problem traits. Multiple triggers may be satisfied; all matching personalities are included unless filtered by `personality_filter`.
 
 | # | Personality | Trigger condition | Default model class | Backend | Scope limiter |
 | --- | --- | --- | --- | --- | --- |
@@ -66,7 +66,7 @@ The registry is normative. All built-in personalities must appear in this table.
 | 8 | Copilot Reviewer | problem includes code and copilot-cli is available | external | copilot-cli | Full code review via Copilot; availability-gated |
 | 9 | Custom Specialist | caller explicitly supplies via custom menu | varies | varies | Defined by caller in custom menu entry |
 
-Registry entries must not be re-ordered; the integer index is stable across invocations and used in disagreement tracking.
+The integer index in this table is informative only. At runtime, index assignment follows alphabetical crawl order (1-based) from the `reviewers/` directory. Personality renames or additions change the runtime index; disagreement tracking uses personality names, not indices.
 
 ## Custom Personality Menu
 
@@ -79,6 +79,24 @@ Callers may supply additional personalities that extend the registry for a singl
 | `problem` | required | artifact | The content under review. |
 | `personality_filter` | optional | list of personality names or indices | If supplied, restricts the candidate set to the named personalities (from built-in registry + custom menu). Personalities not in the filter are not evaluated against trigger conditions and are not dispatched. |
 | `model_overrides` | optional | map of personality name → model class | Pins the given personalities to the specified model class for this invocation. Overrides the default model class in the registry. |
+
+## Requirements
+
+1. The personality registry must be runtime-crawled from the built-in table plus any caller-supplied custom menu; it must not be a static hardcoded roster.
+2. Devil's Advocate (registry entry 1) must always be included in the swarm unless the caller's `personality_filter` explicitly names a subset that omits it.
+3. All dispatched personalities must operate in read-only mode; sub-agents must not edit files, commit, run side-effecting commands, or call any mutating tool.
+4. The literal read-only phrase "read-only review — analyze and report only, no file edits, no commits, no shell commands" must appear in every personality's dispatch prompt.
+5. Reviewer prompts must be loaded lazily: only after the swarm is finalized (post-availability-gating), and only for personalities that will be dispatched.
+6. All swarm personalities must be dispatched in a single parallel batch; sequential dispatch is not permitted.
+7. External-backend personalities (any backend other than `dispatch-sonnet`, `dispatch-haiku`, or `dispatch-opus`) must be availability-gated before inclusion in the swarm.
+8. A personality that fails its availability probe must be dropped from the swarm for the current invocation; the skill must not fail-stop or surface the probe failure as an error to the caller.
+9. Synthesis output must be delivered in host voice only; raw sub-agent output must not be dumped to the caller, and reviewer attribution must be stripped.
+10. Synthesis output must not exceed 2000 words; if findings exceed the budget the skill must truncate by priority (disagreements first, then high-severity, then medium, then low).
+11. No bare model names (e.g., specific version strings) may appear anywhere in the skill, its reviewer files, or its synthesis output; only model class terms (`haiku-class`, `sonnet-class`, `opus-class`) may be used.
+12. Each finding in aggregated output must cite specific evidence (snippet, line reference, scenario, or direct quote); unsupported assertions are not findings and must be retracted or excluded.
+13. The skill must not merge with or replace the `code-review` consumer skill; the consumer-service boundary must be maintained.
+14. Caller-supplied `model_overrides` must affect model class only; they must not change backend type for any personality.
+15. Custom menu personalities must be additive only; they must not override or replace built-in registry entries.
 
 ## Step Sequence
 
@@ -116,7 +134,7 @@ For each selected personality whose backend is not `dispatch-sonnet` or `dispatc
 
 ### Step 4 — Load reviewer prompts
 
-Only after the swarm is finalized (post-gating) does the skill load the prompt for each surviving personality. Reviewer prompts are stored as separate sub-skill files under `swarm-protocol/reviewers/<name>.md`. The skill loads only the files corresponding to dispatched personalities. Files for non-dispatched personalities must not be loaded.
+Only after the swarm is finalized (post-gating) does the skill load the prompt for each surviving personality. Reviewer prompts are stored as separate sub-skill files under `swarm/reviewers/<name>.md`. The skill loads only the files corresponding to dispatched personalities. Files for non-dispatched personalities must not be loaded.
 
 Rationale for sub-skill files over inline data: inline prompts bloat the context regardless of which personalities are selected, defeating lazy loading. Dynamic data loading at dispatch time keeps the skill's base context minimal. This is a normative decision; implementors must not revert to inline prompts.
 
@@ -128,15 +146,31 @@ Each personality dispatch receives: (1) the full review packet from Step 1, (2) 
 
 The skill applies `model_overrides` at dispatch time: if a caller override exists for a personality, the override model class is used; otherwise the registry default applies.
 
-### Step 6 — Aggregate findings and track disagreements
+### Step 6 — Arbitrator
 
-The skill collects findings from all dispatched personalities. For each finding, the skill records: personality index, finding summary, cited evidence.
+After all member outputs are collected, the skill dispatches a single sonnet-class arbitrator agent. The arbitrator is not in the personality registry; it is not subject to `personality_filter` or availability gating. It is always dispatched as part of the standard step sequence and cannot be disabled.
 
-The skill identifies the disagree set: findings where two or more personalities reached contradictory conclusions on the same point. Each disagree entry records the personalities involved and the conflicting claims.
+The arbitrator receives: (1) all non-empty, non-timeout member outputs from the swarm, and (2) the original review packet. Member outputs that are empty or timed out are excluded from the arbitrator's input set.
 
-### Step 7 — Synthesize and return
+The arbitrator's output is a structured action list only, with two sections:
 
-The skill synthesizes findings into a single host-voice output. It must not dump raw sub-agent output to the caller. It speaks as the host, presenting refined takeaways.
+**(a) Obvious actions** — items where two or more swarm members independently flagged the same concern, or where the concern is self-evident from the artifact. Each item includes: description, source personality names, and evidence cite (snippet, line reference, scenario, or direct quote).
+
+**(b) Critical actions** — items that, if unaddressed, would block shipping or require an architectural change, regardless of reviewer agreement count. Each item includes: description, source personality names, evidence cite, and severity rationale (why it would block shipping or require architectural change).
+
+The arbitrator must not include speculative, low-confidence, or duplicate items. If no actionable findings exist, it must state "No actionable findings" explicitly.
+
+See `specs/arbitrator.md` for the full arbitrator role sub-specification.
+
+### Step 7 — Aggregate findings and track disagreements
+
+The skill collects findings from the arbitrator's structured action list. For each action item, the skill records: personality names cited, finding summary, evidence cite.
+
+The skill identifies the disagree set from the arbitrator's output: items where swarm members reached contradictory conclusions on the same point. Each disagree entry records the personalities involved and the conflicting claims.
+
+### Step 8 — Synthesize and return
+
+The skill synthesizes findings into a single host-voice output, drawing from the arbitrator's action list only. Raw member output must not be passed to the synthesis step and must not be dumped to the caller. The host never reads or parses raw member output directly. It speaks as the host, presenting refined takeaways.
 
 Required synthesis output fields:
 
@@ -157,7 +191,7 @@ C3. The skill does not technically prevent a sub-agent from calling mutating too
 
 C4. Every finding in the aggregated output must cite specific evidence: a snippet, line reference, scenario, or direct quote. Unsupported assertions are not findings. The skill must instruct each reviewer to either cite or retract.
 
-C5. The skill must not merge or replace the `code-review` skill. `swarm-protocol` is infrastructure; `code-review` is a consumer. The two must remain separate with a defined consumer-service boundary.
+C5. The skill must not merge or replace the `code-review` skill. `swarm` is infrastructure; `code-review` is a consumer. The two must remain separate with a defined consumer-service boundary.
 
 C6. No bare model names (e.g., specific version strings) may appear in the skill, its reviewer files, or its synthesis output. Use model class terms only: `haiku-class`, `sonnet-class`, `opus-class`.
 
@@ -178,6 +212,8 @@ B5. If all dispatched personalities return no findings, the synthesis must state
 B6. Devil's Advocate must always be dispatched unless explicitly excluded by `personality_filter` with a named subset that omits it.
 
 B7. Custom menu personalities are evaluated against their caller-supplied trigger condition. If the trigger is "always", they are always included (subject to availability gating if their backend is external).
+
+B8. Cross-vendor diversity is best-effort. When selecting models, prefer at least one personality on a different model family or vendor than the host agent. If unavailable, proceed and note monoculture in synthesis. Devil's Advocate is the natural diversity carrier (registered with `vendor: openai`; non-Anthropic `suggested_models` preference).
 
 ## Defaults and Assumptions
 
@@ -267,6 +303,16 @@ Mitigation: strip reviewer attribution before synthesis output; speak in host vo
 
 `ANTI-PATTERN:` Caller passes `personality_filter: ["Security Auditor"]` expecting that only Security Auditor runs. But the implementation also runs Devil's Advocate because it is "always" included, and the filter is interpreted as additive. Result: caller gets two reviewers when it expected one. Correct approach: `personality_filter` is an inclusion list; Devil's Advocate is always added unless the caller explicitly excludes it by name.
 
+## Sub-specifications
+
+The following companion specs extend this document. Each covers a bounded sub-topic that would otherwise bloat the primary spec.
+
+- `specs/arbitrator.md` — arbitrator role definition
+- `specs/dispatch-integration.md` — dispatch integration patterns
+- `specs/glossary.md` — extended glossary
+- `specs/personality-file.md` — reviewer file format
+- `specs/registry-format.md` — registry index format
+
 ## Section Classification
 
 | Section | Type | Required |
@@ -288,8 +334,6 @@ Mitigation: strip reviewer attribution before synthesis output; speak in host vo
 | Section Classification | Structural | Yes |
 
 ## Open Questions
-
-OQ1. Skill name: the queued task notes the operator may prefer `swarm-review` over `swarm-protocol`. This spec uses `swarm-protocol` (the infrastructure name). Auditor should confirm the name with the operator before the uncompressed/SKILL compilation step.
 
 OQ2. CLI dispatch: `claude -p` and copilot CLI as parallel dispatch backends are explicitly deferred to task 10-0845. The Copilot Reviewer (registry entry 8) currently uses `copilot-cli` as its backend. Once 10-0845 defines the CLI dispatch contract, this spec must be amended to reference it and remove the scope exclusion in C7.
 

@@ -1,9 +1,5 @@
 # swarm — Uncompressed Reference
 
-Multi-personality review and analysis infrastructure skill. Given any artifact, select applicable reviewer personalities from a runtime-crawled registry, gate each on availability, dispatch surviving set in parallel, aggregate findings via an arbitrator, track disagreements, and return a synthesized verdict with a confidence rating.
-
-`swarm` is infrastructure only. Consumer skills (e.g., `code-review`) call into it. The two have a strict consumer-service relationship; swarm must not merge with or replace any consumer skill.
-
 ## Key Terms
 
 - **Artifact**: input content under review — conversation excerpt, file path, diff, plan, document, or structured description. Passed as `problem`.
@@ -28,7 +24,7 @@ Multi-personality review and analysis infrastructure skill. Given any artifact, 
 
 The registry is external to the skill. Built-in personality definitions live as separate files at `swarm/reviewers/<name>.md`. The registry is the directory listing — every `*.md` file present in `reviewers/` at runtime is a registered personality. Adding a personality requires only dropping a new file; no spec or SKILL.md edit required.
 
-**Registry loading**: crawl `reviewers/` at runtime when a swarm invocation begins. Compile-time enumeration is not used. This ensures new personalities are available immediately.
+**Registry loading**: crawl `reviewers/` at runtime when a swarm invocation begins. Compile-time enumeration is not used. `reviewers/index.md` serves as the ordered manifest for the registry — it provides metadata and ordering for personalities discovered during the crawl.
 
 **Metadata-validation gate**: any file in `reviewers/` is subject to automatic metadata-validation before registration. A file failing validation is silently skipped. No human approval required. Valid files are automatically registered.
 
@@ -115,7 +111,7 @@ If `personality_filter` is supplied: restrict candidate set to named personaliti
 
 For each personality in the active set, read `suggested_models` from frontmatter and select the first available model. Caller `model_overrides` take precedence. If no `suggested_models` entry is available and no override applies, default to `sonnet-class`.
 
-Selection logic must be inline within the skill. A separate dispatch for personality selection is not used. Rationale: token cost of a selection dispatch exceeds cost of inline evaluation for registries under 12 entries. Revisit if registry grows beyond approximately 20 entries.
+Selection logic must be inline within the skill. A separate dispatch for personality selection is not used.
 
 Personalities with `required: true` must always be included regardless of trigger evaluation. `personality_filter` may exclude a required personality only when the caller explicitly names a subset that omits it. Devil's Advocate carries `required: true`.
 
@@ -132,8 +128,6 @@ For `dispatch-*` backends, no probe is required; the dispatch skill handles erro
 ### Step 4 — Load reviewer prompts
 
 Only after the swarm is finalized (post-gating) load the prompt for each surviving personality. Reviewer prompts are stored as separate sub-skill files under `swarm/reviewers/<name>.md`. The filename is the personality name lowercased with spaces and apostrophes replaced by hyphens (e.g., `devils-advocate.md`, `security-auditor.md`). Load only files for dispatched personalities. Do not load files for non-dispatched personalities.
-
-Rationale: inline prompts bloat context regardless of which personalities are selected, defeating lazy loading. Dynamic loading at dispatch time keeps the skill's base context minimal. This is a normative decision; do not revert to inline prompts.
 
 ### Step 5 — Dispatch
 
@@ -188,8 +182,6 @@ Synthesis output must not exceed 2000 words. If findings exceed this budget, pri
 C1. All dispatched sub-agents operate in read-only mode. Sub-agents must not edit files, run side-effecting commands, commit, or call any mutating tool. State this constraint explicitly in every personality's dispatch prompt.
 
 C2. Include the literal phrase "read-only review — analyze and report only, no file edits, no commits, no shell commands" in each personality's dispatch prompt.
-
-C3. The skill does not technically prevent a sub-agent from calling mutating tools; the constraint is behavioral, enforced by prompt instruction only. A sub-agent violation is a prompt-design defect, not a dispatch-skill defect. Known limitation (see F3).
 
 C4. Every finding must cite specific evidence: a snippet, line reference, scenario, or direct quote. Instruct each reviewer to either cite or retract.
 
@@ -263,25 +255,15 @@ P5. Synthesis word budget (2000-word cap) overrides completeness. Truncation req
 - Do not fail the swarm if cross-vendor diversity cannot be achieved; diversity is best-effort.
 - Do not treat a `reviewers/*.md` file without valid frontmatter as a registered personality; silently skip invalid files.
 
-## Footguns
+## Related
 
-F1. Loading all reviewer prompts at start (before selection) — bloats every invocation. Mitigation: load only after swarm is finalized (post Step 3, at Step 4).
-
-F2. Silent availability-gate fail-stop — a missing `copilot` binary causes the entire skill to error instead of dropping the personality and continuing. Mitigation: probe failures set personality status to dropped, not error.
-
-F3. Read-only constraint not included in dispatch prompt — sub-agent has no instruction preventing file edits. Mitigation: include the literal read-only phrase (C2) in every personality dispatch.
-
-F4. Sequential dispatch — personalities dispatched one by one, multiplying latency by personality count. Mitigation: issue all dispatches as a single parallel batch per Step 5.
-
-F5. Synthesis dumps reviewer names — output exposes internal review machinery in host-voice output. Mitigation: strip reviewer attribution before synthesis; speak in host voice only.
-
-F6. Host bypasses arbitrator and synthesizes from raw member output. Mitigation: Step 8 must receive only the arbitrator's structured action list; raw member output must not be passed to synthesis.
-
-F7. Monoculture swarm — all personalities resolve to the same model family as the host. Mitigation: Devil's Advocate should carry `vendor: openai` and a preferred non-Anthropic `suggested_models` entry. Diversity rule B8 is the enforcement mechanism.
-
-F8. Treating the informative registry table as normative — deriving the active personality list from a table in the spec instead of crawling `reviewers/` at runtime. Mitigation: the runtime crawl is the only source of truth.
-
-Anti-pattern: `personality_filter: ["Security Auditor"]` — caller expects Security Auditor to run only if trigger is met. But Security Auditor runs unconditionally because the filter bypasses trigger evaluation for named entries. Additionally, Devil's Advocate is suppressed (only always-dispatched when no filter is present). Correct use: `personality_filter` is an inclusion list that bypasses triggers. To include Devil's Advocate alongside a filtered set, name it explicitly.
+- `dispatch` — agent-launching skill; swarm delegates all sub-agent launches here.
+- `compression` — compression skill used to produce the compressed form of this skill.
+- `specs/arbitrator.md` — sub-specification for the arbitrator consolidation role.
+- `specs/dispatch-integration.md` — sub-specification for dispatch integration patterns.
+- `specs/glossary.md` — canonical term definitions for the swarm skill family.
+- `specs/personality-file.md` — sub-specification for the reviewer personality file format.
+- `specs/registry-format.md` — sub-specification for the personality registry format and crawl behavior.
 
 ## Scope Boundaries
 

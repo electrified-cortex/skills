@@ -20,7 +20,7 @@ Required fields per entry:
 | ------------------ | ---------------------- | ----------------------------------------------------------------------- |
 | `name`             | string                 | Display name. Must be unique across all entries in the index.           |
 | `trigger`          | string                 | Trigger condition. Use `"always"` for unconditional inclusion.          |
-| `required`         | bool                   | `true` = always dispatched regardless of `additional_personalities` unless the caller explicitly names a subset that omits it. |
+| `required`         | bool                   | `true` = always dispatched regardless of `custom menu` unless the caller explicitly names a subset that omits it. |
 | `suggested_models` | list of model-class    | Preference-ordered list of model-class terms. First available entry is selected at dispatch time. |
 | `suggested_backends` | list of backend IDs  | Preference-ordered list of backend identifiers.                         |
 | `scope`            | string                 | What this personality reviews and what it explicitly ignores.           |
@@ -47,9 +47,9 @@ Examples:
 
 ## Loading Policy
 
-The skill reads the index file once at the start of a swarm invocation. One file read produces the full metadata for all registered personalities. No directory crawl is performed. The index is the complete registry; body files are not scanned at load time.
+The runtime loading model is a directory crawl of `reviewers/`. At the start of a swarm invocation, the skill crawls the `reviewers/` directory to discover body files, then reads `reviewers/index.md` (or the chosen index file) as an ordered manifest that provides metadata and ordering for the discovered personalities. The index provides ordering metadata; individual body files are the canonical source of personality content.
 
-This single-read policy is cheaper than N per-file frontmatter reads and allows the index to evolve independently of body files.
+This two-step approach (crawl for discovery, index for ordering) means that a new personality is visible to the runtime as soon as its body file is dropped into `reviewers/` and its entry is added to the index. The index is not the sole gating mechanism — both an index entry and a body file are required for a personality to be dispatched.
 
 ## Validation Gate
 
@@ -76,7 +76,7 @@ The table below describes the personalities typically defined in `reviewers/inde
 | 2  | Security Auditor   | problem touches auth, user input, API endpoints, data access, secrets, or network calls | sonnet-class          | dispatch-sonnet | Find vulnerabilities only; no design advice        |
 | 3  | Custom Specialist  | generated on-the-fly when no built-in or caller-supplied personality fits the problem    | sonnet-class          | dispatch-sonnet | Role and scope inferred from the problem domain    |
 
-The integer `#` in this table is informative only. The stable runtime index is entry order in `reviewers/index.md` (1-based). Entry reordering changes the numeric index; callers using `additional_personalities` by name are unaffected.
+The integer `#` in this table is informative only. The stable runtime index is entry order in `reviewers/index.md` (1-based). Entry reordering changes the numeric index; callers using `custom menu` by name are unaffected.
 
 ## On-the-Fly Personality Generation (Custom Specialist)
 
@@ -95,7 +95,7 @@ This behavior is default-ON. Callers who want strict registry-only evaluation (n
 
 ## Caller-Supplied Personalities
 
-Code-domain personalities are not built-in. They are supplied by the consumer skill via `additional_personalities`. The `code-review` skill, for example, supplies the following via its `additional_personalities` set:
+Code-domain personalities are not built-in. They are supplied by the consumer skill via `custom menu`. The `code-review` skill, for example, supplies the following via its `custom menu` set:
 
 - Code Quality Critic — code conventions, readability, duplication; no security or arch
 - Test Reviewer — test coverage and quality only
@@ -104,7 +104,7 @@ Code-domain personalities are not built-in. They are supplied by the consumer sk
 - Performance Reviewer — throughput, latency, resource use only
 - Copilot Reviewer (gpt-class, copilot-cli backend) — full code review via Copilot; availability-gated
 
-**Pre-implementation gate — Copilot Reviewer:** before adding any CLI-backed personality to `reviewers/index.md` or to `code-review`'s `additional_personalities`, verify that task 10-0845 (dispatch skill CLI-extension) has reached PASS.
+**Pre-implementation gate — Copilot Reviewer:** before adding any CLI-backed personality to `reviewers/index.md` or to `code-review`'s `custom menu`, verify that task 10-0845 (dispatch skill CLI-extension) has reached PASS.
 
 ## Custom Personality Menu
 

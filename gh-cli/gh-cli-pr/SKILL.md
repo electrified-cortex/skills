@@ -46,6 +46,7 @@ Sub-skills:
 | gh-cli-pr-comments/ | Add, edit, delete general PR comments |
 | gh-cli-pr-inline-comments/ | Post, edit, delete inline diff comments |
 | gh-cli-pr-merge/ | Merge, update branch, revert, close |
+| gh-cli-pr-file-viewed/ | Mark or unmark files as viewed (single, multiple, or all) |
 
 Notes:
 Use `--repo owner/name` when not in local clone of target repo.

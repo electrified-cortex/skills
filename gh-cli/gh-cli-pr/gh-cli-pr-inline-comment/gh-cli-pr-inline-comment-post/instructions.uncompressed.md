@@ -26,7 +26,7 @@ gh auth status
 Always fetch fresh — stale SHAs cause 422 errors.
 
 ```bash
-gh pr view {PR_NUMBER} --json headRefOid --jq '.headRefOid'
+gh pr view {PR_NUMBER} --repo {OWNER}/{REPO} --json headRefOid --jq '.headRefOid'
 ```
 
 Save as COMMIT_SHA.
@@ -41,14 +41,22 @@ If FILE_PATH is not listed, stop: the file has no changes in this PR.
 
 ## Step 3: Verify the Line Is in the Diff
 
+> **GOTCHA**: `gh pr diff {PR_NUMBER} -- {FILE_PATH}` is INVALID — `gh pr diff` accepts at most one argument (the PR number). The `-- {FILE_PATH}` syntax causes a fatal error: "accepts at most 1 arg(s), received 2".
+
+Get the full patch and parse hunk headers for the target file:
+
 ```bash
-gh pr diff {PR_NUMBER} -- {FILE_PATH}
+gh pr diff {PR_NUMBER} --patch
 ```
 
-`+` lines = RIGHT-side additions. `-` lines = LEFT-side deletions. Space-prefixed = context (use RIGHT).
+Locate the `diff --git a/{FILE_PATH}` section. For each `@@ -OLD,OLD_LEN +NEW,NEW_LEN @@` hunk header:
+- SIDE=RIGHT: valid line range is NEW to (NEW + NEW_LEN - 1)
+- SIDE=LEFT: valid line range is OLD to (OLD + OLD_LEN - 1)
 
-LINE_NUMBER must appear in the diff output. If not found, stop and report:
-`Line {LINE_NUMBER} not visible in diff for {FILE_PATH}`
+If LINE_NUMBER falls outside all hunk ranges for FILE_PATH, stop and report:
+`Line {LINE_NUMBER} not in diff for {FILE_PATH}`
+
+Alternatively, skip this pre-check and rely on the 422 response in Step 5 — a 422 with `field=pull_request_review_thread.line` and `message="could not be resolved"` means the line is not commentable.
 
 ## Step 4: Check for Existing Comment (Deduplication)
 
@@ -96,5 +104,8 @@ On success:
 On duplicate (Step 4 match):
 `{ "status": "duplicate", "comment_id": <existing_id>, "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
 
-On 422: diagnose cause from error body, return:
-`{ "status": "error", "comment_id": null, "message": "<diagnosed cause>" }`
+On 422 where `errors[0].field == "pull_request_review_thread.line"` and `message == "could not be resolved"`:
+`{ "status": "error", "comment_id": null, "message": "Line {LINE_NUMBER} is not in the diff for {FILE_PATH}" }`
+
+On other 422: surface the full `errors` array to the caller:
+`{ "status": "error", "comment_id": null, "message": "<errors array as string>" }`
