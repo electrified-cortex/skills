@@ -85,6 +85,10 @@ Callers may supply additional personalities for a single invocation. Each entry 
 | `personality_filter` | optional | List of personality names or indices. Named personalities dispatched regardless of trigger evaluation; triggers bypassed for named entries. Inclusion list only — not an exclusion gate. |
 | `model_overrides` | optional | Map of personality name to model class. Overrides affect model class only, not backend type. |
 
+## Caller Tier
+
+The host agent executing this skill must be **sonnet-class minimum**. The orchestration requires judgment-intensive work: constructing a self-contained review packet from arbitrary input, evaluating trigger conditions inline against inferred problem traits, and synthesizing arbitrator output into host-voice with a confidence rating. Haiku-class is insufficient for these tasks. Callers dispatching swarm via the `dispatch` skill must use `tier: standard` or higher.
+
 ## Step Sequence
 
 ### Step 1 — Build the review packet
@@ -141,9 +145,23 @@ Each personality dispatch receives:
 
 Apply `model_overrides` at dispatch time: if a caller override exists, use it; otherwise use first available entry from `suggested_models`; otherwise fall back to `sonnet-class`. Apply the diversity preference rule (B8) after model selection to attempt cross-vendor coverage.
 
+Dispatch parameters:
+
+- `<tier>` = `standard` — personality reviews require moderate reasoning over a supplied artifact; fast-cheap is insufficient for evidence-cited findings.
+- `<description>` = `swarm-personality:<personality-name>`
+
+Should return: a structured findings list. Each finding: description of the issue, evidence cite (snippet, line reference, scenario, or direct quote). Empty response or "No findings" is a valid return — treated as non-contributing (B4).
+
 ### Step 6 — Arbitrator consolidation
 
 After all swarm member outputs are collected, dispatch a single arbitrator sub-agent (sonnet-class by default). The arbitrator receives all raw member outputs and the original review packet. Per B4, non-contributing member outputs (empty/timeout) are excluded from the arbitrator's input set.
+
+Dispatch parameters:
+
+- `<tier>` = `standard` — arbitration requires comparing N member outputs and applying judgment to produce an action list; fast-cheap is insufficient.
+- `<description>` = `swarm-arbitrator`
+
+Should return: a structured two-section action list — Obvious actions and Critical actions — as specified in the Required arbitrator output format below. If no actionable findings: "No actionable findings" stated explicitly.
 
 The arbitrator's sole job: produce a structured action list — not a narrative synthesis.
 
@@ -175,6 +193,18 @@ Required synthesis output fields:
 - **Dropped personalities**: list of any personalities dropped by availability gate with reason.
 - **Confidence rating**: High, Medium, or Low. Include rationale. If Low, state specifically what would raise it.
 
+Synthesis output template (use this structure exactly):
+
+```
+**Summary**: <consolidated findings in host voice>
+
+**Disagreements**: <each disagree-set item with tension stated and judgment applied; "None" if disagree set is empty>
+
+**Dropped personalities**: <name — reason for each dropped personality; "None" if none dropped>
+
+**Confidence rating**: <High | Medium | Low> — <rationale; if Low, state what would raise it>
+```
+
 Synthesis output must not exceed 2000 words. If findings exceed this budget, prioritize high-severity and disagreement items. Note any truncation in output.
 
 ## Constraints
@@ -190,6 +220,8 @@ C5. Must not merge or replace the `code-review` skill. `swarm` is infrastructure
 C6. No bare model names may appear in the skill, reviewer files, or synthesis output. Use model class terms only: `haiku-class`, `sonnet-class`, `opus-class`.
 
 C7. CLI-as-dispatch (e.g., `claude -p`, copilot CLI) is out of scope until task 10-0845 reaches PASS. Once 10-0845 lands, the Copilot Reviewer and any CLI-backed personalities may use the CLI dispatch pattern defined there.
+
+C8. Do not expand the personality registry with new built-in entries without a spec amendment and audit pass.
 
 ## Behavior
 
@@ -207,7 +239,7 @@ B6. Devil's Advocate must always be dispatched unless explicitly excluded by `pe
 
 B7. Custom menu personalities are evaluated against their caller-supplied trigger condition. If trigger is "always", always include (subject to availability gating if backend is external).
 
-B8. Cross-vendor diversity: ensure at least one personality runs on a different model family or vendor than the host whenever possible. If host is opus-class, prefer at least one personality on a non-Anthropic model or non-opus model. If host is sonnet-class, prefer one personality on opus-class or a non-Anthropic model. This preference is best-effort: if no diverse option is available after availability gating, proceed and note monoculture in synthesis output. Devil's Advocate is the natural carrier for diversity (always required, frontmatter expresses preference for non-Anthropic reasoning model). The `vendor` frontmatter field is the signal used for diversity evaluation.
+B8. Cross-vendor diversity: prefer at least one personality on a different model family or vendor than the host. Best-effort: if no diverse option is available after availability gating, proceed and note monoculture in synthesis output. Devil's Advocate is the natural carrier for diversity (always required, `vendor` frontmatter field expresses preference for non-Anthropic model).
 
 ## Defaults
 
@@ -217,6 +249,12 @@ D3. Default dispatch: parallel (all at once, single batch).
 D4. Default `model_overrides`: none.
 D5. Custom menu entry with no model class and no caller override: default `sonnet-class`.
 D6. Confidence rating default: Medium. Raised to High when all personalities agree and all findings cite evidence. Lowered to Low when disagree set is non-empty on a high-severity point, or when any personality returns no findings.
+
+Calibration examples:
+- **High**: Security Auditor, Code Quality Critic, and Devil's Advocate all flag the same SQL injection risk with evidence cites; no disagreements. → High.
+- **Medium** (default): Reviewers agree on two findings but one personality returns "No findings." Wait — "any personality returns no findings" triggers Low, not Medium. → Low.
+- **Medium** (true): Reviewers produce 3 findings with evidence; no high-severity disagreements; all personalities contributed. → Medium.
+- **Low**: Devil's Advocate flags no concerns (returns "No findings"); or Security Auditor and Architect reach contradictory conclusions on a shipping-blocking concern. → Low; state what would raise it (e.g., "re-run with explicit security artifact to get Security Auditor finding").
 
 ## Error Handling
 
@@ -233,27 +271,6 @@ P2. `model_overrides` override registry defaults.
 P3. Availability gate overrides selection: a personality that passes selection but fails the probe is dropped.
 P4. Read-only constraint (C1) overrides any personality-specific instruction. No personality prompt may authorize editing, committing, or side-effecting commands.
 P5. Synthesis word budget (2000-word cap) overrides completeness. Truncation required over exceeding the cap.
-
-## Don'ts
-
-- Do not load reviewer prompts for personalities that will not be dispatched.
-- Do not use a fixed roster; evaluate trigger conditions against the artifact.
-- Do not fail-stop when a personality is unavailable; drop and continue.
-- Do not dump raw sub-agent output to the caller; synthesize in host voice.
-- Do not merge with or replace the `code-review` skill.
-- Do not dispatch personalities sequentially when parallel dispatch is available.
-- Do not include bare model names; use model class terms only.
-- Do not perform CLI-as-dispatch until task 10-0845 lands and is referenced here.
-- Do not expand the registry without a spec amendment and audit pass.
-- Do not allow `model_overrides` to specify a backend change; overrides affect model class only.
-- Do not allow custom menu entries to override or replace built-in registry entries; custom is additive only.
-- Do not apply `personality_filter` as an exclusion list; it is an inclusion constraint.
-- Do not have the host parse raw member output; that is the arbitrator's job.
-- Do not add the arbitrator to the registry or subject it to selection/gating/filter.
-- Do not implement `local-llm` backend routing in v1; the type is reserved only.
-- Do not embed a normative personality registry as a static table in the spec or SKILL.md; the registry is the `reviewers/` directory.
-- Do not fail the swarm if cross-vendor diversity cannot be achieved; diversity is best-effort.
-- Do not treat a `reviewers/*.md` file without valid frontmatter as a registered personality; silently skip invalid files.
 
 ## Related
 

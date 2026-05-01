@@ -5,6 +5,8 @@ description: Multi-personality review infrastructure — selects personalities, 
 
 Inputs: `problem` (required artifact), `personality_filter` (inclusion list, bypasses triggers), `model_overrides` (model class only, not backend).
 
+Caller tier: **sonnet-class minimum**. Host must build review packet, evaluate trigger conditions inline, and synthesize findings — haiku-class is insufficient.
+
 ## Step Sequence
 
 S1. Build review packet from `problem`. Fields (omit if N/A): Goal, Approach, Key decisions, Artifacts (actual content — not references), Files affected, Blast radius, Conventions. Packet must be self-contained. Verify Goal is evaluable + Artifacts contain real content; resolve gaps from context — don't ask caller.
@@ -15,9 +17,9 @@ S3. Availability gate. For each selected personality with non-`dispatch-*` backe
 
 S4. Load reviewer prompts. Only after swarm finalized (post-S3). Load `reviewers/<kebab-name>.md` for dispatched personalities only. Don't load files for non-dispatched personalities.
 
-S5. Dispatch. Issue all swarm personalities as single parallel batch via `dispatch` skill. Never sequential. Each dispatch receives: review packet + personality prompt + read-only constraint ("read-only review — analyze and report only, no file edits, no commits, no shell commands"). Model selection: `model_overrides` first → first available from `suggested_models` → fallback `sonnet-class`. Apply diversity rule B8 after selection.
+S5. Dispatch. Issue all swarm personalities as single parallel batch via `dispatch` skill. Never sequential. Each dispatch receives: review packet + personality prompt + read-only constraint ("read-only review — analyze and report only, no file edits, no commits, no shell commands"). Model selection: `model_overrides` first → first available from `suggested_models` → fallback `sonnet-class`. Apply diversity rule B8 after selection. Tier: `standard` (evidence-cited findings require moderate reasoning). Description: `swarm-personality:<name>`. Should return: structured findings list — each finding with description + evidence cite; "No findings" is valid (treated as non-contributing per B4).
 
-S6. Arbitrator. After all member outputs collected, dispatch single sonnet-class arbitrator (not in registry, not subject to filter/gating). Input: all non-empty/non-timeout member outputs + review packet. Output: structured action list only — two sections:
+S6. Arbitrator. After all member outputs collected, dispatch single sonnet-class arbitrator (not in registry, not subject to filter/gating). Tier: `standard` (N-output comparison + judgment). Description: `swarm-arbitrator`. Input: all non-empty/non-timeout member outputs + review packet. Should return: structured two-section action list only — two sections:
 
 - Obvious actions: 2+ members flagged same concern, or self-evident from artifact. Each: description + source personality indices + evidence cite.
 - Critical actions: would block shipping or require arch change regardless of agreement count. Each: description + source personality indices + evidence cite + severity rationale.
@@ -26,11 +28,11 @@ No speculative, low-confidence, or duplicate items. If empty: state "No actionab
 
 S7. Aggregate. Collect findings from arbitrator's action list. Record per item: personality indices, summary, evidence. Identify disagree set: items where arbitrator flagged contradictory conclusions from different members on same point.
 
-S8. Synthesize. Speak as host only — don't dump raw member or arbitrator output. Synthesize from arbitrator's action list only. Required output: Summary (host voice), Disagreements (state tension + apply judgment), Dropped personalities (with reason), Confidence rating (High/Medium/Low + rationale; if Low, state what would raise it). Cap: 2000 words. If over: truncate — disagreements first, then high-severity, then medium, then low; note truncation.
+S8. Synthesize. Speak as host only — don't dump raw member or arbitrator output. Synthesize from arbitrator's action list only. Output template: `**Summary**: … / **Disagreements**: … / **Dropped personalities**: … / **Confidence rating**: High|Medium|Low — <rationale>`. Cap: 2000 words. If over: truncate — disagreements first, then high-severity, then medium, then low; note truncation.
 
 ## Confidence Rating
 
-Default Medium. High: all personalities agree + all findings cite evidence. Low: disagree set has high-severity point, or any personality returned no findings.
+Default Medium. High: all personalities agree + all findings cite evidence. Low: disagree set has high-severity point, OR any personality returns no findings (including "No findings" response). If Low, state what would raise it.
 
 ## Behaviors
 
