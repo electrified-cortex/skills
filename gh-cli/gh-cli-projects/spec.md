@@ -31,14 +31,14 @@ The skill must enable an agent to:
 
 ## Requirements
 
-- The skill must explain that `gh project` operates on project IDs, not names — commands for resolving a project name to its ID must be included.
-- Field editing must cover single-select fields specifically, as these require the option's ID, not its label text.
-- The skill must demonstrate adding both issues and PRs as items using the correct owner/repo/number form.
+- The skill must explain that `gh project` operates on project IDs, not names — the skill must include commands for resolving a project name to its ID.
+- Field editing must cover single-select fields specifically, as these require the option ID, not its label text.
+- The skill must demonstrate adding both issues and PRs as items using the correct `owner/repo/number` form.
 - The skill must distinguish between archiving an item (keeps it in the project, hidden) and deleting it (removes it permanently).
 
 ## Behavior
 
-The skill covers Projects v2 operations via `gh project`: creating projects, listing them to resolve names to IDs, adding issues and PRs as items, creating and editing custom fields (text, number, date, single select, iteration), editing item field values, archiving and deleting items, and copying projects. Single-select field edits require the option's ID, not its label text — the skill must show how to resolve the option ID before editing. Archiving keeps an item in the project but hides it; deletion removes it permanently.
+The skill covers Projects v2 operations via `gh project`: creating projects, listing them to resolve names to IDs, adding issues and PRs as items, creating and editing custom fields (text, number, date, single select, iteration), editing item field values, archiving and deleting items, and copying projects. Single-select field edits require the option ID, not its label text — the skill must show how to resolve the option ID before editing. Archiving keeps an item in the project but hides it; deletion removes it permanently.
 
 ## Error Handling
 
@@ -59,19 +59,19 @@ Project ID takes precedence over project name — all operations must resolve th
 
 | Command | Class | Notes |
 | --- | --- | --- |
-| gh project list | Safe | Read-only |
-| gh project view | Safe | Read-only |
-| gh project create | Destructive | Operator approval required before execution |
-| gh project edit | Destructive | Operator approval required before execution |
-| gh project delete | Destructive | Operator approval required before execution |
-| gh project copy | Destructive | Operator approval required before execution |
-| gh project link | Destructive | Operator approval required before execution |
-| gh project unlink | Destructive | Operator approval required before execution |
-| gh project item-add | Destructive | Operator approval required before execution |
-| gh project item-edit | Destructive | Operator approval required before execution |
-| gh project item-archive | Destructive | Operator approval required before execution |
-| gh project item-delete | Destructive | Operator approval required before execution |
-| gh project field-create | Destructive | Operator approval required before execution |
-| gh project field-delete | Destructive | Operator approval required before execution |
+| `gh project list` | Safe | Read-only |
+| `gh project view` | Safe | Read-only |
+| `gh project create` | Destructive | Operator approval required before execution |
+| `gh project edit` | Destructive | Operator approval required before execution |
+| `gh project delete` | Destructive | Operator approval required before execution |
+| `gh project copy` | Destructive | Operator approval required before execution |
+| `gh project link` | Destructive | Operator approval required before execution |
+| `gh project unlink` | Destructive | Operator approval required before execution |
+| `gh project item-add` | Destructive | Operator approval required before execution |
+| `gh project item-edit` | Destructive | Operator approval required before execution |
+| `gh project item-archive` | Destructive | Operator approval required before execution |
+| `gh project item-delete` | Destructive | Operator approval required before execution |
+| `gh project field-create` | Destructive | Operator approval required before execution |
+| `gh project field-delete` | Destructive | Operator approval required before execution |
 
 **Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.

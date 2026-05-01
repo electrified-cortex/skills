@@ -1,6 +1,6 @@
 # Skill Index Auditing — Agent Instructions
 
-Dispatch skill. You are a fast-cheap agent operating in zero context. Your job is to validate an existing skill-index cascade and return one of three verdicts: `ok`, `rebuild-needed`, or `inconclusive`. On a PASS verdict (`ok`), you also write `skill.index.sha256` alongside each validated raw index as a sign-off artifact. You do not rebuild. You do not invoke the builder. Writing the stamp on PASS is the only file modification you ever perform.
+Dispatch skill. You are a standard agent operating in zero context. Your job is to validate an existing skill-index cascade and return one of three verdicts: `ok`, `rebuild-needed`, or `inconclusive`. You do not rebuild. You do not invoke the builder. You do not modify any files.
 
 ---
 
@@ -15,10 +15,6 @@ Dispatch skill. You are a fast-cheap agent operating in zero context. Your job i
 ## Outputs
 
 Write the audit report to `result_file`. See Report Format below.
-
-On a PASS verdict, also write `skill.index.sha256` alongside each validated raw index. The stamp content is the SHA-256 hex digest of the exact bytes of the stored `skill.index` for that node — no trailing newline unless the raw index itself ends with one; no other content. Write the stamp only after the entire walk completes with a PASS verdict. Do not write partial stamps if the walk is still in progress.
-
-On any non-PASS verdict (`rebuild-needed` or `inconclusive`): do not write or delete any stamp. Leave pre-existing stale stamps untouched.
 
 If the audit report cannot be written: emit a non-zero exit signal. Do not silently succeed.
 
@@ -50,28 +46,24 @@ For each node reached during the walk:
 
 ### A. Run fail-fast checks first (in order; halt on first failure)
 
-1. **Stamp present**: `skill.index.sha256` must exist alongside `skill.index` in the same directory. Missing → `rebuild-needed`; record reason and failing-node path; halt.
-
-2. **Stamp matches**: compute SHA-256 of the raw bytes of `skill.index` at this node; compare against the stored `skill.index.sha256`. Mismatch → `rebuild-needed`; record reason and failing-node path; halt.
-
-3. **Entry targets resolve**: every entry in the raw index must resolve to an on-disk target within the current node's subtree.
+1. **Entry targets resolve**: every entry in the raw index must resolve to an on-disk target within the current node's subtree.
    - Plain leaf entry (no trailing `/`): target must be an existing directory.
    - Descent-marked entry (trailing `/`): target must be an existing directory containing `skill.index`.
    - Combo entry: target must satisfy both conditions.
    - Shortcut entry (multi-segment key): walk the path from the current node to the target; apply subtree-containment check (no `..`, no absolute paths, no escape above invocation root) at every step.
    - Missing target or out-of-subtree target → `rebuild-needed`; record reason and failing-node path; halt.
 
-4. **No missing direct children**: every manifest-bearing direct child directory of the current directory must appear as an entry in this node's raw index, unless that child is already reachable via a shortcut entry present elsewhere in the cascade. Missing → `rebuild-needed`; record reason and failing-node path; halt.
+2. **No missing direct children**: every manifest-bearing direct child directory of the current directory must appear as an entry in this node's raw index, unless that child is already reachable via a shortcut entry present elsewhere in the cascade. Missing → `rebuild-needed`; record reason and failing-node path; halt.
 
-4a. **No index at pure leaf**: no manifest-bearing directory with zero manifest-bearing children may have a `skill.index`. If the auditor encounters a `skill.index` at such a directory, the cascade contains a stale or erroneous index node the builder should not have produced → `rebuild-needed`; record reason and the path of the offending directory; halt.
+2a. **No index at pure leaf**: no manifest-bearing directory with zero manifest-bearing children may have a `skill.index`. If the auditor encounters a `skill.index` at such a directory, the cascade contains a stale or erroneous index node the builder should not have produced → `rebuild-needed`; record reason and the path of the offending directory; halt.
 
-5. **Combo self entry**: if the current directory is a combo node (has a skill manifest and at least one manifest-bearing child), it must have a self entry (key `.`) in its own raw index. Missing → `rebuild-needed`; record reason and failing-node path; halt.
+3. **Combo self entry**: if the current directory is a combo node (has a skill manifest and at least one manifest-bearing child), it must have a self entry (key `.`) in its own raw index. Missing → `rebuild-needed`; record reason and failing-node path; halt.
 
-6. **Combo enumerates subdirectories**: a combo node's raw index must enumerate all its manifest-bearing subdirectories, either as direct-child entries or as shortcut entries. Missing entry → `rebuild-needed`; record reason and failing-node path; halt.
+4. **Combo enumerates subdirectories**: a combo node's raw index must enumerate all its manifest-bearing subdirectories, either as direct-child entries or as shortcut entries. Missing entry → `rebuild-needed`; record reason and failing-node path; halt.
 
-7. **Combo classified in parent**: a combo node must be classified as combo (sub-node-marked, key ending in `/`) in its parent's raw index. Missing or wrong classification → `rebuild-needed`; record reason and failing-node path; halt.
+5. **Combo classified in parent**: a combo node must be classified as combo (sub-node-marked, key ending in `/`) in its parent's raw index. Missing or wrong classification → `rebuild-needed`; record reason and failing-node path; halt.
 
-8. **No reference loops**: on every resolution path — whether the step is a direct-child descent, a shortcut path-walk, or a combo sub-node descent — maintain the full ordered set of nodes visited on that path. Before opening any node, check whether its directory is already in the set. If it is: a reference loop exists → `rebuild-needed`; record reason and the ordered visited sequence; halt. The visited set is scoped to the current resolution path; crossing into a sibling subtree resets it.
+6. **No reference loops**: on every resolution path — whether the step is a direct-child descent, a shortcut path-walk, or a combo sub-node descent — maintain the full ordered set of nodes visited on that path. Before opening any node, check whether its directory is already in the set. If it is: a reference loop exists → `rebuild-needed`; record reason and the ordered visited sequence; halt. The visited set is scoped to the current resolution path; crossing into a sibling subtree resets it.
 
 When any fail-fast check fails: produce the audit report with `verdict: rebuild-needed`, the reason, and the failing-node path, then halt. Do not run continue-past checks at the failing node.
 
@@ -79,7 +71,7 @@ When any fail-fast check fails: produce the audit report with `verdict: rebuild-
 
 These findings are recorded in the audit report but do not halt the walk and do not by themselves produce `rebuild-needed`.
 
-1. **Orphans**: a `skill.index.sha256` or `skill.index.md` present without a corresponding `skill.index` in the same directory. Record as janitorial signal.
+1. **Orphans**: a `skill.index.md` present without a corresponding `skill.index` in the same directory. Record as janitorial signal.
 
 2. **Malformed lines**: any raw index line with a missing key, missing colon, or forbidden characters. Record the line and the node. If the node completes all fail-fast checks without halting, and any malformed-line finding exists at that node, raise the final verdict for that node to `rebuild-needed` when the walk ends (per R12 escalation).
 
@@ -93,13 +85,13 @@ These findings are recorded in the audit report but do not halt the walk and do 
 
 ## Check Ordering
 
-Within a single node: fail-fast checks (A.1–A.8) run before continue-past checks (B.1–B.3). When a fail-fast check fails, halt without running continue-past checks at that node.
+Within a single node: fail-fast checks (A.1–A.6) run before continue-past checks (B.1–B.5). When a fail-fast check fails, halt without running continue-past checks at that node.
 
 ---
 
 ## Visited-Node Tracking
 
-Maintain the ordered set of nodes visited on the current resolution path. A node is appended to the set before it is inspected. Tracking applies to every step of every resolution path: direct-child descent, shortcut path-walk endpoint, and combo sub-node descent. If a step would land on a node already in the current set: loop detected, halt per check A.8. The visited set is scoped to the current path; crossing into a sibling subtree resets it.
+Maintain the ordered set of nodes visited on the current resolution path. A node is appended to the set before it is inspected. Tracking applies to every step of every resolution path: direct-child descent, shortcut path-walk endpoint, and combo sub-node descent. If a step would land on a node already in the current set: loop detected, halt per check A.6. The visited set is scoped to the current path; crossing into a sibling subtree resets it.
 
 ---
 
@@ -144,7 +136,7 @@ failing_node: <absolute path to first failing node, or blank if none>
 ### Continue-Past Findings
 | Type | Node | Detail |
 | --- | --- | --- |
-| orphan | <path> | <stamp or overlay, no corresponding raw index> |
+| orphan | <path> | <overlay, no corresponding raw index> |
 | malformed-line | <path> | <line content> |
 | phantom-index | <path> | <not reachable from cascade root> |
 | trigger-shape | <path> | <overlay section heading: reason non-conformant> |
@@ -162,8 +154,8 @@ failing_node: <absolute path to first failing node, or blank if none>
 ## Don'ts
 
 - Do not rebuild. Do not invoke the builder.
-- Do not modify any file except writing `skill.index.sha256` on PASS. On non-PASS verdict, no files modified — not even pre-existing stale stamps.
-- Do not open skill contents (any file other than `skill.index`, `skill.index.md`, `skill.index.sha256`).
+- Do not modify any file.
+- Do not open skill contents (any file other than `skill.index`, `skill.index.md`).
 - Do not keep walking after a fail-fast check fails.
 - Do not treat orphans or phantom indexes as `rebuild-needed` triggers by themselves.
 - Do not judge curator intent, shortcut placement optimality, or aesthetic choices.
