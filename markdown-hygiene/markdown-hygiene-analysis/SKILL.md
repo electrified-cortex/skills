@@ -26,6 +26,7 @@ Variables:
 `<tier>` = `standard` = needs higher reasoning to interpret SA rules and apply them to the content.
 `<description>` = `Markdown Hygiene Analysis: <markdown_file_path>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+Optional (if available): `<model-override>` = `GPT-5.4` fallback to no override if this fails.
 
 Follow `dispatch` skill. See `../../dispatch/SKILL.md`.
 
