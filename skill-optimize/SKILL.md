@@ -137,7 +137,8 @@ Status: `qualified` | `acted` | `deferred` | `rejected` | `clean` | `audit-candi
 **Action taken:** <changed or "No change.">
 ```
 
-Clean → `CLEAN — no findings.`
+Multiple findings: use `## Findings` section header before the list, not `---` separators.
+Clean → single-line body under `# <TOPIC>`: `CLEAN — no findings.`
 
 Step 6 — Output:
 

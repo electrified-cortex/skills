@@ -252,14 +252,19 @@ If the log does not exist, create it using the header format from Step 2.
 ```md
 # <TOPIC> — <date>
 
-**Severity:** HIGH | MEDIUM | LOW
+## Findings
 
-**Finding:** <what was observed>
+### <CATEGORY> — HIGH | MEDIUM | LOW
 
+**Signal:** <observed>
+**Reasoning:** <grounded in skill content>
+**Recommendation:** <specific>
 **Action taken:** <what changed, or "No change.">
 ```
 
-If clean: write a single line `CLEAN — no findings.` instead.
+If multiple findings: list them all under the single `## Findings` section — do not separate with `---`.
+
+If clean: write the `# <TOPIC>` heading followed by a single line `CLEAN — no findings.`
 
 ---
 
