@@ -25,6 +25,7 @@ For each role:
 | ---- | ------------ | --------- | ------------------ | --------------- |
 
 Task types:
+
 - **Deterministic execution** → Haiku-class candidate
 - **Structured judgment** (weighing, comparing, assessing) → Sonnet-class
 - **Deep multi-constraint reasoning** → Opus-class (rare)
@@ -35,6 +36,7 @@ For any role at Sonnet+ tier: ask whether the instructions are explicit
 enough that a Haiku could follow them if given the same inputs.
 
 Signal that instructions are the barrier (not cognitive demand):
+
 - Steps use prose conditionals ("if it seems like...", "consider whether...")
   instead of explicit decision trees
 - The model must infer criteria that aren't stated
@@ -50,7 +52,7 @@ and no eval exists, flag it.
 
 ### Step 5 — Produce finding or confirm clean
 
-```
+```md
 ### MODEL SELECTION — HIGH | MEDIUM | LOW
 
 **Signal:** <which role; current tier; what the task actually demands>
