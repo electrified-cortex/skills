@@ -5,20 +5,29 @@ description: Remove orphaned hash directories from a repository's .hash-record/ 
 
 # Hash Record Prune
 
-Dispatch an isolated agent (use Dispatch agent, zero context): "Read and follow `instructions.txt` (in this directory). Input: `repo_root=<absolute-path> [--target <glob>] [--dry-run] [--limit <N>]`"
+Run the script directly. Do not reimplement the prune logic.
 
-Parameters:
+## Script
 
-- `repo_root` (string, required): absolute path to the repository root containing the `.hash-record/` directory to prune.
-- `--target <glob>` (string, optional): relative glob pattern matched against repo-relative file paths. When provided, only hash directories whose associated source path(s) include at least one match are candidates. Hash directories outside the target are skipped entirely — neither validated nor deleted. Must not be an absolute path.
-- `--dry-run` (flag, optional): list orphaned hash directories without deleting. Default behavior is to delete.
-- `--limit <N>` (integer, optional): cap the number of hash directories deleted in one invocation. Default unlimited.
+- PS7: `pwsh <this-skill-dir>/prune.ps1 "<repo_root>" [-target "<glob>"] [-dry_run] [-limit <N>]`
+- Bash: `bash <this-skill-dir>/prune.sh "<repo_root>" [--target "<glob>"] [--dry-run] [--limit <N>]`
 
-Validity rules (scoped to `repo_root` — the active worktree only):
+## Parameters
+
+- `repo_root` (required): absolute path to the repository root containing the `.hash-record/` directory to prune.
+- `--target <glob>` (optional): relative glob pattern matched against repo-relative file paths. When provided, only hash directories whose associated source path(s) include at least one match are candidates. Hash directories outside the target are skipped entirely — neither validated nor deleted. Must not be an absolute path.
+- `--dry-run` (optional): list orphaned hash directories without deleting. Default: delete.
+- `--limit <N>` (optional): cap the number of hash directories deleted per invocation. Default: unlimited.
+
+## Validity Rules
+
+Scoped to `repo_root` (active worktree only):
 
 - **Manifest records** (have `manifest.yaml`): orphaned when re-computing the manifest hash from current `file_paths` yields a different value, or any listed file is missing under `repo_root`.
-- **Non-manifest records**: orphaned when `<full-hash>` does not match any file blob hash in `repo_root`. Scan excludes `.worktrees/` paths (prevents crawling into linked worktree checkouts) and submodule directory paths.
+- **Non-manifest records**: orphaned when `<full-hash>` does not match any file blob hash in `repo_root`. Scan excludes `.worktrees/` paths and submodule directory paths.
 
-Returns: `CLEAN` | `pruned: <count>` | `dry-run: <count>` | `ERROR: <reason>`
+## Returns
+
+`CLEAN` | `pruned: <count>` | `dry-run: <count>` | `ERROR: <reason>`
 
 Related: `hash-record`, `hash-record-index`, `hash-record-manifest`

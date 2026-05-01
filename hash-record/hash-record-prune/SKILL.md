@@ -3,17 +3,20 @@ name: hash-record-prune
 description: Remove orphaned hash directories from a repository's .hash-record/ store. Triggers — prune hash records, clean up hash-record, remove orphaned records, hash-record maintenance, reclaim disk.
 ---
 
-Dispatch isolated agent (Dispatch agent, zero context): "Read and follow `instructions.txt` (in this directory). Input: `repo_root=<absolute-path> [--target <glob>] [--dry-run] [--limit <N>]`"
+Run script directly. Don't reimplement.
 
-- `repo_root` (string, required): absolute path to repo root containing `.hash-record/` dir.
-- `--target <glob>` (string, optional): relative glob pattern matched against repo-relative file paths. Only hash directories whose associated source path(s) match are candidates. Hash directories outside the target are skipped entirely. Must not be an absolute path.
-- `--dry-run` (flag, optional): list orphaned hash dirs without deleting. Default: delete.
-- `--limit <N>` (integer, optional): cap hash dirs deleted per invocation. Default: unlimited.
+- PS7: `pwsh <this-skill-dir>/prune.ps1 "<repo_root>" [-target "<glob>"] [-dry_run] [-limit <N>]`
+- Bash: `bash <this-skill-dir>/prune.sh "<repo_root>" [--target "<glob>"] [--dry-run] [--limit <N>]`
+
+- `repo_root` (required): absolute path to repo root containing `.hash-record/` dir.
+- `--target <glob>` (optional): relative glob; only matching hash dirs are candidates. No absolute paths.
+- `--dry-run` (optional): list orphans, no delete. Default: delete.
+- `--limit <N>` (optional): cap deletions per invocation. Default: unlimited.
 
 Validity scoped to `repo_root` (active worktree only):
 
-- Manifest records: re-derive manifest hash from `file_paths` under `repo_root`; orphaned if any file missing or hash changes.
-- Non-manifest records: check `<full-hash>` against blob-hash set from `repo_root` scan (excludes `.worktrees/` paths and submodule directory paths).
+- Manifest records: orphaned if any listed file missing or manifest hash changes.
+- Non-manifest records: orphaned if `<full-hash>` not in repo blob-hash set (excludes `.worktrees/` and submodule paths).
 
 Returns: `CLEAN` | `pruned: <count>` | `dry-run: <count>` | `ERROR: <reason>`
 
