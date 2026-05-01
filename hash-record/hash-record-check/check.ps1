@@ -1,4 +1,5 @@
 # check.ps1 — hash-record cache probe
+#Requires -Version 7
 # Usage: check.ps1 <file_path> <op_kind> <record_filename>
 # Outputs one of: HIT: <abs-path>   (file exists; caller reads)  (exit 0)
 #                 MISS: <abs-path>  (file absent; caller writes)  (exit 0)

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # check.sh — hash-record cache probe
 # Usage: check <file_path> <op_kind> <record_filename>
-# Outputs one of: HIT pass|findings|unknown: <path>  (exit 0)
-#                 MISS: <parent-dir>                  (exit 0)
-#                 ERROR: <reason>                     (exit 1)
+# Outputs one of: HIT: <abs-path>   (file exists; caller reads)  (exit 0)
+#                 MISS: <abs-path>  (file absent; caller writes)  (exit 0)
+#                 ERROR: <reason>                                 (exit 1)
 set -e
 
 # ---------------------------------------------------------------------------

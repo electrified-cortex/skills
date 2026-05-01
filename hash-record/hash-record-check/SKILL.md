@@ -32,9 +32,27 @@ HIT and MISS return the SAME path. On HIT it exists; on MISS it doesn't.
 
 - `check.sh` — Bash implementation.
 - `check.ps1` — PowerShell 7+ implementation.
+- `misses.ps1` — PowerShell 7+ batch variant (see below).
 
-Both produce byte-identical stdout for the same inputs. Forward-slash paths on every platform.
+Both `check` variants produce byte-identical stdout for the same inputs. Forward-slash paths on every platform.
 
 Full CLI contract: `check.spec.md` (in this folder).
+
+---
+
+**`misses.ps1` — parallel batch miss probe**
+
+```powershell
+pwsh misses.ps1 <glob> <op_kind> <record_filename>
+```
+
+Expands `<glob>`, probes all matched files in parallel, and outputs one absolute path per line for each file that has **no** cache entry. Sorted. Zero output means every file is already cached.
+
+Use this before dispatching agents to find exactly which files still need work:
+
+```powershell
+$misses = pwsh misses.ps1 'gh-cli/**/*.md' markdown-hygiene lint.md
+# $misses is now a list of file paths to dispatch
+```
 
 Related: `hash-record`, `hash-record-prune`, `hash-record-index`

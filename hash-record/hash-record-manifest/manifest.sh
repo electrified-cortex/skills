@@ -116,7 +116,7 @@ for FILE_PATH in "${FILES[@]}"; do
 done
 
 # Step 3: Sort pairs lexically by repo-relative path (byte-order ascending)
-IFS=$'\n' SORTED_PAIRS=($(printf '%s\n' "${PAIRS[@]}" | sort))
+IFS=$'\n' SORTED_PAIRS=($(printf '%s\n' "${PAIRS[@]}" | LC_ALL=C sort))
 unset IFS
 
 # Step 4: Build manifest text — one line per pair, each ending with LF

@@ -80,7 +80,7 @@ R1. Both scripts MUST produce byte-identical stdout when run against the same
 R2. Both scripts MUST require no installation. `verify.sh` uses bash 4.3+
     and POSIX `tail`. `verify.ps1` uses pwsh 7.0+ .NET APIs only.
 
-R3. Both scripts MUST implement all five rules listed in Scope with identical
+R3. Both scripts MUST implement all rules listed in Scope with identical
     behavior.
 
 R4. Frontmatter detection MUST suppress MD041. Detection: first non-blank
@@ -89,17 +89,14 @@ R4. Frontmatter detection MUST suppress MD041. Detection: first non-blank
 R5. MD010 MUST NOT flag tab characters inside fenced code blocks (triple
     backtick fences). The fence delimiter lines themselves are also exempt.
 
-R6. MD012 MUST flag each excess blank line individually. A run of three
-    consecutive blank lines produces two violations (lines N+1 and N+2).
-
-R7. Output MUST use the exact format defined in this spec. No trailing
+R6. Output MUST use the exact format defined in this spec. No trailing
     spaces on output lines. No blank lines between violation pairs. Final
     line of output terminates with `\n`.
 
-R8. The `--ignore` / `-Ignore` flag MUST suppress the specified rules
+R7. The `--ignore` / `-Ignore` flag MUST suppress the specified rules
     entirely for the run. Suppressed rules produce no output entries.
 
-R9. Both scripts MUST be idempotent. Running verify twice on the same file
+R8. Both scripts MUST be idempotent. Running verify twice on the same file
     with the same flags produces identical output.
 
 ## Constraints

@@ -689,3 +689,8 @@ width-matching is required.
 - Link validation (future skill)
 - Applying fixes to the target file from the executor (detect-only; fix pass is a
   separate host-dispatched concern)
+
+## Appendix
+
+Thoughts: fixing line items in reverse order could help LLMs if they needed to write incrementally.
+But better to use an original file as ref and write to an output, which most agents know how to do.

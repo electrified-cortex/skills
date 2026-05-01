@@ -58,7 +58,7 @@ Use aggregate result from Step 4.
 
 - `clean` — skip to Step 6.
 - `fail` or `pass` — dispatch combined fix agent (standard tier). Host-composed prompt:
-  `For <markdown_file_path>: (a) read the lint report at the path in <lint_result> and fix every FAIL-severity item; (b) read the analysis report at the path in <analysis_result> and for each advisory, either apply the fix or append "Skipped: <reason>" to the advisories section of <report_path>. Return \`fixed: <report_path>\` if any fixes were applied to <markdown_file_path>, or \`clean: <report_path>\` if only skipped entries were logged.`
+  `For <markdown_file_path>: (a) read the lint report at the path in <lint_result> and fix every FAIL-severity item; (b) read the analysis report at the path in <analysis_result> and for each advisory, either apply the fix or append "Skipped: <reason>" to the advisories section of <report_path>. Return "fixed: <report_path>" if any fixes were applied to <markdown_file_path>, or "clean: <report_path>" if only skipped entries were logged.`
   - `fixed: <report_path>` — fixes applied to target file. Restart from Step 2. Count as a fail iteration; after the 3rd, stop and return `findings: <report_path>` to caller instead.
   - `clean: <report_path>` — no file changes; only advisory skips logged. Skip to Step 6.
   - `ERROR: <reason>` — stop, surface reason.

@@ -19,8 +19,8 @@ the cached audit verdict by reading the report's frontmatter.
 
 Arguments:
   skill_dir  Absolute path to the skill folder being audited.
-             Tool enumerates spec.md, uncompressed.md,
-             instructions.uncompressed.md (whichever exist).
+             Tool enumerates all files recursively, excluding
+             dot-prefixed directories and optimize-log.md.
 
 Output (stdout, one line):
   PASS: <abs-path>            Cached report says result: pass.
@@ -37,7 +37,7 @@ USAGE
 fi
 
 if [ "$#" -lt 1 ]; then
-  echo "ERROR: missing argument -- expected <skill_dir> [--uncompressed]"
+  echo "ERROR: missing argument -- expected <skill_dir>"
   exit 1
 fi
 
@@ -84,6 +84,8 @@ while IFS= read -r -d '' F; do
     done
     [ "$SKIP" -eq 1 ] && continue
   fi
+  # Skip optimize-log.md (skill-optimize artifact)
+  [ "${REL##*/}" = "optimize-log.md" ] && continue
   FILES+=("$F")
 done < <(cd "$SKILL_DIR" && find . -type f -print0 | LC_ALL=C sort -z)
 

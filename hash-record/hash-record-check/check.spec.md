@@ -98,6 +98,45 @@ stdout contract.
 - `git` on PATH (used for `rev-parse` and `hash-object`).
 - The file at `<file_path>` must be readable.
 
+---
+
+## Companion: misses.ps1
+
+A parallel batch variant that accepts a glob and outputs only the files that have no cache entry.
+
+### Purpose
+
+Given a glob of files, quickly determine which ones still need an operation run — no cache entry exists for them yet. Designed for bulk fan-out: run `misses.ps1` first, dispatch agents only for the listed files.
+
+### Interface
+
+```text
+pwsh misses.ps1 <glob> <op_kind> <record_filename>
+```
+
+| Positional        | Required | Description                                              |
+| ----------------- | -------- | -------------------------------------------------------- |
+| `glob`            | yes      | File glob to expand (e.g. `gh-cli/**/*.md`).             |
+| `op_kind`         | yes      | Same as `check.ps1` — e.g. `markdown-hygiene`.           |
+| `record_filename` | yes      | Leaf filename to probe — e.g. `lint.md`, `report.md`.   |
+
+### Output
+
+One absolute file path per line for each matched file with no cache entry. Sorted alphabetically. No output if all files have cache entries or the glob matches nothing.
+
+### Behavior
+
+- Probes all matched files in parallel (`ForEach-Object -Parallel`, throttle 16).
+- Inlines the hash-object + path construction logic from `check.ps1` — no subprocess per file.
+- Repo root resolved once from the first matched file.
+- Non-matching globs silently produce no output (exit 0).
+- Errors (invalid `op_kind`, bad `record_filename`) go to stderr, exit 1.
+
+### Exit codes
+
+- `0`: success (zero or more misses output).
+- `1`: argument error.
+
 ## Examples
 
 ```bash

@@ -28,8 +28,8 @@ the cached audit verdict by reading the report's frontmatter.
 
 Arguments:
   skill_dir  Absolute path to the skill folder being audited.
-             Tool enumerates spec.md, uncompressed.md,
-             instructions.uncompressed.md (whichever exist).
+             Tool enumerates all files recursively, excluding
+             dot-prefixed directories and optimize-log.md.
 
 Output (stdout, one line):
   PASS: <abs-path>            Cached report says result: pass.
@@ -82,7 +82,8 @@ foreach ($f in $files_raw) {
             }
         }
     }
-    if (-not $skip) {
+    $leaf = Split-Path -Leaf $f
+    if (-not $skip -and $leaf -ne 'optimize-log.md') {
         $files += $f
     }
 }
