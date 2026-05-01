@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Semantic advisory scan of a `.md` file against SA001–SA038 rules. Reads the existing `lint.md` from the lint phase, evaluates all SA rules, and writes `analysis.md` (advisory findings). The host aggregates `lint.md` and `analysis.md` into `report.md`. The target file is never modified.
+Semantic advisory scan of a `.md` file against SA001–SA038 rules. Reads the existing `lint.md` from the lint phase, evaluates all SA rules, and writes `analysis.md` (advisory findings). The host aggregates `lint.md` and `analysis.md` into `report.md`. Do not modify the target file.
 
 ## Model Tier
 
@@ -22,8 +22,8 @@ Sonnet-class or GPT-5.4 (`standard`). Semantic reasoning required — SA rules i
 
 1. **Read `<lint_path>`** — extract `result` field (`clean` or `fail`) and count FINDINGS entries.
 2. **Evaluate SA001–SA038** — read `<markdown_file_path>` and apply every SA rule. Skip rules in `--ignore`. SA032 and SA038 are LLM-detected; flag only when clearly and unambiguously evident.
-3. **Determine result** from lint_result and advisory count (see Result Logic below).
-4. **Write `<analysis_path>`** — overwrite if present.
+3. **Determine result** from lint_result and advisory count (see Result Logic).
+4. If `<analysis_path>` already exists, overwrite it.
 5. **Return** `clean` (no advisories, lint clean), `pass: <analysis_path>` (advisories present, lint clean), or `findings: <analysis_path>` (lint fail).
 
 ## SA Rule Reference
@@ -34,18 +34,20 @@ SA001–SA038 are defined in the parent skill's `spec.md` (markdown-hygiene/spec
 
 | lint_result | advisory_count | result |
 | ----------- | -------------- | ------ |
-| `fail` | any | `fail` |
+| `fail` | any | `findings` |
 | `clean` | > 0 | `pass` |
 | `clean` | 0 | `clean` |
 
 ## Output Contract
+
+All output is written to `<analysis_path>`. The host writes `report.md` — this executor only writes `analysis.md`.
 
 ### analysis.md frontmatter
 
 ```yaml
 file_path: <repo-relative path>
 operation_kind: markdown-hygiene-analysis
-result: clean | pass | fail
+result: clean | pass | findings
 ```
 
 ### analysis.md body — CLEAN
@@ -81,5 +83,5 @@ Each finding is exactly two lines: SA line, then indented `Note:` line (observat
 ## Constraints
 
 - Hard prohibition: do NOT author scripts (`.ps1`, `.sh`, etc.) or write any file other than `<analysis_path>`.
-- Target file is read-only.
-- Advisory entries use `Note:` (observation), never `Fix:` (imperative) — the host decides whether to act.
+- Do not write to `<markdown_file_path>`.
+- Use `Note:` (not `Fix:`) for advisory entries — observations only; the host decides whether to act.
