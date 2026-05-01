@@ -3,10 +3,10 @@
 ## Purpose
 
 Detect markdownlint violations in a `.md` file and produce a cache record with
-imperative `Fix:` instructions for each finding. The target file is never modified
-by the executor. Fixes are applied by a separate ad-hoc dispatch at the host
-orchestration layer, which also drives an iteration loop until the file is clean
-or the iteration limit is reached.
+imperative `Fix:` instructions for each finding. The executor never modifies the
+target file. A separate ad-hoc dispatch at the host orchestration layer applies
+the fixes and drives an iteration loop until the file is clean or the iteration
+limit is reached.
 
 ## Architecture
 
@@ -19,20 +19,20 @@ Haiku-class. Deterministic pattern-matching only. It:
 - Runs the `verify.sh`/`verify.ps1` script, then scans for remaining MD violations via rule-knowledge.
 - Writes `lint.md` at `<lint_path>` with `operation_kind: markdown-hygiene-lint` and `result: clean|fail`.
 - Returns `clean` or `findings: <lint_path>` to its dispatch caller.
-- Never modifies the target file. Hard prohibition on script authoring.
-- This layer is unchanged by iteration logic — always a single detect pass.
+- **Never** modifies the target file. Hard prohibition on script authoring.
+- This layer is unchanged by iteration logic — **always** a single detect pass.
 
 `lint.md` feeds the host aggregate step alongside `analysis.md`. The aggregate result — not `lint.md` alone — determines whether the iteration loop fires.
 
-### Analysis Executor (`markdown-hygiene-analysis/instructions.txt`)
+### Analysis Executor
 
-Sonnet-class (or GPT-5.4). Semantic reasoning. It:
+`markdown-hygiene-analysis/instructions.txt` — Sonnet-class (or GPT-5.4). Semantic reasoning. It:
 
 - Reads `<lint_path>` to extract the lint result and violation count.
 - Evaluates SA001–SA038 advisory rules against the target file.
 - Writes `analysis.md` at `<analysis_path>` with `operation_kind: markdown-hygiene-analysis` and `result: clean|pass|fail`.
 - Returns `clean`, `pass: <analysis_path>`, or `findings: <analysis_path>` to its dispatch caller.
-- Never modifies the target file. Hard prohibition on script authoring.
+- **Never** modifies the target file. Hard prohibition on script authoring.
 
 `analysis.md` feeds the host aggregate step. The host — not the analysis executor — writes `report.md`.
 
@@ -163,7 +163,7 @@ Input shape: `<markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
 
 There are no `--fix`, `--force`, `--source`, `--target`, or `--filename` flags.
 
-### Host Iteration Loop
+### Iteration Loop
 
 After each full cycle (lint → analysis → aggregate), the host branches on `report.md`:
 

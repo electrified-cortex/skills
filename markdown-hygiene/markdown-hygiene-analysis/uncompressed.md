@@ -39,3 +39,5 @@ If `ERROR:` stop here and return the result to the caller.
 Otherwise rerun the result check for `analysis`.
 If that result is a `MISS: <abs-path>` then something is wrong and report it as: `ERROR: Expected analysis report at <abs-path>. None found.`
 Otherwise return the result to the caller.
+
+If not `clean`, consider reading the analysis report and decide with the caller (agent/operator) whether to apply any fixes or log skipped advisories with reasons in the final report.
