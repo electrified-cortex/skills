@@ -1,4 +1,4 @@
-﻿---
+---
 name: skill-optimize
 description: Analyzes single skill for architectural and structural improvement. Dispatches topic analysis to sub-agents, records findings in optimize-log. NEVER modifies source files. Triggers — optimize skill, skill review, architectural review, skill improvement, find skill issues, analyze skill structure.
 ---

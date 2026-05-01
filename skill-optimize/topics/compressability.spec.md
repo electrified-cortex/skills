@@ -1,7 +1,6 @@
-﻿# Compressability
+# Compressability
 
 ## Purpose
-
 
 Assess whether the skill's instructions can be made tighter and shorter
 while preserving accuracy. Compressibility is brevity in service of

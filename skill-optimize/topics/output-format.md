@@ -1,4 +1,4 @@
-﻿# OUTPUT FORMAT — Executable Assessment
+# OUTPUT FORMAT — Executable Assessment
 
 Assess whether the skill specifies its output format explicitly enough to
 produce consistent, parseable results. Two outputs to check: the primary

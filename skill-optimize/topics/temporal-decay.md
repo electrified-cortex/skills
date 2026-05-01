@@ -1,4 +1,4 @@
-﻿# TEMPORAL DECAY — Executable Assessment
+# TEMPORAL DECAY — Executable Assessment
 
 Assess whether the skill contains content that will become stale as
 external versions, model behaviors, or conventions change.

@@ -1,4 +1,4 @@
-﻿# FAILURE MODE — Executable Assessment
+# FAILURE MODE — Executable Assessment
 
 Assess whether the skill documents and handles the ways it can silently
 produce wrong output — not runtime errors, but semantic failures.

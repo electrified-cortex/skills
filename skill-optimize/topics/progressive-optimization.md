@@ -1,4 +1,4 @@
-﻿# PROGRESSIVE OPTIMIZATION — Executable Assessment
+# PROGRESSIVE OPTIMIZATION — Executable Assessment
 
 Assess whether the skill's topic priority ordering is correct and whether
 the current tracking infrastructure captures what it needs to.

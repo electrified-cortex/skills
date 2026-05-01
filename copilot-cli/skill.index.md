@@ -1,4 +1,4 @@
-﻿# copilot-cli - skill index
+# copilot-cli - skill index
 
 ## copilot-cli
 

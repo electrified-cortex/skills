@@ -1,7 +1,6 @@
-﻿# Model Selection
+# Model Selection
 
 ## Purpose
-
 
 Assess the appropriate model tier for this skill's executor and whether
 instruction quality is the limiting factor that prevents lower-tier execution.

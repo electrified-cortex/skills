@@ -1,7 +1,6 @@
-﻿# Error Handling
+# Error Handling
 
 ## Purpose
-
 
 Assess whether the skill explicitly addresses what happens when things go
 wrong — missing inputs, malformed data, unexpected states, external tool

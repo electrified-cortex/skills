@@ -1,4 +1,4 @@
-﻿# Autonomy Level — Assessment Procedure
+# Autonomy Level — Assessment Procedure
 
 ## What to assess
 

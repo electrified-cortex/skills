@@ -1,7 +1,6 @@
-﻿# Composition
+# Composition
 
 ## Purpose
-
 
 Assess how a skill is structured and whether it should be decomposed,
 grouped, or re-shaped to reduce what any single invocation must load.

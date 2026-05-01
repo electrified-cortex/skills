@@ -1,7 +1,6 @@
-﻿# Temporal Decay
+# Temporal Decay
 
 ## Purpose
-
 
 Assess whether the skill contains content that will become stale over
 time — version numbers, model names, external endpoints, date-referenced

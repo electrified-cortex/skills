@@ -1,4 +1,4 @@
-﻿---
+---
 name: hash-stamping
 description: SHA-256 integrity stamp suite. Verify stamp drift or write/update stamps. Triggers — verify stamp, check integrity, detect drift, update sha256, stamp this file, hash mismatch.
 ---

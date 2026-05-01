@@ -1,7 +1,6 @@
-﻿# Progressive Optimization and Tracking
+# Progressive Optimization and Tracking
 
 ## Purpose
-
 
 Ideas for how skill-optimize can track its own work over time, avoid
 redundant analysis, and prioritize the highest-impact work first.
@@ -65,7 +64,6 @@ skill: <repo-relative skill path>
 # Optimization Log
 
 ## Purpose
-
 
 | Topic | Topic version | Last run | Model | Findings | Record |
 | --- | --- | --- | --- | --- | --- |

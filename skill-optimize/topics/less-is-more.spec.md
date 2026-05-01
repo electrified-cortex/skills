@@ -1,7 +1,6 @@
-﻿# Less Is More
+# Less Is More
 
 ## Purpose
-
 
 Assess whether the skill's instruction file contains content that is not
 pulling its weight — instructions the model doesn't need to produce correct

@@ -1,7 +1,6 @@
-﻿# Verification Strategy
+# Verification Strategy
 
 ## Purpose
-
 
 Assess whether the skill defines *what counts as correct* — not just
 whether the model reviewed its own output (self-critique.spec.md), but

@@ -1,4 +1,4 @@
-﻿# MODEL SELECTION — Executable Assessment
+# MODEL SELECTION — Executable Assessment
 
 Assess whether each execution role in the skill is using the right model
 tier, and whether instruction quality is the real barrier preventing a

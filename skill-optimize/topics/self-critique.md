@@ -1,4 +1,4 @@
-﻿# SELF CRITIQUE — Executable Assessment
+# SELF CRITIQUE — Executable Assessment
 
 Assess whether the skill includes a verification pass for its own judgment
 outputs. For assessment-heavy skills, a within-turn self-review reduces

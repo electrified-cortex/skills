@@ -1,7 +1,6 @@
-﻿# Autonomy Level
+# Autonomy Level
 
 ## Purpose
-
 
 Assess whether the skill is correctly calibrated on the autonomy spectrum
 — how much authority it has to act without human confirmation, when it

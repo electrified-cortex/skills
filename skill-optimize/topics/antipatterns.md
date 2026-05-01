@@ -1,4 +1,4 @@
-﻿# ANTI-PATTERNS — Executable Assessment
+# ANTI-PATTERNS — Executable Assessment
 
 Assess whether systemic failures are present — ones no primary topic fully
 owns, or ones emerging from topic interaction. Primary topics own their

@@ -1,7 +1,6 @@
-﻿# Anti-Patterns and Foot Guns
+# Anti-Patterns and Foot Guns
 
 ## Purpose
-
 
 > **Activation:** This topic fires only when a *systemic* failure is
 > present — one that no primary topic fully owns, or one that emerges from

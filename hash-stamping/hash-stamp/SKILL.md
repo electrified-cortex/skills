@@ -1,4 +1,4 @@
-﻿---
+---
 name: hash-stamp
 description: Writes or updates SHA-256 companion files alongside target files.
 ---

@@ -1,4 +1,4 @@
-﻿# VERIFICATION STRATEGY — Executable Assessment
+# VERIFICATION STRATEGY — Executable Assessment
 
 Assess whether the skill defines what counts as correct — what it treats
 as ground truth, how it checks claims, and what confidence level attaches

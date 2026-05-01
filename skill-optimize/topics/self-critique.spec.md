@@ -1,7 +1,6 @@
-﻿# SELF CRITIQUE
+# SELF CRITIQUE
 
 ## Purpose
-
 
 Assess whether the skill includes a verification or self-critique step
 for its own outputs. For judgment-heavy skills, instructing the model to

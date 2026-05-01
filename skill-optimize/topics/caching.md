@@ -1,4 +1,4 @@
-﻿# CACHING (HASH RECORD) — Executable Assessment
+# CACHING (HASH RECORD) — Executable Assessment
 
 Assess whether the skill correctly applies a hash record for caching, and
 whether the chosen iteration-tracking approach is sound.

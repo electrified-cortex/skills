@@ -1,4 +1,4 @@
-﻿# COMPRESSIBILITY — Executable Assessment
+# COMPRESSIBILITY — Executable Assessment
 
 Assess whether the skill's instruction file is tighter than it needs to
 be. Match instruction style to the actual cognitive demand of the task.

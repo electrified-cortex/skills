@@ -1,7 +1,6 @@
-﻿# Failure Mode Design
+# Failure Mode Design
 
 ## Purpose
-
 
 Assess whether the skill explicitly catalogs the ways it can fail to
 produce useful output — not just runtime errors (which are covered by

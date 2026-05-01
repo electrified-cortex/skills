@@ -1,7 +1,6 @@
-﻿# CHAIN OF THOUGHT
+# CHAIN OF THOUGHT
 
 ## Purpose
-
 
 Assess whether the skill requires explicit reasoning scaffolding for tasks
 that must synthesize ambiguous or competing evidence before reaching a

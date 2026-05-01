@@ -1,7 +1,6 @@
-﻿# TOOL SIGNATURES
+# TOOL SIGNATURES
 
 ## Purpose
-
 
 Assess the quality of tool, function, and sub-skill names and descriptions
 used or referenced by the skill. For agents selecting tools at runtime,

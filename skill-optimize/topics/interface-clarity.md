@@ -1,4 +1,4 @@
-﻿# INTERFACE CLARITY — Executable Assessment
+# INTERFACE CLARITY — Executable Assessment
 
 Assess whether the skill clearly documents its invocation contract: what
 inputs it requires, what it returns on success and failure, and what its

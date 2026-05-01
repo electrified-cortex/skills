@@ -1,7 +1,6 @@
-﻿# Context Sensitivity
+# Context Sensitivity
 
 ## Purpose
-
 
 Assess whether the skill correctly handles variation in its operating
 context — different callers, environments, inputs, and task states —

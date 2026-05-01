@@ -1,4 +1,4 @@
-﻿# WORDING — Executable Assessment
+# WORDING — Executable Assessment
 
 Assess instruction phrasing, ordering, and structural patterns that
 affect how the model interprets and executes the skill.

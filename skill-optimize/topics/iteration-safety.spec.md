@@ -1,7 +1,6 @@
-﻿# Iteration Safety
+# Iteration Safety
 
 ## Purpose
-
 
 How to take advantage of iterative loops (convergence, self-critique,
 multi-pass) without runaway token spend or infinite recursion.

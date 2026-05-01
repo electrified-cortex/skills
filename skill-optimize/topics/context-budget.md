@@ -1,4 +1,4 @@
-﻿# Context Budget — Assessment Procedure
+# Context Budget — Assessment Procedure
 
 ## What to assess
 

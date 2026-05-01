@@ -1,7 +1,6 @@
-﻿# Interface Clarity
+# Interface Clarity
 
 ## Purpose
-
 
 Assess whether the skill clearly defines its invocation contract — what it
 needs from callers, what it promises to return, and under what conditions

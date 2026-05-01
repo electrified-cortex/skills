@@ -1,4 +1,4 @@
-﻿# DETERMINISM — Executable Assessment
+# DETERMINISM — Executable Assessment
 
 Assess whether any LLM-dependent step in the skill could be replaced with
 a deterministic tool, script, or structured algorithm — and whether any

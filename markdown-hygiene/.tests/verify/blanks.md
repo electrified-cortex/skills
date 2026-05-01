@@ -2,5 +2,4 @@
 
 Paragraph one.
 
-
 Paragraph two.

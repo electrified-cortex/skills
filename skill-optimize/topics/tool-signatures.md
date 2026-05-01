@@ -1,4 +1,4 @@
-﻿# TOOL SIGNATURES — Executable Assessment
+# TOOL SIGNATURES — Executable Assessment
 
 Assess whether the tool calls, sub-skill names, and parameter descriptions
 used in this skill are precise enough to avoid selection errors at runtime.

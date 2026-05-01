@@ -1,7 +1,6 @@
-﻿# Evaluation Harness
+# Evaluation Harness
 
 ## Purpose
-
 
 Assess whether the skill has a mechanism to verify that a proposed
 optimization actually improves it — and that improvements to one aspect

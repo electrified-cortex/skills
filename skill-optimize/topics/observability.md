@@ -1,4 +1,4 @@
-﻿# OBSERVABILITY — Executable Assessment
+# OBSERVABILITY — Executable Assessment
 
 Assess whether the skill produces enough signal to be debuggable and
 trustworthy — decision transparency, intermediate state, error context.

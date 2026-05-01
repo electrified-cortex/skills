@@ -1,7 +1,6 @@
-﻿# Caching (hash-record)
+# Caching (hash-record)
 
 ## Purpose
-
 
 Assess whether the skill would benefit from a hash record to avoid
 redundant processing on unchanged inputs.

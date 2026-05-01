@@ -1,7 +1,6 @@
-﻿# Activation Discipline
+# Activation Discipline
 
 ## Purpose
-
 
 Assess whether the skill defines the conditions under which it should be
 invoked — and, equally important, the conditions under which it should not.

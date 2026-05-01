@@ -1,7 +1,6 @@
-﻿# EXAMPLES
+# EXAMPLES
 
 ## Purpose
-
 
 Assess whether the skill could benefit from including one or more
 concrete input/output examples. Few-shot examples are one of the most

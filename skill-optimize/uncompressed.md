@@ -249,7 +249,7 @@ If the log does not exist, create it using the header format from Step 2.
 
 **Finding:** <what was observed>
 
-**Action taken:** <what changed, or "No change."> 
+**Action taken:** <what changed, or "No change.">
 ```
 
 If clean: write a single line `CLEAN — no findings.` instead.

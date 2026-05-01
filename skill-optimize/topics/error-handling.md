@@ -1,4 +1,4 @@
-﻿# ERROR HANDLING — Executable Assessment
+# ERROR HANDLING — Executable Assessment
 
 Assess whether the skill explicitly addresses error paths — missing inputs,
 malformed data, unexpected states, and out-of-scope inputs.

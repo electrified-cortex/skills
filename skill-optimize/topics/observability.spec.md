@@ -1,7 +1,6 @@
-﻿# Observability
+# Observability
 
 ## Purpose
-
 
 Assess whether the skill produces enough signal for humans and downstream
 agents to understand what it did, why it decided what it decided, and

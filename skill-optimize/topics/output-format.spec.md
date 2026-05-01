@@ -1,7 +1,6 @@
-﻿# OUTPUT FORMAT
+# OUTPUT FORMAT
 
 ## Purpose
-
 
 Assess whether the skill specifies its output format explicitly enough to
 produce consistent, parseable results across invocations. Implicit format

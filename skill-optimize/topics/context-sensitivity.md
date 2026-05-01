@@ -1,4 +1,4 @@
-﻿# Context Sensitivity — Assessment Procedure
+# Context Sensitivity — Assessment Procedure
 
 ## What to assess
 

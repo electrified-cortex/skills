@@ -1,7 +1,6 @@
-﻿# WORDING
+# WORDING
 
 ## Purpose
-
 
 Assess the instruction phrasing, ordering, and structural patterns that
 influence how a model interprets and executes the skill. This category

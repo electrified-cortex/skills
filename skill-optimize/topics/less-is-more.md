@@ -1,4 +1,4 @@
-﻿# LESS IS MORE — Executable Assessment
+# LESS IS MORE — Executable Assessment
 
 Assess whether the skill's instruction file (`uncompressed.md`, `SKILL.md`,
 `instructions.txt`) contains non-load-bearing content — sentences, sections,

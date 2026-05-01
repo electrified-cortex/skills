@@ -1,7 +1,6 @@
-﻿# Context Budget
+# Context Budget
 
 ## Purpose
-
 
 Assess whether the skill is responsible with the context it consumes and
 the context it passes on. Compressibility and Less Is More focus on the

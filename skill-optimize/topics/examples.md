@@ -1,4 +1,4 @@
-﻿# EXAMPLES — Executable Assessment
+# EXAMPLES — Executable Assessment
 
 Assess whether the skill's output format or judgment calibration would
 benefit materially from 1-3 targeted concrete examples.

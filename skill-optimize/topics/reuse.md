@@ -1,4 +1,4 @@
-﻿# REUSE — Executable Assessment
+# REUSE — Executable Assessment
 
 Assess whether the skill contains procedure blocks that could be extracted
 as sub-skills, converted to tools, or replaced with existing primitives.

@@ -1,4 +1,4 @@
-﻿# EVALUATION HARNESS — Executable Assessment
+# EVALUATION HARNESS — Executable Assessment
 
 Assess whether the skill has a mechanism to verify that optimizations
 actually improve it and don't introduce regressions.

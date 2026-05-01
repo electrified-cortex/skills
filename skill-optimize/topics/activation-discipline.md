@@ -1,4 +1,4 @@
-﻿# Activation Discipline — Assessment Procedure
+# Activation Discipline — Assessment Procedure
 
 ## What to assess
 

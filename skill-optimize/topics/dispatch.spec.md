@@ -1,7 +1,6 @@
-﻿# Dispatch
+# Dispatch
 
 ## Purpose
-
 
 Assess whether the skill's execution pattern (dispatch vs inline) is the
 right choice for its purpose. Full rationale for the dispatch primitive is

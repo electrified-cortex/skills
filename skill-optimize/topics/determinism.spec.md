@@ -1,7 +1,6 @@
-﻿# Determinism
+# Determinism
 
 ## Purpose
-
 
 Assess whether any LLM-dependent step in the skill could be replaced with
 a deterministic tool, script, or structured algorithm.

@@ -1,4 +1,4 @@
-﻿# DISPATCH — Executable Assessment
+# DISPATCH — Executable Assessment
 
 Assess whether the skill uses the right execution pattern: dispatch (isolated
 sub-agent context) or inline (runs in the host agent's context). Wrong

@@ -1,4 +1,4 @@
-﻿# COMPOSITION — Executable Assessment
+# COMPOSITION — Executable Assessment
 
 Assess whether the skill is structured at the right granularity — not too
 monolithic, not over-split. Focus on whether any single invocation loads more

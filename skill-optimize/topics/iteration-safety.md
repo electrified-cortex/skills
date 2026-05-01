@@ -1,4 +1,4 @@
-﻿# ITERATION SAFETY — Executable Assessment
+# ITERATION SAFETY — Executable Assessment
 
 Assess whether the skill's loops have hard caps, state tracking, and
 explicit stopping criteria to prevent runaway token spend.

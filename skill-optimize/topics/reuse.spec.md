@@ -1,7 +1,6 @@
-﻿# REUSE
+# REUSE
 
 ## Purpose
-
 
 Assess whether the skill contains procedure blocks that could be extracted,
 shared, or replaced with existing reusable components. A good skill library,

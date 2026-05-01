@@ -1,7 +1,6 @@
-﻿# Convergence
+# Convergence
 
 ## Purpose
-
 
 How do you know a skill has been optimized enough? How do you drive it
 toward that state reliably?

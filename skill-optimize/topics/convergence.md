@@ -1,4 +1,4 @@
-﻿# CONVERGENCE — Executable Assessment
+# CONVERGENCE — Executable Assessment
 
 Assess whether the skill has sufficient multi-pass stopping criteria and
 whether the current implementation will reach a stable optimized state

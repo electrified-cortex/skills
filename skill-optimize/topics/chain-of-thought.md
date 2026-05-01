@@ -1,4 +1,4 @@
-﻿# CHAIN OF THOUGHT — Executable Assessment
+# CHAIN OF THOUGHT — Executable Assessment
 
 Assess whether the skill needs explicit reasoning elicitation to produce
 correct verdict quality, and whether the current form provides it.
