@@ -46,6 +46,8 @@ Frontmatter: `operation_kind: markdown-hygiene`, `result: <aggregate>`, `file_pa
 Body:
 
 ```md
+# Result
+
 lint: `<lint_result>`
 analysis: `<analysis_result>`
 ```
