@@ -34,8 +34,8 @@ Variables:
 `<instructions>` = `instructions.txt` (this folder; NEVER READ THIS FILE)
 `<instructions-abspath>` = absolute path to `<instructions>`
 `<input-args>` = `<markdown_file_path> --lint-path <lint_path> [--ignore <RULE>[,<RULE>...]]`
-`<tier>` = `fast-cheap`
-`<description>` = `Lint: <markdown_file_path>`
+`<tier>` = `fast-cheap` = haiku or mini class that can easily handle simple linting tasks.
+`<description>` = `Markdown Hygiene Lint: <markdown_file_path>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
 Follow `dispatch` skill. See `../../dispatch/SKILL.md`.
