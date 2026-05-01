@@ -1,5 +1,7 @@
 # Skill Optimize — Execution Instructions
 
+Prerequisite: audit the target skill using `../skill-auditing/SKILL.md`
+
 ## Inputs
 
 Required:
@@ -240,7 +242,7 @@ If the log does not exist, create it using the header format from Step 2.
 
 **5b — Write report file** to `<skill-path>/.optimization/<topic-slug>.md`:
 
-```
+```md
 # <TOPIC> — <date>
 
 **Severity:** HIGH | MEDIUM | LOW

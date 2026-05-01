@@ -3,6 +3,8 @@ name: skill-optimize
 description: Analyzes single skill for architectural and structural improvement. Dispatches topic analysis to sub-agents, records findings in optimize-log. NEVER modifies source files. Triggers — optimize skill, skill review, architectural review, skill improvement, find skill issues, analyze skill structure.
 ---
 
+Prerequisite: audit the target skill using `../skill-auditing/SKILL.md`
+
 Inputs:
 
 Required: `<skill-path>` — path to skill dir (SKILL.md, spec.md, uncompressed.md, etc.)
@@ -133,7 +135,7 @@ Status: `acted` | `deferred` | `rejected` | `clean` | `audit-candidate`. No log 
 5b: Write `<skill-path>/.optimization/<slug>.md`:
 
 ```md
-(H1) <TOPIC> — <date>
+# <TOPIC> — <date>
 
 **Severity:** HIGH | MEDIUM | LOW
 **Finding:** <observed>
