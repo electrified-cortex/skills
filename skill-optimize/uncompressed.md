@@ -6,8 +6,8 @@ Prerequisite: audit the target skill using `../skill-auditing/SKILL.md`
 
 Required:
 
-- `<skill-path>` — path to the skill directory (contains SKILL.md,
-  spec.md, uncompressed.md, etc.)
+- `<skill-path>` — path to the **target skill being analyzed** (not
+  this skill's own directory). Contains SKILL.md, spec.md, uncompressed.md, etc.
 
 Optional:
 
@@ -35,7 +35,7 @@ If none of these exist, stop: `ERROR: no skill source files found at <skill-path
 
 ## Step 2 — Check the Optimize Log
 
-The optimize log is at `<skill-path>/optimize-log.md`.
+The optimize log is at `<skill-path>/optimize-log.md` — written into the target skill's own directory.
 
 If it exists, read it. The log records which topics have been analyzed,
 when, and what was found. Use it to:

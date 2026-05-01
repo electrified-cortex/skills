@@ -1,9 +1,10 @@
 # Skill Index Auditing Specification
 
-Normative spec for the auditor. The auditor validates existing index artifacts and, on PASS, writes the integrity stamp (`skill.index.sha256`) as a sign-off artifact. It conforms to the root `skill-index` spec.
+Normative spec for the auditor. The auditor validates existing index artifacts and reports a verdict. It conforms to the root `skill-index` spec.
 
 ## Changelog
 
+- R3, R4, R22, R23 removed: stamp-present check, stamp-match check, and stamp sign-off writing dropped. Stamping is no longer general practice; auditor is read-only under all verdicts. C2, N2, B1, D1, E4 updated accordingly.
 - R24–R25 added: overlay sections checked for trigger shape (continue-past); raw-index keyword quality checked per integration spec R21–R24 (continue-past). Both escalate to `rebuild-needed` if found after a clean fail-fast walk.
 - R22 added: auditor writes `skill.index.sha256` on PASS.
 - R23 added: auditor does not write (and does not delete) the stamp on FAIL or inconclusive.
@@ -47,17 +48,13 @@ Applies to any directory subtree containing one or more index nodes. The auditor
 
 R1. The auditor must accept an invocation root and restrict its work to the subtree rooted there.
 
-R2. The auditor must not modify any file during its validation walk. After the walk completes and a PASS verdict is determined, the auditor writes `skill.index.sha256` per R22. On any non-PASS verdict, no files are modified at any point.
+R2. The auditor must not modify any file at any point.
 
 ### Caller Responsibilities
 
 The caller must not read `instructions.txt` themselves. Pass the file path to a dispatch agent and let it read the file.
 
 ### Per-Node Checks (Fail-Fast)
-
-R3. The auditor must verify that each visited raw index has an accompanying integrity stamp. Missing stamp is `rebuild-needed`.
-
-R4. The auditor must verify that the integrity stamp matches the SHA-256 of the raw index's current stored bytes. Mismatch is `rebuild-needed`.
 
 R5. The auditor must verify that every entry in a raw index resolves to an on-disk target within the current node's subtree: a leaf skill's directory (for a leaf or combo classification), a descendant directory with its own raw index (for a sub-node classification), or both (for a combo classification). A shortcut entry (multi-segment relative path per root spec R33) must resolve by walking the path from the current node. A missing or out-of-subtree target is `rebuild-needed`.
 
@@ -111,19 +108,13 @@ R20. If the auditor cannot reach a fail-fast conclusion (for example, a director
 
 R21. The auditor must treat the root spec as authoritative. When a check in this spec conflicts with the root spec, the root spec wins and the check must be re-derived from it.
 
-### Stamp Sign-Off
-
-R22. After the walk completes and a PASS verdict is determined, the auditor must write `skill.index.sha256` alongside each raw index it validated during the walk. Stamps are written only after the verdict is known — not incrementally during the walk — so that a non-PASS verdict never leaves partial stamp state. The stamp content is the SHA-256 hex digest of the exact bytes of the stored `skill.index` for that node — no trailing newline unless the raw index itself ends with one; no other content. This stamp is the auditor's sign-off artifact, confirming the cascade was structurally valid at time of audit. Writing the stamp is the only file-write the auditor performs.
-
-R23. On any verdict other than PASS (`rebuild-needed` or `inconclusive`), the auditor must not write any stamp. Existing stamps are left untouched — stale stamps remain stale, absent stamps remain absent. A stale or absent stamp after a non-PASS verdict is intentional: it signals "unaudited since last build," giving the host agent a clear indicator that a build-then-audit cycle is required.
-
 ---
 
 ## Constraints
 
 C1. The auditor must not access the network.
 
-C2. The auditor must not modify any index artifact during its walk. The sole exception is writing `skill.index.sha256` after the walk completes and a PASS verdict is determined, per R22. On any non-PASS verdict, no files are modified.
+C2. The auditor must not modify any file.
 
 C3. The auditor must not invoke the builder. Triggering the builder is the host agent's decision based on the audit report.
 
@@ -135,7 +126,7 @@ C5. The auditor must not judge the optimality, placement, or curation quality of
 
 ## Behavior
 
-B1. The auditor produces an audit report and, on PASS, writes the integrity stamp alongside each validated raw index per R22. No other outputs or side effects are permitted.
+B1. The auditor produces an audit report. No other outputs or side effects are permitted.
 
 B2. When the auditor encounters a child directory it cannot read, it records the failure as `inconclusive` for that subtree and continues with siblings. Subtree-level `inconclusive` records aggregate into the final verdict per P3. Top-level unreadability is handled per E1.
 
@@ -147,7 +138,7 @@ B4. The auditor's visited-node tracking under R10 applies to every step of every
 
 ## Defaults and Assumptions
 
-D1. The auditor is expected to be run by a lightweight LLM class. Its checks are chosen to fit within that budget. On PASS, it performs one stamp write per validated node, all executed after the walk completes; each write is small and atomic.
+D1. The auditor is expected to be run by a lightweight LLM class. Its checks are chosen to fit within that budget.
 
 D2. The dot-folder allow-list used by the auditor must match the one used by the builder for the same tree. The host agent supplies both.
 
@@ -160,8 +151,6 @@ E1. Invocation-root unreadable: return verdict `inconclusive` with the reason an
 E2. Per-subtree unreadability: per B2, record and continue with siblings.
 
 E3. If the audit report itself cannot be produced, the auditor must emit a non-zero exit signal.
-
-E4. If one or more stamp writes fail after a PASS verdict (disk error, permission denied, I/O failure), the auditor must downgrade the verdict to `inconclusive`, list the failed nodes in the audit report, and emit a non-zero exit signal. A partial stamp state — some nodes stamped, others not — is not acceptable; incomplete sign-off is treated as no sign-off.
 
 ---
 
@@ -180,7 +169,7 @@ P3. An `inconclusive` verdict takes precedence over `ok` but not over `rebuild-n
 F1: Auditor rebuilds instead of signalling.
 Description: The auditor tries to fix problems it finds rather than halting and returning `rebuild-needed`.
 Why: The auditor is designed to be the cheap fast check. Builder work is not cheap. Mixing the two defeats the triage and makes audits heavy.
-Mitigation: Enforce R2 and C3. The auditor's outputs are: a verdict (always) and a stamp write (on PASS only). It does not rebuild or patch index content.
+Mitigation: Enforce R2 and C3. The auditor's sole output is a verdict. It does not rebuild or patch index content.
 
 F2: Auditor keeps walking after a fail-fast failure.
 Description: The auditor collects all failures before returning.
@@ -208,7 +197,7 @@ Mitigation: Enforce R10 and B4. Track nodes on each resolution path. On revisit,
 
 N1. The auditor does not rebuild.
 
-N2. The auditor does not modify any file except writing `skill.index.sha256` on PASS per R22. On FAIL or inconclusive, it leaves all files untouched — including any pre-existing stale stamps.
+N2. The auditor does not modify any file.
 
 N3. The auditor does not invoke the builder.
 

@@ -7,7 +7,7 @@ Prerequisite: audit the target skill using `../skill-auditing/SKILL.md`
 
 Inputs:
 
-Required: `<skill-path>` — path to skill dir (SKILL.md, spec.md, uncompressed.md, etc.)
+Required: `<skill-path>` — path to the **target skill being analyzed** (not this skill's own directory). Contains SKILL.md, spec.md, uncompressed.md, etc.
 
 Optional:
 `<topic>` — slug; provided → skip assessor, analyze directly.
@@ -25,7 +25,7 @@ Read all from `<skill-path>` in order; don't analyze yet.
 
 None found → `ERROR: no skill source files found at <skill-path>`.
 
-Allowed write targets: `<skill-path>/optimize-log.md` (5a), `<skill-path>/.optimization/<slug>.md` (5b). Read scope: `<skill-path>` and `<skill-optimize-root>/topics/` only.
+Allowed write targets (inside the **target skill's** directory): `<skill-path>/optimize-log.md` (5a), `<skill-path>/.optimization/<slug>.md` (5b). Read scope: `<skill-path>` and `<skill-optimize-root>/topics/` only.
 
 Step 2 — Check Optimize Log:
 
