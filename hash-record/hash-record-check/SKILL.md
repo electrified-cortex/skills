@@ -48,6 +48,8 @@ pwsh misses.ps1 <glob> <op_kind> <record_filename>
 
 Expands `<glob>`, probes all matched files in parallel, and outputs one absolute path per line for each file that has **no** cache entry. Sorted. Zero output means every file is already cached.
 
+Paths under `.hash-record/` are excluded by default.
+
 Use this before dispatching agents to find exactly which files still need work:
 
 ```powershell

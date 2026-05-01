@@ -5,6 +5,7 @@
 # Output: one absolute file path per line for each file with no cache entry (MISS)
 # Exit: 0 success (including zero matches); 1 argument or runtime error
 # Deps: pwsh 7.0+, git on PATH.
+# Notes: ignores any matched path under .hash-record/ to avoid cache self-scans.
 
 param(
     [Parameter(Position = 0, Mandatory)]
@@ -39,6 +40,13 @@ $files = if ($Glob -match '\*\*') {
     Get-ChildItem -Path $basePart -Recurse -Filter $leafPart -File -ErrorAction SilentlyContinue
 } else {
     Get-ChildItem -Path $Glob -File -ErrorAction SilentlyContinue
+}
+if (-not $files -or $files.Count -eq 0) { exit 0 }
+
+# Never process files inside the cache tree itself.
+$files = $files | Where-Object {
+    $normalized = $_.FullName.Replace('\\', '/').ToLowerInvariant()
+    -not $normalized.Contains('/.hash-record/')
 }
 if (-not $files -or $files.Count -eq 0) { exit 0 }
 

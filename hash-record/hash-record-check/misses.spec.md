@@ -39,6 +39,8 @@ One absolute file path per line for each matched file that has no cache entry.
 Paths are sorted alphabetically for deterministic output. No output if every
 matched file is already cached or the glob matches nothing.
 
+Any matched file under `.hash-record/` is always excluded before probing.
+
 All output goes to stdout. Errors and WARN lines go to stderr only and never
 appear in stdout.
 
@@ -59,15 +61,16 @@ Globs that match no files produce no output and exit 0.
 1. Validate `op_kind` and `record_filename` — reject values containing `..` or
    path separators.
 2. Expand the glob using the rules above.
-3. Resolve the repo root once from the first matched file via
+3. Exclude any expanded file path that is under `.hash-record/`.
+4. Resolve the repo root once from the first matched file via
    `git rev-parse --show-toplevel`. If not in a git repo, fall back to the
    file's parent directory and emit a WARN to stderr.
-4. For each matched file, in parallel:
+5. For each matched file, in parallel:
    a. Run `git hash-object <file>` to get the blob hash.
    b. Construct the cache path:
       `<repo_root>/.hash-record/<hash[0:2]>/<hash>/<op_kind>/<record_filename>`
    c. If the cache file does not exist, emit the file's absolute path.
-5. Sort and output all misses.
+6. Sort and output all misses.
 
 Parallelism is bounded by `-ThrottleLimit 16`.
 
