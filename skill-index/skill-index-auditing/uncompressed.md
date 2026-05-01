@@ -55,7 +55,7 @@ These checks, if failed, immediately produce `rebuild-needed` with the reason an
 
 These findings do not halt the audit but are reported in the audit report:
 
-1. **Orphans:** a `skill.index.sha256` or `skill.index.md` with no corresponding `skill.index`. Janitorial signal; does not trigger `rebuild-needed` by itself.
+1. **Orphans:** a `skill.index.md` with no corresponding `skill.index`. Janitorial signal; does not trigger `rebuild-needed` by itself.
 2. **Malformed lines:** a raw index line with missing key, missing colon, or forbidden characters. Recorded without halting. If the node completes inspection without a fail-fast failure, any malformed-line finding raises the final verdict to `rebuild-needed`.
 3. **Phantom indexes:** a `skill.index` within the invocation root's subtree not reachable from the root node's cascade. Janitorial signal; does not trigger `rebuild-needed` by itself.
 4. **Overlay trigger shape (R24):** an overlay section that describes what the skill does rather than when to load it (i.e., does not express triggering conditions per `skill-index-building` spec R22–R25). Findings escalate the verdict to `rebuild-needed` after a clean fail-fast walk.

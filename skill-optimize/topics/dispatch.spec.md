@@ -2,6 +2,7 @@
 
 ## Purpose
 
+
 Assess whether the skill's execution pattern (dispatch vs inline) is the
 right choice for its purpose. Full rationale for the dispatch primitive is
 in `dispatch/dispatch-pattern.md`; the summary below covers the key signals.
@@ -87,8 +88,8 @@ Fire a MEDIUM finding if the skill dispatches but:
 
 ## Parameters
 
-- `<skill-path>` — path to the skill directory being analyzed (inherited from optimizer invocation)
-- `<skill-source-files>` — all source files from the skill directory (inherited from Step 1)
+- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
+- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
 
 ## Output
 

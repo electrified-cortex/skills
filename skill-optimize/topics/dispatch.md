@@ -74,7 +74,7 @@ If the skill uses dispatch, inspect how it invokes the dispatch pattern:
 
 **Canonical form** (from `markdown-hygiene-analysis/SKILL.md` as golden reference):
 
-```md
+```
 `<instructions>` = `instructions.txt` (NEVER READ)
 `<instructions-abspath>` = absolute path to `<instructions>`
 `<input-args>` = <the specific inputs>

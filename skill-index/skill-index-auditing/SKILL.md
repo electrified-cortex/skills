@@ -2,8 +2,7 @@
 name: skill-index-auditing
 description: >-
   Validator for a skill-index cascade. Returns ok, rebuild-needed, or
-  inconclusive. On PASS, writes skill.index.sha256 as sign-off. Never invokes
-  the builder.
+  inconclusive. Never invokes the builder.
 ---
 
 ## Dispatch
@@ -11,7 +10,7 @@ description: >-
 `<instructions>` = `instructions.txt` (NEVER READ)
 `<instructions-abspath>` = absolute path to `<instructions>`
 `<input-args>` = `root=<path> result_file=<path> [--dot-allow <name,...>]`
-`<tier>` = `standard` — structural walk with stamp verification requires reliable judgment
+`<tier>` = `standard` — structural walk requires reliable judgment
 `<description>` = `Skill Index Audit: <path>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
@@ -22,7 +21,7 @@ Should return: audit report at `result_file` with verdict `ok` | `rebuild-needed
 `result_file` (required): abs path for audit report.
 `--dot-allow` (optional): comma-separated bare dot-folder names (must match builder's list). Default: empty.
 
-Returns: audit report at `result_file`. On PASS, also writes `skill.index.sha256` alongside each validated raw index.
+Returns: audit report at `result_file`.
 
 Verdicts:
 
@@ -36,19 +35,17 @@ Walk order: depth-first from invocation root, parents before children. Parent-le
 
 Fail-fast checks (halt on first failure → `rebuild-needed`):
 
-1. Stamp present: each raw index must have `skill.index.sha256`.
-2. Stamp matches: SHA-256 of raw index bytes must equal stored stamp.
-3. Entry targets resolve: every entry resolves to on-disk target within node's subtree. Plain entry → leaf-skill dir. Descent-marked → descendant dir with own `skill.index`. Combo → satisfies both. Shortcut entries (multi-segment keys) resolved by path-walk from current node. Missing or out-of-subtree → `rebuild-needed`.
-4. No missing direct children: every manifest-bearing direct child must appear as entry in node's raw index, unless reachable via shortcut elsewhere in cascade.
-4a. No index at pure leaf: manifest-bearing dir with zero manifest-bearing children must not have `skill.index`. Stale/erroneous if found → `rebuild-needed`.
-5. Combo self entry: every combo node must have self entry (key `.`) in its raw index.
-6. Combo enumerates subdirectories: every combo node must enumerate manifest-bearing subdirs in its raw index (direct-child or shortcut entries).
-7. Combo classified in parent: every combo node must be classified combo in parent's raw index.
-8. No reference loops: on every resolution path, track full ordered set of nodes visited. Step landing on already-visited node → `rebuild-needed`. Auditor is primary enforcer per root spec.
+1. Entry targets resolve: every entry resolves to on-disk target within node's subtree. Plain entry → leaf-skill dir. Descent-marked → descendant dir with own `skill.index`. Combo → satisfies both. Shortcut entries (multi-segment keys) resolved by path-walk from current node. Missing or out-of-subtree → `rebuild-needed`.
+2. No missing direct children: every manifest-bearing direct child must appear as entry in node's raw index, unless reachable via shortcut elsewhere in cascade.
+2a. No index at pure leaf: manifest-bearing dir with zero manifest-bearing children must not have `skill.index`. Stale/erroneous if found → `rebuild-needed`.
+3. Combo self entry: every combo node must have self entry (key `.`) in its raw index.
+4. Combo enumerates subdirectories: every combo node must enumerate manifest-bearing subdirs in its raw index (direct-child or shortcut entries).
+5. Combo classified in parent: every combo node must be classified combo in parent's raw index.
+6. No reference loops: on every resolution path, track full ordered set of nodes visited. Step landing on already-visited node → `rebuild-needed`. Auditor is primary enforcer per root spec.
 
 Continue-past checks (record, don't halt):
 
-1. Orphans: `skill.index.sha256` or `skill.index.md` with no corresponding `skill.index`. Janitorial; doesn't trigger `rebuild-needed` alone.
+1. Orphans: `skill.index.md` with no corresponding `skill.index`. Janitorial; doesn't trigger `rebuild-needed` alone.
 2. Malformed lines: raw index line with missing key, missing colon, or forbidden chars. Recorded without halting. Any finding raises verdict to `rebuild-needed` after clean fail-fast walk.
 3. Phantom indexes: `skill.index` in invocation root's subtree not reachable from root cascade. Janitorial; doesn't trigger `rebuild-needed` alone.
 4. Overlay trigger shape (R24): overlay section describing what skill does rather than when to load it (doesn't express triggering conditions per `skill-index-building` spec R22–R25). Escalates to `rebuild-needed` after clean fail-fast walk.
@@ -57,12 +54,6 @@ Continue-past checks (record, don't halt):
 Check ordering: fail-fast runs before continue-past at each node. Fail-fast failure → halt without running continue-past.
 
 Visited-node tracking: maintain ordered set of nodes on current resolution path. Applies to every step — direct-child descent, shortcut path-walk endpoint, combo sub-node descent. Append new node before inspection. Step landing on already-visited node → loop, halt. Set resets on sibling subtree entry.
-
-Stamp sign-off: after walk completes and PASS determined, write `skill.index.sha256` alongside each validated raw index. Stamps written only after verdict known — not incrementally during walk — so non-PASS never leaves partial stamp state. Content: SHA-256 hex digest of exact bytes of stored `skill.index` for that node — no trailing newline unless raw index ends with one; no other content. Sign-off confirming cascade valid at time of audit.
-
-On non-PASS (`rebuild-needed` or `inconclusive`), mustn't write any stamp. Existing stamps left untouched — stale stay stale, absent stay absent. Stale/absent stamp after non-PASS intentional: signals "unaudited since last build," triggering build-then-audit cycle.
-
-Stamp write is only file-write auditor ever performs.
 
 Audit report fields:
 
@@ -76,7 +67,6 @@ Error handling:
 - Invocation root unreadable → `inconclusive` with reason, halt.
 - Per-subtree unreadable → `inconclusive` for subtree, continue siblings.
 - Audit report not producible → non-zero exit; don't silently succeed.
-- Stamp write failure after PASS → downgrade to `inconclusive`, list failed nodes in report, non-zero exit. Partial stamp state unacceptable — incomplete sign-off = no sign-off.
 
 Precedence:
 
