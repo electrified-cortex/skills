@@ -233,10 +233,11 @@ function Test-GlobMatch {
     #   ?   -> match one character (no /)
     #   .   -> literal dot
     $esc = [System.Text.RegularExpressions.Regex]::Escape($g)
-    # Un-escape the wildcards we care about after escaping
-    $esc = $esc -replace '\*\*', '{GLOBSTAR}'
-    $esc = $esc -replace '\*', '[^/]*'
-    $esc = $esc -replace '\?', '[^/]'
+    # Un-escape the wildcards we care about after escaping.
+    # Regex::Escape converts * -> \* and ? -> \?, so we must match those escaped forms.
+    $esc = $esc -replace '\\\*\\\*', '{GLOBSTAR}'
+    $esc = $esc -replace '\\\*', '[^/]*'
+    $esc = $esc -replace '\\\?', '[^/]'
     $esc = $esc -replace '\{GLOBSTAR\}', '.*'
     $pattern = '^' + $esc + '$'
     return [System.Text.RegularExpressions.Regex]::IsMatch($p, $pattern)
@@ -305,14 +306,14 @@ function Test-TargetMatch {
 # ---------------------------------------------------------------------------
 $orphans = [System.Collections.Generic.List[string]]::new()
 
-$shard_dirs = Get-ChildItem -LiteralPath $hash_record_literal -Directory -ErrorAction SilentlyContinue
+$shard_dirs = Get-ChildItem -LiteralPath $hash_record_literal -Directory -Force -ErrorAction SilentlyContinue
 foreach ($shard in $shard_dirs) {
     # Skip symlinks
     if ($shard.LinkType) { continue }
     # Skip dot-prefixed admin directories
     if ($shard.Name.StartsWith('.')) { continue }
 
-    $hash_dirs = Get-ChildItem -LiteralPath $shard.FullName -Directory -ErrorAction SilentlyContinue
+    $hash_dirs = Get-ChildItem -LiteralPath $shard.FullName -Directory -Force -ErrorAction SilentlyContinue
     foreach ($hash_dir in $hash_dirs) {
         # Skip symlinks
         if ($hash_dir.LinkType) { continue }

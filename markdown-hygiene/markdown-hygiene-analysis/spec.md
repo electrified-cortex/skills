@@ -33,7 +33,7 @@ SA001–SA038 are defined in the parent skill's `spec.md` (markdown-hygiene/spec
 ## Result Logic
 
 | lint_result | advisory_count | result |
-|-------------|---------------|--------|
+| ----------- | -------------- | ------ |
 | `fail` | any | `fail` |
 | `clean` | > 0 | `pass` |
 | `clean` | 0 | `clean` |
