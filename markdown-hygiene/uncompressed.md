@@ -8,83 +8,67 @@ description: Full markdown hygiene pass on a .md file — lint fixes, MD rule sc
 ## Input
 
 `<markdown_file_path>` — absolute path to the `.md` file to process.
-`--ignore <RULE>[,<RULE>...]` (optional) — MD or SA rule codes to suppress across all phases.
+`--ignore <RULE>[,<RULE>...]` (optional) — MD rule codes to suppress (lint only).
 
 ## Step 1 — Result check (report)
 
-Run inline result check for `report`. See `markdown-hygiene-result/SKILL.md`.
+Run inline `markdown-hygiene-result` check for `report`. See `markdown-hygiene-result/SKILL.md`.
 
-- `MISS: <abs-path>` — bind `<report_path>`. Jump to Step 2.
+- `MISS: <abs-path>` — bind `<report_path>`. Continue.
 - Otherwise: stop here, return result to caller.
 
-## Step 2 — Preparation
+## Step 2 — Lint
 
-If a markdown linter is available, run auto-fix on `<markdown_file_path>`. Re-run the result check for `report`.
+Follow `markdown-hygiene-lint/SKILL.md` with `<markdown_file_path> [--ignore <RULE>[,<RULE>...]]`.
 
-- `MISS: <abs-path>` — rebind `<report_path>`. Continue.
-- Otherwise: stop here, return result to caller.
-
-## Step 3 — Result check (lint)
-
-Run inline result check for `lint`. See `markdown-hygiene-result/SKILL.md`.
-
-- `clean: <lint_path>` or `findings: <lint_path>` — bind `<lint_path>`, skip to Step 5.
-- `MISS: <abs-path>` — bind `<lint_path>`, run Phase 1 (Step 4).
-
-## Step 4 — Phase 1: Lint
-
-Dispatch `markdown-hygiene-lint`. See `markdown-hygiene-lint/SKILL.md`.
-
-Input: `<markdown_file_path> --lint-path <lint_path> [--ignore <RULE>[,<RULE>...]]`
-
-On return, run `result lint` again:
-
-- `clean: <lint_path>` or `findings: <lint_path>` — bind confirmed `<lint_path>`. Continue to Step 5.
 - `ERROR: <reason>` — stop, surface reason.
+- Otherwise: bind `<lint_result>`.
 
-## Step 5 — Result check (analysis)
+## Step 3 — Analysis
 
-Run inline result check for `analysis`. See `markdown-hygiene-result/SKILL.md`.
+Follow `markdown-hygiene-analysis/SKILL.md` with `<markdown_file_path>`.
 
-- `clean: <analysis_path>`, `pass: <analysis_path>`, or `findings: <analysis_path>` — bind `<analysis_path>`, skip to Step 7.
-- `MISS: <abs-path>` — bind `<analysis_path>`, run Phase 2 (Step 6).
-
-## Step 6 — Phase 2: Analysis
-
-Dispatch `markdown-hygiene-analysis`. See `markdown-hygiene-analysis/SKILL.md`.
-
-Input: `<markdown_file_path> --lint-path <lint_path> --analysis-path <analysis_path> [--ignore <RULE>[,<RULE>...]]`
-
-Analysis executor writes `analysis.md`. It does NOT write `report.md`.
-
-- `clean`, `pass: <analysis_path>`, or `findings: <analysis_path>` — continue to Step 7.
 - `ERROR: <reason>` — stop, surface reason.
+- Otherwise: bind `<analysis_result>`.
 
-## Step 7 — Host aggregate
+## Step 4 — Aggregate
 
-Read `lint.md` and `analysis.md` results. Derive aggregate:
+Derive aggregate from `<lint_result>` and `<analysis_result>`:
 
-- Either is `fail` → aggregate `fail`.
-- Lint `clean`, analysis `pass` → aggregate `pass`.
+- `<lint_result>` starts with `findings:` → aggregate `fail`.
+- `<lint_result>` is `clean`, `<analysis_result>` starts with `pass:` → aggregate `pass`.
 - Both `clean` → aggregate `clean`.
 
-Write `report.md` at `<report_path>`: frontmatter `operation_kind: markdown-hygiene`, aggregate result, refs to `lint.md` and `analysis.md`.
+Write `report.md` at `<report_path>`:
 
-## Step 8 — Iteration check
+Frontmatter: `operation_kind: markdown-hygiene`, `result: <aggregate>`, `file_path: <repo-relative-path>`. No absolute paths.
 
-Read `report.md` result.
+Body:
 
-- `clean` — skip to Step 9.
+```md
+lint: `<lint_result>`
+analysis: `<analysis_result>`
+```
+
+Where `<lint_result>` and `<analysis_result>` are the bare return values (`clean`, `findings: lint.md`, `pass: analysis.md`) using repo-relative paths only.
+
+## Step 5 — Iteration check
+
+Use aggregate result from Step 4.
+
+- `clean` — skip to Step 6.
 - `fail` or `pass` — dispatch combined fix agent (standard tier). Host-composed prompt:
-  `For <markdown_file_path>: (a) read <lint_path> and fix every FAIL-severity item; (b) read <analysis_path> and for each advisory, either apply the fix or append "Skipped: <reason>" to the advisories section of <report_path>. Return \`fixed: <report_path>\` if any fixes were applied to <markdown_file_path>, or \`clean: <report_path>\` if only skipped entries were logged.`
+  `For <markdown_file_path>: (a) read the lint report at the path in <lint_result> and fix every FAIL-severity item; (b) read the analysis report at the path in <analysis_result> and for each advisory, either apply the fix or append "Skipped: <reason>" to the advisories section of <report_path>. Return \`fixed: <report_path>\` if any fixes were applied to <markdown_file_path>, or \`clean: <report_path>\` if only skipped entries were logged.`
   - `fixed: <report_path>` — fixes applied to target file. Restart from Step 2. Count as a fail iteration; after the 3rd, stop and return `findings: <report_path>` to caller instead.
-  - `clean: <report_path>` — no file changes; only advisory skips logged. Skip to Step 9.
+  - `clean: <report_path>` — no file changes; only advisory skips logged. Skip to Step 6.
   - `ERROR: <reason>` — stop, surface reason.
 
 `fixed:` is an internal signal only — never written to any record file, never returned to the caller.
 
-## Step 9 — Prune
+## Step 6 — Prune
 
 Run `hash-record-prune` with `repo_root=<repo_root> --target <repo-relative-path>` where `<repo-relative-path>` is `<markdown_file_path>` stripped of the repo root prefix.
 
 This removes orphaned hash directories for the target file accumulated across iterations.
+
+Return based on last `report.md` result: `clean` → `CLEAN`; `pass` → `pass: <report_path>`.

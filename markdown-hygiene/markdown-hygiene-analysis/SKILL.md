@@ -15,8 +15,6 @@ Run inline result check for `analysis`. See `../markdown-hygiene-result/SKILL.md
 ## Inputs
 
 `<markdown_file_path>` — absolute path to the `.md` file to analyze.
-`<lint_path>` — absolute path to the existing `lint.md` from the lint phase (read-only reference).
-`--ignore <RULE>[,<RULE>...]` (optional) — SA rule codes to suppress.
 
 ## Dispatch
 
@@ -24,14 +22,14 @@ Variables:
 
 `<instructions>` = `instructions.txt` (this folder; NEVER READ THIS FILE)
 `<instructions-abspath>` = absolute path to `<instructions>`
-`<input-args>` = `<markdown_file_path> --lint-path <lint_path> --analysis-path <analysis_path> [--ignore <RULE>[,<RULE>...]]`
+`<input-args>` = `<markdown_file_path> --analysis-path <analysis_path>`
 `<tier>` = `standard`
 `<description>` = `Analysis: <markdown_file_path>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
 Follow `dispatch` skill. See `../../dispatch/SKILL.md`.
 
-Should return: `clean` | `pass: <analysis_path>` | `findings: <analysis_path>` | `ERROR: <reason>`
+Should return: `clean` | `pass: <analysis_path>` | `ERROR: <reason>`
 
 ## Result
 

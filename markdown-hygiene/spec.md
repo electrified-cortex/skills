@@ -38,26 +38,39 @@ Sonnet-class (or GPT-5.4). Semantic reasoning. It:
 
 ### Host Orchestration Layer (`SKILL.md`)
 
-The host is the agent that reads `SKILL.md` and drives the full workflow. It:
+The host is the agent that reads `SKILL.md` and drives the full workflow.
 
-1. **Result check — `report` mode.** Run `result <markdown_file_path> report`. MISS → bind `<report_path>`, continue. Otherwise → return result to caller, stop.
-2. **Preparation.** If a markdown linter is available, run auto-fix on `<markdown_file_path>`. Repeat result check — `report` mode — after the fix. MISS → rebind `<report_path>`, continue. Otherwise → return result to caller, stop.
-3. **Result check — `lint` mode.** Run `result <markdown_file_path> lint`. HIT → bind `<lint_path>`, skip Phase 1, jump to Step 5. MISS → bind `<lint_path>`, run Phase 1.
-4. **Phase 1 — Lint** (`fast-cheap` / Haiku). Dispatch lint executor with `--lint-path <lint_path>`. On return, re-run `result lint` → bind confirmed `<lint_path>`. On error, stop.
-5. **Result check — `analysis` mode.** Run `result <markdown_file_path> analysis`. HIT → bind `<analysis_path>`, skip Phase 2, jump to Step 7. MISS → bind `<analysis_path>`, run Phase 2.
-6. **Phase 2 — Analysis** (`standard` / Sonnet or GPT-5.4). Dispatch analysis executor. Writes `analysis.md`. On error, stop.
-7. **Host aggregate.** Read `lint.md` and `analysis.md` results. Derive aggregate result:
-   - Either result is `fail` → aggregate is `fail`.
-   - Lint `clean`, analysis `pass` → aggregate is `pass`.
-   - Both `clean` → aggregate is `clean`.
-   Write `report.md` at `<report_path>`: `operation_kind: markdown-hygiene`, aggregate result, links to `lint.md` and `analysis.md`.
-8. **Iteration check.** Read `report.md` result.
-   - `clean` — skip to Step 10 (Prune).
-   - `fail` or `pass` — dispatch combined fix agent (standard tier). Agent fixes all FAIL-severity items and weighs each advisory: fix it or log "Skipped: `<reason>`" in `<report_path>`. Agent returns `fixed:` (changes applied) or `clean:` (only skips logged).
-     - `fixed:` — restart from Preparation (step 2); count as a fail iteration.
-     - `clean:` — skip to Step 10 (Prune).
-9. Still `fixed:` after 3rd iteration — stop, return `findings: <last-report-path>`.
-10. **Prune.** Run `hash-record-prune repo_root=<repo_root> --target <repo-relative-path>`. Removes orphaned hash directories accumulated across iterations.
+```mermaid
+flowchart TD
+    A([start]) --> RC1[result check: report]
+    RC1 -->|HIT| RET([return result to caller])
+    RC1 -->|MISS - bind report_path| LINT[markdown-hygiene-lint/SKILL.md\nauto-fix + cache check + dispatch]
+    LINT -->|ERROR| RET
+    LINT -->|clean/findings - bind lint_path| ANA[markdown-hygiene-analysis/SKILL.md\ncache check + dispatch]
+    ANA -->|ERROR| RET
+    ANA -->|clean/pass/findings - bind analysis_path| AGG[aggregate + write report.md]
+    AGG --> IC{aggregate result?}
+    IC -->|clean| PRN1[prune]
+    PRN1 --> CLEAN([return CLEAN])
+    IC -->|fail or pass| FIX[dispatch fix agent]
+    FIX -->|ERROR| RET
+    FIX -->|clean: - only skips logged| PRN2[prune]
+    PRN2 --> PASS([return pass: report_path])
+    FIX -->|fixed: - changes applied| CNT{iteration count}
+    CNT -->|3 or fewer - restart| LINT
+    CNT -->|exceeded| STOP([return findings: report_path])
+```
+
+Steps:
+
+1. **Result check (report).** Cache hit → return to caller. Miss → bind `<report_path>`.
+2. **Lint.** Follow `markdown-hygiene-lint/SKILL.md`. Sub-skill handles auto-fix, cache check, and dispatch. Bind `<lint_path>` from return.
+3. **Analysis.** Follow `markdown-hygiene-analysis/SKILL.md`. Sub-skill handles cache check and dispatch. Bind `<analysis_path>` from return.
+4. **Aggregate.** Derive combined result from `<lint_path>` and `<analysis_path>`. Write `report.md`.
+5. **Iteration check.** Clean → prune → `CLEAN`. Fail/pass → dispatch fix agent.
+   - `fixed:` — restart from step 2 (max 3 times; then return `findings:`).
+   - `clean:` — prune → `pass: <report_path>`.
+6. **Prune.** Remove orphaned hash records for this file.
 
 ### Result Check Tool
 

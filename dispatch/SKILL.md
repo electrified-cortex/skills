@@ -1,4 +1,4 @@
-﻿---
+---
 name: dispatch
 description: How to dispatch a sub-agent. Triggers — dispatch, sub-agent, isolated scope, background, background execution, background task, background agent.
 ---

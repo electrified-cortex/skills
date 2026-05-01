@@ -11,11 +11,10 @@ This skill applies to VS Code (GitHub Copilot) and Cursor only.
 | Environment | Path |
 | --- | --- |
 | VS Code / Cursor | `.github/agents/dispatch.agent.md` |
-| Claude Code CLI | `.claude/agents/dispatch.agent.md` (not this skill's scope) |
+| Claude Code CLI | `.claude/agents/dispatch.agent.md` |
 
-VS Code does NOT read `.claude/agents/`. File placed there → agent not found. Sub-agents must also live in `.github/agents/`.
-
-Source to copy: `dispatch/agents/vscode-dispatch.agent.md`.
+VS Code can read `.claude/agents/` but tends to get permissions wrong and is generally true in reverse with `.github/agents/`
+The right thing to do is simply copy these to the correct location.
 
 ## Required Frontmatter
 
@@ -72,7 +71,6 @@ Assumed similar to VS Code: same path, frontmatter rules, model name format. No 
 
 | Symptom | Cause |
 | --- | --- |
-| Agent not found | File in `.claude/agents/` not `.github/agents/` |
 | Wrong model silently | Slug in `model` field |
 | Sub-agent can't use tools | `tools` field missing or incomplete |
 | Sub-agent lacks task context | Context not inherited; hand-feed it |

@@ -5,6 +5,15 @@ description: MD rule violation scan for a .md file. Fixes known safe rules in-pl
 
 # Markdown Hygiene — Lint
 
+## Preparation
+
+Run the in-place auto-fix script on `<markdown_file_path>`:
+
+- PS7: `pwsh <this-skill-dir>/lint.ps1 <markdown_file_path>`
+- Bash: `bash <this-skill-dir>/lint.sh <markdown_file_path>`
+
+This fixes MD009 (trailing spaces), MD012 (consecutive blanks), MD047 (trailing newline) in-place before scanning.
+
 ## Cached Result check (lint)
 
 Run inline result check for `lint`. See `../markdown-hygiene-result/SKILL.md`.
