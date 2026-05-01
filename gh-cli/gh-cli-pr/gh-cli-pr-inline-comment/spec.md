@@ -36,13 +36,9 @@ REST API endpoint `/repos/{owner}/{repo}/pulls/{pull_number}/comments` via `gh a
 
 The skill must enable an agent to:
 
-- Fetch the current commit SHA from the PR head (`headRefOid`)
-- Verify the target file and line appear in the PR diff before posting
-- Post a single-line inline comment with `body`, `commit_id`, `path`, `line`, `side`
-- Post a multi-line inline comment spanning a range
-- Edit an existing inline comment by `comment_id`
-- Delete an existing inline comment by `comment_id`
-- List all inline comments on a PR
+- Route post operations to `gh-cli-pr-inline-comment-post/`
+- Route edit operations to `gh-cli-pr-inline-comment-edit/`
+- Route delete operations to `gh-cli-pr-inline-comment-delete/`
 - Diagnose and recover from 422 errors (line not in diff, wrong side, stale SHA)
 
 ## Behavior
