@@ -21,7 +21,7 @@ Parameters:
 - `result_file` (required): absolute path for the audit report file.
 - `--dot-allow` (optional): comma-separated bare dot-folder names to traverse (must match the list used by the builder for the same tree). Default: empty.
 
-Returns: an audit report written to `result_file`, and on PASS, `skill.index.sha256` written alongside each validated raw index.
+Returns: an audit report written to `result_file`.
 
 ## Verdicts
 

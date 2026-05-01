@@ -1,5 +1,5 @@
 ---
-file_path: skill-auditing/SKILL.md
+file_path: skill-auditing/spec.md
 operation_kind: markdown-hygiene-lint
 result: clean
 ---
