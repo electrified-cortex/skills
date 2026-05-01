@@ -18,11 +18,11 @@ Delete an existing inline review comment permanently.
 ## Command
 
 ```bash
-gh api --method DELETE /repos/{OWNER}/{REPO}/pulls/comments/{COMMENT_ID}
+gh api --method DELETE repos/{OWNER}/{REPO}/pulls/comments/{COMMENT_ID}
 ```
 
 ## Notes
 
 - Use `/pulls/comments/{id}` — not `/issues/comments/{id}` (different endpoint).
 - Deletion is permanent — no undo.
-- To find a comment ID: `gh api --paginate /repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments --jq '.[] | {id, path, line, body}'`
+- To find a comment ID: `gh api --paginate repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments --jq '.[] | {id, path, line, body}'`

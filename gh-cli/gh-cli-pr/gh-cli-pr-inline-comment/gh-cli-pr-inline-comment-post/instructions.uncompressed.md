@@ -18,7 +18,7 @@ Post an inline review comment anchored to a specific line in a pull request diff
 ## Prerequisites
 
 ```bash
-gh auth status
+gh auth status 2>&1
 ```
 
 ## Step 1: Fetch the Commit SHA
@@ -34,7 +34,7 @@ Save as COMMIT_SHA.
 ## Step 2: Verify the File Is in the Diff
 
 ```bash
-gh pr diff {PR_NUMBER} --name-only
+gh pr diff {PR_NUMBER} --repo {OWNER}/{REPO} --name-only
 ```
 
 If FILE_PATH is not listed, stop: the file has no changes in this PR.
@@ -46,12 +46,14 @@ If FILE_PATH is not listed, stop: the file has no changes in this PR.
 Get the full patch and parse hunk headers for the target file:
 
 ```bash
-gh pr diff {PR_NUMBER} --patch
+gh pr diff {PR_NUMBER} --repo {OWNER}/{REPO} --patch
 ```
 
 Locate the `diff --git a/{FILE_PATH}` section. For each `@@ -OLD,OLD_LEN +NEW,NEW_LEN @@` hunk header:
 - SIDE=RIGHT: valid line range is NEW to (NEW + NEW_LEN - 1)
 - SIDE=LEFT: valid line range is OLD to (OLD + OLD_LEN - 1)
+
+> **COMPACT FORM**: when a hunk spans exactly 1 line, git omits the count — `@@ -10 +10 @@` means OLD_LEN=1, NEW_LEN=1 (equivalent to `@@ -10,1 +10,1 @@`). Always treat a missing count as 1.
 
 If LINE_NUMBER falls outside all hunk ranges for FILE_PATH, stop and report:
 `Line {LINE_NUMBER} not in diff for {FILE_PATH}`
@@ -61,7 +63,7 @@ Alternatively, skip this pre-check and rely on the 422 response in Step 5 — a 
 ## Step 4: Check for Existing Comment (Deduplication)
 
 ```bash
-gh api --paginate /repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments \
+gh api --paginate repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments \
   --jq '.[] | select(.path == "{FILE_PATH}" and .line == {LINE_NUMBER}) | {id, body, author: .user.login}'
 ```
 
@@ -73,7 +75,7 @@ If a matching comment already exists, return:
 Single-line:
 
 ```bash
-gh api --method POST /repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments \
+gh api --method POST repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments \
   --field body="{BODY}" \
   --field commit_id="{COMMIT_SHA}" \
   --field path="{FILE_PATH}" \
@@ -84,7 +86,7 @@ gh api --method POST /repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments \
 Multi-line (when START_LINE is provided):
 
 ```bash
-gh api --method POST /repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments \
+gh api --method POST repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments \
   --field body="{BODY}" \
   --field commit_id="{COMMIT_SHA}" \
   --field path="{FILE_PATH}" \

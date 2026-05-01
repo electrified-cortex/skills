@@ -19,12 +19,12 @@ Update the body of an existing inline review comment.
 ## Command
 
 ```bash
-gh api --method PATCH /repos/{OWNER}/{REPO}/pulls/comments/{COMMENT_ID} \
+gh api --method PATCH repos/{OWNER}/{REPO}/pulls/comments/{COMMENT_ID} \
   --field body="{BODY}"
 ```
 
 ## Notes
 
 - Use `/pulls/comments/{id}` — not `/issues/comments/{id}` (different endpoint).
-- Comment IDs come from the list endpoint: `gh api --paginate /repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments`.
+- Comment IDs come from the list endpoint: `gh api --paginate repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments`.
 - Only `body` can be updated via this endpoint.

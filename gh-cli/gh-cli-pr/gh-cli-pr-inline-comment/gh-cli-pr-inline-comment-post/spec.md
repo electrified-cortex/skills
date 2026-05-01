@@ -61,6 +61,8 @@ fetch SHA → verify file in diff → verify line in diff → dedup check → PO
 - `gh pr diff {PR_NUMBER} -- {FILE_PATH}` fails: "accepts at most 1 arg(s), received 2". File-scoped diffs are not supported by `gh pr diff`. Use `--patch` and parse.
 - `gh auth status` output goes to stderr. Capture with `2>&1`.
 - Always pass `--repo {OWNER}/{REPO}` to `gh pr view` and `gh pr diff` when not running inside a local clone.
+- Windows Git Bash rewrites leading `/` in `gh api` paths as a filesystem path (e.g. `/repos/...` → `C:/Program Files/Git/repos/...`). Always omit the leading `/`: `repos/{OWNER}/...` not `/repos/{OWNER}/...`.
+- Compact hunk format: when a hunk spans exactly 1 line, git omits the count — `@@ -10 +10 @@` means length=1 (same as `@@ -10,1 +10,1 @@`). Treat a missing count as 1 or the range check will wrongly exclude single-line hunks.
 
 ## Constraints
 

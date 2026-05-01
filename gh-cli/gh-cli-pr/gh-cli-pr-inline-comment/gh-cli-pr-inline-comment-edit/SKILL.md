@@ -6,7 +6,7 @@ description: Edit the body of an existing inline PR review comment by comment ID
 Input: OWNER, REPO, COMMENT_ID, BODY
 
 ```bash
-gh api --method PATCH /repos/{OWNER}/{REPO}/pulls/comments/{COMMENT_ID} \
+gh api --method PATCH repos/{OWNER}/{REPO}/pulls/comments/{COMMENT_ID} \
   --field body="{BODY}"
 ```
 
