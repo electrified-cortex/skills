@@ -4,3 +4,4 @@ gh-cli-pr-create: Open pull request via GitHub CLI, gh cli pr create, gh cli pr 
 gh-cli-pr-inline-comment/: Post, edit, or delete inline code review comments on PR diff lines. Routes to sub-skills by operation, gh cli pr inline comment, gh cli pr inline comment skill, gh cli pr inline comment workflow
 gh-cli-pr-merge: Merge, update, revert, close pull request via GitHub CLI, gh cli pr merge, gh cli pr merge skill, gh cli pr merge workflow
 gh-cli-pr-review: Approve, request changes on, dismiss pull request review via GitHub CLI, gh cli pr review, gh cli pr review skill, gh cli pr review workflow
+gh-cli-pr-file-viewed: Mark or unmark one, multiple, or all files in a pull request as viewed via GitHub CLI, gh cli pr file viewed, gh cli pr mark file viewed, gh cli pr file viewed skill

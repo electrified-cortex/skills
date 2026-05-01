@@ -23,3 +23,7 @@ Merges, updates branch, reverts, or closes a pull request via the GitHub CLI.
 ## gh-cli-pr-review
 
 Approves, requests changes on, or dismisses a pull request review via the GitHub CLI.
+
+## gh-cli-pr-file-viewed
+
+Marks or unmarks one, multiple, or all changed files in a pull request as viewed via GitHub GraphQL mutations.
