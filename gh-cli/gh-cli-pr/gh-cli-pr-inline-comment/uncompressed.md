@@ -7,8 +7,6 @@ description: Post, edit, or delete inline code review comments on PR diff lines.
 
 Routes inline review comment operations to specialized sub-skills.
 
-Inline review comments are anchored to a specific file and line in the PR diff. They appear in the "Files changed" view and require a `commit_id` and `path` — unlike general PR comments.
-
 ## Operation Routing
 
 | Operation | Sub-skill | Notes |

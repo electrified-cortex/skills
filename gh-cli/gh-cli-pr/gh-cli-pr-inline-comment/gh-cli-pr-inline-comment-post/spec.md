@@ -55,3 +55,10 @@ fetch SHA → verify file in diff → verify line in diff → dedup check → PO
 | 422 `position` rejected | Deprecated param used | Replace with `line` + `side` |
 | 404 | Wrong repo or PR number | Verify owner/repo |
 | 403 | No write access | Check auth |
+
+## Constraints
+
+- Step order is fixed: fetch SHA -> verify file -> verify line -> dedup -> POST. Never skip.
+- Never use the deprecated `position` parameter. Always use `line` + `side`.
+- `commit_id` must be fetched fresh each invocation — never reuse a cached SHA.
+- Edit and delete operations are out of scope — see sibling sub-skills.
