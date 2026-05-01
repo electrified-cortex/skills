@@ -35,3 +35,4 @@ Full reports: `.optimization/<slug>.md`
 | AUTONOMY LEVEL | 2026-04-30 | Claude Sonnet 4.6 | 1 (LOW) | acted | Added autonomy model statement to What This Skill Does section |
 | CONTEXT BUDGET | 2026-04-30 | Claude Sonnet 4.6 | 0 | clean | Two-tier dispatch (lean qualifier + targeted analyzer) is correctly calibrated |
 | CONTEXT SENSITIVITY | 2026-04-30 | Claude Sonnet 4.6 | 1 (LOW) | acted | Added guard for invalid direct topic slug in Step 3 |
+| CACHING | 2026-05-01 | Claude Sonnet 4.6 | 1 (LOW) | acted | Added Step 2b guard — skip explicit topic if already clean/acted/rejected |

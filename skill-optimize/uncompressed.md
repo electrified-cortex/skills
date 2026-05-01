@@ -78,6 +78,19 @@ Note the verdict. Proceed regardless — this is informational only.
 
 ---
 
+## Step 2b — Explicit Topic Guard
+
+If `<topic>` was explicitly provided AND the optimize log exists AND the log
+contains a row for `<topic>` with status `clean`, `acted`, or `rejected`:
+
+```md
+SKIP: <topic> already <status> — pass --force to re-analyze
+```
+
+Stop. Pass `--force` to bypass this guard and re-run the analysis.
+
+---
+
 ## Step 3 — Assessor Pass
 
 Goal: pick the best topic to analyze next.

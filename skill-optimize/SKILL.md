@@ -47,6 +47,10 @@ Step 2a — Pre-flight Audit Check:
 
 Run `pwsh result.ps1 <skill-path>` from `skill-auditing/` dir. Note verdict; proceed regardless.
 
+Step 2b — Explicit Topic Guard:
+
+If `<topic>` provided AND log exists AND `<topic>` row status is `clean`, `acted`, or `rejected` → emit `SKIP: <topic> already <status> — pass --force to re-analyze` and stop. (Bypass with `--force` flag.)
+
 Step 3 — Assessor Pass:
 
 Pick best next topic. Skip if `<topic>` provided — verify `topics/<topic>.md` exists; missing → `ERROR: topic file not found at topics/<topic>.md`. Go to Step 4.
