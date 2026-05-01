@@ -17,7 +17,7 @@ lint or analysis executor sub-agents — those follow their own `instructions.tx
 
 ## Pipeline Overview
 
-```
+```text
 glob
  │
  ▼
@@ -33,10 +33,11 @@ Phase 2 — Distributed lint (Haiku-class, parallel)
   one markdown-hygiene-lint dispatch per file
  │
  ▼
-Phase 3 — Analysis miss filter (free)
-  misses.ps1 <glob> markdown-hygiene analysis.md
- │
- ▼  files without a cached analysis record
+Phase 3 — Analysis cost gate (confirmation required)
+  misses.ps1 <glob> markdown-hygiene analysis.md  → count N
+  prompt: "Dispatch N Sonnet agents? [yes / no / list]"
+ │  (stop here if operator declines)
+ ▼  operator confirmed
 Phase 4 — Distributed analysis (Sonnet-class, parallel)
   one markdown-hygiene-analysis dispatch per file
 ```
@@ -85,16 +86,35 @@ Each agent writes its own `lint.md` cache record and returns `clean:` or
 
 **Model class:** Haiku (cheap, deterministic pattern-matching only).
 
-### Phase 3 — Analysis Miss Filter
+### Phase 3 — Analysis Cost Gate (confirmation required)
 
-**Tool:** `hash-record/hash-record-check/misses.ps1`
+Before running any analysis, the orchestrator **must** pause and ask the
+operator or calling agent whether to proceed.
+
+The orchestrator first runs the miss probe to produce a count:
 
 ```powershell
 $analysisMisses = pwsh misses.ps1 <glob> markdown-hygiene analysis.md
 ```
 
-Re-runs the miss probe for `analysis.md`. Some files may already have an
-analysis record from a prior run. Only files without one are dispatched.
+Then surfaces a confirmation prompt before dispatching anything:
+
+```text
+Analysis will dispatch <N> Sonnet-class agents for <N> uncached files.
+This incurs real token cost. Proceed? [yes / no / list]
+```
+
+- `yes` — proceed to Phase 4.
+- `no` — stop here; lint records are already cached and usable.
+- `list` — show the file paths in `$analysisMisses` before asking again.
+
+**Do not skip this gate.** Analysis is optional and expensive. If the caller
+is an automated pipeline with no interactive channel, it must pass an explicit
+`--run-analysis` flag (or equivalent) to bypass the gate programmatically —
+silence is not consent.
+
+If `$analysisMisses` is empty (all files already cached), skip the gate
+entirely and report that analysis is already complete.
 
 ### Phase 4 — Distributed Analysis (Sonnet-class)
 
@@ -115,8 +135,8 @@ writes `analysis.md`, and returns `clean:`, `pass:`, or `findings:`.
 | 0     | Free       | Pure PowerShell, git hash-object probe             |
 | 1     | Free       | markdownlint --fix, no LLM                         |
 | 2     | Haiku × N  | N = count of lint misses; parallelised             |
-| 3     | Free       | Same as Phase 0 but for analysis.md                |
-| 4     | Sonnet × M | M ≤ N; files already analysed are excluded         |
+| 3     | Free       | Miss probe + confirmation gate; operator may stop  |
+| 4     | Sonnet × M | M ≤ N; only runs with explicit operator approval   |
 
 On repeat runs against the same glob, Phases 0 and 3 will return smaller sets
 as the cache fills. Incremental runs converge toward zero agent cost.
