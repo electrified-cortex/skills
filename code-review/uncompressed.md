@@ -13,13 +13,13 @@ Dispatch zero-context sub-agents per tier. NEVER read or interpret `instructions
 
 Claude Code: `Agent` tool. Pass: "Read and follow `instructions.txt` here. Input: `change_set=<form> tier=smoke [focus=<csv>] [context_pointer=<path>]`"
 
-VS Code / Copilot: `runSubagent(model: "Claude Haiku 4.5 (Copilot)", prompt: "Read and follow \`instructions.txt\` in this directory. Input: \`change_set=<form> tier=smoke [focus=<csv>] [context_pointer=<path>]\`")`
+VS Code / Copilot: `runSubagent(model: "Claude Haiku 4.5 (Copilot)", prompt: "Read and follow \`instructions.txt\` in this directory. Input: `change_set=<form> tier=smoke [focus=<csv>] [context_pointer=<path>]`")`
 
 **Substantive pass** (`tier=substantive`) — Sonnet-class / standard:
 
 Claude Code: `Agent` tool. Pass: "Read and follow `instructions.txt` here. Input: `change_set=<form> tier=substantive prior_findings=<json> [focus=<csv>] [context_pointer=<path>]`"
 
-VS Code / Copilot: `runSubagent(model: "Claude Sonnet 4.6 (Copilot)", prompt: "Read and follow \`instructions.txt\` in this directory. Input: \`change_set=<form> tier=substantive prior_findings=<json> [focus=<csv>] [context_pointer=<path>]\`")`
+VS Code / Copilot: `runSubagent(model: "Claude Sonnet 4.6 (Copilot)", prompt: "Read and follow \`instructions.txt\` in this directory. Input: `change_set=<form> tier=substantive prior_findings=<json> [focus=<csv>] [context_pointer=<path>]`")`
 
 ## Orchestration
 
