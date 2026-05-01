@@ -16,6 +16,7 @@ the full story.
 | [gh-cli](gh-cli/) | GitHub CLI operations — routes to domain-specific sub-skills via agent dispatch |
 | [markdown-hygiene](markdown-hygiene/) | Fix all markdownlint violations in a `.md` file — zero-error gate before stamping or committing |
 | [skill-auditing](skill-auditing/) | Audit a skill for quality, classification, cost, and compliance with the skill-writing spec |
+| [skill-optimize](skill-optimize/) | Analyze a skill for architectural and structural improvement — intelligence over rules, Sonnet-class judgment |
 | [skill-index](skill-index/) | Cascading per-directory index system for agent skill discovery without filesystem walks |
 | [skill-writing](skill-writing/) | How to write skills — inline vs dispatch decision, folder conventions, quality criteria, audit gate |
 | [spec-auditing](spec-auditing/) | Audit spec/companion pairs for drift and consistency |
@@ -137,6 +138,12 @@ The complement to tool writing. Tool auditing runs a seven-check checklist — c
 As the skill library grew, filesystem walks became expensive and unreliable. The skill-index toolkit introduces a cascading per-directory index system: a builder produces a raw `skill.index` and an LLM-authored `skill.index.md` overlay; an auditor validates the cascade and writes a SHA-256 stamp on PASS; a crawler consumes the cascade to locate a skill by name without touching the filesystem. The stamp is a sign-off artifact — its absence after a build signals "unaudited," not "needs rebuild."
 
 [Read more](skill-index/)
+
+### Skill Optimize
+
+Auditing catches rule violations; optimizing catches missed opportunities. Skill optimize applies an engineering lens — not "what should I say?" but "what contract am I fulfilling, and what is the minimum that satisfies it?" It dispatches topic analysis to sub-agents, records findings in an optimize-log, and never modifies source files. Topics cycle through an assessor pass that selects the highest-value candidate, then a dedicated sub-agent writes a structured finding. The skill is Sonnet-class by design: questions like whether dispatch vs inline is the right call, whether a hash record would eliminate redundant work, or whether an LLM step can be replaced by a deterministic tool require judgment that cannot be reduced to a checklist.
+
+[Read more](skill-optimize/)
 
 ## License
 
