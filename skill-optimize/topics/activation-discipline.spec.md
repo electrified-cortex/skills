@@ -10,8 +10,8 @@ the calling agent's context as reliably as a skill with bloated instructions.
 
 ## Parameters
 
-- <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)
-- <skill-source-files> — all source files from the skill directory (inherited from Step 1)
+- `<skill-path>` — path to the skill directory being analyzed (inherited from optimizer invocation)
+- `<skill-source-files>` — all source files from the skill directory (inherited from Step 1)
 
 ## Output
 
