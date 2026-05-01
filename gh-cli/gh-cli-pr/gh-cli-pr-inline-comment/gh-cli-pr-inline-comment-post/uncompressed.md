@@ -27,11 +27,12 @@ This is the complex operation: before POSTing, the sub-agent must fetch the PR h
 `<instructions>` = `instructions.txt` (NEVER READ)
 `<instructions-abspath>` = absolute path to `<instructions>` in this skill folder
 `<input-args>` = `OWNER={OWNER} REPO={REPO} PR_NUMBER={PR_NUMBER} FILE_PATH={FILE_PATH} LINE_NUMBER={LINE_NUMBER} BODY={BODY} SIDE={SIDE} START_LINE={START_LINE}`
-`<tier>` = fast-cheap
+`<tier>` = fast-cheap — scripted API sequence; sub-agent executes fixed CLI steps, no LLM judgment required
 `<description>` = post inline PR comment on {FILE_PATH}:{LINE_NUMBER}
 `<prompt>` = Read and follow `<instructions-abspath>`. Input: `<input-args>`
 
 Follow dispatch skill: `../../../../dispatch/SKILL.md`
+Should return: `{ "status": "posted" | "duplicate" | "error", "comment_id": <id or null>, "message": "<one line>" }`
 
 ## Return
 
