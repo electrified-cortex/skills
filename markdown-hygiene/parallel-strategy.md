@@ -18,7 +18,7 @@ pwsh markdown-hygiene/markdown-hygiene-lint/lint.ps1 @lintMisses
 
 ## Step 3 — Lint (parallel, Haiku-class)
 
-Dispatch one `markdown-hygiene-lint` agent per file in `$lintMisses`. Run parallel (8–16 concurrent). Each returns `clean:` or `findings: <path>`.
+Dispatch one `markdown-hygiene-lint` agent per file in `$lintMisses`. Run parallel if possible (3–8 concurrent). Each returns `clean:` or `findings: <path>`.
 
 ## Step 4 — Analysis gate
 
