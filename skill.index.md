@@ -38,7 +38,7 @@ Supports prune accumulated artifacts, session-log hygiene, audit-report sweep, h
 
 ## markdown-hygiene
 
-Supports Fix markdownlint violations in a md file Triggers — fix markdown, lint markdown, normalize formatting, clean.
+Full markdown hygiene pipeline covering lint fixes, MD rule scanning, and semantic advisory analysis for .md files.
 
 ## session-logging
 
@@ -51,6 +51,10 @@ Supports Audit a skill for quality, classification, cost, and compliance with th
 ## skill-index
 
 Supports Root skill for the skill-index toolkit Governs sub-skills that let agents discover available skills by readin.
+
+## skill-optimize
+
+Analyzes a single skill for architectural and structural improvement by dispatching focused topic analyses to sub-agents.
 
 ## skill-writing
 

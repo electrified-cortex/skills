@@ -2,24 +2,24 @@
 
 ## gh-cli-pr
 
-Supports Entry point for pull request management via the GitHub CLI. Handles common PR inspection and routes write operations to sub-skills.
+Entry point for pull request management via the GitHub CLI; handles common PR inspection and routes write operations to sub-skills.
 
 ## gh-cli-pr-comments
 
-Supports Add, edit, delete general pull request comments via GitHub CLI.
+Adds, edits, or deletes general pull request comments via the GitHub CLI.
 
 ## gh-cli-pr-create
 
-Supports Open pull request via GitHub CLI.
+Opens a pull request via the GitHub CLI.
 
-## gh-cli-pr-inline-comments
+## gh-cli-pr-inline-comment
 
-Supports Post, edit, delete inline code review comments on PR diff lines via GitHub CLI.
+Routes inline code review comment operations (post, edit, delete) on PR diff lines to the appropriate sub-skill.
 
 ## gh-cli-pr-merge
 
-Supports Merge, update, revert, close pull request via GitHub CLI.
+Merges, updates branch, reverts, or closes a pull request via the GitHub CLI.
 
 ## gh-cli-pr-review
 
-Supports Approve, request changes on, dismiss pull request review via GitHub CLI.
+Approves, requests changes on, or dismisses a pull request review via the GitHub CLI.
