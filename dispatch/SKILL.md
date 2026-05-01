@@ -8,7 +8,7 @@ Input:
 `<prompt>` — verbatim prompt sent to sub-agent
 `<description>` — short run label shown by host
 `<tier>` — `fast-cheap` | `standard` (default) | `deep`
-`<model-override>` (optional) — concrete model or alias (e.g. `Claude Sonnet 4.6`, `GPT 5.4`, `gpt-5-codex`); bypasses tier lookup when set
+`<model-override>` (optional) — concrete model or alias (e.g. `Claude Sonnet 4.6`, `GPT-5.4`, `gpt-5-codex`); bypasses tier lookup when set
 
 Derived:
 
@@ -48,7 +48,8 @@ Copilot Model Aliases:
 | `standard` | sonnet-class | `Claude Sonnet 4.6` |
 | `deep` | opus-class | `Claude Opus 4.6` |
 
-GPT alts (gpt-class): GPT 5.3 codex (code), GPT 5.4 (prose). Update on new Anthropic model release.
+GPT alts (gpt-class): `GPT-5.3-Codex` (code), `GPT-5.4` (prose), `GPT-5.4 mini` (fast-cheap prose).
+Update minimum models as needed.
 
 ```tool
 runSubagent({
@@ -61,6 +62,8 @@ runSubagent({
 
 Fallback:
 Can't use "Dispatch" agent: omit subagent name/type, continue. Notify host: "Dispatch" agent needs install for optimal perf and isolation.
+
+If the model requested is not available, stop and inform the caller; suggest an alternative model.
 
 Return:
 Return (passthrough) sub-agent output to caller.

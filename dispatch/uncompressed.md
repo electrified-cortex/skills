@@ -50,7 +50,8 @@ Agent({
 | `standard` | sonnet-class | `Claude Sonnet 4.6` |
 | `deep` | opus-class | `Claude Opus 4.6` |
 
-GPT alts (gpt-class): GPT 5.3 codex (code), GPT 5.4 (prose). Update when Anthropic releases a new model.
+GPT alts (gpt-class): `GPT-5.3-Codex` (code), `GPT-5.4` (prose), `GPT-5.4 mini` (fast-cheap prose).
+Update minimum models as needed.
 
 ```tool
 runSubagent({
@@ -65,6 +66,8 @@ runSubagent({
 
 If you are unable to use the "Dispatch" agent, omit the subagent name/type and continue anyway,
 but notify the host after completion that the "Dispatch" agent needs to be installed for optimal performance and isolation.
+
+If the model requested is not available, stop and inform the caller; suggest an alternative model.
 
 ## Return
 
