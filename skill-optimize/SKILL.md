@@ -29,7 +29,7 @@ Allowed write targets (inside the **target skill's** directory): `<skill-path>/o
 
 Step 2 — Check Optimize Log:
 
-Log: `<skill-path>/optimize-log.md`. Read if exists; exclude `clean`/`rejected`/`acted` from candidates. No log → first pass.
+Log: `<skill-path>/optimize-log.md`. Read if exists. Any topic with any log entry is excluded from candidate selection in Step 3a. No log → first pass.
 
 ```markdown
 (H1) Optimize Log: <skill-name>
@@ -41,7 +41,9 @@ Log: `<skill-path>/optimize-log.md`. Read if exists; exclude `clean`/`rejected`/
 | CACHING  | 2026-04-29 | Sonnet | 0 | clean   | No change. |
 ```
 
-Status: `pending` | `acted` | `deferred` | `rejected` | `clean`
+Status: `qualified` (verdict in Action) | `pending` | `acted` | `deferred` | `rejected` | `clean`
+
+Action for `qualified` rows: `yes — <reason>` / `maybe — <what tips it>` / `no — <reason>`
 
 Step 2a — Pre-flight Audit Check:
 
@@ -55,51 +57,38 @@ Step 3 — Assessor Pass:
 
 Pick best next topic. Skip if `<topic>` provided — verify `topics/<topic>.md` exists; missing → `ERROR: topic file not found at topics/<topic>.md`. Go to Step 4.
 
-Assessor model: Sonnet-class.
+3a — Candidate Selection (Host, mechanical):
 
-3a — Qualifier (Haiku-class, one call):
+1. Read `topics/_index.md` — fixed priority-ordered list
+2. Remove any topic already in the optimize-log (any status, including `qualified`)
+3. Take top 3 remaining in order
 
-Pass: source files (Step 1), ordered candidates (unanalyzed, not `clean`/`rejected`/`acted`, priority-sorted), one-line descriptions.
+None remaining → `No unqualified topics remaining — all topics logged.`
+
+3b — Qualifier (Haiku-class, one call):
+
+Pass: source files (Step 1), the 3 candidates from 3a, one-line descriptions.
 
 ```text
-Read the skill files below.
-Scan the following topic list in order.
-Return the FIRST topic that applies. Short-circuit at first match.
-
-Format:
-TOPIC: <SLUG>
-APPLICABLE: yes | maybe
-REASON: <one sentence>
-
-If none apply: TOPIC: none
+For each topic, assess whether it applies to this skill.
+Format: TOPIC: <SLUG> | APPLICABLE: yes | no | maybe | REASON: <one sentence>
+For `maybe`: reason must explain what would tip it yes or no.
+Return a result for every topic.
 ```
 
-Second candidate: one extra call starting after prev slug. No further chaining.
+Log all 3 results immediately as `qualified` rows (Step 5a).
 
-3b — Assessor Decision:
+3c — Assessor Decision (Sonnet-class host):
 
-Pick one `yes`/`maybe` topic most likely to yield HIGH finding.
-`TOPIC: none` → `No applicable topics found — all logged or none apply.`
+Read all `qualified: yes/maybe` rows. Pick topic most likely to yield HIGH finding.
 
-Tie-breaking: 1. `yes` > `maybe` 2. Structural > stylistic 3. Shorter spec 4. Default: DISPATCH → CACHING → DETERMINISM → INTERFACE CLARITY → LESS IS MORE
+No yes/maybe rows → `No applicable topics found — all qualified topics returned no.`
+
+Tie-breaking: 1. `yes` > `maybe` 2. Structural > stylistic 3. Shorter spec
 
 Emit: `Assessor selected: <TOPIC-SLUG> — <one-line reason>`. `assess-only` → stop.
 
-Fallback (no dispatch):
-
-| Signal | Topic |
-| ------ | ----- |
-| Expensive/repetitive, no cache | HASH RECORD |
-| Sub-agents or external tools | DISPATCH |
-| Steps replaceable via regex/file/git | DETERMINISM |
-| Contract undocumented | INTERFACE CLARITY |
-| Description vague or similar to neighbors | TOOL SIGNATURES |
-| Instructions long relative to scope | LESS IS MORE |
-| Judgment calls, no review | SELF CRITIQUE |
-| No output schema; format varies | OUTPUT FORMAT |
-| Loops, no hard cap | ITERATION SAFETY |
-| Version refs pinned | TEMPORAL DECAY |
-| Default | DISPATCH |
+Fallback (no dispatch): Skip 3b. Read `topics/_index.md` for priority order. Assess top 3 candidates inline. Log as `qualified`. Proceed to 3c.
 
 Step 4 — Topic Analysis (Dispatched):
 
@@ -131,10 +120,12 @@ CLEAN → `clean`. Findings → record. Missing `### CATEGORY` or `**Reasoning:*
 
 Step 5 — Record Results:
 
-5a: Append to `<skill-path>/optimize-log.md`:
-`| <TOPIC> | <date> | <model> | <N> | <status> | <action> |`
+After 3b: append one `qualified` row per topic to log (Haiku-class, status `qualified`, Action: verdict + reason).
+After 4: update selected topic row from `qualified` to final status.
 
-Status: `acted` | `deferred` | `rejected` | `clean` | `audit-candidate`. No log → create with Step 2 header.
+5a: `| <TOPIC> | <date> | <model> | <N> | <status> | <action> |`
+
+Status: `qualified` | `acted` | `deferred` | `rejected` | `clean` | `audit-candidate`. No log → create with Step 2 header.
 
 5b: Write `<skill-path>/.optimization/<slug>.md`:
 

@@ -17,17 +17,6 @@ Run `result` tool (in this folder), whichever your runtime has. DON'T READ the s
 If `stdout` is `MISS: <abs-path>` -> bind `<report_path>` = `<abs-path>`, continue to Preparation.
 Otherwise -> emit `stdout` verbatim, stop.
 
-## Preparation
-
-Pre-audit markdown-hygiene sweep. For each `.md` file in `<skill_dir>` (one by one, sequentially):
-
-- Run `markdown-hygiene` skill on that file (per `../markdown-hygiene/SKILL.md`).
-- If `markdown-hygiene` returns `findings: <report-path>` after its own 3-iteration loop, stop audit and surface: `ERROR: pre-audit markdown-hygiene failed on <file>: <report-path>`.
-- If `markdown-hygiene` returns `ERROR: <reason>`, stop and surface.
-- Continue when CLEAN.
-
-Proceed only when every `.md` in `<skill_dir>` is CLEAN per `markdown-hygiene`.
-
 ## Inspect
 
 Variables:

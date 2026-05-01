@@ -37,12 +37,9 @@ If none of these exist, stop: `ERROR: no skill source files found at <skill-path
 
 The optimize log is at `<skill-path>/optimize-log.md` — written into the target skill's own directory.
 
-If it exists, read it. The log records which topics have been analyzed,
-when, and what was found. Use it to:
-
-- Skip topics already marked `clean` or `rejected`
-- Pick up from where the last session left off
-- Avoid repeating analysis the owner already reviewed and decided on
+If it exists, read it. Any topic with any log entry (any status) is excluded
+from candidate selection in Step 3a — the host subtracts the full logged set
+from the `_index.md` list before sending candidates to the qualifier.
 
 If no log exists, proceed — this is the first pass.
 
@@ -61,13 +58,14 @@ If no log exists, proceed — this is the first pass.
 
 Status values:
 
-- `pending` — finding exists, not yet reviewed by owner
+- `qualified` — qualifier ran; verdict + reasoning in Action field. Awaiting assessor pick.
+- `pending` — analyzer ran, finding exists, not yet reviewed by owner
 - `acted` — skill was changed based on this finding
 - `deferred` — finding reviewed, owner chose not to act yet
 - `rejected` — finding reviewed and does not apply
 - `clean` — no findings for this topic
 
-Action values: free-text one-line summary of what was done (or `—` if none).
+Action values: free-text one-line summary of what was done (or `—` if none). For `qualified` rows: `yes — <reason>` / `maybe — <what would tip it yes or no>` / `no — <reason>`.
 
 ---
 
@@ -99,59 +97,54 @@ Skip this step if `<topic>` was explicitly provided. First verify
 `<skill-optimize-root>/topics/<topic>.md` exists. If not found, stop:
 `ERROR: topic file not found at topics/<topic>.md`. Then go to Step 4.
 
-**Assessor model:** Sonnet-class (standard). The assessor makes the final
-pick — it does not read topic specs itself. It reads qualifier signals and
-decides.
+### 3a — Candidate Selection (Host, mechanical)
 
-### 3a — Qualifier Dispatch (Haiku-class, batched)
+No model needed. Host does this deterministically:
+
+1. Read `topics/_index.md` — the fixed priority-ordered topic list
+2. Remove any topic already present in the optimize-log (any status, including `qualified`)
+3. Take the top 3 remaining in order
+
+If fewer than 3 unlogged topics remain, use however many there are.
+If none remain, stop and emit:
+`No unqualified topics remaining — all topics logged.`
+
+### 3b — Qualifier Dispatch (Haiku-class)
 
 Dispatch one Haiku-class qualifier agent. Give it:
 
 - All skill source files (from Step 1)
-- The ordered candidate topic list — all unanalyzed topics not in the log
-  as `clean`/`rejected`/`acted`, sorted by natural priority tier. Priority
-  order: tier 1 (structural) — DISPATCH, CACHING, DETERMINISM, COMPOSITION,
-  MODEL-SELECTION; tier 2 (stylistic) — COMPRESSIBILITY, WORDING,
-  LESS-IS-MORE, REUSE, OUTPUT-FORMAT; tier 3 — all remaining. Full topic
-  list: read from `topics/` directory.
-- One-line descriptions only — not full topic specs
+- The 3 candidate topics from 3a, with one-line descriptions only (not full specs)
 
 Prompt:
 
 ```text
-Read the skill files below.
-Scan the following topic list in order.
-Return the FIRST topic that applies to this skill.
-Short-circuit: stop at the first match.
+For each topic below, assess whether it applies to this skill.
 
-Format:
-TOPIC: <SLUG>
-APPLICABLE: yes | maybe
-REASON: <one sentence>
+Format (one line per topic):
+TOPIC: <SLUG> | APPLICABLE: yes | no | maybe | REASON: <one sentence>
 
-If none apply: TOPIC: none
+For `maybe`: the reason must explain what would tip it to yes or no.
+For `no`: one sentence explaining why it does not apply.
+
+Return a result for every topic. Do not skip any.
 ```
 
-One dispatch call. One result. Move to 3b.
+One dispatch call. Log all 3 results immediately as `qualified` rows (Step 5a).
 
-To find a second candidate (after acting on the first), run at most one
-additional qualifier call, starting from the topic after the previously
-returned slug. Do not chain more qualifier calls in a single invocation.
+### 3c — Assessor Decision (Sonnet-class host)
 
-### 3b — Assessor Decision
+Read all `qualified` rows in the log where Action starts with `yes` or `maybe`.
+Pick the single topic most likely to yield a HIGH finding for this specific skill.
 
-Review qualifier results. From topics marked `yes` or `maybe`, pick the
-single topic most likely to yield a HIGH finding.
+If no `yes` or `maybe` rows exist, stop and emit:
+`No applicable topics found — all qualified topics returned no.`
 
-If qualifier returned `TOPIC: none`, stop and emit:
-`No applicable topics found — all topics already logged or none apply to this skill.`
-
-Tie-breaking priority:
+Tie-breaking (when expected yield is unclear):
 
 1. `yes` over `maybe`
-2. Structural before stylistic (DISPATCH, CACHING, DETERMINISM before WORDING, COMPRESSIBILITY)
+2. Structural before stylistic
 3. Shorter topic spec (faster analysis, same expected yield)
-4. Default: DISPATCH → CACHING → DETERMINISM → INTERFACE CLARITY → LESS IS MORE
 
 Emit: `Assessor selected: <TOPIC-SLUG> — <one-line reason>`
 
@@ -159,21 +152,9 @@ If in `assess-only` mode, stop here.
 
 **Fallback — inline qualification (no dispatch available):**
 
-Skip 3a. Read the skill and use these heuristics directly:
-
-| Signal | First topic |
-| ------ | ----------- |
-| Expensive or repetitive work, no log/cache mechanism | HASH RECORD |
-| Spawns sub-agents or calls external tools | DISPATCH |
-| Steps that could be regex / file check / git command | DETERMINISM |
-| Contract (inputs/outputs) not documented | INTERFACE CLARITY |
-| Description is vague or similar to neighboring skills | TOOL SIGNATURES |
-| Instructions are very long relative to task scope | LESS IS MORE |
-| Makes judgment calls with no review step | SELF CRITIQUE |
-| No output schema; output format varies | OUTPUT FORMAT |
-| Iterates or loops with no hard cap | ITERATION SAFETY |
-| External version references / model name pinned | TEMPORAL DECAY |
-| Default | DISPATCH |
+Skip 3b. Read `topics/_index.md` for the priority order, then read the skill
+and assess each of the top 3 candidates yourself using the same yes/no/maybe
+criteria. Log them as `qualified` and proceed to 3c.
 
 ---
 
@@ -245,11 +226,18 @@ in the log and stop. Do not attempt to parse or use a malformed response.
 
 ## Step 5 — Record Results
 
-**5a — Append one row** to `<skill-path>/optimize-log.md`:
+**5a — Append rows** to `<skill-path>/optimize-log.md`:
 
 | `<TOPIC>` | `<today's date>` | `<model>` | `<N findings>` | `<status>` | `<one-line action summary>` |
 
-Status: `acted` | `deferred` | `rejected` | `clean` | `audit-candidate`
+After 3b (qualifier): append one row per qualified topic immediately:
+- Status: `qualified`
+- Model: Haiku-class
+- Findings: `—`
+- Action: `yes — <reason>` / `maybe — <what would tip it>` / `no — <reason>`
+
+After 4 (analyzer): update the selected topic's row — change status from `qualified` to the
+final status: `pending` | `acted` | `deferred` | `rejected` | `clean` | `audit-candidate`
 
 If the log does not exist, create it using the header format from Step 2.
 
