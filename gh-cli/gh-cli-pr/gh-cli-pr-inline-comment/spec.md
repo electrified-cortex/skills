@@ -1,9 +1,19 @@
 ---
-name: gh-cli-pr-inline-comments
+name: gh-cli-pr-inline-comment
 description: Spec for posting, editing, and deleting inline code review comments on pull request diffs via GitHub CLI.
 ---
 
-# gh-cli-pr-inline-comments — Spec
+# gh-cli-pr-inline-comment — Spec
+
+## Architecture
+
+This is a routing skill. Operations are handled by sub-skills:
+
+| Sub-skill | Operation |
+| --------- | --------- |
+| `gh-cli-pr-inline-comment-post/` | Create inline comment (complex: SHA, diff verify, dedup, POST) |
+| `gh-cli-pr-inline-comment-edit/` | Edit comment body by ID |
+| `gh-cli-pr-inline-comment-delete/` | Delete comment by ID |
 
 ## Purpose
 
