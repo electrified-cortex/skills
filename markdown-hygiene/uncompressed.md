@@ -5,6 +5,8 @@ description: Full markdown hygiene pass on a .md file — lint fixes, MD rule sc
 
 # Markdown Hygiene
 
+If attempting to lint multiple files, read `parallel-strategy.md` to help optimize; otherwise continue.
+
 ## Input
 
 `<markdown_file_path>` — absolute path to the `.md` file to process.

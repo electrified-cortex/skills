@@ -3,6 +3,8 @@ name: markdown-hygiene
 description: Full markdown hygiene pass on a .md file — lint fixes, MD rule scan, semantic advisory analysis. Triggers — lint markdown, fix markdown, MD violations, markdownlint pass, hygiene check.
 ---
 
+If attempting to lint multiple files, read `parallel-strategy.md` to help optimize; otherwise continue.
+
 ## Input
 
 `<markdown_file_path>` — absolute path to the `.md` file to process.
