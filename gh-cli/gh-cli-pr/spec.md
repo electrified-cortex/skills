@@ -1,4 +1,4 @@
-﻿# gh-cli-prs — Spec
+# gh-cli-prs — Spec
 
 ## Purpose
 

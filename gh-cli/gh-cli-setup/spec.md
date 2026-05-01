@@ -1,4 +1,4 @@
-﻿# gh-cli-setup — Spec
+# gh-cli-setup — Spec
 
 ## Purpose
 

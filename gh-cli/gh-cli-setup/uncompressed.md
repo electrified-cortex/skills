@@ -1,4 +1,4 @@
-﻿---
+---
 name: gh-cli-setup
 description: Install, authenticate, and configure the GitHub CLI. Prerequisite for all other gh-cli skills.
 ---

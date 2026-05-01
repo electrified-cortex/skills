@@ -35,11 +35,12 @@ Variables:
 `<instructions>` = `instructions.txt` (NEVER READ)
 `<instructions-abspath>` = absolute path to `<instructions>`
 `<input-args>` = `skill_dir=<skill_dir> --report-path <report_path>`
-`<tier>` = `fast-cheap`
+`<tier>` = `standard` — audit requires judgment; fast-cheap models miss nuances
 `<description>` = `Auditing skill: <skill_dir>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
 Follow `dispatch` skill. See `../dispatch/SKILL.md`.
+Should return: `PASS: <path>` | `NEEDS_REVISION: <path>` | `FAIL: <path>` | `ERROR: <reason>`
 If returns `ERROR: <reason>` -> stop, surface reason.
 
 ## Inline result check (post-execute)

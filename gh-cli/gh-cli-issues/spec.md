@@ -1,4 +1,4 @@
-﻿# gh-cli-issues — Spec
+# gh-cli-issues — Spec
 
 ## Purpose
 

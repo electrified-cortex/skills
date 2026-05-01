@@ -18,9 +18,19 @@ Every indexed directory receives exactly two files from the builder:
 
 The integrity stamp (`skill.index.sha256`) is written by the auditor after a PASS verdict, not by the builder. Absence of a stamp after a build means "unaudited since last build," not "needs rebuild."
 
-## Invocation
+## Dispatch
 
-Without reading `instructions.txt` yourself, use a Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory). Input: `root=<path> [--dot-allow <name,...>] [--rebuild]`"
+Variables:
+
+`<instructions>` = `instructions.txt` (NEVER READ)
+`<instructions-abspath>` = absolute path to `<instructions>`
+`<input-args>` = `root=<path> [--dot-allow <name,...>] [--rebuild]`
+`<tier>` = `standard` — generative index writing requires reliable output quality
+`<description>` = `Skill Index Build: <path>`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+
+Follow `dispatch` skill. See `../../dispatch/SKILL.md`.
+Should return: change manifest (nodes created, updated, unchanged, blocked, broken-shortcut, skipped)
 
 Parameters:
 

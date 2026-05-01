@@ -1,4 +1,4 @@
-﻿---
+---
 name: gh-cli-issues
 description: Manage GitHub issues using the gh issue subcommand. Full lifecycle: create, list, view, edit, comment, close, transfer.
 ---

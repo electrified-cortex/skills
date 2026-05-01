@@ -6,7 +6,17 @@ description: >-
   the builder.
 ---
 
-Dispatch (Dispatch agent, zero context): "Read and follow `instructions.txt` (in this directory). Input: `root=<path> result_file=<path> [--dot-allow <name,...>]`"
+## Dispatch
+
+`<instructions>` = `instructions.txt` (NEVER READ)
+`<instructions-abspath>` = absolute path to `<instructions>`
+`<input-args>` = `root=<path> result_file=<path> [--dot-allow <name,...>]`
+`<tier>` = `standard` — structural walk with stamp verification requires reliable judgment
+`<description>` = `Skill Index Audit: <path>`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+
+Follow `dispatch` skill. See `../../dispatch/SKILL.md`.
+Should return: audit report at `result_file` with verdict `ok` | `rebuild-needed` | `inconclusive`
 
 `root` (required): abs path to cascade's invocation root.
 `result_file` (required): abs path for audit report.

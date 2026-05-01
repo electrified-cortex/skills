@@ -3,7 +3,7 @@ name: gh-cli-projects
 description: Create, manage GitHub Projects v2 boards, items, fields via CLI.
 ---
 
-Commands use project numbers, not names. Resolve name → number first:
+Commands use project numbers, not names. Resolve name -> number first:
 
 ```bash
 gh project list --owner owner --format json --jq '.projects[] | select(.title=="My Project") | .number'

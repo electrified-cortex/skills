@@ -1,4 +1,4 @@
-﻿---
+---
 name: gh-cli-pr-review
 description: Spec for reviewing pull requests via the GitHub CLI.
 ---

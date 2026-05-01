@@ -45,12 +45,6 @@ Aggregated result (caller builds after both passes complete):
 - Forward `prior_findings` to substantive unmodified — no filtering, no summarizing.
 - Tier substitution is prohibited: smoke must use fast-cheap, substantive must use standard.
 
-## Tier vocabulary
-
-`fast-cheap` — cost-optimized (e.g. Haiku-class), use for `tier=smoke`.
-`standard` — capable (e.g. Sonnet-class), use for `tier=substantive`.
-Tier substitution is prohibited.
-
 ## Parameters
 
 `change_set` (required): inline unified diff, absolute file path list, or git ref/range (refs require shell access in dispatched agent).

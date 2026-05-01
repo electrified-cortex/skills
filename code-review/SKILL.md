@@ -3,17 +3,22 @@ name: code-review
 description: Tiered code review on a change set. Read-only — never modifies code. Triggers — security, correctness, code-quality, change-review, architectural-risk.
 ---
 
-Dispatch zero-context sub-agents per tier. NEVER read/interpret `instructions.txt` — sub-agent does the work.
+`<instructions>` = `instructions.txt` (this folder; NEVER READ)
+`<instructions-abspath>` = absolute path to `<instructions>`
 
-Dispatch:
+Smoke pass (`tier=smoke`):
+`<input-args>` = `change_set=<form> tier=smoke [focus=<csv>] [context_pointer=<path>]`
+`<tier>` = `fast-cheap`
+`<description>` = `Code Review Smoke: <change_set>`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+Follow `dispatch` skill. See `../dispatch/SKILL.md`.
 
-Smoke pass (`tier=smoke`) — Haiku-class / fast-cheap:
-Claude Code: `Agent` tool. Pass: "Read and follow `instructions.txt` here. Input: `change_set=<form> tier=smoke [focus=<csv>] [context_pointer=<path>]`"
-VS Code / Copilot: `runSubagent(model: "Claude Haiku 4.5 (Copilot)", prompt: "Read and follow \`instructions.txt\` in this directory. Input: \`change_set=<form> tier=smoke [focus=<csv>] [context_pointer=<path>]\`")`
-
-Substantive pass (`tier=substantive`) — Sonnet-class / standard:
-Claude Code: `Agent` tool. Pass: "Read and follow `instructions.txt` here. Input: `change_set=<form> tier=substantive prior_findings=<json> [focus=<csv>] [context_pointer=<path>]`"
-VS Code / Copilot: `runSubagent(model: "Claude Sonnet 4.6 (Copilot)", prompt: "Read and follow \`instructions.txt\` in this directory. Input: \`change_set=<form> tier=substantive prior_findings=<json> [focus=<csv>] [context_pointer=<path>]\`")`
+Substantive pass (`tier=substantive`):
+`<input-args>` = `change_set=<form> tier=substantive prior_findings=<json> [focus=<csv>] [context_pointer=<path>]`
+`<tier>` = `standard`
+`<description>` = `Code Review Substantive: <change_set>`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+Follow `dispatch` skill. See `../dispatch/SKILL.md`.
 
 Orchestration:
 
@@ -37,11 +42,6 @@ Caller obligations:
 Smoke is not sign-off. Always dispatch substantive before acting on results.
 Forward `prior_findings` to substantive unmodified — no filtering, no summarizing.
 Tier substitution is prohibited: smoke must use fast-cheap, substantive must use standard.
-
-Tier vocabulary:
-`fast-cheap` — cost-optimized (e.g. Haiku-class), use for `tier=smoke`.
-`standard` — capable (e.g. Sonnet-class), use for `tier=substantive`.
-Tier substitution is prohibited.
 
 Parameters:
 `change_set` (required): inline unified diff, absolute file path list, or git ref/range (refs require shell access in dispatched agent).

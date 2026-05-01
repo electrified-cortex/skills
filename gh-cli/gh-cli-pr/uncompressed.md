@@ -1,4 +1,4 @@
-﻿---
+---
 name: gh-cli-pr
 description: Entry point for pull request management via the GitHub CLI. Handles common PR inspection and routes write operations to sub-skills.
 ---

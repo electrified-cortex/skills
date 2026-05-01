@@ -16,9 +16,17 @@ Every indexed dir gets exactly two files from builder:
 
 Absent stamp = unaudited since last build, not needs-rebuild.
 
-Invocation:
+## Dispatch
 
-Use Dispatch agent (zero context): "Read and follow `instructions.txt` (in this dir). Input: `root=<path> [--dot-allow <name,...>] [--rebuild]`"
+`<instructions>` = `instructions.txt` (NEVER READ)
+`<instructions-abspath>` = absolute path to `<instructions>`
+`<input-args>` = `root=<path> [--dot-allow <name,...>] [--rebuild]`
+`<tier>` = `standard` — generative index writing requires reliable output quality
+`<description>` = `Skill Index Build: <path>`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+
+Follow `dispatch` skill. See `../../dispatch/SKILL.md`.
+Should return: change manifest (nodes created, updated, unchanged, blocked, broken-shortcut, skipped)
 
 Parameters:
 `root` (required): absolute path to invocation root.

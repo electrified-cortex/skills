@@ -1,4 +1,4 @@
-﻿---
+---
 name: gh-cli-projects
 description: Create, manage GitHub Projects v2 boards, items, fields via CLI.
 ---

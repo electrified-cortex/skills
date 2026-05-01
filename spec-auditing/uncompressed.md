@@ -8,23 +8,27 @@ description: >-
 
 # Spec Auditing
 
-Without reading `instructions.txt` yourself, spawn a zero-context, claude-haiku-class sub-agent in the background:
+## Dispatch
 
-Claude Code: `Agent` tool. Pass: `"Read and follow instructions.txt (in this directory). Input: <target-path> [--spec <spec-path>] [--fix]"`
+Variables:
 
-VS Code / Copilot: `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow instructions.txt (in this directory). Input: <target-path> [--spec <spec-path>] [--fix]")`
+`<instructions>` = `instructions.txt` (NEVER READ)
+`<instructions-abspath>` = absolute path to `<instructions>`
+`<input-args>` = `<target-path> [--spec <spec-path>] [--fix]`
+`<tier>` = `fast-cheap` — spec alignment checking is rule-matching, not deep judgment
+`<description>` = `Spec Audit: <target-path>`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
-Don't read `instructions.txt` yourself.
+Follow `dispatch` skill. See `../dispatch/SKILL.md`.
+Should return: `Pass` | `Pass with Findings` | `Fail`
+
+NEVER READ OR INTERPRET `instructions.txt` YOURSELF. Let the sub-agent do the work.
 
 Parameters:
 
 - `target-path` (string, required): path to spec file or companion file to audit
 - `--spec <spec-path>` (string, optional): explicit path to spec file (pair-audit mode)
 - `--fix` (flag, optional): fix mode — target must be git-tracked and clean; modifies target to match spec, up to 3 passes
-
-Returns: Pass / Pass with Findings / Fail. Each finding: Finding ID, Severity, Title, Affected file(s), Evidence (with quote), Explanation, Recommended fix.
-
-NEVER READ OR INTERPRET `instructions.txt` YOURSELF. Let the sub-agent do the work.
 
 One skill per invocation. Chain multiple subjects as separate runs.
 

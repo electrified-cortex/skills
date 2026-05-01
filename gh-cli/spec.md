@@ -1,4 +1,4 @@
-﻿# gh-cli — Spec
+# gh-cli — Spec
 
 ## Purpose
 

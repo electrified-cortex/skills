@@ -10,8 +10,17 @@ Dispatch skill. Reads existing skill-index cascade to locate skill matching agen
 Purpose:
 Find right skill by reading only index nodes. Never opens skill contents, never walks filesystem, never climbs above working dir.
 
-Invocation:
-Dispatch via Dispatch agent (zero context): "Read and follow `instructions.txt` (in this directory). Input: `root=<path> need=<phrase>`"
+## Dispatch
+
+`<instructions>` = `instructions.txt` (NEVER READ)
+`<instructions-abspath>` = absolute path to `<instructions>`
+`<input-args>` = `root=<path> need=<phrase>`
+`<tier>` = `fast-cheap` — pattern matching against index keywords; no deep judgment needed
+`<description>` = `Skill Index Crawl: <phrase>`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+
+Follow `dispatch` skill. See `../../dispatch/SKILL.md`.
+Should return: crawl report with outcome `hit: <path>` | `no match` | `ambiguous` | `no index here` | `reference loop`
 
 Parameters:
 

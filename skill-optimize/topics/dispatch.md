@@ -68,7 +68,40 @@ Fire a DISPATCH finding if:
   everything) or too fine (dispatching trivial single-step operations)
 - The fallback for unavailable dispatch is missing
 
-### Step 4 — Check tool call vs. text substitution opportunities
+### Step 4 — Check dispatch implementation quality (for dispatch skills)
+
+If the skill uses dispatch, inspect how it invokes the dispatch pattern:
+
+**Canonical form** (from `markdown-hygiene-analysis/SKILL.md` as golden reference):
+
+```
+`<instructions>` = `instructions.txt` (NEVER READ)
+`<instructions-abspath>` = absolute path to `<instructions>`
+`<input-args>` = <the specific inputs>
+`<tier>` = `fast-cheap` | `standard` | `deep`  — <reason>
+`<description>` = <short run label>
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+
+Follow `dispatch` skill. See `<path>/dispatch/SKILL.md`.
+Should return: <expected output contract>
+```
+
+Fire a MEDIUM finding for any of these:
+
+1. **Old inline form** — skill uses `"Read and follow instructions.txt..."` embedded
+   directly (e.g. `Dispatch agent (zero context): "..."`) instead of named variables.
+   This makes the dispatch fragile and non-uniform across skills.
+
+2. **Missing `Should return:`** — the expected output contract is not declared
+   after the dispatch call. Callers must guess what to handle.
+
+3. **Missing tier or tier unjustified** — `<tier>` not set, or set without any
+   comment. For non-obvious choices (e.g. using `standard` for what looks simple,
+   or `fast-cheap` for complex work) a parenthetical reason is expected.
+
+Do NOT fire if the skill is inline-only (no dispatch at all).
+
+### Step 5 — Check tool call vs. text substitution opportunities
 
 Scan the instructions for tool calls. For each one, ask:
 
@@ -83,7 +116,7 @@ Fire a LOW finding (tool call replacement) when a tool call's behavior
 could be replaced by a 2-3 line inline instruction with no loss of
 reliability or correctness.
 
-### Step 5 — Produce finding or confirm clean
+### Step 6 — Produce finding or confirm clean
 
 **Finding format:**
 

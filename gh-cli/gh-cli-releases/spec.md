@@ -1,4 +1,4 @@
-﻿# gh-cli-releases — Spec
+# gh-cli-releases — Spec
 
 ## Purpose
 

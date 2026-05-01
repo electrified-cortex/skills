@@ -29,6 +29,7 @@ Variables:
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
 Follow `dispatch` skill. See `../dispatch/SKILL.md`.
+Should return: `PASS: <path>` | `PASS_WITH_FINDINGS: <path>` | `FAIL: <path>` | `ERROR: <reason>`
 If returns `ERROR: <reason>` -> stop, surface reason.
 
 ## Inline result check (post-execute)

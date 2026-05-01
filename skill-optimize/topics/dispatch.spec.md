@@ -69,6 +69,23 @@ Produce a finding when a tool call is present whose behavior could be
 replaced by a small inline instruction with no loss of reliability or
 correctness, and where the replacement would reduce latency or cost.
 
+**Dispatch implementation quality (canonical form):**
+
+When a skill dispatches, the invocation should use the canonical variable
+block pattern established in the `dispatch` skill. The golden reference is
+`markdown-hygiene/markdown-hygiene-analysis/SKILL.md` and
+`markdown-hygiene/markdown-hygiene-lint/SKILL.md`.
+
+Fire a MEDIUM finding if the skill dispatches but:
+
+- Uses old inline form (`"Read and follow instructions.txt..."`  embedded
+  directly without named variables) instead of the canonical block
+- Does not declare `Should return:` after the dispatch call — omitting the
+  expected output contract makes the caller guess what to handle
+- Does not state the tier (`<tier>` = `fast-cheap` | `standard` | `deep`)
+  or provides no justification for the tier choice (a comment on why is
+  preferred for non-obvious choices)
+
 ## Parameters
 
 - <skill-path> — path to the skill directory being analyzed (inherited from optimizer invocation)

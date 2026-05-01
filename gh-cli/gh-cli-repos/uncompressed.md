@@ -1,4 +1,4 @@
-﻿---
+---
 name: gh-cli-repos
 description: Create, clone, fork, sync, edit, delete GitHub repositories via CLI.
 ---
