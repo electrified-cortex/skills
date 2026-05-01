@@ -37,9 +37,11 @@ If none of these exist, stop: `ERROR: no skill source files found at <skill-path
 
 The optimize log is at `<skill-path>/optimize-log.md` — written into the target skill's own directory.
 
-If it exists, read it. Any topic with any log entry (any status) is excluded
-from candidate selection in Step 3a — the host subtracts the full logged set
-from the `_index.md` list before sending candidates to the qualifier.
+If it exists, read it. Topics are excluded from candidate selection in Step 3a
+when their log entry is any of: `qualified` (no verdict), `clean`, `acted`,
+`deferred`, `rejected`, or `audit-candidate`. Topics with no log entry are
+candidates. `yes`/`maybe` results are never logged, so those topics always
+re-enter the candidate pool on the next pass.
 
 If no log exists, proceed — this is the first pass.
 
@@ -130,7 +132,10 @@ For `no`: one sentence explaining why it does not apply.
 Return a result for every topic. Do not skip any.
 ```
 
-One dispatch call. Log all 3 results immediately as `qualified` rows (Step 5a).
+One dispatch call. Hold results in memory for 3c.
+
+Log `no` results immediately as `qualified` rows (Step 5a) — they are excluded
+from future candidate selection. Do not log `yes` or `maybe` results yet.
 
 ### 3c — Assessor Decision (Sonnet-class host)
 
@@ -230,14 +235,15 @@ in the log and stop. Do not attempt to parse or use a malformed response.
 
 | `<TOPIC>` | `<today's date>` | `<model>` | `<N findings>` | `<status>` | `<one-line action summary>` |
 
-After 3b (qualifier): append one row per qualified topic immediately:
+After 3b (qualifier): append one `qualified` row **for each `no` result only**.
 - Status: `qualified`
 - Model: Haiku-class
 - Findings: `—`
-- Action: `yes — <reason>` / `maybe — <what would tip it>` / `no — <reason>`
+- Action: `no — <reason>`
 
-After 4 (analyzer): update the selected topic's row — change status from `qualified` to the
-final status: `pending` | `acted` | `deferred` | `rejected` | `clean` | `audit-candidate`
+`yes`/`maybe` results are not logged until the analyzer completes.
+
+After 4 (analyzer): append one row for the analyzed topic with its final status.
 
 If the log does not exist, create it using the header format from Step 2.
 

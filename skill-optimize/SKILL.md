@@ -29,7 +29,7 @@ Allowed write targets (inside the **target skill's** directory): `<skill-path>/o
 
 Step 2 — Check Optimize Log:
 
-Log: `<skill-path>/optimize-log.md`. Read if exists. Any topic with any log entry is excluded from candidate selection in Step 3a. No log → first pass.
+Log: `<skill-path>/optimize-log.md`. Read if exists. Exclude from 3a: any topic with status `qualified` (no), `clean`, `acted`, `deferred`, `rejected`, or `audit-candidate`. Topics with no log entry are candidates. `yes`/`maybe` results are never logged — those topics re-enter the pool each pass. No log → first pass.
 
 ```markdown
 (H1) Optimize Log: <skill-name>
@@ -120,8 +120,8 @@ CLEAN → `clean`. Findings → record. Missing `### CATEGORY` or `**Reasoning:*
 
 Step 5 — Record Results:
 
-After 3b: append one `qualified` row per topic to log (Haiku-class, status `qualified`, Action: verdict + reason).
-After 4: update selected topic row from `qualified` to final status.
+After 3b: append `qualified` rows **for `no` results only** (Haiku-class, Action: `no — <reason>`). `yes`/`maybe` held in memory, not logged until analyzer completes.
+After 4: append final row for analyzed topic.
 
 5a: `| <TOPIC> | <date> | <model> | <N> | <status> | <action> |`
 
