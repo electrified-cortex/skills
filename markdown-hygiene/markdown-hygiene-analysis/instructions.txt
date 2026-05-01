@@ -1,13 +1,10 @@
 Inputs:
 `<markdown_file_path>` (required) — absolute path to `.md` file.
-`--lint-path <lint_path>` (required) — absolute path to existing lint.md (read-only reference). Missing -> `ERROR: --lint-path required`, stop.
 `--analysis-path <analysis_path>` (required) — absolute path to write analysis.md. Missing -> `ERROR: --analysis-path required`, stop.
-`--ignore <RULE>[,<RULE>...]` (optional) — SA rules to skip.
 
 Hard prohibition: don't author scripts (`.ps1`, `.sh`, etc.), helper files, or any file other than `<analysis_path>`. Target is read-only. Use Read/Bash/Grep only for inspection.
 
-1. Read `<lint_path>` — extract frontmatter `result` field (`clean` or `fail`) and FINDINGS list (count violations for index summary).
-2. Semantic advisory scan: read `<markdown_file_path>`, evaluate SA001-SA038 below. Each entry uses `Note:` not `Fix:` — host LLM decides whether to act. Skip `--ignore` rules. SA032 and SA038 require semantic reasoning — flag only when clearly evident.
+1. Semantic advisory scan: read `<markdown_file_path>`, evaluate SA001-SA038 below. Each entry uses `Note:` not `Fix:` — host LLM decides whether to act. SA032 and SA038 require semantic reasoning — flag only when clearly evident.
 3. SA rules:
    SA001 [FAIL] — 3+ consecutive ALL CAPS words not an acronym/known term.
    SA002 [FAIL] — entire sentence in ALL CAPS.
@@ -47,16 +44,15 @@ Hard prohibition: don't author scripts (`.ps1`, `.sh`, etc.), helper files, or a
    SA036 [WARN] — directive sentence has 3+ coordinating conjunctions — split into one instruction per sentence.
    SA037 [WARN] — list mixes command items and observation/description items without a distinguishing signal.
    SA038 [FAIL] — contradictory instructions present in document (LLM-detected).
-4. Determine overall result:
-   lint_result = frontmatter `result` from `<lint_path>`.
+2. Determine overall result:
    advisory_count = number of SA findings.
-   overall = `fail` if lint_result == fail; `pass` if lint_result == clean AND advisory_count > 0; `clean` if both zero.
-5. Write `<analysis_path>`:
+   overall = `pass` if advisory_count > 0; `clean` if advisory_count == 0.
+3. Write `<analysis_path>`:
    `mkdir -p $(dirname <analysis_path>)` first.
-   Frontmatter: `file_path: <repo-relative>`; `operation_kind: markdown-hygiene-analysis`; `result: clean` (no advisories, lint clean), `result: pass` (advisories, lint clean), or `result: fail` (lint fail).
+   Frontmatter: `file_path: <repo-relative>`; `operation_kind: markdown-hygiene-analysis`; `result: clean` (no advisories) or `result: pass` (advisories present).
    Body:
-     No advisories, lint clean: `# Result\n\nCLEAN`.
+     No advisories: `# Result\n\nCLEAN`.
      Advisories: `# Result\n\n## Advisory\n\n- <list>`. Each entry two lines:
        `SA0XX [SEVERITY] line N: <description>` (omit line N for document-level)
        Indented `Note: <observation>` — plain English, no imperative.
-6. Return `clean` (no advisories, lint clean), `pass: <analysis_path>` (advisories, lint clean), or `findings: <analysis_path>` (lint fail). On failure: `ERROR: <reason>`.
+4. Return `clean` (no advisories) or `pass: <analysis_path>` (advisories present). On failure: `ERROR: <reason>`.
