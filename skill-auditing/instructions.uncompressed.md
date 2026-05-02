@@ -169,10 +169,9 @@ distinguish.
 ### (A-FS-1) Orphan files
 
 Scan all files in `<skill_dir>` recursively. Skip dot-prefixed directories.
-For each file that is NOT a well-known role file (`spec.md`, `README.md`,
-`result.sh`, `result.ps1`, `verify.sh`, `verify.ps1`, `eval.txt`,
-`eval.uncompressed.md`, `SKILL.md`, `uncompressed.md`, `instructions.txt`,
-`instructions.uncompressed.md`, `*.spec.md`):
+For each file that is NOT a well-known role file (`spec.md`,
+`*.sh`, `*.ps1`, `*.spec.md`, `eval.txt`,
+`*.uncompressed.md`, `SKILL.md`, `uncompressed.md`, `instructions.txt`, `optimize-log.md`):
 
 - Check whether the file is referenced by name or relative path in any of:
   `SKILL.md`, `uncompressed.md`, `instructions.uncompressed.md`.
