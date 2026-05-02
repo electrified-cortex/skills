@@ -1,7 +1,8 @@
 #!/usr/bin/env pwsh
 # result.ps1 — skill-auditing result tool
 # Wraps hash-record-manifest and translates HIT into the cached audit verdict.
-# Usage: result <skill_dir>
+# Usage: result <skill_dir> <mode>
+#   mode: report | uncompressed
 # Outputs one of:
 #   PASS: <abs-path>            (HIT, result: pass)         (exit 0)
 #   NEEDS_REVISION: <abs-path>  (HIT, result: findings)     (exit 0)
@@ -12,7 +13,8 @@
 param(
     [Parameter(Position=0)]
     [string]$skill_dir,
-    [switch]$uncompressed,
+    [Parameter(Position=1)]
+    [string]$mode,
     [switch]$help,
     [switch]$h
 )
@@ -21,7 +23,7 @@ $ErrorActionPreference = 'Continue'
 
 if ($help -or $h) {
     [Console]::Out.Write(@"
-Usage: result <skill_dir>
+Usage: result <skill_dir> <mode>
 
 Wraps hash-record-manifest for skill-auditing and translates a HIT into
 the cached audit verdict by reading the report's frontmatter.
@@ -30,6 +32,8 @@ Arguments:
   skill_dir  Absolute path to the skill folder being audited.
              Tool enumerates all files recursively, excluding
              dot-prefixed directories and optimize-log.md.
+  mode       report       -- compiled artifacts cache (SKILL.md + instructions.txt)
+             uncompressed -- source artifacts cache (uncompressed.md + instructions.uncompressed.md + spec.md)
 
 Output (stdout, one line):
   PASS: <abs-path>            Cached report says result: pass.
@@ -45,9 +49,18 @@ Exit codes:
     exit 0
 }
 
-if (-not $skill_dir) {
-    [Console]::Out.Write("ERROR: missing argument -- expected <skill_dir>`n")
+if (-not $skill_dir -or -not $mode) {
+    [Console]::Out.Write("ERROR: missing arguments -- expected <skill_dir> <mode>`n")
     exit 1
+}
+
+$record_filename = switch ($mode) {
+    'report'       { 'report.md' }
+    'uncompressed' { 'uncompressed.md' }
+    default {
+        [Console]::Out.Write("ERROR: invalid mode: $mode (expected: report | uncompressed)`n")
+        exit 1
+    }
 }
 
 if (-not (Test-Path -LiteralPath $skill_dir -PathType Container)) {
@@ -104,12 +117,12 @@ if (-not (Test-Path -LiteralPath $manifest_ps1)) {
     exit 1
 }
 
-# Determine op_kind based on --uncompressed flag
-$op_kind = if ($uncompressed) { 'skill-auditing/v2/uncompressed' } else { 'skill-auditing/v2' }
+# Determine op_kind and record_filename
+$op_kind = 'skill-auditing/v2'
 
-# Invoke manifest with computed op_kind + record_filename=report.md
+# Invoke manifest with computed op_kind + record_filename
 try {
-    $manifest_args = @($op_kind, 'report.md') + $files
+    $manifest_args = @($op_kind, $record_filename) + $files
     $manifest_out = & pwsh -NoProfile -File $manifest_ps1 @manifest_args 2>$null
     $manifest_out = $manifest_out -join "`n" -replace "`r", '' -split "`n" | Where-Object { $_ -ne '' } | Select-Object -Last 1
 } catch {

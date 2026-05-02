@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # result.sh — skill-auditing result tool
-# Wraps hash-record-manifest and translates HIT into the cached audit verdict.
-# Usage: result <skill_dir>
+# Usage: result.sh <skill_dir> <mode>
+#   mode: report | uncompressed
 # Outputs one of:
 #   PASS: <abs-path>            (HIT, result: pass)         (exit 0)
 #   NEEDS_REVISION: <abs-path>  (HIT, result: findings)     (exit 0)
@@ -12,7 +12,7 @@ set -e
 
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   cat <<'USAGE'
-Usage: result <skill_dir>
+Usage: result.sh <skill_dir> <mode>
 
 Wraps hash-record-manifest for skill-auditing and translates a HIT into
 the cached audit verdict by reading the report's frontmatter.
@@ -21,6 +21,8 @@ Arguments:
   skill_dir  Absolute path to the skill folder being audited.
              Tool enumerates all files recursively, excluding
              dot-prefixed directories and optimize-log.md.
+  mode       report       — compiled artifacts cache (SKILL.md + instructions.txt)
+             uncompressed — source artifacts cache (uncompressed.md + instructions.uncompressed.md + spec.md)
 
 Output (stdout, one line):
   PASS: <abs-path>            Cached report says result: pass.
@@ -36,28 +38,26 @@ USAGE
   exit 0
 fi
 
-if [ "$#" -lt 1 ]; then
-  echo "ERROR: missing argument -- expected <skill_dir>"
+if [ "$#" -lt 2 ]; then
+  echo "ERROR: missing arguments -- expected <skill_dir> <mode>"
   exit 1
 fi
 
 SKILL_DIR="$1"
-shift
+MODE="$2"
 
-# Parse optional --uncompressed flag
-OP_KIND="skill-auditing/v2"
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --uncompressed)
-      OP_KIND="skill-auditing/v2/uncompressed"
-      shift
-      ;;
-    *)
-      echo "ERROR: unknown argument: $1"
-      exit 1
-      ;;
-  esac
-done
+case "$MODE" in
+  report)
+    RECORD_FILE="report.md"
+    ;;
+  uncompressed)
+    RECORD_FILE="uncompressed.md"
+    ;;
+  *)
+    echo "ERROR: invalid mode: $MODE (expected: report | uncompressed)"
+    exit 1
+    ;;
+esac
 
 if [ ! -d "$SKILL_DIR" ]; then
   echo "ERROR: skill_dir not found: $SKILL_DIR"
@@ -69,12 +69,9 @@ fi
 # .tests/, .worktrees/). Dot-prefixed FILES (e.g. .gitignore) ARE included.
 FILES=()
 while IFS= read -r -d '' F; do
-  # Strip leading "./" then check each directory component for dot-prefix.
-  # The leaf filename is excluded from this check (dotfiles allowed at leaf).
   REL="${F#./}"
   DIR_PART="$(dirname "$REL")"
   if [ "$DIR_PART" != "." ]; then
-    # Walk each segment of the directory path.
     SKIP=0
     IFS='/' read -ra SEGS <<< "$DIR_PART"
     for SEG in "${SEGS[@]}"; do
@@ -84,15 +81,12 @@ while IFS= read -r -d '' F; do
     done
     [ "$SKIP" -eq 1 ] && continue
   fi
-  # Skip optimize-log.md (skill-optimize artifact)
   [ "${REL##*/}" = "optimize-log.md" ] && continue
   FILES+=("$F")
 done < <(cd "$SKILL_DIR" && find . -type f -print0 | LC_ALL=C sort -z)
 
-# Convert relative paths back to absolute by prepending skill_dir
 ABS_FILES=()
 for F in "${FILES[@]}"; do
-  # Strip leading "./"
   REL="${F#./}"
   ABS_FILES+=("$SKILL_DIR/$REL")
 done
@@ -112,13 +106,12 @@ if [ ! -f "$MANIFEST_SH" ]; then
   exit 1
 fi
 
-# Invoke manifest with computed op_kind + record_filename=report.md
-MANIFEST_OUT=$(bash "$MANIFEST_SH" "$OP_KIND" "report.md" "${FILES[@]}" 2>/dev/null) || {
+# Invoke manifest
+MANIFEST_OUT=$(bash "$MANIFEST_SH" "skill-auditing/v2" "$RECORD_FILE" "${FILES[@]}" 2>/dev/null) || {
   echo "ERROR: hash-record-manifest failed for: $SKILL_DIR"
   exit 1
 }
 
-# Branch on manifest stdout
 case "$MANIFEST_OUT" in
   "MISS: "*)
     echo "$MANIFEST_OUT"
@@ -134,7 +127,6 @@ case "$MANIFEST_OUT" in
       echo "ERROR: cache record vanished at: $REPORT_PATH"
       exit 1
     fi
-    # Parse frontmatter result: line.
     RESULT_VALUE=$(grep -m1 '^result:' "$REPORT_PATH" 2>/dev/null | awk '{print $2}')
     case "$RESULT_VALUE" in
       pass)

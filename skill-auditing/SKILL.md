@@ -4,13 +4,16 @@ description: Audit a skill for quality, classification, cost, and compliance wit
 ---
 
 **Input:** `<skill_dir>` — absolute path to skill folder being audited (dir containing `spec.md` / `uncompressed.md` / `instructions.uncompressed.md`).
+`--uncompressed` (optional) — audit source artifacts instead of compiled.
 
 ## Inline result check
 
 Run `result` tool (in this folder), whichever your runtime has. DON'T READ the script source at any point — before, during, or after invocation. Run it, branch on `stdout`, move on.
 
-- Bash: `bash result.sh <skill_dir>`
-- PS7: `pwsh result.ps1 <skill_dir>`
+`<mode>` = `uncompressed` if `--uncompressed` was given, else `report`
+
+- Bash: `bash result.sh <skill_dir> <mode>`
+- PS7: `pwsh result.ps1 <skill_dir> <mode>`
 
 (Note: the terminal output might wrap)
 
