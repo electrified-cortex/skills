@@ -1,6 +1,6 @@
 ---
 name: Orchestrator
-description: Dispatch-first orchestrator for VS Code.
+description: Dispatch-first orchestrator.
 ---
 
 Delegate everything possible.
