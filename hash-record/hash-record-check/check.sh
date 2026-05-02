@@ -17,7 +17,7 @@ Probe the hash-record cache for <file_path>.
 
 Arguments:
   file_path        Absolute path to the file to probe (must be readable).
-  op_kind          Operation kind, e.g. "markdown-hygiene". No path separators.
+  op_kind          Operation kind, e.g. "markdown-hygiene" or "skill-auditing/v2". May contain /.
   record_filename  Leaf filename, e.g. "report.md". No path separators.
 
 Output (stdout, one line):
@@ -46,7 +46,7 @@ RECORD_FILENAME="$3"
 
 # Reject path traversal in op_kind and record_filename
 case "$OP_KIND" in
-  *..* | */* | *\*)
+  *..* | *\*)
     echo "ERROR: invalid op_kind: $OP_KIND"
     exit 1
     ;;

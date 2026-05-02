@@ -45,11 +45,11 @@ SKILL_DIR="$1"
 shift
 
 # Parse optional --uncompressed flag
-OP_KIND="skill-auditing/v1.2-compiled"
+OP_KIND="skill-auditing/v2"
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --uncompressed)
-      OP_KIND="skill-auditing/v1.2-uncompressed"
+      OP_KIND="skill-auditing/v2/uncompressed"
       shift
       ;;
     *)

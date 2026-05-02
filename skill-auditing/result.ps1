@@ -105,7 +105,7 @@ if (-not (Test-Path -LiteralPath $manifest_ps1)) {
 }
 
 # Determine op_kind based on --uncompressed flag
-$op_kind = if ($uncompressed) { 'skill-auditing/v1.2-uncompressed' } else { 'skill-auditing/v1.2-compiled' }
+$op_kind = if ($uncompressed) { 'skill-auditing/v2/uncompressed' } else { 'skill-auditing/v2' }
 
 # Invoke manifest with computed op_kind + record_filename=report.md
 try {

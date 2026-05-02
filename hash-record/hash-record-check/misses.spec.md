@@ -21,11 +21,11 @@ supported.
 
 ## Parameters
 
-| Positional        | Type   | Required | Description                                              |
-| ----------------- | ------ | -------- | -------------------------------------------------------- |
-| `glob`            | string | yes      | File glob to expand (see Glob Handling below).           |
-| `op_kind`         | string | yes      | Operation kind folder, e.g. `markdown-hygiene`.          |
-| `record_filename` | string | yes      | Leaf filename to probe, e.g. `lint.md`, `report.md`.     |
+| Positional | Type | Required | |
+| --- | --- | --- | --- |
+| `glob` | string | yes | File glob to expand (see Glob Handling below). |
+| `op_kind` | string | yes | Operation kind, e.g. `markdown-hygiene` or `skill-auditing/v2`. May contain `/`. |
+| `record_filename` | string | yes | Leaf filename to probe, e.g. `lint.md`, `report.md`. |
 
 ## Interface
 
@@ -58,8 +58,7 @@ Globs that match no files produce no output and exit 0.
 
 ## Behavior
 
-1. Validate `op_kind` and `record_filename` — reject values containing `..` or
-   path separators.
+1. Validate `op_kind` and `record_filename` — reject values containing `..` or `\`. Forward slash `/` is permitted in `op_kind` for versioned namespacing (e.g. `skill-auditing/v2`).
 2. Expand the glob using the rules above.
 3. Exclude any expanded file path that is under `.hash-record/`.
 4. Resolve the repo root once from the first matched file via
@@ -89,7 +88,8 @@ are not candidates for caching.
 
 - Read-only: never modifies the target files or any cache record.
 - No sub-dispatches; fully self-contained.
-- `op_kind` and `record_filename` MUST NOT contain `..` or path separators.
+- `op_kind` MUST NOT contain `..` or `\`. Forward slash `/` is permitted for versioned namespacing.
+- `record_filename` MUST NOT contain `..`, `/`, or `\`.
 - Output paths use the OS-native separator (absolute path from `FullName`).
 - Forward-slash paths are used internally for cache path construction to match
   the `check.ps1` convention.

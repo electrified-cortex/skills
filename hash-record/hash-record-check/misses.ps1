@@ -21,7 +21,7 @@ param(
 $ErrorActionPreference = 'Stop'
 
 # Validate
-if ($OpKind -match '\.\.' -or $OpKind -match '[/\\]') {
+if ($OpKind -match '\.\.' -or $OpKind -match '[\\]') {
     [Console]::Error.WriteLine("ERROR: invalid op_kind: $OpKind")
     exit 1
 }

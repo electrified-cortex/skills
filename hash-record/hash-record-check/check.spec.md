@@ -16,11 +16,11 @@ is NOT supported — install Microsoft PowerShell 7+ on any platform.
 
 ## Parameters
 
-| Positional        | Type   | Required | Description                                |
+| Positional | Type | Required | Description |
 | ----------------- | ------ | -------- | ------------------------------------------ |
-| `file_path`       | string | yes      | Absolute path to the file to probe.        |
-| `op_kind`         | string | yes      | Operation kind (e.g. `markdown-hygiene`).  |
-| `record_filename` | string | yes      | Leaf filename (e.g. `report.md`).          |
+| `file_path` | string | yes | Absolute path to the file to probe. |
+| `op_kind` | string | yes | Operation kind (e.g. `markdown-hygiene` or `skill-auditing/v2`). May contain `/`. |
+| `record_filename` | string | yes | Leaf filename (e.g. `report.md`). |
 
 All three positional arguments are required. Passing fewer than three
 causes an ERROR output and non-zero exit.
@@ -86,9 +86,8 @@ stdout contract.
 - No sub-dispatches; fully self-contained.
 - POSIX-friendly Bash: no `bashisms` beyond `$()` and `[[ ]]`.
 - PowerShell 7+ only (no PS5.1 fallbacks).
-- `op_kind` and `record_filename` MUST NOT contain `..` or path
-  separators. The tool rejects such values with
-  `ERROR: invalid <field>: <value>`.
+- `op_kind` MUST NOT contain `..` or `\`. Forward slash `/` is permitted for versioned namespacing (e.g. `skill-auditing/v2`).
+- `record_filename` MUST NOT contain `..`, `/`, or `\`. The tool rejects invalid values with `ERROR: invalid <field>: <value>`.
 - Forward-slash output on every platform (Windows accepts forward
   slashes; cross-runtime byte-equality requires this).
 - No interactive prompts.
@@ -104,7 +103,7 @@ stdout contract.
 
 A parallel batch variant that accepts a glob and outputs only the files that have no cache entry.
 
-### Purpose
+### Purpose (misses.ps1)
 
 Given a glob of files, quickly determine which ones still need an operation run — no cache entry exists for them yet. Designed for bulk fan-out: run `misses.ps1` first, dispatch agents only for the listed files.
 
@@ -114,13 +113,13 @@ Given a glob of files, quickly determine which ones still need an operation run 
 pwsh misses.ps1 <glob> <op_kind> <record_filename>
 ```
 
-| Positional        | Required | Description                                              |
+| Positional | Required | Description |
 | ----------------- | -------- | -------------------------------------------------------- |
-| `glob`            | yes      | File glob to expand (e.g. `gh-cli/**/*.md`).             |
-| `op_kind`         | yes      | Same as `check.ps1` — e.g. `markdown-hygiene`.           |
-| `record_filename` | yes      | Leaf filename to probe — e.g. `lint.md`, `report.md`.   |
+| `glob` | yes | File glob to expand (e.g. `gh-cli/**/*.md`). |
+| `op_kind` | yes | Same as `check.ps1` — e.g. `markdown-hygiene`. |
+| `record_filename` | yes | Leaf filename to probe — e.g. `lint.md`, `report.md`. |
 
-### Output
+### Output (misses.ps1)
 
 One absolute file path per line for each matched file with no cache entry. Sorted alphabetically. No output if all files have cache entries or the glob matches nothing.
 

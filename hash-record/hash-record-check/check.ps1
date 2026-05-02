@@ -27,7 +27,7 @@ if ($help -or $h) {
         "`n" +
         "Arguments:`n" +
         "  file_path        Absolute path to the file to probe (must be readable).`n" +
-        "  op_kind          Operation kind, e.g. `"markdown-hygiene`". No path separators.`n" +
+        "  op_kind          Operation kind, e.g. `"markdown-hygiene`" or `"skill-auditing/v2`". May contain /.`n" +
         "  record_filename  Leaf filename, e.g. `"report.md`". No path separators.`n" +
         "`n" +
         "Output (stdout, one line):`n" +
@@ -51,7 +51,7 @@ if (-not $file_path -or -not $op_kind -or -not $record_filename) {
 }
 
 # Reject path traversal in op_kind and record_filename
-if ($op_kind -match '\.\.' -or $op_kind -match '[/\\]') {
+if ($op_kind -match '\.\.' -or $op_kind -match '[\\]') {
     [Console]::Out.Write("ERROR: invalid op_kind: $op_kind`n")
     exit 1
 }
