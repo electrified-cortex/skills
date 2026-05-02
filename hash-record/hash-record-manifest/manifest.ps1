@@ -25,7 +25,7 @@ if ($help -or $h) {
         "Probe the hash-record cache for a set of files via a combined manifest hash.`n" +
         "`n" +
         "Arguments:`n" +
-        "  op_kind          Operation kind, e.g. `"markdown-hygiene`" or `"skill-auditing/v1.2`".`n" +
+        "  op_kind          Operation kind, e.g. `"markdown-hygiene`" or `"skill-auditing/v2`".`n" +
         "                   May contain /. Must NOT contain .., \, or *.`n" +
         "  record_filename  Leaf filename, e.g. `"report.md`". No path separators.`n" +
         "  file1 ...        One or more file paths (relative or absolute, must be readable).`n" +

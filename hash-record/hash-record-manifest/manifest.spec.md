@@ -12,7 +12,7 @@ Both Bash (`manifest.sh`) and PowerShell 7+ (`manifest.ps1`) variants are provid
 
 | Positional        | Type   | Required | Description                                  |
 | ----------------- | ------ | -------- | -------------------------------------------- |
-| `op_kind`         | string | yes      | Operation kind (e.g. `skill-auditing/v1.2`). |
+| `op_kind`         | string | yes      | Operation kind (e.g. `skill-auditing/v2`). |
 | `record_filename` | string | yes      | Leaf filename (e.g. `report.md`).            |
 | `files`           | array  | yes      | One or more file paths (relative or absolute). |
 
@@ -51,7 +51,7 @@ All three are required. Fewer than three positional groups -> ERROR + exit non-z
    <repo_root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/<op_kind>/<record_filename>
    ```
 
-   Note: `<op_kind>` may contain `/` (e.g. `skill-auditing/v1.2`), allowing subdirectory versioning. Path traversal characters (`..`, leading `/`) are still rejected — but `/` itself is permitted to support versioned op_kinds.
+   Note: `<op_kind>` may contain `/` (e.g. `skill-auditing/v2`), allowing subdirectory versioning. Path traversal characters (`..`, leading `/`) are still rejected — but `/` itself is permitted to support versioned op_kinds.
 
 7. Test whether `<cache_path>` exists as a regular file.
 
@@ -96,8 +96,8 @@ WARN lines (no-repo fallback) go to stderr only and never affect the stdout cont
 
 ```bash
 # Multi-file manifest probe
-bash manifest.sh skill-auditing/v1.2 report.md /repo/skills/foo/spec.md /repo/skills/foo/uncompressed.md
-# -> MISS: /repo/.hash-record/ab/abcdef.../skill-auditing/v1.2/report.md
+bash manifest.sh skill-auditing/v2 report.md /repo/skills/foo/spec.md /repo/skills/foo/uncompressed.md
+# -> MISS: /repo/.hash-record/ab/abcdef.../skill-auditing/v2/report.md
 
 # Single-file (degenerate but valid)
 bash manifest.sh markdown-hygiene report.md /repo/path/to/file.md
@@ -110,8 +110,8 @@ bash manifest.sh --help
 
 ```powershell
 # Same shape on PS7+
-pwsh manifest.ps1 skill-auditing/v1.2 report.md /example/repo/skills/foo/spec.md /example/repo/skills/foo/uncompressed.md
-# -> MISS: /example/repo/.hash-record/ab/abcdef.../skill-auditing/v1.2/report.md
+pwsh manifest.ps1 skill-auditing/v2 report.md /example/repo/skills/foo/spec.md /example/repo/skills/foo/uncompressed.md
+# -> MISS: /example/repo/.hash-record/ab/abcdef.../skill-auditing/v2/report.md
 ```
 
 ## Relationship to `hash-record-check`

@@ -25,7 +25,7 @@ The tool enumerates ALL files inside `<skill_dir>`, recursively, excluding: (a) 
 2. Enumerate ALL regular files inside `<skill_dir>`, recursively. Skip: (a) any file whose path passes through a dot-prefixed DIRECTORY (e.g. `.hash-record/foo`, `subdir/.tests/x.md`, `subdir/.optimization/x.md`); (b) any file whose leaf name is `optimize-log.md`. Dot-prefixed FILES at any depth ARE included. Sort lexically by path (byte order). At least one MUST be found or -> `ERROR: no files found in skill_dir`, exit 1.
 
 3. Invoke `hash-record-manifest` (sibling tool — do NOT reimplement) with:
-   - `op_kind` = `skill-auditing/v1.2-compiled` (default) OR `skill-auditing/v1.2-uncompressed` (when `--uncompressed` is set). Two distinct caches so the same manifest hash + flag yields independent records.
+   - `op_kind` = `skill-auditing/v2-compiled` (default) OR `skill-auditing/v2-uncompressed` (when `--uncompressed` is set). Two distinct caches so the same manifest hash + flag yields independent records.
    - `record_filename` = `report.md`
    - `files` = the enumerated list (absolute paths).
 
@@ -65,7 +65,7 @@ The host:
 - Forward-slash paths. ASCII output.
 - Both `result.sh` (Bash) and `result.ps1` (PowerShell 7+); byte-identical stdout.
 - Delegates manifest computation entirely to `hash-record-manifest` — no duplication.
-- Skill version (`v1.2`) is hardcoded in the script. Bump version + update script in lockstep when contract changes.
+- Skill version (`v2`) is hardcoded in the script. Bump version + update script in lockstep when contract changes.
 
 ## Dependencies
 
@@ -75,10 +75,10 @@ The host:
 
 ```bash
 bash result.sh /repo/skills/some-skill
-# -> MISS: /repo/.hash-record/ab/abcdef.../skill-auditing/v1.2/report.md
-# -> PASS: /repo/.hash-record/ab/abcdef.../skill-auditing/v1.2/report.md
-# -> NEEDS_REVISION: /repo/.hash-record/ab/abcdef.../skill-auditing/v1.2/report.md
-# -> FAIL: /repo/.hash-record/ab/abcdef.../skill-auditing/v1.2/report.md
+# -> MISS: /repo/.hash-record/ab/abcdef.../skill-auditing/v2/report.md
+# -> PASS: /repo/.hash-record/ab/abcdef.../skill-auditing/v2/report.md
+# -> NEEDS_REVISION: /repo/.hash-record/ab/abcdef.../skill-auditing/v2/report.md
+# -> FAIL: /repo/.hash-record/ab/abcdef.../skill-auditing/v2/report.md
 
 bash result.sh --help
 ```
