@@ -25,7 +25,7 @@ Variables:
 `<instructions>` = `instructions.txt` (NEVER READ)
 `<instructions-abspath>` = absolute path to `<instructions>`
 `<input-args>` = `skill_dir=<skill_dir> --report-path <report_path>`
-`<tier>` = `standard` — audit requires judgment; fast-cheap models miss nuances
+`<tier>` = `fast-cheap` — first pass. Subsequent passes use `standard`.
 `<description>` = `Auditing skill: <skill_dir>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
