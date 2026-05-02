@@ -10,14 +10,12 @@ description: Audit a skill for quality, classification, cost, and compliance wit
 `<skill_dir>` — absolute path to the skill folder being audited.
 `<flags>` — optional, any combination:
 
-- `--uncompressed`: shifts audit focus from compiled artifacts (`SKILL.md` + `instructions.txt`) to uncompressed sources (`uncompressed.md` + `instructions.uncompressed.md` + `spec.md`). Manifest scope is unaffected (always all-files).
-
 ## Inline result check
 
 Run the `result` tool (in this folder), whichever your runtime has. DON'T READ the script source at any point — before, during, or after invocation. Run it, branch on stdout, move on.
 
-- Bash: `bash result.sh <skill_dir> [--uncompressed]`
-- PS7: `pwsh result.ps1 <skill_dir> [-uncompressed]`
+- Bash: `bash result.sh <skill_dir>`
+- PS7: `pwsh result.ps1 <skill_dir>`
 
 If stdout is `MISS: <abs-path>` -> bind `<report_path>` = `<abs-path>`, continue to Preparation.
 Otherwise -> emit stdout verbatim, stop.
@@ -28,7 +26,7 @@ Variables:
 
 `<instructions>` = `instructions.txt` (NEVER READ)
 `<instructions-abspath>` = absolute path to `<instructions>`
-`<input-args>` = `skill_dir=<skill_dir> --report-path <report_path> [--uncompressed]`
+`<input-args>` = `skill_dir=<skill_dir> --report-path <report_path>`
 `<tier>` = `standard` — audit requires judgment; fast-cheap models miss nuances
 `<description>` = `Auditing skill: <skill_dir>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
@@ -44,6 +42,13 @@ Same invocation as the first Inline result check.
 Branch on stdout (last line):
 
 - `PASS: <report_path>` -> done.
-- `ERROR: <reason>` -> stop, surface reason.
+- `ERROR: <reason>` -> surface the stdout, stop.
 - `MISS: <abs-path>` -> executor failed to write report; surface `ERROR: executor did not write report at <report_path>`, stop.
-- `FAIL: <report_path>` or `NEEDS_REVISION: <report_path>` -> read `./fixing.md`.
+- `FAIL: <report_path>` or `NEEDS_REVISION: <report_path>` -> surface the stdout, and append:
+
+   ```text
+
+   To fix, dispatch a sub-agent with this report as input instructing it to fix all the issues.
+   Keep track of the number of revision rounds. If it has been 3, stop here and surface the report.
+   ```
+

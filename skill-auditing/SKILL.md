@@ -3,22 +3,20 @@ name: skill-auditing
 description: Audit a skill for quality, classification, cost, and compliance with the skill-writing spec. Triggers — audit this skill, check skill quality, review skill compliance, validate skill structure, skill needs review.
 ---
 
-**Input:** `<skill_dir>` — absolute path to skill folder being audited (dir containing `spec.md` / `uncompressed.md` / `instructions.uncompressed.md`).
-`--uncompressed` (optional) — audit source artifacts instead of compiled.
+## Input
+
+`<skill_dir>` — absolute path to the skill folder being audited.
+`<flags>` — optional, any combination:
 
 ## Inline result check
 
-Run `result` tool (in this folder), whichever your runtime has. DON'T READ the script source at any point — before, during, or after invocation. Run it, branch on `stdout`, move on.
+Run the `result` tool (in this folder), whichever your runtime has. DON'T READ the script source at any point — before, during, or after invocation. Run it, branch on stdout, move on.
 
-`<mode>` = `uncompressed` if `--uncompressed` was given, else `report`
+- Bash: `bash result.sh <skill_dir>`
+- PS7: `pwsh result.ps1 <skill_dir>`
 
-- Bash: `bash result.sh <skill_dir> <mode>`
-- PS7: `pwsh result.ps1 <skill_dir> <mode>`
-
-(Note: the terminal output might wrap)
-
-If `stdout` is `MISS: <abs-path>` -> bind `<report_path>` = `<abs-path>`, continue to Preparation.
-Otherwise -> emit `stdout` verbatim, stop.
+If stdout is `MISS: <abs-path>` -> bind `<report_path>` = `<abs-path>`, continue to Preparation.
+Otherwise -> emit stdout verbatim, stop.
 
 ## Inspect
 
@@ -38,11 +36,16 @@ If returns `ERROR: <reason>` -> stop, surface reason.
 ## Inline result check (post-execute)
 
 You (the host) run `result` again directly — do NOT dispatch it.
-Same invocation as **Inline result check**.
-Output is always exactly one line starting with a prefix. Long paths may visually wrap in terminal display — ignore the wrap, match from the start of the full output string.
-Branch on `stdout`:
+Same invocation as the first Inline result check.
+Branch on stdout (last line):
 
 - `PASS: <report_path>` -> done.
-- `ERROR: <reason>` -> stop, surface reason.
+- `ERROR: <reason>` -> surface the stdout, stop.
 - `MISS: <abs-path>` -> executor failed to write report; surface `ERROR: executor did not write report at <report_path>`, stop.
-- `FAIL: <report_path>` or `NEEDS_REVISION: <report_path>` -> read `./fixing.md`.
+- `FAIL: <report_path>` or `NEEDS_REVISION: <report_path>` -> surface the stdout, and append:
+
+   ```text
+
+   To fix, dispatch a sub-agent with this report as input instructing it to fix all the issues.
+   Keep track of the number of revision rounds. If it has been 3, stop here and surface the report.
+   ```
