@@ -257,6 +257,7 @@ Verify `uncompressed.md` contains ONLY:
 - Dispatch invocation + input signature (parameter list)
 - Return contract (`Returns:` line)
 - Optional 2-line iteration-safety pointer
+- Optional inline result check protocol (pre-dispatch cache check + post-execute result routing via a co-located result tool)
 
 Any of the following → HIGH:
 
@@ -295,6 +296,23 @@ The frontmatter `description` MUST follow the pattern: `<one-line action>. Trigg
 
 - Description written as prose without trigger phrases.
 - Description stuffed with implementation notes (e.g., "Dispatch skill", "Iteration-safe via hash-record", "Zero errors gate") — these waste trigger-phrase budget and must be removed.
+
+### (DS-4) Inline dispatch guard
+
+Dispatch skills MUST use the canonical prompt-only dispatch pattern. See `dispatch/dispatch-pattern.md` for context and rationale.
+
+Required elements in `uncompressed.md`:
+
+- `<instructions>` binding MUST include a `NEVER READ` guard (e.g. `NEVER READ THIS FILE` or `NEVER READ`) on the same line.
+- `<prompt>` binding MUST use the `Read and follow <instructions-abspath>` form.
+- MUST delegate via `Follow dispatch skill. See <path>/dispatch/SKILL.md`.
+
+Violations:
+
+- Missing `NEVER READ` guard on the `<instructions>` binding → HIGH.
+- Missing `<prompt>` binding or not using the `Read and follow` form → HIGH.
+- Missing `Follow dispatch skill. See ...` delegation line → HIGH.
+- Stale standalone opener (`Without reading... yourself, spawn...`) or closer (`NEVER READ OR INTERPRET...`) outside the variable block → MEDIUM (stale pattern; remove).
 
 ### (DS-5) No substrate duplication
 
@@ -396,6 +414,7 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 | Return shape declared (DS-1) | PASS/FAIL/N/A | |
 | Host card minimalism (DS-2) | PASS/FAIL/N/A | |
 | Description trigger phrases (DS-3) | PASS/FAIL/N/A | |
+| Inline dispatch guard (DS-4) | PASS/FAIL/N/A | |
 | No substrate duplication (DS-5) | PASS/FAIL/N/A | |
 | No overbuilt sub-skill dispatch (DS-6) | PASS/FAIL/N/A | |
 

@@ -8,7 +8,6 @@ description: Audit a skill for quality, classification, cost, and compliance wit
 ## Input
 
 `<skill_dir>` — absolute path to the skill folder being audited.
-`<flags>` — optional, any combination:
 
 ## Inline result check
 

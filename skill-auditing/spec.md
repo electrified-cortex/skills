@@ -93,10 +93,11 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
     in skill-auditing's own files are exempt.
 21. For dispatch skills, `uncompressed.md` **must** be a launch-script: frontmatter,
     optional H1, dispatch invocation + input signature, return contract, optional
-    2-line iteration-safety pointer. Anything else (executor procedure, Modes tables,
-    examples, rationale, Related breadcrumbs, Behavior sections, Output format
-    descriptions, model-class guidance) belongs in `instructions.uncompressed.md`
-    or `spec.md`. Violation → HIGH. (A-FM-10)
+    2-line iteration-safety pointer, optional inline result check protocol (pre-dispatch
+    cache check + post-execute result routing via a co-located result tool). Anything
+    else (executor procedure, Modes tables, examples, rationale, Related breadcrumbs,
+    Behavior sections, Output format descriptions, model-class guidance) belongs in
+    `instructions.uncompressed.md` or `spec.md`. Violation → HIGH. (A-FM-10)
 
 ## Constraints
 
@@ -245,32 +246,32 @@ Verify the companion spec is structurally sound, then verify the compiled artifa
 
 6. **Coverage** — every normative requirement in the spec must be
    represented in the SKILL.md. Missing requirements → FAIL.
-2. **No contradictions** — SKILL.md must not contradict the spec.
+7. **No contradictions** — SKILL.md must not contradict the spec.
    Spec is authoritative; SKILL.md is subordinate.
-3. **No unauthorized additions** — SKILL.md must not introduce
+8. **No unauthorized additions** — SKILL.md must not introduce
    normative requirements not present in the spec.
-4. **Conciseness** — every line in SKILL.md must affect runtime
+9. **Conciseness** — every line in SKILL.md must affect runtime
    behavior. No design rationale (belongs in spec). No redundant
    explanations. Agent-facing density, not human-facing readability.
    The auditor must also check for consolidation opportunities: sections
    that could be merged, rules that repeat content already stated, and
    length that exceeds the complexity of what is described. Flag as
    Informational; escalate to Low if duplication creates drift risk.
-5. **Completeness** — all runtime instructions present. No implicit
-   assumptions. Edge cases addressed or explicitly excluded. Defaults
-   stated, not assumed.
-6. **Breadcrumbs** — ends with related skills or help topics.
-   References are valid (pointed-to resources exist). No stale
-   references.
-7. **Cost analysis** (dispatch skills only) — uses Dispatch agent
-   (zero-context isolation). Instruction file is right-sized (< 500
-   lines). Sub-skills referenced by pointer, not inlined. Single
-   dispatch turn when possible.
-9. **No dispatch refs in instructions** — `instructions.txt` must not
-   tell the agent to dispatch other skills. Subagents cannot dispatch;
-   only the host agent can. "Related" context references are OK;
-   "run this skill" or "dispatch this" → FAIL.
-10. **No spec breadcrumbs in runtime** — the runtime surface (SKILL.md
+10. **Completeness** — all runtime instructions present. No implicit
+    assumptions. Edge cases addressed or explicitly excluded. Defaults
+    stated, not assumed.
+11. **Breadcrumbs** — ends with related skills or help topics.
+    References are valid (pointed-to resources exist). No stale
+    references.
+12. **Cost analysis** (dispatch skills only) — uses Dispatch agent
+    (zero-context isolation). Instruction file is right-sized (< 500
+    lines). Sub-skills referenced by pointer, not inlined. Single
+    dispatch turn when possible.
+13. **No dispatch refs in instructions** — `instructions.txt` must not
+    tell the agent to dispatch other skills. Subagents cannot dispatch;
+    only the host agent can. "Related" context references are OK;
+    "run this skill" or "dispatch this" → FAIL.
+14. **No spec breadcrumbs in runtime** — the runtime surface (SKILL.md
     and `instructions.txt`) must not reference the skill's own companion
     `spec.md`, not as a pointer, breadcrumb, or "see spec.md" hint. The
     compressed runtime is self-contained; pointing the agent at the spec
@@ -278,42 +279,42 @@ Verify the companion spec is structurally sound, then verify the compiled artifa
     whose operation takes a spec as input (e.g. `spec-auditing`,
     `skill-auditing`) may reference `spec.md` files that are the subject
     of the operation — never the skill's own companion spec.
-10a. **Eval log presence (informational)** — perform the eval-presence
+15. **Eval log presence (informational)** — perform the eval-presence
     check by reading the co-located `eval.txt` sub-instructions. Full
     procedure (four-option suggestion, honest-state principle,
     verdict-gate rule) lives in `eval.txt` / `eval.uncompressed.md`.
     Absence of `eval.md` MUST NOT affect the verdict.
-11. **(A-FM-2) Description not restated** — search every artifact
+16. **(A-FM-2) Description not restated** — search every artifact
     (`uncompressed.md`, `SKILL.md`, `instructions.uncompressed.md`,
     `instructions.txt`) for body prose that duplicates the `description`
     frontmatter value. Any restatement → LOW (escalate to HIGH if
     verbatim duplication).
-13. **(A-FM-5) No exposition in runtime artifacts** — scan `SKILL.md`,
+17. **(A-FM-5) No exposition in runtime artifacts** — scan `SKILL.md`,
     `uncompressed.md`, `instructions.uncompressed.md`, and
     `instructions.txt` for rationale, "why this exists," root-cause
     narrative, historical notes, or background prose. Any found → HIGH.
     Rationale belongs exclusively in `spec.md`.
-14. **(A-FM-6) No non-helpful tags** — check all artifacts for descriptor
+18. **(A-FM-6) No non-helpful tags** — check all artifacts for descriptor
     lines that carry no operational value (e.g., "inline apply directly no
     dispatch," "dispatch skill," bare type labels not used as actionable
     instructions). Any found → LOW.
-15. **(A-FM-7) No empty sections** — verify every heading in every artifact
+19. **(A-FM-7) No empty sections** — verify every heading in every artifact
     has body content before the next heading or end of file. An empty
     section → HIGH.
-16. **(A-FM-8) Iteration-safety placement** — verify the Iteration Safety
+20. **(A-FM-8) Iteration-safety placement** — verify the Iteration Safety
     blurb is absent from `instructions.uncompressed.md` and
     `instructions.txt`. Presence in either → HIGH. Additionally, if the
     guard appears in both `SKILL.md` and `instructions.*`, flag as
     probable duplication → HIGH.
-17. **(A-FM-9a) Iteration-safety pointer form** — if a caller skill
+21. **(A-FM-9a) Iteration-safety pointer form** — if a caller skill
     references iteration-safety, verify it uses the exact 2-line pointer
     block form (`Do not re-audit unchanged files.` + `See
     \``<path>`/iteration-safety/SKILL.md\`.`) and that the relative path
     matches the caller's actual folder depth. Any deviation → HIGH.
-18. **(A-FM-9b) No verbatim Rule A/B restatement** — scan all artifacts
+22. **(A-FM-9b) No verbatim Rule A/B restatement** — scan all artifacts
     for verbatim restatement of iteration-safety Rules A or B beyond the
     sanctioned 2-line pointer block. Any found → HIGH.
-19. **(A-XR-1) Cross-reference anti-pattern** — scan `SKILL.md`,
+23. **(A-XR-1) Cross-reference anti-pattern** — scan `SKILL.md`,
     `instructions.txt`, any sub-instructions (e.g. `eval.txt`), and
     `uncompressed.md` for any pointer to ANOTHER skill's `uncompressed.md`
     or `spec.md` by file path or inline link. Examples of violations: "See
@@ -359,44 +360,19 @@ Applies to dispatch skills only. Auditor runs these checks against `uncompressed
      "Iteration-safe via hash-record", "Zero errors gate") — these waste trigger-phrase
      budget and must be removed.
 
-4. **Inline dispatch guard (DS-4)** — the dispatch instruction MUST follow the
-   canonical cross-platform dispatch pattern:
+4. **Inline dispatch guard (DS-4)** — dispatch skills MUST use the canonical
+   prompt-only dispatch pattern. See `dispatch/dispatch-pattern.md` for context.
 
-   ```text
-   Without reading `<instructions-file>` yourself, spawn a zero-context, haiku-class sub-agent in the background:
-
-   **Claude Code:** `Agent` tool. Pass: `"Read and follow <instructions-file> here. Input: <args>"`
-
-   **VS Code / Copilot:** `runSubagent(model: "Claude Haiku 4.5", prompt: "Read and follow <instructions-file> in <skill_dir>. Input: <args>")`
-
-   Don't read `<instructions-file>` yourself.
-
-   Returns: `<return contract>`
-
-   NEVER READ OR INTERPRET `<instructions-file>` YOURSELF. Let the sub-agent do the work.
-   ```
-
-   Three reinforcements are required:
-   - **Opening prefix:** `Without reading <instructions-file> yourself, spawn...` —
-     primes the agent before reading the bullets.
-   - **Mid-block warning:** `Don't read <instructions-file> yourself.` — repeated
-     after the cross-platform bullets so the directive lands twice.
-   - **Closing reinforcement:** `NEVER READ OR INTERPRET <instructions-file>
-     YOURSELF. Let the sub-agent do the work.` — uppercase reinforcement at the
-     end of the SKILL.md/uncompressed.md body. Empirically, the closing
-     uppercase form is what makes VS Code Copilot reliably dispatch instead
-     of inlining.
+   Required elements in `uncompressed.md`:
+   - `<instructions>` binding MUST include a `NEVER READ` guard (e.g. `NEVER READ THIS FILE` or `NEVER READ`) on the same line.
+   - `<prompt>` binding MUST use the `Read and follow <instructions-abspath>` form.
+   - MUST delegate via `Follow dispatch skill. See <path>/dispatch/SKILL.md`.
 
    Violations:
-   - Standalone bold warnings (`**Do not execute this skill inline.**`)
-     separated from the dispatch line → HIGH (fold into the pattern, don't
-     keep as a banner).
-   - Missing the opening "Without reading" prefix → HIGH.
-   - Missing the closing uppercase reinforcement → MEDIUM (some runtimes
-     reliably dispatch without it; VS Code Copilot needs it).
-   - Cross-platform bullets reduced to a single platform → HIGH (the dual
-     Claude Code / VS Code form is the cross-platform contract).
-   - VS Code line missing `model: "Claude Haiku 4.5"` literal → HIGH.
+   - Missing `NEVER READ` guard on the `<instructions>` binding → HIGH.
+   - Missing `<prompt>` binding or not using the `Read and follow` form → HIGH.
+   - Missing `Follow dispatch skill. See ...` delegation line → HIGH.
+   - Stale standalone opener (`Without reading... yourself, spawn...`) or closer (`NEVER READ OR INTERPRET...`) outside the variable block → MEDIUM (stale pattern; remove).
 
 5. **No substrate duplication in consumers (DS-5)** — consumer skills that produce
    records (audit reports, hygiene reports, review reports) MUST NOT inline the
@@ -414,11 +390,12 @@ Applies to dispatch skills only. Auditor runs these checks against `uncompressed
 
 7. **(A-FM-10) Launch-script form on dispatch skills** — `uncompressed.md` for a
    dispatch skill MUST contain only: frontmatter, optional H1, dispatch invocation +
-   input signature, return contract, optional 2-line iteration-safety pointer. Any
-   content beyond these elements (executor procedure, Modes tables, examples,
-   rationale, Related breadcrumbs, Behavior sections, Output format descriptions,
-   model-class guidance, false-positive guard lists) → HIGH. Content belongs in
-   `instructions.uncompressed.md` or `spec.md`.
+   input signature, return contract, optional 2-line iteration-safety pointer, optional
+   inline result check protocol (pre-dispatch cache check + post-execute result routing
+   via a co-located result tool). Any content beyond these elements (executor procedure,
+   Modes tables, examples, rationale, Related breadcrumbs, Behavior sections, Output
+   format descriptions, model-class guidance, false-positive guard lists) → HIGH.
+   Content belongs in `instructions.uncompressed.md` or `spec.md`.
 
 These checks extend Step 3. Violations are recorded in the Step 3 findings table
 under a "Dispatch Skill Checks" group and contribute to the verdict per the normal

@@ -8,7 +8,7 @@ Read-only.
 
 ## Parameters
 
-| Positional | Type | Required | Description                                 |
+| Positional | Type | Required | Description |
 | ---------- | ---- | -------- | ------------------------------------------- |
 | `skill_dir` | string | yes | Absolute path to the skill folder being audited. |
 
@@ -38,17 +38,17 @@ The tool enumerates ALL files inside `<skill_dir>`, recursively, excluding: (a) 
      - `error` -> emit `FAIL: <abs-path>`, exit 0.
      - any other value -> emit `ERROR: malformed cache record at <abs-path>`, exit 1.
 
-## Output contract
+## Output
 
 One line, no trailing whitespace, LF terminator. Forward-slash paths.
 
-| Condition          | Output                          | Exit |
+| Condition | Output | Exit |
 | ------------------ | ------------------------------- | ---- |
-| HIT, `result: pass`     | `PASS: <abs-path>`         | 0    |
-| HIT, `result: findings` | `NEEDS_REVISION: <abs-path>` | 0  |
-| HIT, `result: error`    | `FAIL: <abs-path>`         | 0    |
-| MISS               | `MISS: <abs-path>`              | 0    |
-| Argument or runtime error | `ERROR: <reason>`        | 1    |
+| HIT, `result: pass` | `PASS: <abs-path>` | 0 |
+| HIT, `result: findings` | `NEEDS_REVISION: <abs-path>` | 0 |
+| HIT, `result: error` | `FAIL: <abs-path>` | 0 |
+| MISS | `MISS: <abs-path>` | 0 |
+| Argument or runtime error | `ERROR: <reason>` | 1 |
 
 The host:
 
