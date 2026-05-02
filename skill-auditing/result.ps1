@@ -1,8 +1,7 @@
 #!/usr/bin/env pwsh
 # result.ps1 — skill-auditing result tool
 # Wraps hash-record-manifest and translates HIT into the cached audit verdict.
-# Usage: result <skill_dir> <mode>
-#   mode: report | uncompressed
+# Usage: result <skill_dir>
 # Outputs one of:
 #   PASS: <abs-path>            (HIT, result: pass)         (exit 0)
 #   NEEDS_REVISION: <abs-path>  (HIT, result: findings)     (exit 0)
@@ -13,8 +12,6 @@
 param(
     [Parameter(Position=0)]
     [string]$skill_dir,
-    [Parameter(Position=1)]
-    [string]$mode,
     [switch]$help,
     [switch]$h
 )
@@ -23,7 +20,7 @@ $ErrorActionPreference = 'Continue'
 
 if ($help -or $h) {
     [Console]::Out.Write(@"
-Usage: result <skill_dir> <mode>
+Usage: result <skill_dir>
 
 Wraps hash-record-manifest for skill-auditing and translates a HIT into
 the cached audit verdict by reading the report's frontmatter.
@@ -32,8 +29,6 @@ Arguments:
   skill_dir  Absolute path to the skill folder being audited.
              Tool enumerates all files recursively, excluding
              dot-prefixed directories and optimize-log.md.
-  mode       report       -- compiled artifacts cache (SKILL.md + instructions.txt)
-             uncompressed -- source artifacts cache (uncompressed.md + instructions.uncompressed.md + spec.md)
 
 Output (stdout, one line):
   PASS: <abs-path>            Cached report says result: pass.
@@ -49,19 +44,12 @@ Exit codes:
     exit 0
 }
 
-if (-not $skill_dir -or -not $mode) {
-    [Console]::Out.Write("ERROR: missing arguments -- expected <skill_dir> <mode>`n")
+if (-not $skill_dir) {
+    [Console]::Out.Write("ERROR: missing argument -- expected <skill_dir>`n")
     exit 1
 }
 
-$record_filename = switch ($mode) {
-    'report'       { 'report.md' }
-    'uncompressed' { 'uncompressed.md' }
-    default {
-        [Console]::Out.Write("ERROR: invalid mode: $mode (expected: report | uncompressed)`n")
-        exit 1
-    }
-}
+$record_filename = 'report.md'
 
 if (-not (Test-Path -LiteralPath $skill_dir -PathType Container)) {
     [Console]::Out.Write("ERROR: skill_dir not found: $skill_dir`n")
@@ -117,10 +105,8 @@ if (-not (Test-Path -LiteralPath $manifest_ps1)) {
     exit 1
 }
 
-# Determine op_kind and record_filename
+# Invoke manifest
 $op_kind = 'skill-auditing/v2'
-
-# Invoke manifest with computed op_kind + record_filename
 try {
     $manifest_args = @($op_kind, $record_filename) + $files
     $manifest_out = & pwsh -NoProfile -File $manifest_ps1 @manifest_args 2>$null

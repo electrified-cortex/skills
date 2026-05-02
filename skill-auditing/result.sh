@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # result.sh — skill-auditing result tool
-# Usage: result.sh <skill_dir> <mode>
-#   mode: report | uncompressed
+# Usage: result.sh <skill_dir>
 # Outputs one of:
 #   PASS: <abs-path>            (HIT, result: pass)         (exit 0)
 #   NEEDS_REVISION: <abs-path>  (HIT, result: findings)     (exit 0)
@@ -12,7 +11,7 @@ set -e
 
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   cat <<'USAGE'
-Usage: result.sh <skill_dir> <mode>
+Usage: result.sh <skill_dir>
 
 Wraps hash-record-manifest for skill-auditing and translates a HIT into
 the cached audit verdict by reading the report's frontmatter.
@@ -21,8 +20,6 @@ Arguments:
   skill_dir  Absolute path to the skill folder being audited.
              Tool enumerates all files recursively, excluding
              dot-prefixed directories and optimize-log.md.
-  mode       report       — compiled artifacts cache (SKILL.md + instructions.txt)
-             uncompressed — source artifacts cache (uncompressed.md + instructions.uncompressed.md + spec.md)
 
 Output (stdout, one line):
   PASS: <abs-path>            Cached report says result: pass.
@@ -38,26 +35,13 @@ USAGE
   exit 0
 fi
 
-if [ "$#" -lt 2 ]; then
-  echo "ERROR: missing arguments -- expected <skill_dir> <mode>"
+if [ "$#" -lt 1 ]; then
+  echo "ERROR: missing argument -- expected <skill_dir>"
   exit 1
 fi
 
 SKILL_DIR="$1"
-MODE="$2"
-
-case "$MODE" in
-  report)
-    RECORD_FILE="report.md"
-    ;;
-  uncompressed)
-    RECORD_FILE="uncompressed.md"
-    ;;
-  *)
-    echo "ERROR: invalid mode: $MODE (expected: report | uncompressed)"
-    exit 1
-    ;;
-esac
+RECORD_FILE="report.md"
 
 if [ ! -d "$SKILL_DIR" ]; then
   echo "ERROR: skill_dir not found: $SKILL_DIR"
