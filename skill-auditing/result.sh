@@ -18,8 +18,10 @@ the cached audit verdict by reading the report's frontmatter.
 
 Arguments:
   skill_dir  Absolute path to the skill folder being audited.
-             Tool enumerates all files recursively, excluding
-             dot-prefixed directories and optimize-log.md.
+             Tool hashes only semantic content files: SKILL.md,
+             instructions.txt, spec.md, uncompressed.md,
+             instructions.uncompressed.md (whichever exist).
+             Skill dir must be inside a git repository.
 
 Output (stdout, one line):
   PASS: <abs-path>            Cached report says result: pass.
@@ -48,38 +50,32 @@ if [ ! -d "$SKILL_DIR" ]; then
   exit 1
 fi
 
-# Enumerate ALL regular files in skill_dir, recursively, skipping any file
-# whose path passes through a dot-prefixed DIRECTORY (e.g. .hash-record/,
-# .tests/, .worktrees/). Dot-prefixed FILES (e.g. .gitignore) ARE included.
-FILES=()
-while IFS= read -r -d '' F; do
-  REL="${F#./}"
-  DIR_PART="$(dirname "$REL")"
-  if [ "$DIR_PART" != "." ]; then
-    SKIP=0
-    IFS='/' read -ra SEGS <<< "$DIR_PART"
-    for SEG in "${SEGS[@]}"; do
-      case "$SEG" in
-        .*) SKIP=1; break ;;
-      esac
-    done
-    [ "$SKIP" -eq 1 ] && continue
-  fi
-  [ "${REL##*/}" = "optimize-log.md" ] && continue
-  FILES+=("$F")
-done < <(cd "$SKILL_DIR" && find . -type f -print0 | LC_ALL=C sort -z)
+SKILL_DIR=$(cd "$SKILL_DIR" && pwd)
 
-ABS_FILES=()
-for F in "${FILES[@]}"; do
-  REL="${F#./}"
-  ABS_FILES+=("$SKILL_DIR/$REL")
+# Enumerate only the semantic content files the audit agent reads.
+# Hashing all files causes indeterminism when non-semantic files are
+# added/modified between the pre- and post-dispatch result calls.
+# Order is intentional — hash key must be identical between pre- and post-dispatch calls.
+# Do not sort or reorder this list.
+SEMANTIC_NAMES=("SKILL.md" "instructions.txt" "spec.md" "uncompressed.md" "instructions.uncompressed.md")
+FILES=()
+for NAME in "${SEMANTIC_NAMES[@]}"; do
+    CANDIDATE="$SKILL_DIR/$NAME"
+    if [ -f "$CANDIDATE" ]; then
+        FILES+=("$CANDIDATE")
+    fi
 done
-FILES=("${ABS_FILES[@]}")
 
 if [ "${#FILES[@]}" -eq 0 ]; then
   echo "ERROR: no files found in skill_dir"
   exit 1
 fi
+
+# Verify skill_dir is inside a git repo — fail explicitly instead of silent fallback
+git -C "$SKILL_DIR" rev-parse --show-toplevel >/dev/null 2>&1 || {
+    echo "ERROR: skill_dir is not inside a git repository: $SKILL_DIR"
+    exit 1
+}
 
 # Locate sibling manifest tool
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -91,7 +87,7 @@ if [ ! -f "$MANIFEST_SH" ]; then
 fi
 
 # Invoke manifest
-MANIFEST_OUT=$(bash "$MANIFEST_SH" "skill-auditing/v2" "$RECORD_FILE" "${FILES[@]}" 2>/dev/null) || {
+MANIFEST_OUT=$(bash "$MANIFEST_SH" "skill-auditing/v2" "$RECORD_FILE" "${FILES[@]}") || {
   echo "ERROR: hash-record-manifest failed for: $SKILL_DIR"
   exit 1
 }

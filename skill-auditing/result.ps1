@@ -27,8 +27,10 @@ the cached audit verdict by reading the report's frontmatter.
 
 Arguments:
   skill_dir  Absolute path to the skill folder being audited.
-             Tool enumerates all files recursively, excluding
-             dot-prefixed directories and optimize-log.md.
+             Tool hashes only semantic content files: SKILL.md,
+             instructions.txt, spec.md, uncompressed.md,
+             instructions.uncompressed.md (whichever exist).
+             Skill dir must be inside a git repository.
 
 Output (stdout, one line):
   PASS: <abs-path>            Cached report says result: pass.
@@ -56,43 +58,30 @@ if (-not (Test-Path -LiteralPath $skill_dir -PathType Container)) {
     exit 1
 }
 
-# Enumerate ALL regular files in skill_dir, recursively, skipping any path
-# where any component starts with '.' (dot-prefixed files or directories like
-# .hash-record/, .tests/, .worktrees/, .gitignore).
+# Enumerate only the semantic content files the audit agent reads.
+# Hashing all files causes indeterminism when non-semantic files (stamps,
+# scripts, logs) are added/modified between the pre- and post-dispatch calls.
+# Order is intentional — hash key must be identical between pre- and post-dispatch calls.
+# Do not sort or reorder this list.
+$semantic_names = @('SKILL.md', 'instructions.txt', 'spec.md', 'uncompressed.md', 'instructions.uncompressed.md')
 $skill_dir_full = (Resolve-Path -LiteralPath $skill_dir).Path
-$skill_dir_full_fwd = $skill_dir_full -replace '\\', '/'
-$files_raw = Get-ChildItem -LiteralPath $skill_dir -Recurse -File -Force | ForEach-Object { $_.FullName }
 $files = @()
-foreach ($f in $files_raw) {
-    $f_fwd = $f -replace '\\', '/'
-    # Strip the skill_dir prefix to get relative path
-    if ($f_fwd.StartsWith($skill_dir_full_fwd + '/')) {
-        $rel = $f_fwd.Substring($skill_dir_full_fwd.Length + 1)
-    } else {
-        $rel = $f_fwd
-    }
-    # Skip if any DIRECTORY component starts with '.' (leaf filename can be a dotfile).
-    $segments = $rel -split '/'
-    $dir_segments = $segments[0..([math]::Max(0, $segments.Length - 2))]
-    $skip = $false
-    if ($segments.Length -gt 1) {
-        foreach ($component in $dir_segments) {
-            if ($component.StartsWith('.')) {
-                $skip = $true
-                break
-            }
-        }
-    }
-    $leaf = Split-Path -Leaf $f
-    if (-not $skip -and $leaf -ne 'optimize-log.md') {
-        $files += $f
+foreach ($name in $semantic_names) {
+    $candidate = Join-Path $skill_dir_full $name
+    if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+        $files += $candidate
     }
 }
-# Sort by relative path (byte-order) for stable manifest input
-$files = $files | Sort-Object -CaseSensitive
 
 if ($files.Count -eq 0) {
     [Console]::Out.Write("ERROR: no files found in skill_dir`n")
+    exit 1
+}
+
+# Verify skill_dir is inside a git repo — fail explicitly instead of silent fallback
+$null = & git -C $skill_dir_full rev-parse --show-toplevel 2>$null
+if ($LASTEXITCODE -ne 0) {
+    [Console]::Out.Write("ERROR: skill_dir is not inside a git repository: $skill_dir`n")
     exit 1
 }
 
@@ -109,7 +98,7 @@ if (-not (Test-Path -LiteralPath $manifest_ps1)) {
 $op_kind = 'skill-auditing/v2'
 try {
     $manifest_args = @($op_kind, $record_filename) + $files
-    $manifest_out = & pwsh -NoProfile -File $manifest_ps1 @manifest_args 2>$null
+    $manifest_out = & pwsh -NoProfile -File $manifest_ps1 @manifest_args
     $manifest_out = $manifest_out -join "`n" -replace "`r", '' -split "`n" | Where-Object { $_ -ne '' } | Select-Object -Last 1
 } catch {
     [Console]::Out.Write("ERROR: hash-record-manifest failed for: $skill_dir`n")
