@@ -43,7 +43,6 @@ Output is always exactly one line starting with a prefix. Long paths may visuall
 Branch on `stdout`:
 
 - `PASS: <report_path>` -> done.
-- `NEEDS_REVISION: <report_path>` -> caller may dispatch fix pass with report; surface and stop.
-- `FAIL: <report_path>` -> surface and stop.
 - `ERROR: <reason>` -> stop, surface reason.
 - `MISS: <abs-path>` -> executor failed to write report; surface `ERROR: executor did not write report at <report_path>`, stop.
+- `FAIL: <report_path>` or `NEEDS_REVISION: <report_path>` -> read `./fixing.md`.
