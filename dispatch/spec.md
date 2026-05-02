@@ -26,7 +26,7 @@ Does NOT cover:
 - How to author a skill or write a spec (`skill-writing`, `spec-writing`).
 - Inter-agent communication via Telegram, MCP, or other channels.
 - Non-dispatch delegation patterns (writing tasks to a queue for other agents to claim).
-- CLI dispatch as an alternative path when the Agent tool is unavailable (see `supplemental.md` for context inheritance and subagent type details).
+- Workflow patterns for consuming skills that call dispatch (result checks, iteration loops, hash-record integration — see the consuming skill's own spec and `supplemental.md §Hash-Record Integration`).
 
 This skill is a **runtime** skill, not an authoring skill. Cross-references are one-way: authoring skills reference `dispatch`; `dispatch` does not reference them back.
 
@@ -102,7 +102,7 @@ Must include a note to update the table when Anthropic releases a new model.
 
 ### Fallback
 
-R7. The runtime card must define fallback: when the "Dispatch" agent type is unavailable, omit `subagent_type` / `agentName`, continue anyway, and notify the host after completion that the "Dispatch" agent needs to be installed.
+R7. The runtime card must define fallback: when the "Dispatch" agent type is unavailable, omit `subagent_type` / `agentName` and continue. Behavior is identical to when the agent is installed; the agent adds context isolation and performance. Notify the host after completion.
 
 ### Return
 
@@ -299,12 +299,10 @@ Cross-reference: `copilot-cli` skill for operation routing, flag assembly, and o
 | Purpose | Context | No |
 | Scope | Boundary | Yes |
 | Definitions | Reference | Yes |
-| Requirements (R1–R16 incl. R3a) | Normative spec | Yes |
+| Requirements (R1–R10) | Normative spec | Yes |
 | Constraints (C1–C7) | Normative spec | Yes |
-| Behavior (B1–B5) | Normative spec | Yes |
-| Defaults and Assumptions (D1–D4) | Normative spec | Yes |
-| Error Handling (E1–E4) | Normative spec | Yes |
-| Precedence Rules (P1–P4) | Normative spec | Yes |
+| Defaults and Assumptions (D1–D3) | Normative spec | Yes |
+| Precedence Rules (P1–P3) | Normative spec | Yes |
 | Don'ts (DN1–DN12) | Normative spec | Yes |
 | Platform Gotchas (PG1–PG4) | Normative deviation | Yes |
 | CLI Dispatch Mode (CDR1–CDR17, CDRC1–CDRC3, CDRDN1–CDRDN5) | Normative spec | Yes |

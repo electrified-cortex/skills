@@ -5,6 +5,7 @@ The dispatch skill requires a companion agent file installed in your project's a
 ## Agent Files
 
 Source: `dispatch/agents/`
+See `dispatch/agents/README.md` for agent file descriptions and install path details.
 
 | File | Environment | Install path |
 | --- | --- | --- |
@@ -15,5 +16,4 @@ Copy the appropriate file. The agent name is `Dispatch` in both environments.
 
 ## If Not Installed
 
-Dispatch cannot function effectively without the agent file.
-If it is absent, stop and tell the host to install it before proceeding.
+The dispatch primitive works without the agent file — it omits `subagent_type` / `agentName` and dispatches using the default subagent type. Behavior is identical to when the agent is installed; the agent file adds context isolation and consistent performance. Install is strongly recommended for production use. Notify the host after completion if the agent file is absent.

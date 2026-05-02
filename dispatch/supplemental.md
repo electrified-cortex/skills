@@ -154,3 +154,15 @@ Use this table to select the enforcement method when setting up a CLI dispatch i
 At least one method must be applied per CDR10. Prefer permission policy; layer prompt instruction on top for defense in depth.
 
 ANTI-PATTERN: Calling agent dispatches `claude -p "Refactor auth.ts and save the result."` — this violates CDR8 (mutation) and CDR3 (no scope-limiting prompt on what to return). Correct: `claude -p "Suggest refactoring changes for auth.ts. Return proposed diff as text. Do not modify any files."`
+
+## Hash-Record Integration
+
+Dispatch and hash-record are orthogonal. Dispatch has no knowledge of any cache or hash-record.
+
+The integration pattern used by consuming skills like `skill-auditing` and `markdown-hygiene`:
+
+1. **Pre-dispatch**: the host calls the hash-record `result` tool (a script, not a dispatch call). If the result is `HIT`, dispatch is skipped — the cached report is used directly.
+2. **Dispatch**: the host builds a prompt and calls the dispatch skill. The sub-agent reads `instructions.txt` and executes. The host **never** reads `instructions.txt` directly.
+3. **Post-dispatch**: the host calls `result` again to verify the dispatched agent wrote the report. `MISS` means the agent failed; `HIT` resolves the result.
+
+Dispatch does not manage cache records. Hash-record decisions belong to the consuming skill.

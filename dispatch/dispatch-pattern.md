@@ -56,6 +56,20 @@ omit `agentName` and continue, but notify the host after completion. This
 makes the primitive resilient across environments with different agent
 installations.
 
+## Consumer Pattern
+
+Skills that use dispatch follow a common three-phase pattern:
+
+1. **Pre-dispatch result check**: the consuming skill calls a `result` tool (a script, not a dispatch call). If `HIT`, dispatch is skipped and the cached report is used directly.
+2. **Dispatch**: the consuming skill builds a prompt (typically "read and follow `<instructions.txt>`; input: `<args>`") and calls the dispatch skill. The sub-agent reads `instructions.txt` and executes. The host **never** reads `instructions.txt` — that is the sub-agent's operative content.
+3. **Post-dispatch result check**: the consuming skill calls `result` again to verify the sub-agent wrote the report. On `MISS`, the consuming skill handles the failure (log, retry up to max iterations, or surface error).
+
+Reference consumers: `markdown-hygiene/SKILL.md`, `skill-auditing/SKILL.md`.
+
+## Hash-Record Relationship
+
+Dispatch is hash-record-agnostic. The integration belongs to the consuming skill: cache check before dispatch, cache write after dispatch (by the dispatched agent). Dispatch just spawns; caching decisions are upstream.
+
 ## Historical note
 
 Prior to the prompt-only refactor, each dispatch skill embedded a verbatim

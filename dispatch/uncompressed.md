@@ -64,11 +64,17 @@ runSubagent({
 
 ## Fallback
 
-If you are unable to use the "Dispatch" agent, omit the subagent name/type and continue anyway,
-but notify the host after completion that the "Dispatch" agent needs to be installed for optimal performance and isolation.
+If the "Dispatch" agent is not installed: omit `subagent_type` / `agentName` and continue — behavior is identical. The agent adds context isolation and consistent performance. Notify the host after completion.
 
-If the model requested is not available, stop and inform the caller; suggest an alternative model.
+If the requested model is not available: stop and inform the caller; suggest an alternative.
 
 ## Return
 
 Return (passthrough) whatever the sub-agent output was to the caller of this skill.
+
+## See also
+
+- `supplemental.md` — context inheritance evidence, system-prompt pollution, CLI dispatch examples, hash-record integration
+- `dispatch-pattern.md` — design rationale, variable substitution model, consumer pattern
+- `installation.md` — agent file installation for Claude Code and VS Code
+- `dispatch-setup/SKILL.md` — VS Code / Cursor setup troubleshooting
