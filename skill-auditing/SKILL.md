@@ -39,7 +39,7 @@ You (the host) run `result` again directly — do NOT dispatch it.
 Same invocation as the first Inline result check.
 Branch on stdout (last line):
 
-- `PASS: <report_path>` -> done.
+- `PASS: <report_path>` -> `done.`
 - `ERROR: <reason>` -> surface the stdout, stop.
 - `MISS: <abs-path>` -> executor failed to write report; surface `ERROR: executor did not write report at <report_path>`, stop.
 - `FAIL: <report_path>` or `NEEDS_REVISION: <report_path>` -> surface the stdout, and append:

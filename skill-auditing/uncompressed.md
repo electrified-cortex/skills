@@ -41,7 +41,7 @@ You (the host) run `result` again directly — do NOT dispatch it.
 Same invocation as the first Inline result check.
 Branch on stdout (last line):
 
-- `PASS: <report_path>` -> done.
+- `PASS: <report_path>` -> `done.`
 - `ERROR: <reason>` -> surface the stdout, stop.
 - `MISS: <abs-path>` -> executor failed to write report; surface `ERROR: executor did not write report at <report_path>`, stop.
 - `FAIL: <report_path>` or `NEEDS_REVISION: <report_path>` -> surface the stdout, and append:
@@ -51,4 +51,3 @@ Branch on stdout (last line):
    To fix, dispatch a sub-agent with this report as input instructing it to fix all the issues.
    Keep track of the number of revision rounds. If it has been 3, stop here and surface the report.
    ```
-
