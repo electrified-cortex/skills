@@ -2,7 +2,31 @@
 
 ## Purpose
 
-Deterministic scan of a `.md` file for MD rule violations. Runs a two-step preparation pass before scanning: the co-located `lint` tool unconditionally auto-fixes known safe rules, followed by any installed markdown linter for a broader auto-fix pass. Writes `lint.md` at the host-specified path with imperative `Fix:` instructions per finding. Preparation always modifies the target file; the scan pass then reads the post-fix file.
+Deterministic scan of a `.md` file for MD rule violations. Runs a two-step preparation pass before scanning: the co-located `lint` tool unconditionally auto-fixes known safe rules, followed by any installed markdown linter for a broader auto-fix pass. Writes `lint.md` at the host-specified path with imperative `Fix:` instructions per finding. Preparation may modify the target file via safe auto-fixes; the scan pass then reads the post-fix file.
+
+## Scope
+
+Applies when a deterministic MD rule violation scan is needed on a single `.md` file. Covers MD001–MD060 and related rules. Does not cover semantic advisory rules (SA001–SA038) — that is `markdown-hygiene-analysis`. Does not cover orchestration logic — the parent `markdown-hygiene` skill handles sequencing and aggregation.
+
+## Definitions
+
+- **Executor**: The dispatched agent that runs the scan and writes `lint.md`.
+- **Host**: The caller of this sub-skill (typically the parent `markdown-hygiene` skill).
+- **Preparation**: The auto-fix pass that runs `lint.sh`/`lint.ps1` and any installed linter before scanning. May modify the target file.
+- **lint.md**: The output record written by the executor containing MD rule findings and result frontmatter.
+- **Scan pass**: The rule-checking phase that runs after preparation on the post-fix file.
+
+## Requirements
+
+1. The executor **must** run the co-located `lint.sh`/`lint.ps1` preparation script unconditionally before scanning.
+2. If an installed markdown linter is available, the executor **must** run its auto-fix pass after the local lint tool. If absent, the executor **must not** install one.
+3. After preparation, the executor **must** re-probe the hash-record cache (`result check, lint mode`) to detect if the now-modified file already has a cached result.
+4. The executor **must** run `verify.sh`/`verify.ps1` and include its output in findings. It **must not** re-check rules already covered by verify unless verify was skipped or errored.
+5. The executor **must** suppress MD041 when the first non-blank line is `---` (YAML frontmatter), regardless of `--ignore`.
+6. The executor **must** write `lint.md` at `<lint_path>`. If the file already exists it **must** be overwritten.
+7. Every finding **must** be verifiable against a specific line in the post-fix file. Hallucinated findings are worse than missed findings — drop any finding not pointable to a verified line.
+8. The executor **must not** author scripts or write any file other than `<lint_path>`.
+9. Preparation **may** modify `<markdown_file_path>` via safe auto-fixes only. The scan pass **must not** modify it.
 
 ## Model Tier
 

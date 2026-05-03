@@ -9,6 +9,7 @@ param(
     [Parameter(Position = 0, Mandatory, ValueFromRemainingArguments)]
     [string[]]$Patterns
 )
+$ErrorActionPreference = 'Stop'
 
 function Invoke-LintFile([string]$FilePath) {
     if (-not (Test-Path $FilePath -PathType Leaf)) {

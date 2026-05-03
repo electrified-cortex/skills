@@ -14,6 +14,7 @@ param(
     [Parameter()]
     [string]$Ignore = ''
 )
+$ErrorActionPreference = 'Stop'
 
 if (-not (Test-Path $FilePath -PathType Leaf)) {
     [Console]::Error.WriteLine("ERROR: file not found: $FilePath")

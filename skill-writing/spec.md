@@ -317,7 +317,7 @@ probable duplication violation and MUST be flagged.
 R-FM-9 **Rules A and B verbatim live only in iteration-safety.** Callers
 MUST use only the 2-line pointer block:
 
-```
+```md
 Do not re-audit unchanged files.
 See `<relative-path>/iteration-safety/SKILL.md`.
 ```
@@ -386,7 +386,7 @@ High/Low decision rule is.
 **Examples:**
 
 | Skill | Frequency | Recommendation |
-|---|---|---|
+| --- | --- | --- |
 | markdown-hygiene | High (before every commit, many files) | Haiku-readiness justified |
 | code-review | High (every PR, many files) | Haiku-readiness justified |
 | skill-auditing | Medium | Haiku-readiness recommended |
@@ -592,6 +592,43 @@ or by stripping `<repo-root>/` from an absolute path.
 Frontmatter, body prose, code samples, and embedded examples are all in
 scope. Stdout return values that emit absolute paths (e.g. `PATH: <abs>`)
 are exempt — those are runtime addresses, not artifact body content.
+
+## R-SS-1 — Sub-skill Input Isolation
+
+Sub-skills within a parent orchestrator MUST NOT accept as named inputs
+the output paths, result tokens, or computed artifacts of sibling
+sub-skills. Each sub-skill's interface MUST accept only:
+
+- The primary resource being processed (e.g., document path, file path).
+- Skill-specific configuration parameters (e.g., `--ignore` flags, style options).
+
+The parent orchestrator owns sequencing, result passing, and
+cross-sub-skill coordination. If context from one sub-skill's output
+is needed by another, the parent transforms and injects it through its
+own procedure — not by threading one sub-skill's output path directly
+into another sub-skill's input signature.
+
+Coupling sub-skill A's output format into sub-skill B's input signature
+makes B fragile: any change to A's output breaks B. The parent is the
+correct integration point for this knowledge.
+
+### Forbidden (example)
+
+```text
+# FORBIDDEN — analysis sub-skill accepting lint sub-skill output path
+Inputs:
+  <markdown_file_path> — path to the document
+  <lint_path> — path to lint report from sibling lint sub-skill
+```
+
+### Allowed Result
+
+```text
+# ALLOWED — analysis sub-skill with only primary input + own config
+Inputs:
+  <markdown_file_path> — path to the document
+  --ignore <RULE>[,<RULE>...] — optional SA rules to suppress
+```
 
 ## Relationship to Other Skills
 

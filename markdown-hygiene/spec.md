@@ -181,7 +181,7 @@ After each full cycle (lint → analysis → aggregate), the host branches on `r
 
 **On fix agent return:**
 
-- `fixed: <report_path>` — fixes applied to `<markdown_file_path>`. Re-run the full cycle (Preparation onward). Count as a fail iteration; after the 3rd, stop and return `findings: <report_path>` to caller.
+- `fixed: <report_path>` — fixes applied to `<markdown_file_path>`. Re-run lint only (not analysis — see below). Count as a fail iteration; after the 3rd, stop and return `findings: <report_path>` to caller.
 - `clean: <report_path>` — no file changes; only advisory skips logged. Run prune, return `pass: <report_path>` to caller.
 - `ERROR: <reason>` — stop. Surface `ERROR: <reason>` to caller.
 
@@ -200,6 +200,14 @@ only `<prompt>` — it does not perform template substitution. The host is the o
 party that constructs prompt strings.
 
 **Max 3 `fixed:` iterations.** If the fix agent keeps returning `fixed:` and lint keeps finding new issues, cap at 3 restart cycles, then stop and return `findings: <last-report-path>` to caller.
+
+**Analysis independence rule.** Analysis (SA001–SA038) is independent of lint. Lint fixes (formatting: spacing, heading levels, blank lines, etc.) cannot affect semantic advisory results. Therefore:
+
+- After a `fixed:` return from the combined fix agent, re-run lint only. Do NOT re-run analysis. Carry the cached `<analysis_path>` forward into the next aggregate step.
+- Only re-run analysis when semantic content changes — i.e., on the first pass, or if the host knows prose or instruction content was changed (not just lint fixes applied).
+- The host has agency to decide whether a change is lint-only or semantic. Default: treat `fixed:` returns as lint-only (since the fix prompt targets lint violations and advisory skips, neither of which rewrites prose).
+
+This rule reduces iteration cost significantly: lint-fix restart cycles pay one lint dispatch, not two.
 
 ### Advisory Rules (SA series)
 
@@ -403,9 +411,20 @@ Two statements in the document directly contradict each other (e.g. "Always log 
 **Analysis executor returns to dispatch caller** (one line only):
 
 - `clean` — no advisories found
-- `pass: <analysis_path>` — advisories found
+- `pass: <analysis_path>` — WARN/SUGGEST advisories found; no FAIL
 - `findings: <analysis_path>` — at least one FAIL-severity advisory found
 - `ERROR: <reason>` — failure before record write
+
+**Host-driven analysis state transitions** (after initial analysis runs):
+
+The host may update `analysis.md` result without re-running analysis:
+
+- `accepted` — host reviewed advisories and marked them acceptable (no changes to target file required). Applies when advisories are tolerable as-is.
+- `fixed` — host reviewed advisories AND made changes (applied a fix to the target file, or appended "Skipped: `<reason>`" notes to the analysis record).
+
+These transitions bypass re-running the analysis executor. Once `accepted` or `fixed`, the iteration loop treats analysis as settled and does not re-dispatch it. The host writes the updated `result:` field to `analysis.md` directly.
+
+This pattern (host-driven attestation transitions on sub-skill cache records) is reusable in other skills.
 
 **Host returns to its own caller** after the iteration loop completes (one line only):
 
@@ -548,11 +567,13 @@ Each advisory entry is two lines:
 - Lint clean, advisories present (worst is WARN or SUGGEST) -> `pass`
 
 `lint.md` `result` field values: `clean` or `fail` only.
-`analysis.md` `result` field values: `clean`, `pass`, or `fail`.
+`analysis.md` `result` field values: `clean`, `pass`, `fail`, `accepted`, or `fixed`.
 
 - `clean` — no advisories
-- `pass` — advisories present, worst severity is WARN or SUGGEST
-- `fail` — at least one advisory with severity FAIL
+- `pass` — advisories present, worst severity is WARN or SUGGEST (set by executor)
+- `fail` — at least one advisory with severity FAIL (set by executor)
+- `accepted` — host reviewed advisories and marked them acceptable; no target file changes (set by host)
+- `fixed` — host reviewed advisories and made changes (fix applied or skip notes appended) (set by host)
 
 ### Fix Line Philosophy
 

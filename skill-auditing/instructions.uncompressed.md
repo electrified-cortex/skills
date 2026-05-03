@@ -88,13 +88,15 @@ If dispatch: verify SKILL.md is a short routing card. If inline: verify SKILL.md
 
 **(A-IS-1) Input/output double-specification** — if the skill takes an INPUT parameter that duplicates an OUTPUT already determined by a referenced sub-skill (e.g. passing `result_file` when the sub-skill dictates the output path via its own hash-record write), flag as HIGH. The input surface must not override conventions dictated by referenced sub-skills.
 
+**(A-IS-2) Sub-skill input isolation** — if a sub-skill's input surface includes a parameter that accepts the output path, result token, or computed artifact of a sibling sub-skill (e.g. a `<lint_path>` parameter consuming a sibling lint sub-skill's output), flag as HIGH. Sub-skills must be independently executable from the primary input only; the parent orchestrator owns cross-sub-skill data flow. See `skill-writing` spec R-SS-1.
+
 ### Frontmatter
 
 `name` and `description` present and accurate.
 
 **(A-FM-1) Name matches folder** — `name` field MUST equal the skill's folder name exactly. Check both `uncompressed.md` and `SKILL.md`; mismatch in either → FAIL.
 
-**(A-FM-3) H1 per artifact** — `SKILL.md` MUST NOT contain an H1 (`# ...` line). `uncompressed.md` MUST contain an H1. `instructions.uncompressed.md` (if present) MUST contain an H1. `instructions.txt` (if present) MUST NOT contain an H1. Violation in `SKILL.md` or `instructions.txt` → HIGH. Missing H1 in `uncompressed.md` or `instructions.uncompressed.md` is out of scope — markdown-hygiene covers H1 enforcement.
+**(A-FM-3) H1 per artifact** — `SKILL.md` MUST NOT contain an H1 (`# ...` line). If `uncompressed.md` is present, it MUST contain an H1. `instructions.uncompressed.md` (if present) MUST contain an H1. `instructions.txt` (if present) MUST NOT contain an H1. Violation in `SKILL.md` or `instructions.txt` → HIGH. Absence of `uncompressed.md` is not a finding — it is optional. Missing H1 in `uncompressed.md` or `instructions.uncompressed.md` is out of scope — markdown-hygiene covers H1 enforcement.
 
 ### No duplication
 
@@ -118,14 +120,18 @@ Scan `SKILL.md`, `uncompressed.md`, and `instructions.uncompressed.md` for any e
 
 Verify each compiled artifact faithfully represents its uncompressed counterpart with no loss of intent. Minor wording compression is acceptable; omitted requirements, contradictions, or changed behavior are not.
 
+`uncompressed.md` is optional. Its absence is not a finding. When absent, the SKILL.md ↔ uncompressed.md parity row is N/A.
+
 | Compiled | Uncompressed counterpart |
 | --- | --- |
-| `SKILL.md` | `uncompressed.md` |
+| `SKILL.md` | `uncompressed.md` (optional) |
 | `instructions.txt` | `instructions.uncompressed.md` |
 
 For each pair where both files exist: read both, compare intent. If the compiled version diverges — finding text: `Parity failure: <description>. Fix: edit <uncompressed-file>, then recompress to <compiled-file>.`
 
 If a counterpart does not exist, skip parity for that pair (N/A).
+
+Advisory (LOW, non-blocking): if `uncompressed.md` is absent and `SKILL.md` is >60 lines → suggest maintaining an uncompressed source for readability and safe editing. Do not count toward verdict severity.
 
 ## Step 3 — Spec Alignment
 
@@ -248,9 +254,9 @@ Any cross-file path pointer → HIGH.
 
 ### (A-FM-10) Launch-script form on dispatch skills
 
-Applies to dispatch skills only (N/A for inline skills).
+Applies to dispatch skills only (N/A for inline skills). N/A if `uncompressed.md` is absent (SKILL.md-only is valid).
 
-Verify `uncompressed.md` contains ONLY:
+If `uncompressed.md` is present, verify it contains ONLY:
 
 - Frontmatter (`name`, `description`)
 - Optional H1
@@ -282,9 +288,9 @@ The host card MUST explicitly declare the return shape. Canonical shapes: `PATH:
 
 ### (DS-2) Host card minimalism
 
-`uncompressed.md` MUST NOT contain any of the following; each present → HIGH:
+The host card — `uncompressed.md` when present, or `SKILL.md` for SKILL.md-only dispatch skills — MUST NOT contain any of the following; each present → HIGH:
 
-- Internal cache mechanism descriptions (e.g., "iteration-safe via hash-record", "hash blob check") — caching is implementation detail invisible to the host.
+- Internal cache mechanism descriptions (e.g., "iteration-safe via hash-record", "hash blob check") — caching is implementation detail invisible to the host. **Exception: A-FM-10 inline result check protocol sections (pre-dispatch cache check + post-execute result routing via a co-located result tool) are explicitly allowed host behavior — do NOT flag these as DS-2 violations.**
 - Adaptive/conditional rules invisible to the host (e.g., "MD041 auto-suppressed when frontmatter present") — belong in `instructions.uncompressed.md`.
 - Tool-fallback hints (e.g., "use the CLI if available") — belong in instructions where the dispatched agent decides.
 - Subjective qualifiers (e.g., "Sonnet-class equivalent or diminishing returns") — replace with the operative model class in the dispatch line.
@@ -369,6 +375,7 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 | Inline/dispatch consistency | PASS/FAIL | |
 | Structure | PASS/FAIL | |
 | Input/output double-spec (A-IS-1) | PASS/FAIL | |
+| Sub-skill input isolation (A-IS-2) | PASS/FAIL/N/A | |
 | Frontmatter | PASS/FAIL | |
 | Name matches folder (A-FM-1) | PASS/FAIL | |
 | H1 per artifact (A-FM-3) | PASS/FAIL | |

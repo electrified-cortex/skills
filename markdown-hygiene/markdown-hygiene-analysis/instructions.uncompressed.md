@@ -11,7 +11,7 @@ Hard prohibition: do NOT author scripts, helper files, or any file other than `<
 
 ## Procedure
 
-1. **Semantic advisory scan** — read `<markdown_file_path>` and evaluate every SA rule below. These are observations, not lint violations. Each entry uses `Note:` instead of `Fix:` — the host LLM decides whether to act. SA032 and SA038 require semantic reasoning — flag only when clearly and unambiguously evident.
+1. Read `<markdown_file_path>` and evaluate every SA rule below. These are observations, not lint violations. Each entry uses `Note:` instead of `Fix:` — the host LLM decides whether to act. SA032 and SA038 require semantic reasoning — flag only when clearly and unambiguously evident.
 
 3. **SA rule reference:**
 
@@ -54,25 +54,24 @@ Hard prohibition: do NOT author scripts, helper files, or any file other than `<
    - SA037 — Mixed imperative and declarative in list: a list mixes command items and observation/description items without a signal distinguishing them — LLMs may execute observations or skip commands. Severity: WARN.
    - SA038 — Contradictory instructions: two statements in the document directly contradict each other (LLM-detected) — reconcile the contradiction explicitly. Severity: FAIL.
 
-2. **Determine overall result:**
-   - `advisory_count` = number of SA findings from step 1.
-   - `overall`:
-     - `pass` — if `advisory_count > 0`.
-     - `clean` — if `advisory_count == 0`.
+2. **Determine overall result from advisory severity:**
+   - Any FAIL-severity finding → `fail`.
+   - WARN or SUGGEST findings only → `pass`.
+   - No findings → `clean`.
 
 3. **Write `<analysis_path>`** (overwrite if present):
    - `mkdir -p $(dirname <analysis_path>)` first.
    - Frontmatter (open `---`, close `---`):
      - `file_path: <repo-relative path>` — via `git ls-files --full-name <markdown_file_path>` or strip `<repo_root>/`.
      - `operation_kind: markdown-hygiene-analysis`
-     - `result: clean` (no advisories) or `result: pass` (advisories present).
+     - `result: clean` (no advisories) or `result: pass` (WARN/SUGGEST only) or `result: fail` (any FAIL-severity).
    - Body:
      - No advisories: `# Result\n\nCLEAN`.
      - Advisories: `# Result\n\n## Advisory\n\n- <list>`. Each entry is two lines:
        - `SA0XX [SEVERITY] line N: <description>` (omit line N for document-level observations)
        - Indented `Note: <observation>` — plain English, no imperative.
 
-4. **Return** `clean` (no advisories) or `pass: <analysis_path>` (advisories present). On any failure, return `ERROR: <reason>`.
+4. **Return** `clean` (no advisories), `pass: <analysis_path>` (WARN/SUGGEST only), or `findings: <analysis_path>` (any FAIL-severity). On any failure, return `ERROR: <reason>`.
 
 ## Output Format
 
@@ -96,4 +95,3 @@ CLEAN
 - SA035 [WARN] line 47: action stated before gate condition
   Note: move "if the flag is set" to the front of the sentence
 ```
-
