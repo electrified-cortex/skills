@@ -49,7 +49,7 @@ Derive aggregate from `<lint_result>` and `<analysis_result>`:
 
 - `<lint_result>` starts with `findings:` → aggregate `fail`.
 - `<lint_result>` is `clean`, `<analysis_result>` is `accepted` or `fixed` → aggregate `pass`.
-- `<lint_result>` is `clean`, `<analysis_result>` starts with `pass:` → aggregate `pass`.
+- `<lint_result>` is `clean`, `<analysis_result>` starts with `pass:` or `findings:` → aggregate `pass`.
 - Both `clean` → aggregate `clean`.
 
 Write `report.md` at `<report_path>`:

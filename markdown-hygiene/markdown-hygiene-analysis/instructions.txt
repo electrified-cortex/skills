@@ -44,15 +44,14 @@ Hard prohibition: don't author scripts (`.ps1`, `.sh`, etc.), helper files, or a
    SA036 [WARN] — directive sentence has 3+ coordinating conjunctions — split into one instruction per sentence.
    SA037 [WARN] — list mixes command items and observation/description items without a distinguishing signal.
    SA038 [FAIL] — contradictory instructions present in document (LLM-detected).
-2. Determine overall result:
-   advisory_count = number of SA findings.
-   overall = `pass` if advisory_count > 0; `clean` if advisory_count == 0.
+2. Determine overall result from advisory severity:
+   overall = `fail` if any FAIL-severity finding; `pass` if WARN/SUGGEST only; `clean` if none.
 3. Write `<analysis_path>`:
    `mkdir -p $(dirname <analysis_path>)` first.
-   Frontmatter: `file_path: <repo-relative>`; `operation_kind: markdown-hygiene-analysis`; `result: clean` (no advisories) or `result: pass` (advisories present).
+   Frontmatter: `file_path: <repo-relative>`; `operation_kind: markdown-hygiene-analysis`; `result: clean` (none) or `result: pass` (WARN/SUGGEST only) or `result: fail` (any FAIL-severity).
    Body:
      No advisories: `# Result\n\nCLEAN`.
      Advisories: `# Result\n\n## Advisory\n\n- <list>`. Each entry two lines:
        `SA0XX [SEVERITY] line N: <description>` (omit line N for document-level)
        Indented `Note: <observation>` — plain English, no imperative.
-4. Return `clean` (no advisories) or `pass: <analysis_path>` (advisories present). On failure: `ERROR: <reason>`.
+4. Return `clean` (no advisories), `pass: <analysis_path>` (WARN/SUGGEST only), or `findings: <analysis_path>` (any FAIL-severity). On failure: `ERROR: <reason>`.

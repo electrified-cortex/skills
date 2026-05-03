@@ -56,11 +56,11 @@ SA001–SA038 are defined in the parent skill's `spec.md` (markdown-hygiene/spec
 
 These result values are set by the **executor**. The host may later transition the result to `accepted` or `fixed` without re-running the executor — see Host-Driven Transitions below.
 
-| advisory_severity | result |
-| ----------------- | ------ |
-| any FAIL | `findings` |
-| WARN/SUGGEST only | `pass` |
-| none | `clean` |
+| advisory_severity | frontmatter `result:` | return token |
+| ----------------- | --------------------- | ------------ |
+| any FAIL | `fail` | `findings: <analysis_path>` |
+| WARN/SUGGEST only | `pass` | `pass: <analysis_path>` |
+| none | `clean` | `clean` |
 
 ## Output Contract
 
