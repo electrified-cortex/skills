@@ -91,3 +91,44 @@ Round 1 complete. Findings staged to TMCP `.code-reviews/files/bba695-L1.md`. No
 ### Status
 
 Round 2 complete. Both rounds documented. Force flag, citation-verification safeguard, and Round 2 review artifacts all staged.
+
+---
+
+## Round 3 — Effectiveness evaluation (2026-05-02, Worker 1)
+
+**Target:** commit `c68c8045` in Telegram MCP repo — `refactor: remove async from handleAnimationStatus function and adjust test tick handling`
+**Files:** `src/tools/animation/status.ts`, `src/tools/send.test.ts`
+**Focus:** `correctness,async-safety`
+
+### Dispatch invocation
+
+Smoke pass (Haiku): `instructions.txt`; `change_set=<diff> tier=smoke focus=correctness,async-safety`
+Substantive pass (Sonnet): `instructions.txt`; `change_set=<diff> tier=substantive prior_findings=<smoke findings JSON> focus=correctness,async-safety`
+
+### Raw output (aggregated)
+
+**Smoke findings:**
+- `minor` — `src/tools/send.test.ts:521`: `vi.runAllTicks()` is not async; removing `await` is technically correct but intent not documented. Recommend inline comment.
+- `nit` — `src/tools/animation/status.ts:6`: `async` removal is correct; no issues.
+
+**Substantive findings:**
+- `nit` — `src/tools/send.test.ts:521`: Missing comment explaining why `await` was removed; functionally correct. Recommend: `// vi.runAllTicks() is sync; subsequent Promise.resolve() flushes cover microtask propagation`
+
+**Prior-findings disposition:**
+- `send.test.ts:521` (smoke: minor) → CONTRADICT → downgraded to `nit`. Removal is unambiguously correct (`vi.runAllTicks()` is synchronous, returns `void`; old `await` was a no-op).
+- `status.ts:6` (smoke: nit) → AGREE → `nit` confirmed. Full call-chain check: invocation wrapped in `try/catch` around `Promise.resolve(handler(...))`, so sync exceptions are still caught.
+
+**Aggregated result:**
+```json
+{"sign_off_pass_index": 1, "verdict": "clean", "severity_aggregate": {"blocker": 0, "major": 0, "minor": 0, "nit": 1}}
+```
+
+### Judgment
+
+**Did it find real issues?** The commit is a clean, low-risk refactor. The skill correctly produced no blockers or majors. The one nit (missing comment on `await` removal) is a legitimate maintainability observation, not boilerplate. No false positives.
+
+**Did it miss anything?** The key risk — whether removing `async` breaks exception routing in the `Promise.resolve(handler(...))` call site — was explicitly investigated and resolved. The pre-existing lack of direct unit test for `handleAnimationStatus` was noted (correctly identified as pre-existing, not introduced by this commit).
+
+**Output structure:** Full spec compliance. Both passes produced correct JSON schema (`tier`, `pass_index`, `verdict`, `findings[]` with correct severity vocabulary). Substantive pass included `prior_findings_disposition` with `decision`, `new_severity`, and `commentary`. Smoke correctly omitted it.
+
+**Verdict: HIGH** — accurate calibration, no false positives, correct prior-findings re-examination, full spec-compliant structure.
