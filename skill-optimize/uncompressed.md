@@ -236,6 +236,7 @@ in the log and stop. Do not attempt to parse or use a malformed response.
 | `<TOPIC>` | `<today's date>` | `<model>` | `<N findings>` | `<status>` | `<one-line action summary>` |
 
 After 3b (qualifier): append one `qualified` row **for each `no` result only**.
+
 - Status: `qualified`
 - Model: Haiku-class
 - Findings: `—`
