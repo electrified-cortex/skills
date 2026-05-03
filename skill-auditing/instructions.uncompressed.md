@@ -202,7 +202,7 @@ Uses Dispatch agent (zero-context isolation). Instruction file right-sized (<500
 
 ### No spec breadcrumbs in runtime
 
-SKILL.md and `instructions.txt` must not reference the skill's own companion `spec.md` — not as a pointer, breadcrumb, or "see spec.md" hint. The compressed runtime is self-contained; nudging the agent toward the spec inflates context and defeats compression. Exception: skills whose operation takes a spec as input (`spec-auditing`, `skill-auditing`) may reference the `spec.md` under audit — never their own companion spec. Remediation: delete the reference; if the information is genuinely needed at runtime, inline it.
+SKILL.md and `instructions.txt` must not reference the skill's own companion `spec.md` — not as a pointer, breadcrumb, or "see spec.md" hint. Exception: skills whose operation takes a spec as input (`spec-auditing`, `skill-auditing`) may reference the `spec.md` under audit — never their own companion spec. Remediation: delete the reference; if the information is genuinely needed at runtime, inline it.
 
 ### Eval log presence (informational)
 

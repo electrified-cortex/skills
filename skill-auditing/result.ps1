@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 # result.ps1 — skill-auditing result tool
 # Wraps hash-record-manifest and translates HIT into the cached audit verdict.
-# Usage: result <skill_dir>
+# Usage: result [--uncompressed] <skill_dir>
 # Outputs one of:
 #   PASS: <abs-path>            (HIT, result: pass)         (exit 0)
 #   NEEDS_REVISION: <abs-path>  (HIT, result: findings)     (exit 0)
@@ -12,6 +12,7 @@
 param(
     [Parameter(Position=0)]
     [string]$skill_dir,
+    [switch]$uncompressed,
     [switch]$help,
     [switch]$h
 )
@@ -20,17 +21,20 @@ $ErrorActionPreference = 'Continue'
 
 if ($help -or $h) {
     [Console]::Out.Write(@"
-Usage: result <skill_dir>
+Usage: result [--uncompressed] <skill_dir>
 
 Wraps hash-record-manifest for skill-auditing and translates a HIT into
 the cached audit verdict by reading the report's frontmatter.
 
 Arguments:
-  skill_dir  Absolute path to the skill folder being audited.
-             Tool hashes only semantic content files: SKILL.md,
-             instructions.txt, spec.md, uncompressed.md,
-             instructions.uncompressed.md (whichever exist).
-             Skill dir must be inside a git repository.
+  skill_dir        Absolute path to the skill folder being audited.
+                   Skill dir must be inside a git repository.
+
+Options:
+  --uncompressed   Switch audit focus to uncompressed sources
+                   (uses op_kind skill-auditing/v2-uncompressed instead
+                   of the default skill-auditing/v2-compiled).
+  --help / -h      Print usage, exit 0.
 
 Output (stdout, one line):
   PASS: <abs-path>            Cached report says result: pass.
@@ -58,18 +62,35 @@ if (-not (Test-Path -LiteralPath $skill_dir -PathType Container)) {
     exit 1
 }
 
-# Enumerate only the semantic content files the audit agent reads.
-# Hashing all files causes indeterminism when non-semantic files (stamps,
-# scripts, logs) are added/modified between the pre- and post-dispatch calls.
-# Order is intentional — hash key must be identical between pre- and post-dispatch calls.
-# Do not sort or reorder this list.
-$semantic_names = @('SKILL.md', 'instructions.txt', 'spec.md', 'uncompressed.md', 'instructions.uncompressed.md')
 $skill_dir_full = (Resolve-Path -LiteralPath $skill_dir).Path
+
+# Verify skill_dir is inside a git repo — fail explicitly instead of silent fallback
+$null = & git -C $skill_dir_full rev-parse --show-toplevel 2>$null
+if ($LASTEXITCODE -ne 0) {
+    [Console]::Out.Write("ERROR: skill_dir is not inside a git repository: $skill_dir`n")
+    exit 1
+}
+
+# Enumerate ALL regular files inside skill_dir recursively.
+# Skip: (a) any file whose path passes through a dot-prefixed directory,
+#        (b) any file whose leaf name is optimize-log.md.
+# Dot-prefixed FILES at any depth are included.
+# Sort lexically by path (byte order) for a stable hash key.
 $files = @()
-foreach ($name in $semantic_names) {
-    $candidate = Join-Path $skill_dir_full $name
-    if (Test-Path -LiteralPath $candidate -PathType Leaf) {
-        $files += $candidate
+$all_files = Get-ChildItem -LiteralPath $skill_dir_full -Recurse -File | Sort-Object FullName
+foreach ($f in $all_files) {
+    # Compute path relative to skill_dir_full
+    $rel = $f.FullName.Substring($skill_dir_full.Length).TrimStart([IO.Path]::DirectorySeparatorChar, '/')
+    $parts = $rel -split '[/\\]'
+    # Check directory components (all but last) for dot-prefixed names
+    $skip = $false
+    for ($i = 0; $i -lt $parts.Count - 1; $i++) {
+        if ($parts[$i] -like '.*') { $skip = $true; break }
+    }
+    # Check leaf name
+    if ($parts[-1] -eq 'optimize-log.md') { $skip = $true }
+    if (-not $skip) {
+        $files += $f.FullName
     }
 }
 
@@ -78,12 +99,8 @@ if ($files.Count -eq 0) {
     exit 1
 }
 
-# Verify skill_dir is inside a git repo — fail explicitly instead of silent fallback
-$null = & git -C $skill_dir_full rev-parse --show-toplevel 2>$null
-if ($LASTEXITCODE -ne 0) {
-    [Console]::Out.Write("ERROR: skill_dir is not inside a git repository: $skill_dir`n")
-    exit 1
-}
+# Select op_kind based on --uncompressed flag
+$op_kind = if ($uncompressed) { 'skill-auditing/v2-uncompressed' } else { 'skill-auditing/v2-compiled' }
 
 # Locate sibling manifest tool
 $script_dir = Split-Path -Parent $PSCommandPath
@@ -95,7 +112,6 @@ if (-not (Test-Path -LiteralPath $manifest_ps1)) {
 }
 
 # Invoke manifest
-$op_kind = 'skill-auditing/v2'
 try {
     $manifest_args = @($op_kind, $record_filename) + $files
     $manifest_out = & pwsh -NoProfile -File $manifest_ps1 @manifest_args

@@ -163,7 +163,7 @@ No dispatch references in instructions:
 `instructions.txt` mustn't tell agent to dispatch other skills. Subagents can't dispatch — only host agent can. References as "Related" context OK. "Run this skill" or "dispatch this" → FAIL. Remediation: move dispatch steps to SKILL.md.
 
 No spec breadcrumbs in runtime:
-SKILL.md and `instructions.txt` mustn't reference skill's own companion `spec.md` — not as pointer, breadcrumb, or "see spec.md" hint. Compressed runtime is self-contained; nudging agent toward spec inflates context and defeats compression. Exception: skills whose operation takes spec as input (`spec-auditing`, `skill-auditing`) may reference `spec.md` under audit — never their own. Remediation: delete reference; if info genuinely needed at runtime, inline it.
+SKILL.md and `instructions.txt` mustn't reference skill's own companion `spec.md` — not as pointer, breadcrumb, or "see spec.md" hint. Exception: skills whose operation takes spec as input (`spec-auditing`, `skill-auditing`) may reference `spec.md` under audit — never their own. Remediation: delete reference; if info genuinely needed at runtime, inline it.
 
 Eval log presence (informational):
 Perform eval-presence check by reading co-located `eval.txt` sub-instructions. Full procedure in `eval.txt` / `eval.uncompressed.md`. Absence of `eval.md` MUST NOT affect verdict.

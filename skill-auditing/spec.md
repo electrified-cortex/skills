@@ -106,16 +106,16 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
 14. Tool files (`.sh`, `.ps1`) **must** be skipped — they are out of scope for skill-auditing. Tool quality is covered by tool-auditing.
 15. If no companion spec exists and the skill is dispatch or complex
     inline, the auditor **must** record a FAIL finding for the spec alignment step and continue collecting findings from compiled artifacts and parity.
-19. After all verdict-bearing Step 3 checks, the auditor **must** perform
+16. After all verdict-bearing Step 3 checks, the auditor **must** perform
     the eval-presence check via the co-located `eval.txt` sub-instructions.
     This requirement specifies that the check exists, not its full procedure.
     Absence of `eval.md` **must not** affect the verdict.
-20. The auditor **must** check all skill artifacts for cross-reference
+17. The auditor **must** check all skill artifacts for cross-reference
     anti-patterns (A-XR-1): any path-based pointer from a skill artifact to
     another skill's `uncompressed.md` or `spec.md` **must** be flagged HIGH.
     Referencing a skill by name only is permitted. Subject-matter mentions
     in skill-auditing's own files are exempt.
-21. For dispatch skills, `uncompressed.md` **must** be a launch-script: frontmatter,
+18. For dispatch skills, `uncompressed.md` **must** be a launch-script: frontmatter,
     optional H1, dispatch invocation + input signature, return contract, optional
     2-line iteration-safety pointer, optional inline result check protocol (pre-dispatch
     cache check + post-execute result routing via a co-located result tool). Anything
