@@ -24,6 +24,8 @@ Follow `markdown-hygiene-analysis/SKILL.md` with `<markdown_file_path>`.
 - `ERROR: <reason>` — stop, surface reason.
 - Otherwise: bind `<analysis_result>`.
 
+Extract `<hash_A>` from `<analysis_path>`: it is the path segment immediately after `.hash-record/<shard>/` (the full 40-char SHA1).
+
 ## Step 3 — Lint
 
 Follow `markdown-hygiene-lint/SKILL.md` with `<markdown_file_path> [--ignore <RULE>[,<RULE>...]]`.
@@ -36,9 +38,9 @@ Follow `markdown-hygiene-lint/SKILL.md` with `<markdown_file_path> [--ignore <RU
 Run inline. No agent dispatch. See `hash-record/hash-record-rekey/SKILL.md`.
 
 ```bash
-bash hash-record/hash-record-rekey/rekey.sh <markdown_file_path> markdown-hygiene analysis.md
+bash hash-record/hash-record-rekey/rekey.sh <markdown_file_path> markdown-hygiene analysis.md <hash_A>
 # Windows:
-pwsh hash-record/hash-record-rekey/rekey.ps1 <markdown_file_path> markdown-hygiene analysis.md
+pwsh hash-record/hash-record-rekey/rekey.ps1 <markdown_file_path> markdown-hygiene analysis.md <hash_A>
 ```
 
 - `REKEYED:` or `CURRENT:` — analysis record moved to current hash (or already there). Continue.

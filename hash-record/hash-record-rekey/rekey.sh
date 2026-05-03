@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # rekey.sh — hash-record re-key after file content change
-# Usage: rekey <file_path> <op_kind> <record_filename>
+# Usage: rekey <file_path> <op_kind> <record_filename> [source_hash]
 # Outputs one of:
 #   REKEYED: <new_abs_path>
 #   CURRENT: <abs_path>
@@ -11,7 +11,7 @@ set -e
 
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
   cat <<'USAGE'
-Usage: rekey <file_path> <op_kind> <record_filename>
+Usage: rekey <file_path> <op_kind> <record_filename> [source_hash]
 
 Re-key a hash-record entry after the source file content changes.
 
@@ -19,6 +19,7 @@ Arguments:
   file_path        Absolute path to the changed file (new content, not yet committed).
   op_kind          Operation kind, e.g. "markdown-hygiene" or "skill-auditing/v2". May contain /.
   record_filename  Leaf filename, e.g. "claude-haiku.md". No path separators or ...
+  source_hash      (Optional) The known old content hash to rekey from. Skips full-tree search when provided.
 
 Output (stdout, one line):
   REKEYED: <abs-path>   Record moved to new hash path.
@@ -42,6 +43,7 @@ fi
 FILE_PATH="$1"
 OP_KIND="$2"
 RECORD_FILENAME="$3"
+SOURCE_HASH="$4"
 
 case "$OP_KIND" in
   *..* | *\\*)
@@ -78,28 +80,37 @@ if [ ! -d "$HASH_RECORD_ROOT" ]; then
   exit 0
 fi
 
-FOUND=()
-while IFS= read -r -d '' candidate; do
-  FOUND+=("$candidate")
-done < <(find "$HASH_RECORD_ROOT" -type f -path "*/${OP_KIND}/${RECORD_FILENAME}" -print0 2>/dev/null)
+if [ -n "$SOURCE_HASH" ]; then
+  OLD_RECORD_PATH="$HASH_RECORD_ROOT/${SOURCE_HASH:0:2}/$SOURCE_HASH/$OP_KIND/$RECORD_FILENAME"
+  if [ ! -f "$OLD_RECORD_PATH" ]; then
+    printf 'NOT_FOUND: no record for %s/%s at %s\n' "$OP_KIND" "$RECORD_FILENAME" "$SOURCE_HASH"
+    exit 0
+  fi
+  OLD_HASH="$SOURCE_HASH"
+else
+  FOUND=()
+  while IFS= read -r -d '' candidate; do
+    FOUND+=("$candidate")
+  done < <(find "$HASH_RECORD_ROOT" -type f -path "*/${OP_KIND}/${RECORD_FILENAME}" -print0 2>/dev/null)
 
-COUNT="${#FOUND[@]}"
+  COUNT="${#FOUND[@]}"
 
-if [ "$COUNT" -eq 0 ]; then
-  printf 'NOT_FOUND: no record for %s/%s\n' "$OP_KIND" "$RECORD_FILENAME"
-  exit 0
+  if [ "$COUNT" -eq 0 ]; then
+    printf 'NOT_FOUND: no record for %s/%s\n' "$OP_KIND" "$RECORD_FILENAME"
+    exit 0
+  fi
+
+  if [ "$COUNT" -gt 1 ]; then
+    printf 'AMBIGUOUS: %d records found -- manual resolution required\n' "$COUNT"
+    exit 1
+  fi
+
+  OLD_RECORD_PATH="${FOUND[0]}"
+  AFTER_PREFIX="${OLD_RECORD_PATH#${HASH_RECORD_ROOT}/}"
+  OLD_SHARD="${AFTER_PREFIX%%/*}"
+  AFTER_SHARD="${AFTER_PREFIX#*/}"
+  OLD_HASH="${AFTER_SHARD%%/*}"
 fi
-
-if [ "$COUNT" -gt 1 ]; then
-  printf 'AMBIGUOUS: %d records found -- manual resolution required\n' "$COUNT"
-  exit 1
-fi
-
-OLD_RECORD_PATH="${FOUND[0]}"
-AFTER_PREFIX="${OLD_RECORD_PATH#${HASH_RECORD_ROOT}/}"
-OLD_SHARD="${AFTER_PREFIX%%/*}"
-AFTER_SHARD="${AFTER_PREFIX#*/}"
-OLD_HASH="${AFTER_SHARD%%/*}"
 
 if [ "$OLD_HASH" = "$NEW_HASH" ]; then
   printf 'CURRENT: %s\n' "$OLD_RECORD_PATH"

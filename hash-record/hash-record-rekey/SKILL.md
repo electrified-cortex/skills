@@ -6,17 +6,18 @@ description: Re-key a stale hash-record entry after a file's content changes. Fi
 Invoke directly via Bash or PowerShell — no agent dispatch.
 
 ```bash
-bash rekey.sh <file_path> <op_kind> <record_filename>
-pwsh rekey.ps1 <file_path> <op_kind> <record_filename>
+bash rekey.sh <file_path> <op_kind> <record_filename> [source_hash]
+pwsh rekey.ps1 <file_path> <op_kind> <record_filename> [source_hash]
 ```
 
 Pass `--help` / `-h` to print usage.
 
-**Arguments** (all required, positional):
+**Arguments** (first three required, positional):
 
 - `file_path` — absolute path to the changed file (new content, not yet committed).
 - `op_kind` — operation kind, e.g. `markdown-hygiene` or `skill-auditing/v2`. May contain `/`.
 - `record_filename` — leaf filename, e.g. `claude-haiku.md`. No path separators or `..`.
+- `source_hash` — (optional) known old content hash to rekey from. When provided, bypasses full-tree search. Prevents AMBIGUOUS when multiple records exist.
 
 **Output** (stdout, one line):
 
