@@ -15,14 +15,12 @@ Variables:
 `<instructions>` = `instructions.txt` (NEVER READ)
 `<instructions-abspath>` = absolute path to `<instructions>`
 `<input-args>` = `<target-path> [--spec <spec-path>] [--fix]`
-`<tier>` = `fast-cheap` — spec alignment checking is rule-matching, not deep judgment
+`<tier>` = `fast-cheap`
 `<description>` = `Spec Audit: <target-path>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
 Follow `dispatch` skill. See `../dispatch/SKILL.md`.
-Should return: `Pass` | `Pass with Findings` | `Fail`
-
-NEVER READ OR INTERPRET `instructions.txt` YOURSELF. Let the sub-agent do the work.
+Returns: `Pass` | `Pass with Findings` | `Fail` | `ERROR: <reason>`
 
 Parameters:
 

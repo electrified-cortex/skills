@@ -1,8 +1,9 @@
 ---
 name: spec-auditing
 description: >-
-  Audit a spec/companion pair or a spec alone. Dispatch instructions.txt —
-  don't audit inline.
+  Audit a spec/companion pair or a spec alone for alignment and completeness.
+  Triggers — spec validation, requirements coverage, contradiction detection,
+  document alignment, specification quality.
 ---
 
 ## Dispatch
@@ -15,7 +16,7 @@ description: >-
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
 Follow `dispatch` skill. See `../dispatch/SKILL.md`.
-Should return: `Pass` | `Pass with Findings` | `Fail`
+Returns: `Pass` | `Pass with Findings` | `Fail` | `ERROR: <reason>`
 
 Parameters:
 `target-path` (required): path to spec or companion file
