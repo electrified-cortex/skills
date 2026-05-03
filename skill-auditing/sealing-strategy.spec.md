@@ -13,6 +13,84 @@ just to restore a passing state. This spec defines when to re-audit vs. when to 
 an existing audit record to the new hash key, and how to track what was applied without
 re-running completed work.
 
+## Canonical sealing order (operator-codified, 2026-05-03)
+
+Apply phases top-down. Each phase is broader than the next; output of an earlier phase
+shapes what the next phase audits.
+
+| # | Phase | Why this order |
+|---|-------|----------------|
+| 1 | Skill optimization | Highest level. Reorganizes / consolidates the skill itself. Leverages existing optimize-folder idempotency. |
+| 2 | Skill audit | Codifies the actual truth of how the skill works (post-optimize). |
+| 3 | Spec audit | Validates specs against the audited truth from step 2. Specs follow audit findings. |
+| 4 | Tool audit | Validates executor scripts (`.sh`/`.ps1`) against the now-aligned specs. Skip if no tools in scope. |
+| 5 | Markdown hygiene **analysis** | Semantic / structural review of every `.md` file. Fix all analysis findings BEFORE running lint. |
+| 6 | Markdown hygiene **lint** | Mechanical formatting. Last step. Runs on semantically-settled content. |
+
+Rationale for ordering:
+
+- Highest level first — broad work shapes narrower work.
+- Audit before spec — the spec must conform to truth, not the other way around.
+- Tool audit after spec — tools are validated against the now-stable spec.
+- Hygiene **analysis before lint** — analysis can change content; lint applied to
+  unsettled content is wasted work.
+
+After step 6, the skill is content-stable. Move to the rekey trick below.
+
+## The rekey trick — preserve all phase outputs without re-running
+
+Each phase produces artifacts: hash records, manifests, audit reports. Downstream phases
+typically modify some of the files referenced by upstream artifacts. Without intervention,
+the upstream records are now stale, and re-running the upstream phase would re-audit
+from scratch — burning tokens for work that has already been done correctly.
+
+**The fix is a single folder-level rekey at the end of the chain.**
+
+At the end of step 6:
+
+1. Identify all produced artifacts. They surface as **untracked or modified files in
+   `git status`** — that is the canonical signal. The folder-level rekey tool walks the
+   sealing-target folder, finds every hash-record entry and every manifest reference to
+   files in the folder, and rekeys each to the current file content.
+2. Run the folder-level rekey BEFORE any prune. (Prune deletes records that don't match
+   current content; running it before rekey would discard records we want to preserve.)
+3. After rekey, every record's recorded hash matches its file's current hash. Re-running
+   any earlier phase short-circuits as a **cache hit** — the audit-execution layer sees
+   the record exists with a current hash and skips re-execution.
+
+**No per-skill rekey-flag.** The rekey tool is responsible for finding records and
+manifests on its own from a folder argument. Skills don't have to declare what files
+they produced.
+
+## Idempotency guarantee (must be tested)
+
+After the full chain + folder-level rekey:
+
+- Re-run skill optimize → cache hit.
+- Re-run skill audit → cache hit.
+- Re-run spec audit → cache hit.
+- Re-run tool audit → cache hit.
+- Re-run hygiene analysis → cache hit.
+- Re-run hygiene lint → cache hit.
+
+If ANY of these re-executes work after a clean rekey, the rekey is incomplete or the
+phase's cache-detection logic is wrong. Both are bugs.
+
+This guarantee must be tested. The first integration test of the rekey-folder mode
+should be a full chain → rekey → re-run-each-phase that asserts cache hits across the
+board.
+
+## Why this order is canonical
+
+Operator (2026-05-03): "*This has to be the way we do things from now on. To prevent
+redoing processing and doing things more than once, things should be idempotent in
+smart ways, even if pieces of them change.*"
+
+The strategy defends against the failure mode that surfaced through the day: skills
+that touched the same files in different phases produced records that invalidated each
+other, and re-running any single phase to "verify" forced full re-execution of work
+that was already complete.
+
 ## Scope
 
 Applies to any skill directory containing: a `SKILL.md`, one or more executor scripts
