@@ -30,9 +30,9 @@ the full story.
 
 ## Quick Start
 
-Unzip or clone as `electrified-cortex` in your agent's skills folder. Each
-skill is self-contained — point your agent at the `SKILL.md` for the tier you
-need and it works immediately.
+**Without plugin install (direct reference):** Clone or unzip as `electrified-cortex` inside your agent's skills folder, then point your agent at the `SKILL.md` for whichever skill you need — each is self-contained.
+
+**With plugin install:** After running the install commands below, Claude Code auto-registers all skills under the `electrified-cortex:` namespace. Reference them as `electrified-cortex:<skill-name>` — no filesystem path needed.
 
 ## Install as a Claude Code plugin
 
@@ -41,7 +41,9 @@ read access to `github.com/electrified-cortex/skills` can install the whole
 bundle in two commands:
 
 ```bash
+# Add the marketplace source (org/repo format: owner/repo)
 claude plugin marketplace add electrified-cortex/skills
+# Install the plugin (name@source-alias format)
 claude plugin install electrified-cortex@electrified-cortex
 ```
 
