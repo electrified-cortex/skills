@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Deterministic scan of a `.md` file for MD rule violations. Runs a two-step preparation pass before scanning: the co-located `lint` tool unconditionally auto-fixes known safe rules, followed by any installed markdown linter for a broader auto-fix pass. Writes `lint.md` at the host-specified path with imperative `Fix:` instructions per finding. Preparation always modifies the target file; the scan pass then reads the post-fix file.
+Deterministic scan of a `.md` file for MD rule violations. Runs a two-step preparation pass before scanning: the co-located `lint` tool unconditionally auto-fixes known safe rules, followed by any installed markdown linter for a broader auto-fix pass. Writes `lint.md` at the host-specified path with imperative `Fix:` instructions per finding. Preparation may modify the target file via safe auto-fixes; the scan pass then reads the post-fix file.
 
 ## Model Tier
 

@@ -4,7 +4,7 @@
 # Exit: 0 all matched files processed; 1 usage error or plain path not found/writable
 # Deps: bash 4.3+. No external tools.
 
-set -uo pipefail
+set -euo pipefail
 
 if [[ $# -eq 0 ]]; then
   printf 'ERROR: usage: lint.sh <path-or-glob> [<path-or-glob> ...]\n' >&2

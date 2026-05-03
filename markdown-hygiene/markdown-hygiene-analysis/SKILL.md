@@ -3,9 +3,7 @@ name: markdown-hygiene-analysis
 description: Semantic advisory scan of a .md file against SA001-SA038 rules. Triggers — analysis phase, SA rules, semantic advisory, style advisories.
 ---
 
-# Markdown Hygiene — Analysis
-
-## Cached Result check (analysis)
+## Cached Result Check (analysis)
 
 Run inline result check for `analysis`. See `../markdown-hygiene-result/SKILL.md`.
 

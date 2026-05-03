@@ -32,11 +32,14 @@ SA001–SA038 are defined in the parent skill's `spec.md` (markdown-hygiene/spec
 
 ## Result Logic
 
-| lint_result | advisory_count | result |
-| ----------- | -------------- | ------ |
-| `fail` | any | `findings` |
-| `clean` | > 0 | `pass` |
-| `clean` | 0 | `clean` |
+These result values are set by the **executor** (the analysis sub-skill). The host may later transition the result to `accepted` or `fixed` without re-running the executor — see Host-Driven Transitions below.
+
+| lint_result | advisory_severity | result |
+| ----------- | ----------------- | ------ |
+| `fail` | any | `fail` |
+| `clean` | any FAIL | `fail` |
+| `clean` | WARN/SUGGEST only | `pass` |
+| `clean` | none | `clean` |
 
 ## Output Contract
 
@@ -47,8 +50,11 @@ All output is written to `<analysis_path>`. The host writes `report.md` — this
 ```yaml
 file_path: <repo-relative path>
 operation_kind: markdown-hygiene-analysis
-result: clean | pass | findings
+result: clean | pass | fail | accepted | fixed
 ```
+
+`clean`, `pass`, `fail` — set by the executor.
+`accepted`, `fixed` — set by the host (see Host-Driven Transitions).
 
 ### analysis.md body — CLEAN
 
@@ -76,9 +82,20 @@ Each finding is exactly two lines: SA line, then indented `Note:` line (observat
 ### Return value
 
 `clean` — lint clean, no advisories.
-`pass: <analysis_path>` — lint clean, advisories present.
-`findings: <analysis_path>` — lint fail (advisory count does not affect this).
+`pass: <analysis_path>` — lint clean, WARN/SUGGEST advisories present.
+`findings: <analysis_path>` — lint fail or FAIL-severity advisory found.
 `ERROR: <reason>` — on any failure.
+
+## Host-Driven Transitions
+
+After the executor writes `analysis.md`, the host may update the `result:` field directly without re-running the executor:
+
+- `accepted` — host reviewed advisories and considers them acceptable. No changes to the target file. Write `result: accepted` to `analysis.md`.
+- `fixed` — host reviewed advisories AND made changes (applied a fix to the target file, or appended "Skipped: <reason>" notes to `analysis.md`). Write `result: fixed` to `analysis.md`.
+
+Both transitions signal to the iteration loop that analysis is settled — no re-dispatch needed.
+
+**Analysis independence rule:** The executor MUST NOT be re-dispatched after a lint-only fix pass. Lint fixes (spacing, blank lines, heading levels, etc.) cannot affect SA advisory results. After a `fixed:` return from the combined fix agent, carry the existing `analysis.md` forward into the next aggregate step.
 
 ## Constraints
 

@@ -5,6 +5,13 @@ description: MD rule violation scan for a .md file. Fixes known safe rules in-pl
 
 # Markdown Hygiene — Lint
 
+## Preparation
+
+Run the in-place auto-fix script on `<markdown_file_path>`:
+
+- PS7: `pwsh <this-skill-dir>/lint.ps1 <markdown_file_path>`
+- Bash: `bash <this-skill-dir>/lint.sh <markdown_file_path>`
+
 ## Cached Result check (lint)
 
 Run inline result check for `lint`. See `../markdown-hygiene-result/SKILL.md`.
@@ -25,7 +32,7 @@ Variables:
 `<instructions>` = `instructions.txt` (this folder; NEVER READ THIS FILE)
 `<instructions-abspath>` = absolute path to `<instructions>`
 `<input-args>` = `<markdown_file_path> --lint-path <lint_path> [--ignore <RULE>[,<RULE>...]]`
-`<tier>` = `fast-cheap` haiku or mini class that can easily handle simple linting tasks.
+`<tier>` = `fast-cheap`
 `<description>` = `Markdown Hygiene Lint: <markdown_file_path>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 

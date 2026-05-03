@@ -5,7 +5,7 @@ description: Semantic advisory scan of a .md file against SA001-SA038 rules. Tri
 
 # Markdown Hygiene — Analysis
 
-## Cached Result check (analysis)
+## Cached Result Check (analysis)
 
 Run inline result check for `analysis`. See `../markdown-hygiene-result/SKILL.md`.
 
