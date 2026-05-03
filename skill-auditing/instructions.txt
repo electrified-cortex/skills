@@ -74,12 +74,14 @@ Stop gates in routing card (dispatch only): if SKILL.md contains refusal conditi
 
 (A-IS-1) Input/output double-specification — if skill takes INPUT duplicating OUTPUT already determined by referenced sub-skill (e.g. passing `result_file` when sub-skill dictates output path via its own hash-record write) → HIGH. Input surface mustn't override sub-skill conventions.
 
+(A-IS-2) Sub-skill input isolation — if a sub-skill's input surface includes a parameter that accepts the output path, result token, or computed artifact of a sibling sub-skill (e.g. a `<lint_path>` parameter consuming a sibling lint sub-skill's output), flag as HIGH. Sub-skills must be independently executable from the primary input only; the parent orchestrator owns cross-sub-skill data flow. See `skill-writing` spec R-SS-1.
+
 Frontmatter:
 `name` and `description` present and accurate.
 
 (A-FM-1) Name matches folder — `name` MUST equal skill's folder name exactly. Check both `uncompressed.md` and `SKILL.md`; mismatch in either → FAIL.
 
-(A-FM-3) H1 per artifact — `SKILL.md` MUST NOT contain H1 (`# ...` line). `uncompressed.md` MUST contain H1. `instructions.uncompressed.md` (if present) MUST contain H1. `instructions.txt` (if present) MUST NOT contain H1. Violation in `SKILL.md` or `instructions.txt` → HIGH. Missing H1 in `uncompressed.md` or `instructions.uncompressed.md` is out of scope — markdown-hygiene covers H1 enforcement.
+(A-FM-3) H1 per artifact — `SKILL.md` MUST NOT contain H1 (`# ...` line). If `uncompressed.md` is present, it MUST contain H1. `instructions.uncompressed.md` (if present) MUST contain H1. `instructions.txt` (if present) MUST NOT contain H1. Violation in `SKILL.md` or `instructions.txt` → HIGH. Missing H1 in `uncompressed.md` or `instructions.uncompressed.md` is out of scope — markdown-hygiene covers H1 enforcement. Absence of `uncompressed.md` is not a finding — it is optional.
 
 No duplication:
 Not duplicating existing capability. If similar exists, recommend merge or distinguish.
@@ -97,13 +99,17 @@ Scan `SKILL.md`, `uncompressed.md`, `instructions.uncompressed.md` for explicit 
 Step 2 — Parity Check:
 Verify each compiled artifact faithfully represents its uncompressed counterpart with no loss of intent. Minor wording compression OK; omitted requirements, contradictions, or changed behavior are not.
 
+`uncompressed.md` is optional. Its absence is not a finding. When absent, the SKILL.md ↔ uncompressed.md parity row is N/A.
+
 | Compiled | Uncompressed counterpart |
 | --- | --- |
-| `SKILL.md` | `uncompressed.md` |
+| `SKILL.md` | `uncompressed.md` (optional) |
 | `instructions.txt` | `instructions.uncompressed.md` |
 
 Both exist → read both, compare intent. Compiled diverges → finding text: `Parity failure: <description>. Fix: edit <uncompressed-file>, then recompress to <compiled-file>.`
 No counterpart → skip (N/A).
+
+Advisory (LOW, non-blocking): if `uncompressed.md` is absent and `SKILL.md` is >60 lines → suggest maintaining an uncompressed source for readability and safe editing. Do not count toward verdict severity.
 
 Step 3 — Spec Alignment:
 Verify companion spec is structurally sound, then verify compiled artifacts faithfully represent it.
@@ -197,8 +203,8 @@ NOT violations:
 Any cross-file path pointer → HIGH.
 
 (A-FM-10) Launch-script form on dispatch skills:
-N/A for inline skills.
-Verify `uncompressed.md` contains ONLY:
+N/A for inline skills. N/A if `uncompressed.md` is absent (SKILL.md-only is valid).
+If `uncompressed.md` is present for a dispatch skill, verify it contains ONLY:
 - Frontmatter (`name`, `description`)
 - Optional H1
 - Dispatch invocation + input signature (parameter list)
@@ -301,6 +307,7 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 | Inline/dispatch consistency | PASS/FAIL | |
 | Structure | PASS/FAIL | |
 | Input/output double-spec (A-IS-1) | PASS/FAIL | |
+| Sub-skill input isolation (A-IS-2) | PASS/FAIL/N/A | |
 | Frontmatter | PASS/FAIL | |
 | Name matches folder (A-FM-1) | PASS/FAIL | |
 | H1 per artifact (A-FM-3) | PASS/FAIL | |

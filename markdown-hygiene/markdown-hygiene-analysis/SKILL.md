@@ -3,16 +3,16 @@ name: markdown-hygiene-analysis
 description: Semantic advisory scan of a .md file against SA001-SA038 rules. Triggers — analysis phase, SA rules, semantic advisory, style advisories.
 ---
 
-## Cached Result Check (analysis)
+## Input
+
+`<markdown_file_path>` — absolute path to the `.md` file to analyze.
+
+## Cached Result Check
 
 Run inline result check for `analysis`. See `../markdown-hygiene-result/SKILL.md`.
 
 - `MISS: <abs-path>` — bind `<analysis_path>`. Jump to Dispatch.
 - Otherwise: stop here, return result to caller.
-
-## Inputs
-
-`<markdown_file_path>` — absolute path to the `.md` file to analyze.
 
 ## Dispatch
 
@@ -20,15 +20,15 @@ Variables:
 
 `<instructions>` = `instructions.txt` (this folder; NEVER READ THIS FILE)
 `<instructions-abspath>` = absolute path to `<instructions>`
-`<input-args>` = `<markdown_file_path> --analysis-path <analysis_path>`
-`<tier>` = `standard` = needs higher reasoning to interpret SA rules and apply them to the content.
+`<input-args>` = `<markdown_file_path> --lint-path <lint_path> --analysis-path <analysis_path> [--ignore <RULE>[,<RULE>...]]`
+`<tier>` = `standard` needs higher reasoning to interpret SA rules and apply them to the content.
 `<description>` = `Markdown Hygiene Analysis: <markdown_file_path>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
-Optional (if available): `<model-override>` = `GPT-5.4` fallback to no override if this fails.
+Optional: `<model-override>` = `sonnet-class`
 
 Follow `dispatch` skill. See `../../dispatch/SKILL.md`.
 
-Should return: `clean` | `pass: <analysis_path>` | `ERROR: <reason>`
+Should return: `clean` | `pass: <analysis_path>` | `findings: <analysis_path>` | `ERROR: <reason>`
 
 ## Result
 

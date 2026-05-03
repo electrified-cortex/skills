@@ -3,6 +3,18 @@ name: markdown-hygiene-lint
 description: MD rule violation scan for a .md file. Fixes known safe rules in-place before scanning. Triggers — lint phase, MD violations, markdownlint scan.
 ---
 
+Inputs:
+
+`<markdown_file_path>` — absolute path to the `.md` file to scan.
+`--ignore <RULE>[,<RULE>...]` (optional) — rule codes to suppress.
+
+## Cached Result Check
+
+Run inline result check for `lint`. See `../markdown-hygiene-result/SKILL.md`.
+
+- `MISS: <abs-path>` — bind `<lint_path>`. Jump to Dispatch.
+- Otherwise: stop here, return result to caller.
+
 ## Preparation
 
 Run the in-place auto-fix script on `<markdown_file_path>`:
@@ -10,20 +22,7 @@ Run the in-place auto-fix script on `<markdown_file_path>`:
 - PS7: `pwsh <this-skill-dir>/lint.ps1 <markdown_file_path>`
 - Bash: `bash <this-skill-dir>/lint.sh <markdown_file_path>`
 
-## Cached Result Check (lint)
-
-Run inline result check for `lint`. See `../markdown-hygiene-result/SKILL.md`.
-
-- `MISS: <abs-path>` — bind `<lint_path>`. Jump to Dispatch.
-- Otherwise: stop here, return result to caller.
-
 ## Dispatch
-
-Inputs:
-
-`<markdown_file_path>` — absolute path to the `.md` file to scan.
-`<lint_path>` — absolute path to write `lint.md`.
-`--ignore <RULE>[,<RULE>...]` (optional) — rule codes to suppress.
 
 Variables:
 

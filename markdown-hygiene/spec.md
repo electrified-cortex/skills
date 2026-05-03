@@ -420,7 +420,7 @@ Two statements in the document directly contradict each other (e.g. "Always log 
 The host may update `analysis.md` result without re-running analysis:
 
 - `accepted` — host reviewed advisories and marked them acceptable (no changes to target file required). Applies when advisories are tolerable as-is.
-- `fixed` — host reviewed advisories AND made changes (applied a fix to the target file, or appended "Skipped: <reason>" notes to the analysis record).
+- `fixed` — host reviewed advisories AND made changes (applied a fix to the target file, or appended "Skipped: `<reason>`" notes to the analysis record).
 
 These transitions bypass re-running the analysis executor. Once `accepted` or `fixed`, the iteration loop treats analysis as settled and does not re-dispatch it. The host writes the updated `result:` field to `analysis.md` directly.
 
