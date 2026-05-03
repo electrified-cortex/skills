@@ -317,7 +317,7 @@ probable duplication violation and MUST be flagged.
 R-FM-9 **Rules A and B verbatim live only in iteration-safety.** Callers
 MUST use only the 2-line pointer block:
 
-```
+```md
 Do not re-audit unchanged files.
 See `<relative-path>/iteration-safety/SKILL.md`.
 ```
@@ -386,7 +386,7 @@ High/Low decision rule is.
 **Examples:**
 
 | Skill | Frequency | Recommendation |
-|---|---|---|
+| --- | --- | --- |
 | markdown-hygiene | High (before every commit, many files) | Haiku-readiness justified |
 | code-review | High (every PR, many files) | Haiku-readiness justified |
 | skill-auditing | Medium | Haiku-readiness recommended |
