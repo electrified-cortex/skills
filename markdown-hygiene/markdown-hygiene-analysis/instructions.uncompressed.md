@@ -11,7 +11,7 @@ Hard prohibition: do NOT author scripts, helper files, or any file other than `<
 
 ## Procedure
 
-1. **Semantic advisory scan** — read `<markdown_file_path>` and evaluate every SA rule below. These are observations, not lint violations. Each entry uses `Note:` instead of `Fix:` — the host LLM decides whether to act. SA032 and SA038 require semantic reasoning — flag only when clearly and unambiguously evident.
+1. Read `<markdown_file_path>` and evaluate every SA rule below. These are observations, not lint violations. Each entry uses `Note:` instead of `Fix:` — the host LLM decides whether to act. SA032 and SA038 require semantic reasoning — flag only when clearly and unambiguously evident.
 
 3. **SA rule reference:**
 

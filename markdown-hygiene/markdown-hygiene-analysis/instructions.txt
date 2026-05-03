@@ -4,7 +4,7 @@ Inputs:
 
 Hard prohibition: don't author scripts (`.ps1`, `.sh`, etc.), helper files, or any file other than `<analysis_path>`. Target is read-only. Use Read/Bash/Grep only for inspection.
 
-1. Semantic advisory scan: read `<markdown_file_path>`, evaluate SA001-SA038 below. Each entry uses `Note:` not `Fix:` — host LLM decides whether to act. SA032 and SA038 require semantic reasoning — flag only when clearly evident.
+1. Read `<markdown_file_path>`. Evaluate every SA rule below. Each entry uses `Note:` not `Fix:` — host LLM decides whether to act. SA032 and SA038 require semantic reasoning — flag only when clearly evident.
 3. SA rules:
    SA001 [FAIL] — 3+ consecutive ALL CAPS words not an acronym/known term.
    SA002 [FAIL] — entire sentence in ALL CAPS.

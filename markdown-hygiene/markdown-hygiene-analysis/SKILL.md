@@ -21,7 +21,7 @@ Variables:
 `<instructions>` = `instructions.txt` (this folder; NEVER READ THIS FILE)
 `<instructions-abspath>` = absolute path to `<instructions>`
 `<input-args>` = `<markdown_file_path> --analysis-path <analysis_path> [--ignore <RULE>[,<RULE>...]]`
-`<tier>` = `standard` needs higher reasoning to interpret SA rules and apply them to the content.
+`<tier>` = `standard`
 `<description>` = `Markdown Hygiene Analysis: <markdown_file_path>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 Optional: `<model-override>` = `sonnet-class`
