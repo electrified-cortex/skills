@@ -31,6 +31,24 @@ Token cost compounds across calls. A skill invoked 100 times saves real
 money when its haiku runs hold up. Verdicts are weighted toward findings
 that move a skill closer to reliable haiku execution.
 
+## Finding Priority Ordering — Big Rough First
+
+When iterating toward a seal, fix in this order:
+
+1. **Structural/architectural** — wrong classification, cross-pollination between
+   sub-skills, missing required files, broken dispatch pattern. No polish until
+   structure is settled.
+2. **Correctness** — spec deviation, parity failures between compressed and
+   uncompressed artifacts, logic errors in result determination.
+3. **Minimalism/style** — exposition in runtime artifacts, host card verbosity,
+   non-normative language in specs, cosmetic naming.
+
+Do not re-audit the same finding category after it has passed. Move to the next
+tier. Rehashing settled tiers wastes audit cycles.
+
+**Sealing gate:** the skill is ready to seal when tiers 1 and 2 are fully clear.
+Tier 3 findings are polishing passes — they do not block a seal.
+
 ## Scope
 
 Applies when auditing an existing skill for quality, compliance, or
