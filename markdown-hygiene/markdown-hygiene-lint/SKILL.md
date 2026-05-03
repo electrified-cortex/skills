@@ -15,13 +15,6 @@ Run inline result check for `lint`. See `../markdown-hygiene-result/SKILL.md`.
 - `MISS: <abs-path>` — bind `<lint_path>`. Jump to Dispatch.
 - Otherwise: stop here, return result to caller.
 
-## Preparation
-
-Run the in-place auto-fix script on `<markdown_file_path>`:
-
-- PS7: `pwsh <this-skill-dir>/lint.ps1 <markdown_file_path>`
-- Bash: `bash <this-skill-dir>/lint.sh <markdown_file_path>`
-
 ## Dispatch
 
 Variables:
