@@ -95,4 +95,3 @@ CLEAN
 - SA035 [WARN] line 47: action stated before gate condition
   Note: move "if the flag is set" to the front of the sentence
 ```
-
