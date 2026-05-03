@@ -35,13 +35,12 @@ Should return: `clean` | `pass: <analysis_path>` | `findings: <analysis_path>` |
 If `ERROR:` stop here and return the result to the caller.
 Otherwise rerun the result check for `analysis`.
 If that result is a `MISS: <abs-path>` then something is wrong and report it as: `ERROR: Expected analysis report at <abs-path>. None found.`
-Otherwise return the result to the caller.
 
 If `clean`, return the result to the caller and stop here.
 
-Otherwise consider reading the analysis report and decide with the caller (agent/operator) whether to apply any fixes or log skipped advisories with reasons in the final report.
+If `pass: <analysis_path>` or `findings: <analysis_path>`, review advisories in `<analysis_path>` and decide:
+- Acceptable as-is → write `result: accepted` to `<analysis_path>` frontmatter. Bind `<analysis_result>` as `accepted`.
+- Addressed (edited target or appended `Skipped: <reason>` notes) → write `result: fixed` to `<analysis_path>` frontmatter. Bind `<analysis_result>` as `fixed`.
+- Deferring to caller — leave `<analysis_result>` as-is.
 
-To fix, `dispatch` a sub-agent with this report as input instructing it to fix all the issues.
-Then follow this skill again, keep track of the number of revision rounds.
-
-If not planning to fix or it has been 3 iterations, stop here and surface the report.
+Return the result to the caller.
