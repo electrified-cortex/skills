@@ -23,6 +23,7 @@ Consumer skills call into this for storage; hash-record never runs operations of
 | Read | path | record content |
 | Write | `(hash, skill, version|null, model, content)` | new path |
 | Invalidate | `[(path, old, new)]` | count deleted |
+| Rekey | `(file_path, op_kind, record_filename)` | `REKEYED / CURRENT / NOT_FOUND` |
 
 Path is deterministic from input. Probe and Write agree.
 
@@ -48,4 +49,4 @@ Don't store outside `.hash-record/`. Don't truncate hash except shard prefix. Re
 
 `.sha256` sidecars and `operator-signoff` records both currently valid governance signals during rollout. Either suffices; consumers MUST NOT require both.
 
-Related: `code-review`, `swarm`, `skill-auditing`, `spec-auditing`, `markdown-hygiene`.
+Related: `code-review`, `swarm`, `skill-auditing`, `spec-auditing`, `markdown-hygiene`, `hash-record-rekey`.

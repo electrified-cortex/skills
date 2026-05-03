@@ -21,3 +21,7 @@ Computes a deterministic manifest hash for a set of files, producing a multi-fil
 ## hash-record-prune
 
 Removes orphaned hash directories from a repository's .hash-record/ store.
+
+## hash-record-rekey
+
+Re-keys a stale hash-record entry after a file's content changes, moving the record to the new blob hash path via git mv.
