@@ -108,3 +108,135 @@ is not supported.
 - `git` on PATH.
 - PowerShell 7+ for the `.ps1` variant.
 - The file at `file_path` must be readable.
+
+## Folder/manifest mode (extension, 2026-05-03)
+
+### Motivation
+
+The per-file mode above requires the caller to know `op_kind` and
+`record_filename` for the record being rekeyed. After a sealing chain
+(skill-optimize → skill-audit → spec-audit → tool-audit → hygiene
+analysis → hygiene lint), many records exist across many op_kinds, and
+the caller may not know which op_kinds were touched. Folder/manifest
+mode lets the caller hand the tool a directory and say "rekey
+everything in scope."
+
+This is the closer step of the sealing strategy
+(`skill-auditing/sealing-strategy.spec.md`). Run BEFORE
+`hash-record-prune`.
+
+### Invocation
+
+When called with a single positional argument that resolves to an
+existing **directory** (not a file), the tool enters folder mode.
+
+| Positional | Type | Required | Description |
+| --- | --- | --- | --- |
+| `folder_path` | string | yes | Absolute path to the target directory (sealing-target scope). |
+
+Flags:
+
+- `--include <glob>`: optional. Restrict scope to files matching the
+  glob (relative to `folder_path`). Repeatable. Default: all files.
+- `--exclude <glob>`: optional. Skip files matching the glob.
+  Repeatable. Default: none.
+- `--dry-run`: optional. Report what would be rekeyed without making
+  changes. No `git mv`, no filesystem mutation.
+- `--manifests`: optional, default `true`. Include manifest files in
+  the rekey pass. When `false`, only direct hash-record entries are
+  rekeyed.
+- `--help` / `-h`: as in per-file mode.
+
+### Discovery
+
+For each file under `folder_path` (filtered by include/exclude):
+
+1. Compute the file's current git blob hash (`git hash-object`).
+2. Scan `.hash-record/` recursively for any entry whose path indicates
+   it was keyed against this file's PRIOR hash. Heuristic: scan all
+   record entries; for each, check whether the record body or
+   frontmatter `path:` field references the file. (Implementation may
+   maintain an index for performance.)
+3. Collect every `(record_path, recorded_hash, op_kind, record_filename)`
+   tuple referencing the file.
+4. **If `--manifests` is true**, also scan manifest files (output of
+   `hash-record-manifest`) for entries referencing the file. Collect
+   their entries for rekey.
+
+### Rekey rule
+
+For each discovered record/manifest-entry:
+
+- If `recorded_hash == file_current_hash`: `CURRENT` (no action).
+- If `recorded_hash != file_current_hash`:
+  - Run the per-file rekey logic (§ Procedure above) for this record.
+  - For manifest entries: update the manifest file's entry in place
+    (rewrite the JSON/markdown line) to the current hash. Stage the
+    manifest file via `git add` after editing.
+
+### Safety guard — semantic vs whitespace
+
+Folder/manifest mode does NOT distinguish whitespace-only from semantic
+changes. It assumes the caller has decided the rekey is safe (typically
+because hygiene lint just ran and produced whitespace-only diffs). If
+the caller has unknown content drift, run a content audit first; do not
+use folder mode as a blanket "make everything green" hammer.
+
+This guard mirrors the per-file caller's responsibility — the per-file
+tool also blindly rekeys without inspecting diff semantics. Folder mode
+inherits that contract.
+
+### Output contract — folder mode
+
+Per-record line on stdout (one per discovered record/manifest entry):
+
+| Output | Meaning |
+| --- | --- |
+| `REKEYED: <abs-path>` | Record moved to new hash. |
+| `CURRENT: <abs-path>` | Hash unchanged. No move. |
+| `MANIFEST_UPDATED: <manifest-path>:<entry-id>` | Manifest entry rewritten. |
+| `NOT_FOUND: no record for <file-rel-path>` | File has no records. |
+| `ERROR: <reason>` | Per-record failure (e.g. git mv failed). |
+
+After all records, a summary line:
+
+`SUMMARY: rekeyed=<n> current=<n> manifest_updated=<n> not_found=<n> errors=<n>`
+
+Exit codes:
+
+- `0`: all rekeys succeeded (or `--dry-run` completed without errors).
+- `1`: any per-record `ERROR` occurred (after attempting the rest).
+- `2`: invocation error (bad path, conflicting flags).
+
+### Idempotency requirement
+
+After a successful folder-mode rekey:
+
+- Running the same folder-mode rekey again MUST produce 100% `CURRENT`
+  + `MANIFEST_UPDATED-no-change` lines (no `REKEYED`).
+- Re-running any of the upstream operations
+  (skill-audit, spec-audit, tool-audit, hygiene) on the same folder
+  MUST hit cache (operation's executor sees a record with current hash
+  and short-circuits).
+
+This is the operator-defined acceptance test for the sealing strategy.
+Implementation MUST verify this via integration test before being
+considered complete.
+
+### Order constraint
+
+Folder-mode rekey runs BEFORE `hash-record-prune`. Pruning before
+rekeying would delete records the rekey is trying to preserve (the
+records still match a file in the folder, just under a stale hash).
+The strategy doc (`sealing-strategy.spec.md`) restates this constraint.
+
+### Out of scope (folder mode)
+
+- Re-executing any of the upstream operations. Folder mode rekeys; it
+  does not audit, lint, or analyze.
+- Resolving content-drift conflicts (semantic vs whitespace
+  classification). Caller's responsibility.
+- Deleting orphaned records (that's `hash-record-prune`'s job, run
+  AFTER folder mode).
+- Cross-folder rekey (records referencing files outside `folder_path`
+  are ignored).
