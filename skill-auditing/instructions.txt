@@ -231,8 +231,8 @@ N/A for inline skills. Run against `uncompressed.md` (host-facing card).
 Host card MUST explicitly declare return shape. Canonical: `PATH: <abs-path-to-artifact>` on success, `ERROR: <reason>` on pre-write failure. Card returning content (multi-line reports, structured findings, inline results) instead of path — for skill producing artifact — MUST be flagged. Missing → HIGH.
 
 (DS-2) Host card minimalism:
-`uncompressed.md` MUST NOT contain any of following; each present → HIGH:
-- Internal cache mechanism descriptions (e.g., "iteration-safe via hash-record", "hash blob check") — caching is impl detail invisible to host.
+The host card (`uncompressed.md` when present; `SKILL.md` for SKILL.md-only dispatch skills) MUST NOT contain any of following; each present → HIGH:
+- Internal cache mechanism descriptions (e.g., "iteration-safe via hash-record", "hash blob check") — caching is impl detail invisible to host. EXCEPTION: A-FM-10 inline result check protocol sections are explicitly allowed host behavior — do NOT flag as DS-2 violation.
 - Adaptive/conditional rules invisible to host (e.g., "MD041 auto-suppressed when frontmatter present") — belong in `instructions.uncompressed.md`.
 - Tool-fallback hints (e.g., "use the CLI if available") — belong in instructions where dispatched agent decides.
 - Subjective qualifiers (e.g., "Sonnet-class equivalent or diminishing returns") — replace with operative model class in dispatch line.

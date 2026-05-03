@@ -351,10 +351,14 @@ Applies to dispatch skills only. Auditor runs these checks against `uncompressed
    produces an artifact — MUST be flagged HIGH. The artifact lives at the path;
    consumers read it from disk only when they need it.
 
-2. **Host card minimalism (DS-2)** — `uncompressed.md` MUST NOT contain any of the
+2. **Host card minimalism (DS-2)** — The host card (`uncompressed.md` when present;
+   `SKILL.md` for SKILL.md-only dispatch skills) MUST NOT contain any of the
    following; each present → HIGH:
    - Internal cache mechanism descriptions (e.g., "iteration-safe via hash-record",
      "hash blob check") — caching is implementation detail invisible to the host.
+     **Exception:** A-FM-10 inline result check protocol sections (pre-dispatch cache
+     check + post-execute result routing via a co-located result tool) are explicitly
+     allowed host behavior — auditors MUST NOT flag these as DS-2 violations.
    - Adaptive/conditional rules invisible to the host (e.g., "MD041 auto-suppressed
      when frontmatter present") — those belong in `instructions.uncompressed.md`.
    - Tool-fallback hints (e.g., "use the CLI if available") — those belong in

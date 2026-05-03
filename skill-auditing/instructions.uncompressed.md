@@ -288,9 +288,9 @@ The host card MUST explicitly declare the return shape. Canonical shapes: `PATH:
 
 ### (DS-2) Host card minimalism
 
-`uncompressed.md` MUST NOT contain any of the following; each present → HIGH:
+The host card — `uncompressed.md` when present, or `SKILL.md` for SKILL.md-only dispatch skills — MUST NOT contain any of the following; each present → HIGH:
 
-- Internal cache mechanism descriptions (e.g., "iteration-safe via hash-record", "hash blob check") — caching is implementation detail invisible to the host.
+- Internal cache mechanism descriptions (e.g., "iteration-safe via hash-record", "hash blob check") — caching is implementation detail invisible to the host. **Exception: A-FM-10 inline result check protocol sections (pre-dispatch cache check + post-execute result routing via a co-located result tool) are explicitly allowed host behavior — do NOT flag these as DS-2 violations.**
 - Adaptive/conditional rules invisible to the host (e.g., "MD041 auto-suppressed when frontmatter present") — belong in `instructions.uncompressed.md`.
 - Tool-fallback hints (e.g., "use the CLI if available") — belong in instructions where the dispatched agent decides.
 - Subjective qualifiers (e.g., "Sonnet-class equivalent or diminishing returns") — replace with the operative model class in the dispatch line.
