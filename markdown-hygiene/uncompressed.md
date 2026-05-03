@@ -31,7 +31,21 @@ Follow `markdown-hygiene-lint/SKILL.md` with `<markdown_file_path> [--ignore <RU
 - `ERROR: <reason>` — stop, surface reason.
 - Otherwise: bind `<lint_result>`.
 
-## Step 4 — Aggregate
+## Step 4 — Rekey
+
+Run inline. No agent dispatch. See `hash-record/hash-record-rekey/SKILL.md`.
+
+```bash
+bash hash-record/hash-record-rekey/rekey.sh <markdown_file_path> markdown-hygiene analysis.md
+# Windows:
+pwsh hash-record/hash-record-rekey/rekey.ps1 <markdown_file_path> markdown-hygiene analysis.md
+```
+
+- `REKEYED:` or `CURRENT:` — analysis record moved to current hash (or already there). Continue.
+- `NOT_FOUND:` — analysis record not present (analysis was clean or not yet written). Continue.
+- `AMBIGUOUS:` or `ERROR:` — log warning, continue (non-fatal).
+
+## Step 5 — Aggregate
 
 Derive aggregate from `<lint_result>` and `<analysis_result>`:
 
@@ -54,7 +68,7 @@ analysis: `<analysis_result>`
 
 Where `<lint_result>` and `<analysis_result>` are the bare return values (`clean`, `findings: lint.md`, `pass: analysis.md`) using repo-relative paths only.
 
-## Step 5 — Prune
+## Step 6 — Prune
 
 Run `hash-record-prune` with `repo_root=<repo_root> --target <repo-relative-path>` where `<repo-relative-path>` is `<markdown_file_path>` stripped of the repo root prefix.
 
