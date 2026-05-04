@@ -12,20 +12,18 @@ Read-only.
 | ---------- | ---- | -------- | ------------------------------------------- |
 | `skill_dir` | string | yes | Absolute path to the skill folder being audited. |
 
-`--uncompressed` (optional) — toggle audit focus from compiled artifacts (default: `SKILL.md` + `instructions.txt`) to uncompressed sources (`uncompressed.md` + `instructions.uncompressed.md` + `spec.md`). Passed through to the executor; does NOT affect manifest scope (manifest is always all-files).
-
 `--help` / `-h` — print usage, exit 0.
 
-The tool enumerates ALL files inside `<skill_dir>`, recursively, excluding: (a) any file whose path passes through a dot-prefixed DIRECTORY (e.g. `.hash-record/`, `.tests/`, `.worktrees/`, `.optimization/`), and (b) any file named `optimize-log.md` (skill-optimize artifact, not part of the skill bundle). Dot-prefixed FILES (e.g. `.gitignore`, `.markdownlint.json`) ARE included — they are skill-significant. The manifest hash covers the entire skill bundle — any file change invalidates the cache. The result tool then delegates to `hash-record-manifest` for the cache lookup.
+The tool hashes ONLY the semantic content files of the skill bundle. Whitelist (in this exact order — order is part of the manifest hash key, do NOT reorder): `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md`. Files that exist are included; files that don't, are skipped. Non-semantic files (stamps, scripts, logs, generated artifacts) are NOT hashed — including them caused indeterminism between pre- and post-dispatch calls when those files mutated mid-run. The result tool delegates manifest computation to `hash-record-manifest` for the cache lookup.
 
 ## Procedure
 
 1. Validate `<skill_dir>` is an existing directory. If not -> `ERROR: skill_dir not found: <path>`, exit 1.
 
-2. Enumerate ALL regular files inside `<skill_dir>`, recursively. Skip: (a) any file whose path passes through a dot-prefixed DIRECTORY (e.g. `.hash-record/foo`, `subdir/.tests/x.md`, `subdir/.optimization/x.md`); (b) any file whose leaf name is `optimize-log.md`. Dot-prefixed FILES at any depth ARE included. Sort lexically by path (byte order). At least one MUST be found or -> `ERROR: no files found in skill_dir`, exit 1.
+2. Look up the semantic-file whitelist in `<skill_dir>` (top-level only, NOT recursive) in this exact order: `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md`. Include each file that exists; skip each that does not. Order is part of the manifest hash key — do NOT sort, reorder, or rearrange. At least one MUST be found or -> `ERROR: no semantic content files found in skill_dir`, exit 1.
 
 3. Invoke `hash-record-manifest` (sibling tool — do NOT reimplement) with:
-   - `op_kind` = `skill-auditing/v2-compiled` (default) OR `skill-auditing/v2-uncompressed` (when `--uncompressed` is set). Two distinct caches so the same manifest hash + flag yields independent records.
+   - `op_kind` = `skill-auditing/v2`. Single canonical op_kind; no compiled/uncompressed split.
    - `record_filename` = `report.md`
    - `files` = the enumerated list (absolute paths).
 
@@ -66,6 +64,11 @@ The host:
 - Both `result.sh` (Bash) and `result.ps1` (PowerShell 7+); byte-identical stdout.
 - Delegates manifest computation entirely to `hash-record-manifest` — no duplication.
 - Skill version (`v2`) is hardcoded in the script. Bump version + update script in lockstep when contract changes.
+
+## Non-goals
+
+- **No compiled/uncompressed cache split.** Single canonical `op_kind = skill-auditing/v2`. If both compressed and uncompressed audit sources need their own audit records, they coexist as sibling files inside `<op>/<version>/` (e.g. `report.md` + `uncompressed.md`) — never as parallel `<op>/<version>-compiled/` and `<op>/<version>-uncompressed/` folders.
+- **No version dot-subversions.** Version segment is `v<N>` flat integer (cache-bust key). `v2.1` / `v2.0.3` are red flags — surface and revert.
 
 ## Dependencies
 

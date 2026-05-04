@@ -150,7 +150,7 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
 
 The audit executes as a single sweep in three ordered steps. All findings are collected before a verdict is assigned — the sweep does not stop on the first finding.
 
-On entry, the auditor computes a manifest hash from all files in `skill_dir` (excluding dot-prefixed directories and `optimize-log.md`) using the hash-record manifest procedure, and checks the cache at `.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v2/report.md`. On a cache hit, the auditor outputs the cached path and stops. On a miss, the auditor proceeds with the full audit.
+On entry, the auditor computes a manifest hash from the semantic-content whitelist in `skill_dir` (top-level only, in this exact order: `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` — files that exist are included; missing files are skipped; order is part of the hash key) using the hash-record manifest procedure, and checks the cache at `.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v2/report.md`. On a cache hit, the auditor outputs the cached path and stops. On a miss, the auditor proceeds with the full audit.
 
 The auditor reads `SKILL.md`, determines skill type (inline or dispatch) by file-system evidence, collects all non-tool files referenced from `SKILL.md` within `skill_dir`, and proceeds through the three steps:
 
