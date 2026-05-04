@@ -134,8 +134,8 @@ Execute phases in order. Stage after each phase. Do not commit until Phase 5.
    - The skill audit may update `result.spec.md` to align with actual tool behavior.
      It must NOT modify the executor scripts (`.sh` / `.ps1`) themselves — spec alignment
      only. Actual script fixes happen in Phase 2 (tool audit).
-3. Repeat until verdict is PASS or PASS_WITH_FINDINGS (trivial only). Hard cap: 3 passes.
-4. The skill-auditing script writes the hash record automatically on PASS.
+3. Repeat until verdict is CLEAN or PASS. Hard cap: 3 passes.
+4. The skill-auditing script writes the hash record automatically on PASS or CLEAN.
 5. Stage all changed files (SKILL.md, instructions.txt, instructions.uncompressed.md,
    result.spec.md, uncompressed.md, and the new `.hash-record/` entry).
 6. Log to activity log: `phase=1 verdict=<verdict> passes=<n> timestamp=<ISO>`

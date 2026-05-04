@@ -3,6 +3,7 @@
 # Wraps hash-record-manifest and translates HIT into the cached audit verdict.
 # Usage: result <skill_dir>
 # Outputs one of:
+#   CLEAN: <abs-path>           (HIT, result: clean)        (exit 0)
 #   PASS: <abs-path>            (HIT, result: pass)         (exit 0)
 #   NEEDS_REVISION: <abs-path>  (HIT, result: findings)     (exit 0)
 #   FAIL: <abs-path>            (HIT, result: error)        (exit 0)
@@ -16,7 +17,7 @@ param(
     [switch]$h
 )
 
-$ErrorActionPreference = 'Continue'
+$ErrorActionPreference = 'Stop'
 
 if ($help -or $h) {
     [Console]::Out.Write(@"
@@ -32,6 +33,7 @@ Options:
   --help / -h      Print usage, exit 0.
 
 Output (stdout, one line):
+  CLEAN: <abs-path>           Cached report says result: clean.
   PASS: <abs-path>            Cached report says result: pass.
   NEEDS_REVISION: <abs-path>  Cached report says result: findings.
   FAIL: <abs-path>            Cached report says result: error.
@@ -131,6 +133,10 @@ if ($manifest_out -like 'HIT: *') {
     }
     $result_value = ($result_line -split ':', 2)[1].Trim() -split '\s+' | Select-Object -First 1
     switch ($result_value) {
+        'clean' {
+            [Console]::Out.Write("CLEAN: $report_path`n")
+            exit 0
+        }
         'pass' {
             [Console]::Out.Write("PASS: $report_path`n")
             exit 0

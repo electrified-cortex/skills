@@ -2,6 +2,7 @@
 # result.sh — skill-auditing result tool
 # Usage: result.sh <skill_dir>
 # Outputs one of:
+#   CLEAN: <abs-path>           (HIT, result: clean)        (exit 0)
 #   PASS: <abs-path>            (HIT, result: pass)         (exit 0)
 #   NEEDS_REVISION: <abs-path>  (HIT, result: findings)     (exit 0)
 #   FAIL: <abs-path>            (HIT, result: error)        (exit 0)
@@ -23,6 +24,7 @@ Options:
   --help / -h      Print usage, exit 0.
 
 Output (stdout, one line):
+  CLEAN: <abs-path>           Cached report says result: clean.
   PASS: <abs-path>            Cached report says result: pass.
   NEEDS_REVISION: <abs-path>  Cached report says result: findings.
   FAIL: <abs-path>            Cached report says result: error.
@@ -84,8 +86,14 @@ if [ ! -f "$MANIFEST_SH" ]; then
   exit 1
 fi
 
+# Normalize a path string to forward slashes
+normalize_path() {
+  echo "${1//\\//}"
+}
+
 # Invoke manifest
 MANIFEST_OUT=$(bash "$MANIFEST_SH" "$OP_KIND" "$RECORD_FILE" "${FILES[@]}")
+MANIFEST_OUT=$(normalize_path "$MANIFEST_OUT")
 
 case "$MANIFEST_OUT" in
   "MISS: "*)
@@ -97,13 +105,17 @@ case "$MANIFEST_OUT" in
     exit 1
     ;;
   "HIT: "*)
-    REPORT_PATH="${MANIFEST_OUT#HIT: }"
+    REPORT_PATH=$(normalize_path "${MANIFEST_OUT#HIT: }")
     if [ ! -f "$REPORT_PATH" ]; then
       echo "ERROR: cache record vanished at: $REPORT_PATH"
       exit 1
     fi
     RESULT_VALUE=$(grep -m1 '^result:' "$REPORT_PATH" 2>/dev/null | awk '{print $2}')
     case "$RESULT_VALUE" in
+      clean)
+        echo "CLEAN: $REPORT_PATH"
+        exit 0
+        ;;
       pass)
         echo "PASS: $REPORT_PATH"
         exit 0

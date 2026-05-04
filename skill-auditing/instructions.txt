@@ -13,7 +13,7 @@ Procedure:
 4. Run Step 1 → Step 2 → Step 3. Collect ALL findings before assigning verdict. Don't stop on first finding.
 5. Assign verdict per Verdict Rules.
 6. Scrub absolute paths from entire report — frontmatter `file_paths`, Notes columns, Findings, ALL prose. Forbidden tokens: Windows drive-letter paths (`<letter>:[/\\]`), POSIX root-anchored paths (`/Users/`, `/home/`, `/d/`, `/c/`, `/mnt/`, `/tmp/`, `/var/`). Evidence containing such path → describe abstractly ("hardcoded drive-letter path on line N") — never quote literal. Use repo-relative paths in Findings.
-7. Write report at `<report_path>` (overwrite if present). Use Bash tool to create the directory first: `mkdir -p $(dirname <report_path>)`. Then use Write tool to write the report. Frontmatter per `hash-record` skill contract (operation_kind: `skill-auditing/v2`, result: `pass | findings | error | skipped`).
+7. Write report at `<report_path>` (overwrite if present). Use Bash tool to create the directory first: `mkdir -p $(dirname <report_path>)`. Then use Write tool to write the report. Frontmatter per `hash-record` skill contract (operation_kind: `skill-auditing/v2`, result: `clean | pass | findings | error | skipped`). Result mapping: CLEAN → `clean`; PASS → `pass`; NEEDS_REVISION → `findings`; FAIL → `findings`; error → `error`; cache hit → `skipped`.
 
    Repo-relative: resolve via `git -C <dir-containing-target-files> rev-parse --show-toplevel`, strip prefix. Same repo root governs cache dir layout (`<repo-root>/.hash-record/...`).
 
@@ -39,6 +39,7 @@ Procedure:
 
    Body: open with `# Result` H1, state verdict, list findings (with step and check refs).
 8. Return verdict token as final stdout line, column 0, no indentation, no quoting, no list-marker prefix. Nothing follows.
+   - `CLEAN: <report_path>`
    - `PASS: <report_path>`
    - `NEEDS_REVISION: <report_path>`
    - `FAIL: <report_path>`
@@ -91,12 +92,12 @@ Not duplicating existing capability. If similar exists, recommend merge or disti
 (A-FS-1) Orphan files:
 Scan all files in `<skill_dir>` recursively; skip dot-prefixed dirs.
 For each file NOT a well-known role file (`spec.md`, `*.sh`, `*.ps1`, `*.spec.md`, `eval.txt`, `*.uncompressed.md`, `SKILL.md`, `uncompressed.md`, `instructions.txt`, `optimize-log.md`):
-- Check if referenced by name or relative path in any of: `SKILL.md`, `uncompressed.md`, `instructions.uncompressed.md`. Not referenced → LOW.
+- Check if referenced by name or relative path in any of: `SKILL.md`, `uncompressed.md`, `spec.md`, `instructions.uncompressed.md`. Not referenced → LOW.
 
 Special case: `instructions.txt` present where file-system evidence shows NOT dispatch (no dispatch invocation in `SKILL.md` or `uncompressed.md`) → HIGH. Instructions file with no dispatch wiring is an orphan.
 
 (A-FS-2) Missing referenced files:
-Scan `SKILL.md`, `uncompressed.md`, `instructions.uncompressed.md` for explicit file-path pointers: `instructions.txt`, `result.sh`, `result.ps1`, `verify.sh`, `verify.ps1`, any other filename literal denoting sibling file. Each must exist in `<skill_dir>`. Missing → HIGH.
+Scan `SKILL.md`, `uncompressed.md`, `spec.md`, `instructions.uncompressed.md` for explicit file-path pointers: `instructions.txt`, `result.sh`, `result.ps1`, `verify.sh`, `verify.ps1`, any other filename literal denoting sibling file. Each must exist in `<skill_dir>`. Missing → HIGH.
 
 Step 2 — Parity Check:
 Verify each compiled artifact faithfully represents its uncompressed counterpart with no loss of intent. Minor wording compression OK; omitted requirements, contradictions, or changed behavior are not.
@@ -267,7 +268,8 @@ Sub-skill whose entire procedure fits within 2–3 inline steps in consumer's in
 These checks extend Step 3. Violations recorded in Step 3 findings table under "Dispatch Skill Checks" group. HIGH violations → NEEDS_REVISION or FAIL depending on count; LOW → NEEDS_REVISION.
 
 Verdict Rules:
-- PASS: No FAIL findings, no HIGH findings.
+- CLEAN: All steps pass with zero findings (no HIGH, no LOW, no informational).
+- PASS: No FAIL findings, no HIGH findings. Non-blocking findings (LOW, informational) may be present.
 - NEEDS_REVISION: No FAIL findings, but HIGH or multiple LOW present. List specific fixes.
 - FAIL: Any FAIL finding, or 3+ HIGH findings.
 
@@ -293,11 +295,11 @@ Body (required):
 ```markdown
 # Result
 
-PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
+CLEAN | PASS | NEEDS_REVISION | FAIL
 
 ## Skill Audit: <skill-name>
 
-**Verdict:** PASS | NEEDS_REVISION | FAIL
+**Verdict:** CLEAN | PASS | NEEDS_REVISION | FAIL
 **Type:** inline | dispatch
 **Path:** <path>
 
