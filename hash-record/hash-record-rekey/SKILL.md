@@ -26,7 +26,7 @@ Pass `--help` / `-h` to print usage.
 - `file_path` — absolute path to the changed file (new content, not yet committed).
 - `op_kind` — operation kind, e.g. `markdown-hygiene` or `skill-auditing/v2`. May contain `/`.
 - `record_filename` — leaf filename, e.g. `claude-haiku.md`. No path separators or `..`.
-- `source_hash` — (optional) known old content hash to rekey from. When provided, bypasses full-tree search and prevents AMBIGUOUS when multiple records exist.
+- `source_hash` — (optional) known old content hash to rekey from. Must be a valid 40-character lowercase hex string; an invalid value produces `ERROR` and exit 1. When provided, bypasses full-tree search and prevents AMBIGUOUS when multiple records exist.
 
 **Folder-mode flags:**
 
@@ -41,8 +41,8 @@ Pass `--help` / `-h` to print usage.
 | --- | --- | --- |
 | `REKEYED: <abs-path>` | Record moved to new hash path. | 0 |
 | `CURRENT: <abs-path>` | Hash unchanged; no move needed. | 0 |
-| `NOT_FOUND: ...` | No record for this op_kind/record_filename. | 0 |
-| `AMBIGUOUS: <n> ...` | Multiple records found; manual resolution required. | 1 |
+| `NOT_FOUND: no record for <op_kind>/<record_filename>` | No record found. | 0 |
+| `AMBIGUOUS: <n> records found -- manual resolution required` | Multiple records found; manual resolution required. | 1 |
 | `ERROR: <reason>` | Argument or runtime error. | 1 |
 
 **Output** (folder mode — one line per record, then a SUMMARY line):
@@ -51,8 +51,8 @@ Pass `--help` / `-h` to print usage.
 | --- | --- | --- |
 | `REKEYED: <abs-path>` | Record moved to new hash path. | 0 |
 | `CURRENT: <abs-path>` | Hash unchanged; no move needed. | 0 |
-| `NOT_FOUND: ...` | No record for this op_kind/record_filename. | 0 |
-| `MANIFEST_UPDATED: <abs-path>` | Multi-file manifest record rekeyed. | 0 |
+| `NOT_FOUND: no record for <file-rel-path>` | No record for this file. | 0 |
+| `MANIFEST_UPDATED: <manifest-path>:<entry-id>` | Multi-file manifest record rekeyed. | 0 |
 | `SUMMARY: rekeyed=<n> current=<n> manifest_updated=<n> not_found=<n> errors=<n>` | Aggregate counts for the folder run. | 0 |
 | `ERROR: <reason>` | Argument or runtime error. | 1 or 2 |
 

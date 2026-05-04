@@ -3,6 +3,7 @@
 ## When to use
 
 Use `hash-record-rekey` when:
+
 - A file's byte content was changed by a formatting or hygiene pass (lint,
   whitespace normalisation, markdown-hygiene, trailing-newline fix, etc.).
 - The file has an existing hash-record entry (from a prior audit or code-review).
@@ -15,6 +16,7 @@ invalidate the audit result and require a full re-audit.
 ## Typical caller context
 
 The sealing-strategy Phase 4A (re-sign path):
+
 1. A lint pass changed a file (e.g. trailing newline added by markdown-hygiene).
 2. `hash-record-check` returns MISS for the new hash.
 3. Check whether the old record exists by running `hash-record-rekey`.
@@ -37,29 +39,39 @@ The sealing-strategy Phase 4A (re-sign path):
 ## Handling each output
 
 ### REKEYED: <new_abs_path>
+
 The record was found under the old hash and moved to the new hash path.
+
 - Stage the moved files: the `git mv` already staged the rename.
 - The record's frontmatter `hash:` field still reflects the old hash.
   If frontmatter accuracy is required, update it before committing.
 - Proceed — the record is now discoverable via `hash-record-check`.
 
 ### CURRENT: <abs_path>
+
 The file's blob hash has not changed. No move was necessary.
+
 - The existing record is already at the correct path.
 - Proceed normally.
 
 ### NOT_FOUND: no record for <op_kind>/<record_filename>
+
 No record exists for this op_kind + record_filename under any hash.
+
 - A full re-audit is required; there is nothing to re-key.
 
 ### AMBIGUOUS: <n> records found -- manual resolution required
+
 More than one record matches the op_kind/record_filename pattern under
 different hashes. Automated re-keying is unsafe.
+
 - Escalate to the operator. Do not attempt automated resolution.
 - The operator must inspect `.hash-record/` and delete stale duplicates.
 
 ### ERROR: <reason>
+
 An argument validation or runtime error occurred.
+
 - Check the error message and fix the argument.
 - Common causes: missing `file_path`, invalid `op_kind` with backslash,
   `git hash-object` failure (file not found or not readable).
@@ -72,7 +84,7 @@ An argument validation or runtime error occurred.
   against the current file hash, it will fail. Update frontmatter if needed.
 - Only one file is moved per call. If multiple records across multiple
   op_kinds need re-keying, call rekey once per (op_kind, record_filename) pair.
-- The move is staged in git automatically (git mv). Commit the repo after
+- The move is staged in git automatically (`git mv`). Commit the repo after
   re-keying as part of the normal workflow.
 - Works only within a git repo. Falls back gracefully (WARN on stderr)
   when run outside a repo, but path construction may be unreliable.
@@ -135,7 +147,7 @@ pwsh rekey.ps1 /path/to/folder [--include <glob>] [--exclude <glob>] [--dry-run]
 
 One line per record, then a final summary line:
 
-```
+```text
 REKEYED: /path/to/.hash-record/3a/3abc.../skill-auditing/v2/claude-haiku.md
 CURRENT: /path/to/.hash-record/ab/abcd.../markdown-hygiene/lint.md
 MANIFEST_UPDATED: /path/to/.hash-record/cd/cdef.../manifests/set.json:entry-1

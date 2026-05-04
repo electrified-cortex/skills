@@ -4,8 +4,8 @@ and you need the old record accessible under the new hash without re-auditing.
 Do NOT use after substantive content changes — those require full re-audit.
 
 Phase 4A (re-sign path) workflow:
-1. Lint pass changed a file -> hash-record-check returns MISS for new hash.
-2. Run hash-record-rekey to find/move the old record.
+1. Lint pass changed a file -> `hash-record-check` returns MISS for new hash.
+2. Run `hash-record-rekey` to find/move the old record.
 3. REKEYED -> old result now discoverable at new hash. Proceed.
 4. NOT_FOUND -> no old record; full audit required.
 5. CURRENT -> file content unchanged; continue normally.
@@ -23,8 +23,8 @@ Steps:
 Output handling:
 
 REKEYED: <new_abs_path>
-  git mv already staged the rename. Frontmatter hash: field still reflects old hash —
-  update if downstream consumer validates it. Record now discoverable via hash-record-check.
+  `git mv` already staged the rename. Frontmatter hash: field still reflects old hash —
+  update if downstream consumer validates it. Record now discoverable via `hash-record-check`.
 
 CURRENT: <abs_path>
   Blob hash unchanged. Existing record at correct path. Proceed normally.
@@ -43,7 +43,7 @@ ERROR: <reason>
 Constraints:
 - Does NOT update frontmatter hash: field — only moves the file.
 - One file moved per call; call once per (op_kind, record_filename) pair.
-- git mv auto-stages the rename; commit as part of normal workflow.
+- `git mv` auto-stages the rename; commit as part of normal workflow.
 - Requires git repo; falls back with WARN on stderr if not in one.
 - op_kind MUST NOT contain .. or \
 - record_filename MUST NOT contain .., /, or \
@@ -105,7 +105,7 @@ Flags:
 
 Folder-mode output is one line per record, plus a final summary:
 
-```
+```text
 REKEYED: /path/to/.hash-record/3a/3abc.../skill-auditing/v2/claude-haiku.md
 CURRENT: /path/to/.hash-record/ab/abcd.../markdown-hygiene/lint.md
 SUMMARY: rekeyed=1 current=1 manifest_updated=0 not_found=0 errors=0
