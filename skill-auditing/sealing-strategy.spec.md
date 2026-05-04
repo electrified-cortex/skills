@@ -19,7 +19,7 @@ Apply phases top-down. Each phase is broader than the next; output of an earlier
 shapes what the next phase audits.
 
 | # | Phase | Why this order |
-|---|-------|----------------|
+| - | ----- | -------------- |
 | 1 | Skill optimization | Highest level. Reorganizes / consolidates the skill itself. Leverages existing optimize-folder idempotency. |
 | 2 | Skill audit | Codifies the actual truth of how the skill works (post-optimize). |
 | 3 | Spec audit | Validates specs against the audited truth from step 2. Specs follow audit findings. |
