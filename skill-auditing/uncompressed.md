@@ -31,7 +31,7 @@ Variables:
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
 Follow `dispatch` skill. See `../dispatch/SKILL.md`.
-Should return: `PASS: <path>` | `NEEDS_REVISION: <path>` | `FAIL: <path>` | `ERROR: <reason>`
+Should return: `CLEAN: <path>` | `PASS: <path>` | `NEEDS_REVISION: <path>` | `FAIL: <path>` | `ERROR: <reason>`
 If returns `ERROR: <reason>` -> stop, surface reason.
 
 ## Inline result check (post-execute)
@@ -40,6 +40,7 @@ You (the host) run `result` again directly — do NOT dispatch it.
 Same invocation as the first Inline result check.
 Branch on stdout (last line):
 
+- `CLEAN: <report_path>` -> audit clean — no findings; done.
 - `PASS: <report_path>` -> `done.`
 - `ERROR: <reason>` -> surface the stdout, stop.
 - `MISS: <abs-path>` -> executor failed to write report; surface `ERROR: executor did not write report at <report_path>`, stop.
