@@ -1,131 +1,435 @@
 #!/usr/bin/env bash
 # rekey.sh — hash-record re-key after file content change
-# Usage: rekey <file_path> <op_kind> <record_filename> [source_hash]
+# Usage (per-file): rekey <file_path> <op_kind> <record_filename> [source_hash]
+# Usage (folder):   rekey <folder_path> [--include <glob>] [--exclude <glob>] [--dry-run] [--manifests <bool>]
 # Outputs one of:
 #   REKEYED: <new_abs_path>
 #   CURRENT: <abs_path>
-#   NOT_FOUND: no record for <op_kind>/<record_filename>
+#   NOT_FOUND: no record for <op_kind>/<record_filename>   (per-file)
+#   NOT_FOUND: no record for <file-rel-path>               (folder)
 #   AMBIGUOUS: <n> records found -- manual resolution required
+#   MANIFEST_UPDATED: <manifest-path>:<entry-id>
+#   SUMMARY: rekeyed=<n> current=<n> manifest_updated=<n> not_found=<n> errors=<n>
 #   ERROR: <reason>
-set -e
+set -euo pipefail
 
-if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-  cat <<'USAGE'
-Usage: rekey <file_path> <op_kind> <record_filename> [source_hash]
-
-Re-key a hash-record entry after the source file content changes.
-
-Arguments:
-  file_path        Absolute path to the changed file (new content, not yet committed).
-  op_kind          Operation kind, e.g. "markdown-hygiene" or "skill-auditing/v2". May contain /.
-  record_filename  Leaf filename, e.g. "claude-haiku.md". No path separators or ...
-  source_hash      (Optional) The known old content hash to rekey from. Skips full-tree search when provided.
-
-Output (stdout, one line):
-  REKEYED: <abs-path>   Record moved to new hash path.
-  CURRENT: <abs-path>   Old hash == new hash. No move needed.
-  NOT_FOUND: ...        No record exists for this op_kind/record_filename.
-  AMBIGUOUS: <n> ...    Multiple records found -- manual resolution required.
-  ERROR: <reason>       Argument or runtime error.
-
-Exit codes:
-  0   Success (REKEYED, CURRENT, or NOT_FOUND).
-  1   Error (AMBIGUOUS or ERROR).
-USAGE
-  exit 0
-fi
-
-if [ "$#" -lt 3 ]; then
-  printf 'ERROR: missing arguments -- expected <file_path> <op_kind> <record_filename>\n'
-  exit 1
-fi
-
-FILE_PATH="$1"
-OP_KIND="$2"
-RECORD_FILENAME="$3"
-SOURCE_HASH="$4"
-
-case "$OP_KIND" in
-  *..* | *\\*)
-    printf 'ERROR: invalid op_kind: %s\n' "$OP_KIND"
-    exit 1
-    ;;
-esac
-
-case "$RECORD_FILENAME" in
-  *..* | */* | *\\*)
-    printf 'ERROR: invalid record_filename: %s\n' "$RECORD_FILENAME"
-    exit 1
-    ;;
-esac
-
-TARGET_DIR=$(dirname "$FILE_PATH")
-REPO_ROOT=$(git -C "$TARGET_DIR" rev-parse --show-toplevel 2>/dev/null) || true
-if [ -z "$REPO_ROOT" ]; then
-  REPO_ROOT="$TARGET_DIR"
-  printf 'WARN: not in a git repo; falling back to file parent dir: %s\n' "$REPO_ROOT" >&2
-fi
-
-NEW_HASH=$(git hash-object "$FILE_PATH" 2>/dev/null) || {
-  printf 'ERROR: git hash-object failed for: %s\n' "$FILE_PATH"
-  exit 1
+# ---------------------------------------------------------------------------
+# Help text
+# ---------------------------------------------------------------------------
+_print_help() {
+  printf 'Usage (per-file): rekey <file_path> <op_kind> <record_filename> [source_hash]\n'
+  printf 'Usage (folder):   rekey <folder_path> [--include <glob>] [--exclude <glob>] [--dry-run] [--manifests <bool>]\n'
+  printf '\n'
+  printf 'Re-key hash-record entries after source file content changes.\n'
+  printf '\n'
+  printf 'Per-file arguments:\n'
+  printf '  file_path        Absolute path to the changed file (new content, not yet committed).\n'
+  printf '  op_kind          Operation kind, e.g. "markdown-hygiene" or "skill-auditing/v2". May contain /.\n'
+  printf '  record_filename  Leaf filename, e.g. "claude-haiku.md". No path separators or ..\n'
+  printf '  source_hash      (Optional) The known old content hash. Skips full-tree search when provided.\n'
+  printf '\n'
+  printf 'Folder-mode flags (first arg is an existing directory):\n'
+  printf '  --include <glob>    Restrict scope to matching files (repeatable; default: all).\n'
+  printf '  --exclude <glob>    Skip matching files (repeatable; default: none).\n'
+  printf '  --dry-run           Report changes without performing git mv or writes.\n'
+  printf '  --manifests <bool>  Include manifest entries (default: true).\n'
+  printf '\n'
+  printf 'Per-file output (stdout, one line):\n'
+  printf '  REKEYED: <abs-path>   Record moved to new hash path.\n'
+  printf '  CURRENT: <abs-path>   Old hash == new hash. No move needed.\n'
+  printf '  NOT_FOUND: ...        No record exists for this op_kind/record_filename.\n'
+  printf '  AMBIGUOUS: <n> ...    Multiple records found -- manual resolution required.\n'
+  printf '  ERROR: <reason>       Argument or runtime error.\n'
+  printf '\n'
+  printf 'Folder-mode output (stdout, one line per record, then summary):\n'
+  printf '  REKEYED: <abs-path>\n'
+  printf '  CURRENT: <abs-path>\n'
+  printf '  NOT_FOUND: no record for <file-rel-path>\n'
+  printf '  MANIFEST_UPDATED: <manifest-path>:<entry-id>\n'
+  printf '  ERROR: <reason>\n'
+  printf '  SUMMARY: rekeyed=<n> current=<n> manifest_updated=<n> not_found=<n> errors=<n>\n'
+  printf '\n'
+  printf 'Exit codes:\n'
+  printf '  0   Success (or --dry-run with no errors).\n'
+  printf '  1   Per-record error (attempts all before exiting).\n'
+  printf '  2   Invocation error (bad path, bad flags).\n'
 }
-[ -z "$NEW_HASH" ] && { printf 'ERROR: git hash-object returned empty hash\n'; exit 1; }
-NEW_SHARD="${NEW_HASH:0:2}"
 
-HASH_RECORD_ROOT="$REPO_ROOT/.hash-record"
-
-if [ ! -d "$HASH_RECORD_ROOT" ]; then
-  printf 'NOT_FOUND: no record for %s/%s\n' "$OP_KIND" "$RECORD_FILENAME"
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+  _print_help
   exit 0
 fi
 
-if [ -n "$SOURCE_HASH" ]; then
-  OLD_RECORD_PATH="$HASH_RECORD_ROOT/${SOURCE_HASH:0:2}/$SOURCE_HASH/$OP_KIND/$RECORD_FILENAME"
-  if [ ! -f "$OLD_RECORD_PATH" ]; then
-    printf 'NOT_FOUND: no record for %s/%s at %s\n' "$OP_KIND" "$RECORD_FILENAME" "$SOURCE_HASH"
-    exit 0
+# ---------------------------------------------------------------------------
+# Detect mode: folder vs per-file
+# ---------------------------------------------------------------------------
+FIRST_ARG="${1:-}"
+
+if [ -z "$FIRST_ARG" ]; then
+  printf 'ERROR: missing arguments -- expected <file_path> <op_kind> <record_filename> or <folder_path>\n'
+  exit 2
+fi
+
+if [ -d "$FIRST_ARG" ]; then
+  # =========================================================================
+  # FOLDER MODE
+  # =========================================================================
+  FOLDER_PATH="$FIRST_ARG"
+  shift
+
+  INCLUDES=()
+  EXCLUDES=()
+  DRY_RUN=false
+  DO_MANIFESTS=true
+
+  # Parse flags
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --include)
+        [ "$#" -lt 2 ] && { printf 'ERROR: --include requires a value\n'; exit 2; }
+        INCLUDES+=("$2"); shift 2 ;;
+      --exclude)
+        [ "$#" -lt 2 ] && { printf 'ERROR: --exclude requires a value\n'; exit 2; }
+        EXCLUDES+=("$2"); shift 2 ;;
+      --dry-run)
+        DRY_RUN=true; shift ;;
+      --manifests)
+        [ "$#" -lt 2 ] && { printf 'ERROR: --manifests requires a value (true|false)\n'; exit 2; }
+        case "$2" in
+          true|1|yes)  DO_MANIFESTS=true  ;;
+          false|0|no)  DO_MANIFESTS=false ;;
+          *) printf 'ERROR: --manifests value must be true or false, got: %s\n' "$2"; exit 2 ;;
+        esac
+        shift 2 ;;
+      --help|-h)
+        _print_help; exit 0 ;;
+      *)
+        printf 'ERROR: unknown flag: %s\n' "$1"; exit 2 ;;
+    esac
+  done
+
+  # Resolve repo root from folder_path
+  REPO_ROOT=$(git -C "$FOLDER_PATH" rev-parse --show-toplevel 2>/dev/null) || true
+  if [ -z "$REPO_ROOT" ]; then
+    REPO_ROOT="$FOLDER_PATH"
+    printf 'WARN: not in a git repo; falling back to folder_path as repo_root: %s\n' "$REPO_ROOT" >&2
   fi
-  OLD_HASH="$SOURCE_HASH"
+  REPO_ROOT_FWD=$(printf '%s' "$REPO_ROOT" | tr '\\' '/')
+
+  # Normalize folder_path to forward slashes, no trailing slash
+  FOLDER_PATH_FWD=$(printf '%s' "$FOLDER_PATH" | tr '\\' '/')
+  FOLDER_PATH_FWD="${FOLDER_PATH_FWD%/}"
+
+  HASH_RECORD_ROOT="$REPO_ROOT_FWD/.hash-record"
+
+  if $DO_MANIFESTS; then
+    printf 'WARN: --manifests=true requested but manifest-entry rekeying is not implemented; manifest entries will not be updated\n' >&2
+  fi
+
+  # ---------------------------------------------------------------------------
+  # Helper: extract file_path / file_paths from YAML frontmatter
+  # Prints one repo-relative path per line.
+  # ---------------------------------------------------------------------------
+  _get_frontmatter_paths() {
+    local rec_file="$1"
+    local past_open=0
+    local collecting_list=0
+    while IFS= read -r line; do
+      # Strip CR for Windows line endings
+      line="${line%$'\r'}"
+      if [ "$past_open" -eq 0 ]; then
+        [ "$line" = "---" ] && past_open=1
+        continue
+      fi
+      # End of frontmatter
+      [ "$line" = "---" ] && break
+      # file_path: single value
+      if [[ "$line" =~ ^file_path:[[:space:]]+(.+)$ ]]; then
+        collecting_list=0
+        printf '%s\n' "${BASH_REMATCH[1]}"
+      # file_paths: list start
+      elif [[ "$line" =~ ^file_paths:[[:space:]]*$ ]]; then
+        collecting_list=1
+      # list item under file_paths
+      elif [ "$collecting_list" -eq 1 ] && [[ "$line" =~ ^[[:space:]]+-[[:space:]]+(.+)$ ]]; then
+        printf '%s\n' "${BASH_REMATCH[1]}"
+      else
+        # Any other top-level key resets list mode
+        if [[ "$line" =~ ^[a-z_]+: ]]; then
+          collecting_list=0
+        fi
+      fi
+    done < "$rec_file"
+  }
+
+  # ---------------------------------------------------------------------------
+  # Helper: glob match (bash case-based)
+  # ---------------------------------------------------------------------------
+  _matches_any_glob() {
+    local rel_path="$1"
+    shift
+    local glob
+    for glob in "$@"; do
+      case "$rel_path" in
+        $glob) return 0 ;;
+      esac
+    done
+    return 1
+  }
+
+  # ---------------------------------------------------------------------------
+  # Load all records into memory as tab-separated entries
+  # Format: rec_path_fwd <TAB> rec_hash <TAB> op_kind <TAB> rec_filename
+  # ---------------------------------------------------------------------------
+  declare -a ALL_RECORDS=()
+  if [ -d "$HASH_RECORD_ROOT" ]; then
+    while IFS= read -r -d '' rec_path; do
+      rec_path_fwd=$(printf '%s' "$rec_path" | tr '\\' '/')
+      after_root="${rec_path_fwd#${HASH_RECORD_ROOT}/}"
+      # after_root = <shard>/<hash>/<op_kind...>/<record_filename>
+      after_shard="${after_root#*/}"           # strip shard
+      rec_hash="${after_shard%%/*}"
+      after_hash="${after_shard#*/}"           # <op_kind...>/<record_filename>
+      rec_filename="${after_hash##*/}"
+      op_kind_part="${after_hash%/*}"
+      ALL_RECORDS+=("${rec_path_fwd}	${rec_hash}	${op_kind_part}	${rec_filename}")
+    done < <(find "$HASH_RECORD_ROOT" -type f -print0 2>/dev/null)
+  fi
+
+  # Counters
+  cnt_rekeyed=0
+  cnt_current=0
+  cnt_manifest_updated=0
+  cnt_not_found=0
+  cnt_errors=0
+  had_error=false
+
+  # ---------------------------------------------------------------------------
+  # Iterate over files in folder_path
+  # ---------------------------------------------------------------------------
+  while IFS= read -r file_abs; do
+    file_abs_fwd=$(printf '%s' "$file_abs" | tr '\\' '/')
+
+    # Compute repo-relative path
+    if [[ "$file_abs_fwd" == "$REPO_ROOT_FWD/"* ]]; then
+      file_rel="${file_abs_fwd#${REPO_ROOT_FWD}/}"
+    else
+      file_rel="$file_abs_fwd"
+    fi
+
+    # Compute folder-relative path for include/exclude matching
+    if [[ "$file_abs_fwd" == "$FOLDER_PATH_FWD/"* ]]; then
+      file_folder_rel="${file_abs_fwd#${FOLDER_PATH_FWD}/}"
+    else
+      file_folder_rel="$file_rel"
+    fi
+
+    # Apply include filter (if any specified)
+    if [ "${#INCLUDES[@]}" -gt 0 ]; then
+      if ! _matches_any_glob "$file_folder_rel" "${INCLUDES[@]}"; then
+        continue
+      fi
+    fi
+
+    # Apply exclude filter
+    if [ "${#EXCLUDES[@]}" -gt 0 ]; then
+      if _matches_any_glob "$file_folder_rel" "${EXCLUDES[@]}"; then
+        continue
+      fi
+    fi
+
+    # Compute current blob hash
+    current_hash=$(git hash-object "$file_abs" 2>/dev/null) || {
+      printf 'ERROR: git hash-object failed for: %s\n' "$file_rel"
+      cnt_errors=$((cnt_errors + 1))
+      had_error=true
+      continue
+    }
+    if [ -z "$current_hash" ]; then
+      printf 'ERROR: git hash-object returned empty hash for: %s\n' "$file_rel"
+      cnt_errors=$((cnt_errors + 1))
+      had_error=true
+      continue
+    fi
+    current_shard="${current_hash:0:2}"
+
+    # Find all records referencing this file (by file_rel)
+    file_records_found=0
+
+    for rec_entry in "${ALL_RECORDS[@]}"; do
+      IFS='	' read -r rec_path rec_hash rec_op_kind rec_filename <<< "$rec_entry"
+
+      # Check if this record's frontmatter references file_rel
+      references_file=false
+      while IFS= read -r fpath; do
+        fpath="${fpath%$'\r'}"
+        fpath="${fpath## }"
+        fpath="${fpath%% }"
+        if [ "$fpath" = "$file_rel" ]; then
+          references_file=true
+          break
+        fi
+      done < <(_get_frontmatter_paths "$rec_path" 2>/dev/null)
+
+      $references_file || continue
+
+      # This record references our file
+      file_records_found=$((file_records_found + 1))
+
+      if [ "$rec_hash" = "$current_hash" ]; then
+        printf 'CURRENT: %s\n' "$rec_path"
+        cnt_current=$((cnt_current + 1))
+      else
+        new_record_dir="$HASH_RECORD_ROOT/$current_shard/$current_hash/$rec_op_kind"
+        new_record_path="$new_record_dir/$rec_filename"
+
+        if $DRY_RUN; then
+          printf 'REKEYED: %s\n' "$new_record_path"
+          cnt_rekeyed=$((cnt_rekeyed + 1))
+        else
+          _rec_error=false
+
+          if ! mkdir -p "$new_record_dir" 2>/dev/null; then
+            printf 'ERROR: mkdir failed for: %s\n' "$new_record_dir"
+            cnt_errors=$((cnt_errors + 1))
+            had_error=true
+            _rec_error=true
+          fi
+
+          if ! $_rec_error; then
+            old_rel="${rec_path#${REPO_ROOT_FWD}/}"
+            new_rel="${new_record_path#${REPO_ROOT_FWD}/}"
+
+            if ! git -C "$REPO_ROOT" mv "$old_rel" "$new_rel" 2>/dev/null; then
+              printf 'ERROR: git mv failed: %s -> %s\n' "$old_rel" "$new_rel"
+              cnt_errors=$((cnt_errors + 1))
+              had_error=true
+              _rec_error=true
+            fi
+          fi
+
+          if ! $_rec_error; then
+            printf 'REKEYED: %s\n' "$new_record_path"
+            cnt_rekeyed=$((cnt_rekeyed + 1))
+            # Update in-memory entry so subsequent files see the new path/hash
+            ALL_RECORDS=("${ALL_RECORDS[@]/$rec_entry/${new_record_path}	${current_hash}	${rec_op_kind}	${rec_filename}}")
+          fi
+        fi
+      fi
+    done
+
+    if [ "$file_records_found" -eq 0 ]; then
+      printf 'NOT_FOUND: no record for %s\n' "$file_rel"
+      cnt_not_found=$((cnt_not_found + 1))
+    fi
+
+  done < <(find "$FOLDER_PATH" -type f -not -path '*/.git/*' 2>/dev/null | LC_ALL=C sort)
+
+  printf 'SUMMARY: rekeyed=%d current=%d manifest_updated=%d not_found=%d errors=%d\n' \
+    "$cnt_rekeyed" "$cnt_current" "$cnt_manifest_updated" "$cnt_not_found" "$cnt_errors"
+
+  if $had_error; then
+    exit 1
+  fi
+  exit 0
+
 else
-  FOUND=()
-  while IFS= read -r -d '' candidate; do
-    FOUND+=("$candidate")
-  done < <(find "$HASH_RECORD_ROOT" -type f -path "*/${OP_KIND}/${RECORD_FILENAME}" -print0 2>/dev/null)
+  # =========================================================================
+  # PER-FILE MODE (original, unchanged)
+  # =========================================================================
 
-  COUNT="${#FOUND[@]}"
+  if [ "$#" -lt 3 ]; then
+    printf 'ERROR: missing arguments -- expected <file_path> <op_kind> <record_filename>\n'
+    exit 2
+  fi
 
-  if [ "$COUNT" -eq 0 ]; then
+  FILE_PATH="$1"
+  OP_KIND="$2"
+  RECORD_FILENAME="$3"
+  SOURCE_HASH="${4:-}"
+
+  case "$OP_KIND" in
+    *..* | *\\*)
+      printf 'ERROR: invalid op_kind: %s\n' "$OP_KIND"
+      exit 1
+      ;;
+  esac
+
+  case "$RECORD_FILENAME" in
+    *..* | */* | *\\*)
+      printf 'ERROR: invalid record_filename: %s\n' "$RECORD_FILENAME"
+      exit 1
+      ;;
+  esac
+
+  TARGET_DIR=$(dirname "$FILE_PATH")
+  REPO_ROOT=$(git -C "$TARGET_DIR" rev-parse --show-toplevel 2>/dev/null) || true
+  if [ -z "$REPO_ROOT" ]; then
+    REPO_ROOT="$TARGET_DIR"
+    printf 'WARN: not in a git repo; falling back to file parent dir: %s\n' "$REPO_ROOT" >&2
+  fi
+
+  NEW_HASH=$(git hash-object "$FILE_PATH" 2>/dev/null) || {
+    printf 'ERROR: git hash-object failed for: %s\n' "$FILE_PATH"
+    exit 1
+  }
+  [ -z "$NEW_HASH" ] && { printf 'ERROR: git hash-object returned empty hash\n'; exit 1; }
+  NEW_SHARD="${NEW_HASH:0:2}"
+
+  HASH_RECORD_ROOT="$REPO_ROOT/.hash-record"
+
+  if [ ! -d "$HASH_RECORD_ROOT" ]; then
     printf 'NOT_FOUND: no record for %s/%s\n' "$OP_KIND" "$RECORD_FILENAME"
     exit 0
   fi
 
-  if [ "$COUNT" -gt 1 ]; then
-    printf 'AMBIGUOUS: %d records found -- manual resolution required\n' "$COUNT"
-    exit 1
+  if [ -n "$SOURCE_HASH" ]; then
+    OLD_RECORD_PATH="$HASH_RECORD_ROOT/${SOURCE_HASH:0:2}/$SOURCE_HASH/$OP_KIND/$RECORD_FILENAME"
+    if [ ! -f "$OLD_RECORD_PATH" ]; then
+      printf 'NOT_FOUND: no record for %s/%s at %s\n' "$OP_KIND" "$RECORD_FILENAME" "$SOURCE_HASH"
+      exit 0
+    fi
+    OLD_HASH="$SOURCE_HASH"
+  else
+    FOUND=()
+    while IFS= read -r -d '' candidate; do
+      FOUND+=("$candidate")
+    done < <(find "$HASH_RECORD_ROOT" -type f -path "*/${OP_KIND}/${RECORD_FILENAME}" -print0 2>/dev/null)
+
+    COUNT="${#FOUND[@]}"
+
+    if [ "$COUNT" -eq 0 ]; then
+      printf 'NOT_FOUND: no record for %s/%s\n' "$OP_KIND" "$RECORD_FILENAME"
+      exit 0
+    fi
+
+    if [ "$COUNT" -gt 1 ]; then
+      printf 'AMBIGUOUS: %d records found -- manual resolution required\n' "$COUNT"
+      exit 1
+    fi
+
+    OLD_RECORD_PATH="${FOUND[0]}"
+    AFTER_PREFIX="${OLD_RECORD_PATH#${HASH_RECORD_ROOT}/}"
+    OLD_SHARD="${AFTER_PREFIX%%/*}"
+    AFTER_SHARD="${AFTER_PREFIX#*/}"
+    OLD_HASH="${AFTER_SHARD%%/*}"
   fi
 
-  OLD_RECORD_PATH="${FOUND[0]}"
-  AFTER_PREFIX="${OLD_RECORD_PATH#${HASH_RECORD_ROOT}/}"
-  OLD_SHARD="${AFTER_PREFIX%%/*}"
-  AFTER_SHARD="${AFTER_PREFIX#*/}"
-  OLD_HASH="${AFTER_SHARD%%/*}"
-fi
+  if [ "$OLD_HASH" = "$NEW_HASH" ]; then
+    printf 'CURRENT: %s\n' "$OLD_RECORD_PATH"
+    exit 0
+  fi
 
-if [ "$OLD_HASH" = "$NEW_HASH" ]; then
-  printf 'CURRENT: %s\n' "$OLD_RECORD_PATH"
+  NEW_RECORD_DIR="$HASH_RECORD_ROOT/$NEW_SHARD/$NEW_HASH/$OP_KIND"
+  NEW_RECORD_PATH="$NEW_RECORD_DIR/$RECORD_FILENAME"
+
+  mkdir -p "$NEW_RECORD_DIR"
+
+  OLD_REL="${OLD_RECORD_PATH#${REPO_ROOT}/}"
+  NEW_REL="${NEW_RECORD_PATH#${REPO_ROOT}/}"
+
+  git -C "$REPO_ROOT" mv "$OLD_REL" "$NEW_REL"
+
+  printf 'REKEYED: %s\n' "$NEW_RECORD_PATH"
   exit 0
 fi
-
-NEW_RECORD_DIR="$HASH_RECORD_ROOT/$NEW_SHARD/$NEW_HASH/$OP_KIND"
-NEW_RECORD_PATH="$NEW_RECORD_DIR/$RECORD_FILENAME"
-
-mkdir -p "$NEW_RECORD_DIR"
-
-OLD_REL="${OLD_RECORD_PATH#${REPO_ROOT}/}"
-NEW_REL="${NEW_RECORD_PATH#${REPO_ROOT}/}"
-
-git -C "$REPO_ROOT" mv "$OLD_REL" "$NEW_REL"
-
-printf 'REKEYED: %s\n' "$NEW_RECORD_PATH"
-exit 0
