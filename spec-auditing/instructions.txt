@@ -66,7 +66,7 @@ Audit (spec-only — apply instead of pair-audit when no companion):
 Six checks only. Numbered to match pair-audit; skip steps 2–5, 10–11, 13 (require companion).
 Apply steps 1, 6, 7, 8, 9, 12 as defined above.
 Additionally: Internal Consistency — no contradictions within spec itself.
-(No Semantic Alignment, Req Coverage, Contradiction Detection, Change Drift Risk, Unauthorized Additions, or Compression Fidelity — all require companion.)
+(No Semantic Alignment, Req Coverage, Cross-File Contradiction Detection, Change Drift Risk, Unauthorized Additions, or Compression Fidelity — all require companion. Internal Consistency is IN scope.)
 
 Assumptions (unless overridden):
 Both files describe same system/behavior/contract; meaningfully aligned. Markdown headings/structure semantically relevant. Normative statements include explicit/implied reqs. Examples subordinate to rules unless explicitly normative. Mandatory behavior without normative keyword but contextually binding → flag as enforceability issue.
@@ -101,7 +101,7 @@ STEP RW: write hash-record (when `--report-path` is provided)
 After verdict determined, write hash-record before emitting the return token:
 1. Use `<report_path>` from `--report-path` argument supplied by the host. If absent or empty, skip this step (no-cache path).
 2. Create parent dirs as needed.
-3. Write the record using the schema defined in `hash-record/spec.md` §Record Frontmatter. Spec-auditing-specific fields:
+3. Write the record using the schema defined in the hash-record skill's record-frontmatter contract. Spec-auditing-specific fields:
    - `operation_kind: spec-auditing/v1`
    - `result:` — one of `pass | pass_with_findings | fail | error` (Pass→pass; Pass with Findings→pass_with_findings; Fail→fail; error→error)
 4. Emit return token as final stdout line (column 0, no indent, no list marker):
@@ -110,7 +110,7 @@ After verdict determined, write hash-record before emitting the return token:
 Output:
 1. Sections in order: `Audit Result`, `Executive Summary`, `Findings`, `Coverage Summary`, `Drift and Risk Notes`, `Repair Priorities`, then the return token (final stdout line).
 2. `Audit Result`: `Pass`, `Pass with Findings`, or `Fail`.
-3. `Executive Summary`: alignment state (or spec quality state in spec-only), mode used, biggest risks, threshold if customized.
+3. `Executive Summary`: pair-audit → alignment state, mode, biggest risks, threshold if customized. Spec-only → spec structural quality and standards-conformance (sections present, enforceability, internal consistency, material weaknesses); no alignment assessment.
 4. `Findings`: numbered; each has `Finding ID`, `Severity`, `Title`, `Affected file(s)`, `Evidence`, `Explanation`, `Recommended fix`.
 5. `Coverage Summary`: well-covered, missing/weak, fit for purpose. Spec-only: "N/A — spec-only mode, no companion present."
 6. `Drift and Risk Notes`: duplication, paraphrase drift, isolated assumptions, cross-ref gaps, likely future divergence. Spec-only: internal consistency observations only (no cross-file drift).

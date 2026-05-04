@@ -92,7 +92,7 @@ Recommend renaming the section/heading/term to "Out of scope".
 Six checks only. Steps numbered to match pair-audit for cross-reference; skip steps 2–5, 10–11, and 13 (require companion).
 Apply steps 1, 6, 7, 8, 9, 12 as defined in pair-audit above.
 Additionally: Internal Consistency — no contradictions within the spec itself.
-(No Semantic Alignment, Requirement Coverage, Contradiction Detection, Change Drift Risk, Unauthorized Additions, or Compression Fidelity — all require a companion.)
+(No Semantic Alignment, Requirement Coverage, Cross-File Contradiction Detection, Change Drift Risk, Unauthorized Additions, or Compression Fidelity — all require a companion. Internal Consistency is IN scope.)
 
 ## Assumptions (unless overridden)
 
@@ -145,7 +145,7 @@ After the verdict is determined, write the hash-record before emitting the retur
 
 1. Use `<report_path>` from the `--report-path` argument supplied by the host. If `--report-path` is absent or empty, skip this step (no-cache path).
 2. Create parent directories as needed.
-3. Write the record using the schema defined in `hash-record/spec.md` §Record Frontmatter. Spec-auditing-specific fields:
+3. Write the record using the schema defined in the hash-record skill's record-frontmatter contract. Spec-auditing-specific fields:
    - `operation_kind: spec-auditing/v1`
    - `result:` — one of `pass | pass_with_findings | fail | error` (Pass→pass; Pass with Findings→pass_with_findings; Fail→fail; error→error)
 4. Emit the return token as the final stdout line (column 0, no indent, no list marker):
@@ -155,8 +155,9 @@ After the verdict is determined, write the hash-record before emitting the retur
 
 1. Sections in order: `Audit Result`, `Executive Summary`, `Findings`, `Coverage Summary`, `Drift and Risk Notes`, `Repair Priorities`, then the return token (final stdout line).
 2. `Audit Result`: `Pass`, `Pass with Findings`, or `Fail`.
-3. `Executive Summary`: alignment state (or spec quality state in spec-only mode), mode used,
-   biggest risks, threshold if customized.
+3. `Executive Summary`:
+   - **Pair-audit mode**: alignment state between spec and companion, mode used, biggest risks, threshold if customized.
+   - **Spec-only mode**: spec structural quality and standards-conformance — sections present, language enforceability, internal consistency, material weaknesses. No alignment assessment; there is no companion.
 4. `Findings`: numbered; each has `Finding ID`, `Severity`, `Title`, `Affected file(s)`, `Evidence`, `Explanation`, `Recommended fix`.
 5. `Coverage Summary`: well-covered, missing/weak, fit for purpose.
    Spec-only mode: set to "N/A — spec-only mode, no companion present."

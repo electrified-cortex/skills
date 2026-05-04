@@ -96,10 +96,13 @@ The following checks require a companion file and are skipped:
 
 - Semantic Alignment (spec vs companion)
 - Requirement Coverage (companion coverage of spec requirements)
-- Contradiction Detection (spec vs companion)
+- Cross-File Contradiction Detection (spec vs companion conflicts)
 - Unauthorized Additions (companion scope expansion)
 - Compression Fidelity (loss/gain/bloat)
 - Change Drift Risk (cross-file divergence)
+
+Internal Consistency (intra-spec contradiction detection) is IN scope for
+spec-only mode — it appears under §What is audited above.
 
 ### Fix mode in spec-only
 
@@ -516,7 +519,13 @@ A single top-level result:
 
 ### 2. Executive Summary
 
-A concise summary of the overall state of alignment between the two files.
+**Pair-audit mode:** A concise summary of the overall state of alignment
+between the two files — shared meaning preserved, key risks, biggest gaps.
+
+**Spec-only mode:** A concise summary of the spec's structural quality and
+standards-conformance — sections present, language enforceability, internal
+consistency, and any material weaknesses. No alignment assessment is included;
+there is no companion to align against.
 
 ### 3. Findings
 
