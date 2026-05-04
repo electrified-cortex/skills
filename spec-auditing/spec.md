@@ -624,11 +624,13 @@ The final line of stdout of the overall skill invocation MUST be the return
 token, at column 0, no indent, no list markers, no quoting.
 
 Host emits (cache hit, executor not invoked):
+
 ```text
 PATH: <report_path>
 ```
 
 Executor emits (after full audit and hash-record write):
+
 ```text
 Pass: <report_path>
 Pass with Findings: <report_path>
