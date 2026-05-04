@@ -49,8 +49,6 @@ so they are discoverable, auditable, and maintainable.
 
 ### Companion Spec
 
-#### Normative
-
 Every tool script must have a companion `.spec.md` file that defines:
 
 1. Purpose — what the tool does
@@ -65,8 +63,6 @@ proper lifecycle.
 
 ### Placement
 
-#### Normative
-
 Tools can live in two locations:
 
 1. **Standalone**: `<agent>/tools/` or `.agents/tools/` for shared tools
@@ -77,8 +73,6 @@ the context of that skill. Standalone tools are for general-purpose
 utilities.
 
 ### Script Conventions
-
-#### Normative
 
 1. Scripts must be self-documenting — parameter block at the top with
    descriptions.
