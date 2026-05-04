@@ -474,6 +474,11 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
         exit 1
     }
 
+    if ($SourceHash -and $SourceHash -notmatch '^[0-9a-f]{40}$') {
+        [Console]::Out.Write("ERROR: invalid source_hash: $SourceHash`n")
+        exit 1
+    }
+
     $target_dir = Split-Path -Parent $file_path
     $repo_root = (& git -C $target_dir rev-parse --show-toplevel 2>$null)
     if (-not $repo_root) {

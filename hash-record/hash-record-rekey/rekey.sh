@@ -459,6 +459,13 @@ else
   RECORD_FILENAME="$3"
   SOURCE_HASH="${4:-}"
 
+  if [ -n "$SOURCE_HASH" ]; then
+    if ! printf '%s' "$SOURCE_HASH" | grep -qE '^[0-9a-f]{40}$'; then
+      echo "ERROR: invalid source_hash: $SOURCE_HASH"
+      exit 1
+    fi
+  fi
+
   case "$OP_KIND" in
     *..* | *\\*)
       printf 'ERROR: invalid op_kind: %s\n' "$OP_KIND"

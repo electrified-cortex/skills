@@ -75,6 +75,43 @@ bash rekey.sh /repo/skills/bar/SKILL.md markdown-hygiene lint.md
 ```
 
 ```powershell
-pwsh rekey.ps1 D:/repo/skills/foo/SKILL.md skill-auditing/v2 claude-haiku.md
-# -> REKEYED: D:/repo/.hash-record/3a/3abcdef.../skill-auditing/v2/claude-haiku.md
+pwsh rekey.ps1 /path/to/skills/foo/SKILL.md skill-auditing/v2 claude-haiku.md
+# -> REKEYED: /path/to/.hash-record/3a/3abcdef.../skill-auditing/v2/claude-haiku.md
 ```
+
+## Folder mode
+
+When the first argument resolves to an existing directory, the tool enters
+folder mode. It detects all changed files under that directory, finds their
+associated hash-record entries (and optionally manifest files), and rekeys
+them in bulk.
+
+Invocation:
+
+```bash
+bash rekey.sh  /path/to/folder [--include <glob>] [--exclude <glob>] [--dry-run] [--manifests]
+```
+
+```powershell
+pwsh rekey.ps1 /path/to/folder [--include <glob>] [--exclude <glob>] [--dry-run] [--manifests]
+```
+
+Flags:
+
+- `--include <glob>` — restrict to files matching the glob (repeatable).
+- `--exclude <glob>` — skip files matching the glob (repeatable).
+- `--dry-run` — report what would be rekeyed without making changes.
+- `--manifests` — also rekey manifest files (default: true).
+
+Folder-mode output is one line per record, plus a final summary:
+
+```
+REKEYED: /path/to/.hash-record/3a/3abc.../skill-auditing/v2/claude-haiku.md
+CURRENT: /path/to/.hash-record/ab/abcd.../markdown-hygiene/lint.md
+SUMMARY: rekeyed=1 current=1 manifest_updated=0 not_found=0 errors=0
+```
+
+Exit codes: 0 = all succeeded, 1 = any per-record ERROR, 2 = invocation error.
+
+Run folder-mode BEFORE `hash-record-prune`; pruning first would delete records
+the rekey is trying to preserve.

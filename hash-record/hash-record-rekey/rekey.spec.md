@@ -8,12 +8,106 @@ bytes (even whitespace-only), its git blob hash changes and the existing
 hash-record entry is stranded under the old hash. This tool finds the
 stranded entry and moves it to the correct new hash path via `git mv`.
 
-## Use case
+## Scope
 
-Phase 4A (re-sign path) of the sealing strategy: after a formatting pass
-changes a file, re-key the audit record to the new blob hash so it is
-discoverable by `hash-record-check` under the new hash, without requiring
-a full re-audit.
+This tool applies to the Phase 4A (re-sign path) step of the sealing
+strategy: after a formatting pass changes a file, re-key the audit record
+to the new blob hash so it is discoverable by `hash-record-check` under
+the new hash, without requiring a full re-audit.
+
+**Appropriate use:**
+
+- A file's content changed due to whitespace-only or formatting operations
+  (lint, hygiene, prettify) and its existing hash-record entry is now stale.
+- A caller knows the specific `op_kind` and `record_filename` and wants to
+  rekey a single record (per-file mode).
+- A caller has a directory of changed files and wants to rekey all affected
+  records in bulk (folder/manifest mode).
+
+**Out of scope:**
+
+- Re-executing the originating audit or lint operation.
+- Resolving content-drift conflicts (semantic vs whitespace classification) —
+  that is the caller's responsibility.
+- Deleting orphaned records (that is `hash-record-prune`'s job, run AFTER
+  this tool).
+- Cross-folder rekey: records referencing files outside the target directory
+  are ignored in folder mode.
+- Records for files that have not changed (hash unchanged → `CURRENT`, no-op).
+
+## Definitions
+
+- **content hash**: The git blob hash (`git hash-object`) of a file's current
+  on-disk bytes. Used as the directory key under `.hash-record/`.
+- **op_kind**: Operation kind — a string identifying the audit or analysis
+  operation that produced the record (e.g. `markdown-hygiene`,
+  `skill-auditing/v2`). May contain `/` for namespaced operations; must not
+  contain `..` or `\`.
+- **shard**: The first two characters of the content hash, used as the first
+  path segment under `.hash-record/` (e.g. `.hash-record/ab/`). Sharding
+  keeps directory sizes manageable.
+- **record**: A file stored at `.hash-record/<shard>/<hash>/<op_kind>/<record_filename>`.
+  The path encodes the content hash of the source file at the time the audit
+  ran.
+- **stale entry**: A record whose path encodes an old content hash that no
+  longer matches the source file's current bytes. Rekey moves it to the
+  current hash path.
+- **manifest hash**: For multi-file records, the canonical directory key is
+  the hash of (sorted file paths + their current git hashes combined), not
+  any individual member file's blob hash.
+- **record_filename**: The leaf filename of a record file (e.g. `claude-haiku.md`).
+  Must not contain `..`, `/`, or `\`.
+- **git mv**: The git command used to rename/move a file and stage that rename
+  in the index in a single operation. Rekey uses `git mv` (not plain `mv`) so
+  the move is immediately staged and history is preserved.
+
+## Requirements
+
+1. **Argument validation**: All three positional arguments (`file_path`,
+   `op_kind`, `record_filename`) are required in per-file mode. Missing
+   arguments must produce an `ERROR` line on stdout and exit 1. `op_kind`
+   must not contain `..` or `\`. `record_filename` must not contain `..`,
+   `/`, or `\`. Path traversal attempts must be rejected. The optional
+   `source_hash` positional argument, when supplied, must be a valid
+   40-character lowercase hex string; an invalid value must produce an
+   `ERROR` line and exit 1.
+
+2. **Output format contract**: Each per-file invocation emits exactly one
+   line on stdout, LF-terminated, with a keyword prefix (`REKEYED`,
+   `CURRENT`, `NOT_FOUND`, `AMBIGUOUS`, or `ERROR`). All paths in output
+   use forward slashes on every platform. WARN lines go to stderr only and
+   must not appear on stdout.
+
+3. **Exit codes**: Exit 0 on success (including `NOT_FOUND` and `CURRENT`
+   outcomes). Exit 1 on any error or `AMBIGUOUS` match. In folder mode,
+   exit 0 if all rekeys succeeded; exit 1 if any per-record `ERROR`
+   occurred; exit 2 for invocation errors (bad path, conflicting flags).
+
+4. **Git-state requirements**: The tool must resolve the repo root via
+   `git -C $(dirname <file_path>) rev-parse --show-toplevel`. If the file is
+   not in a git repo, fall back to `dirname(file_path)` with a stderr WARN.
+   Each `git mv` must be preceded by a git-state smoke check: untracked and
+   staged files proceed; committed-clean files proceed; modified-but-unstaged
+   files surface a warning and are not silently absorbed.
+
+5. **Idempotency requirement**: After a successful rekey pass, running the
+   same rekey again on the same inputs must produce 100% `CURRENT` (or
+   `MANIFEST_UPDATED-no-change`) lines with no `REKEYED` lines. This is
+   the operator-defined acceptance test. Implementation must verify via
+   integration test before being considered complete.
+
+6. **Folder-mode behavior**: When the single positional argument resolves to
+   an existing directory, the tool enters folder mode. It must detect changed
+   files via `git status`, build a rekey set (changed files + referencing
+   manifests), stage the rekey set via `git add`, apply `git mv` moves,
+   perform a diff verification pass, and emit per-record lines plus a final
+   `SUMMARY:` line. Folder mode runs before `hash-record-prune`; the order
+   constraint is mandatory.
+
+7. **Rekey is pure bookkeeping**: The tool moves record files and updates
+   manifest path/hash references only. It must never re-run the originating
+   operation, replace file contents with audit-generated content, delete any
+   record or manifest, or create new audit content.
 
 ## Parameters
 
@@ -22,8 +116,9 @@ a full re-audit.
 | `file_path` | string | yes | Absolute path to the changed file (new content, not yet committed). |
 | `op_kind` | string | yes | Operation kind, e.g. `markdown-hygiene` or `skill-auditing/v2`. May contain `/`. |
 | `record_filename` | string | yes | Leaf filename, e.g. `claude-haiku.md`. No path separators. |
+| `source_hash` | string | no | Known old content hash to rekey from. When provided, bypasses the full-tree scan (step 4 of the Procedure) and targets only the record at the given hash path. Prevents `AMBIGUOUS` when multiple records exist for the same `op_kind`/`record_filename`. |
 
-All three positional arguments are required.
+The first three positional arguments are required in per-file mode. `source_hash` is optional.
 
 ## Flags
 
@@ -40,8 +135,14 @@ All three positional arguments are required.
 
 3. Compute new blob hash: `git hash-object <file_path>`.
 
-4. Scan `.hash-record/` recursively for a file matching the pattern
-   `*/<op_kind>/<record_filename>`. Collect all matches.
+4. Locate the record:
+   - If `source_hash` was supplied: construct the expected path
+     `.hash-record/<source_hash[0:2]>/<source_hash>/<op_kind>/<record_filename>`
+     directly. If that path does not exist, emit `NOT_FOUND` and exit 0.
+     This bypasses the full-tree scan and prevents `AMBIGUOUS`.
+   - If `source_hash` was NOT supplied: scan `.hash-record/` recursively
+     for a file matching the pattern `*/<op_kind>/<record_filename>`.
+     Collect all matches.
 
 5. Dispatch on match count:
    - 0 matches → `NOT_FOUND: no record for <op_kind>/<record_filename>`, exit 0.

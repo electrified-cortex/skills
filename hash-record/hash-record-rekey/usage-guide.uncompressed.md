@@ -94,6 +94,62 @@ bash rekey.sh /repo/skills/bar/SKILL.md markdown-hygiene lint.md
 ```
 
 ```powershell
-pwsh rekey.ps1 D:/repo/skills/foo/SKILL.md skill-auditing/v2 claude-haiku.md
-# -> REKEYED: D:/repo/.hash-record/3a/3abcdef.../skill-auditing/v2/claude-haiku.md
+pwsh rekey.ps1 /path/to/skills/foo/SKILL.md skill-auditing/v2 claude-haiku.md
+# -> REKEYED: /path/to/.hash-record/3a/3abcdef.../skill-auditing/v2/claude-haiku.md
 ```
+
+## Folder mode
+
+When the first argument resolves to an existing **directory** (not a file),
+the tool enters folder mode. It uses `git status` to detect changed files
+under the directory, gathers all associated hash-record entries (and
+optionally manifest files), and rekeys them in bulk.
+
+Use folder mode after a sealing chain (skill-optimize → skill-audit →
+spec-audit → tool-audit → hygiene analysis → hygiene lint) when you do not
+want to call per-file rekey for each changed file individually. Always run
+folder mode BEFORE `hash-record-prune`; pruning first would delete the
+records the rekey is trying to preserve.
+
+### Folder-mode invocation
+
+```bash
+bash rekey.sh  /path/to/folder [--include <glob>] [--exclude <glob>] [--dry-run] [--manifests]
+```
+
+```powershell
+pwsh rekey.ps1 /path/to/folder [--include <glob>] [--exclude <glob>] [--dry-run] [--manifests]
+```
+
+### Folder-mode flags
+
+- `--include <glob>` — restrict scope to files matching the glob (repeatable;
+  default: all files).
+- `--exclude <glob>` — skip files matching the glob (repeatable; default: none).
+- `--dry-run` — report what would be rekeyed without making any filesystem or
+  git changes.
+- `--manifests` — also rekey manifest files that reference changed files
+  (default: true).
+
+### Folder-mode output
+
+One line per record, then a final summary line:
+
+```
+REKEYED: /path/to/.hash-record/3a/3abc.../skill-auditing/v2/claude-haiku.md
+CURRENT: /path/to/.hash-record/ab/abcd.../markdown-hygiene/lint.md
+MANIFEST_UPDATED: /path/to/.hash-record/cd/cdef.../manifests/set.json:entry-1
+NOT_FOUND: no record for skills/bar/SKILL.md
+SUMMARY: rekeyed=1 current=1 manifest_updated=1 not_found=1 errors=0
+```
+
+Exit codes: 0 = all succeeded (or `--dry-run` completed); 1 = any per-record
+ERROR occurred; 2 = invocation error (bad path, conflicting flags).
+
+### Important constraints (folder mode)
+
+- Does NOT re-run any upstream operation (no re-audit, no re-lint).
+- Does NOT delete records; use `hash-record-prune` for that (run AFTER rekey).
+- Ignores records referencing files outside `folder_path`.
+- Safety: does not classify whitespace-only vs semantic changes. Assumes the
+  caller has already verified the rekey is safe.
