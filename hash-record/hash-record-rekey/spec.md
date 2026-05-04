@@ -208,6 +208,70 @@ Exit codes:
 - `1`: any per-record `ERROR` occurred (after attempting the rest).
 - `2`: invocation error (bad path, conflicting flags).
 
+### Sacred invariants (operator, 2026-05-04)
+
+Rekey is **pure mechanical bookkeeping** — it MOVES files, never
+creates them, never deletes them. Audit findings inside any
+record/manifest are PRESERVED byte-for-byte; only references
+(paths, hashes) change.
+
+Rekey MUST NOT:
+
+- Re-run the originating operation (no re-audit, no re-lint).
+- Replace file contents.
+- Delete any record or manifest.
+- Create new audit content.
+
+The diagnostic question is "did the file change in git?" If yes,
+move is required. If no, the record is current.
+
+### Manifest semantics — multi-file records
+
+For multi-file records (manifests), the canonical directory key
+is **the hash of (sorted file paths + their current git hashes
+combined)**, NOT any individual member file's blob hash. This
+guarantees a single stable location per manifest state.
+
+When rekey is invoked on a manifest:
+
+1. For each member file in `file_paths`: recurse — ensure the
+   per-file record is rekeyed (or current).
+2. Compute the new manifest combined hash from the now-current
+   member states.
+3. If the new combined hash equals the old → CURRENT, no move.
+4. Otherwise:
+   - Take the existing manifest content (preserve audit findings
+     byte-for-byte).
+   - Update the manifest's internal `file_paths` + per-file hash
+     references to current values.
+   - `git mv` the manifest from `<old-combined-hash>/...` to
+     `<new-combined-hash>/...`.
+
+Operator quote: "If you tell a manifest to rekey, you're telling
+all related files to rekey because they can't [be considered
+current independently]." A manifest rekey ALWAYS cascades into
+its member files; you cannot rekey a manifest without first
+ensuring its members are current.
+
+### Pre-move git-state smoke check
+
+Before each `git mv`, classify the file's git state:
+
+- **Untracked** → expected baseline for an automated post-audit
+  pass. The audit just produced it, no prior git history. Move
+  is safe.
+- **Staged but uncommitted** → file was modified, intent is
+  clear. `git mv` directly.
+- **Committed clean (working tree clean)** → file was sealed,
+  needs relocation. `git mv` preserves history.
+- **Modified but not staged** → AMBIGUOUS. Surface as
+  warning; do NOT silently absorb. Likely a hand-edit not yet
+  ratified.
+
+For the common case (post-audit automated rekey pass), files
+should be untracked. Anything else is a hand-edit signal worth
+operator visibility.
+
 ### Idempotency requirement
 
 After a successful folder-mode rekey:
