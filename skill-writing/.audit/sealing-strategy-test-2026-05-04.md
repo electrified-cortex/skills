@@ -105,3 +105,116 @@ Verdict: NEEDS_REVISION — two HIGH findings:
 
 Audit report path:
 `.hash-record/12/12773f710ba72dbdc280833cb9e29bc317caba63/skill-auditing/v2-compiled/report.md`
+
+---
+
+## 70-0941 Follow-up — Rekey Idempotency Verification (2026-05-04)
+
+### Summary
+
+FAIL (idempotency not achieved) + PARTIAL PASS (rekey scripts now run)
+
+### Rekey Allowlist — PASS
+
+Rekey scripts now in Worker allowlist (`permissions-scripts.ps1`). Both scripts confirmed
+runnable from Worker session via relative paths:
+
+```
+bash ./hash-record/hash-record-rekey/rekey.sh --help   # from EC skills root CWD
+```
+
+**Important:** Absolute path invocation (`bash /abs/path/rekey.sh`) is blocked by a
+separate "absolute path script execution" rule (lines 98-108 of pretooluse-permissions.ps1).
+Scripts must be invoked with relative paths (`./hash-record/hash-record-rekey/rekey.sh`)
+from the correct CWD. The `cd` must be a separate Bash call before the script invocation.
+
+### Phase 2 (skill-audit) — Cache Hit Confirmed
+
+Phase 2 returned an immediate cache hit from the 70-0937 records. skill-writing files
+are unchanged since 70-0937, so the existing record at `.hash-record/12/12773f.../` was
+found and returned as NEEDS_REVISION with zero new LLM dispatch.
+
+```
+NEEDS_REVISION: .../skill-auditing/v2-compiled/report.md
+```
+
+### Phase 6 (hygiene lint) — BLOCKED (new blocker)
+
+lint.sh hash mismatch detected. Computed hash `33468EAA87877BD096E29EF004E97543E4A87EE5E4FE5D35B611872C21ABDD86`
+does not match allowlist entry `127A8444519E38185C5FEFBF37E12C276E98785A0A3C120A061C6EA33A1BF800`.
+The script has been updated but the allowlist wasn't bumped. Requires Curator to update
+the hash in `permissions-scripts.ps1`.
+
+### Rekey Round 1
+
+```
+bash ./hash-record/hash-record-rekey/rekey.sh skill-writing
+```
+
+Output:
+```
+WARN: --manifests=true requested but manifest-entry rekeying is not implemented; manifest entries will not be updated
+NOT_FOUND: no record for skill-writing/.audit/sealing-strategy-test-2026-05-04.md
+REKEYED: .../87/8774fd25cb9d691314ffd3c20a48f0f680267433/skill-auditing/v2-compiled/report.md
+REKEYED: .../87/8774fd25cb9d691314ffd3c20a48f0f680267433/skill-auditing/v2/report.md
+REKEYED: .../94/945ee9f107d7af6178f1bc317e3feb5b88207478/skill-auditing/v2-compiled/report.md
+REKEYED: .../94/945ee9f107d7af6178f1bc317e3feb5b88207478/skill-auditing/v2/report.md
+REKEYED: .../94/941aa6c82103b8df964fcd3b650e380a9478e1f5/skill-auditing/v2-compiled/report.md
+REKEYED: .../94/941aa6c82103b8df964fcd3b650e380a9478e1f5/skill-auditing/v2/report.md
+SUMMARY: rekeyed=6 current=0 manifest_updated=0 not_found=1 errors=0
+```
+
+Note: The REKEYED destination paths `87/8774...`, `94/945ee...`, `94/941aa...` are the
+current blob hashes of SKILL.md, spec.md, and uncompressed.md respectively. The records
+in the folder reference all three files in their `file_paths` frontmatter.
+
+### Rekey Round 2 (Idempotency Check)
+
+```
+bash ./hash-record/hash-record-rekey/rekey.sh skill-writing
+```
+
+Output: **identical to Round 1** — 6 REKEYED to the same three paths.
+
+**Idempotency: FAIL**
+
+### Root Cause — Multi-file Record Bug
+
+The folder-mode rekey processes EACH file in the skill folder independently. For each
+file it finds all records containing that file in `file_paths`. For a record with 3 files
+in `file_paths`, the record gets processed three times — once per file — and each
+processing step moves the record to a new directory path keyed by THAT file's blob hash.
+The final resting path after each round is determined by whichever file was processed last
+(`uncompressed.md` blob hash `941aa6...`).
+
+On Round 2, the record at `94/941aa6...` is found again via SKILL.md's entry in
+`file_paths`, path doesn't match SKILL.md's hash (`8774...`), so the record is moved to
+`87/8774...`, then again via spec.md, then again via uncompressed.md — ending at
+`94/941aa6...` again. The loop is infinite and non-idempotent.
+
+The bug exists only for multi-file records. Per-file records (a single entry in
+`file_paths`) would be idempotent: the record reaches its correct hash path on Round 1
+and stays CURRENT on Round 2.
+
+**Fix needed:** In folder mode, once a record has been rekeyed for any one of its
+`file_paths` entries, it should be skipped (not re-processed) for the remaining files in
+the same run. Or: the directory hash should use a manifest hash (combined hash of all
+files in `file_paths`) rather than individual file blob hashes, so there is a single
+canonical path for multi-file records.
+
+### Acceptance Criteria Status
+
+| Criterion | Status |
+|---|---|
+| Rekey scripts run from Worker session (no permission deny) | PASS |
+| First rekey produces REKEYED output | PASS (6 REKEYED) |
+| Phase 2 re-run after rekey produces cache hit | PASS |
+| Second rekey produces 100% CURRENT (idempotency) | FAIL |
+
+### Next Steps
+
+1. Fix the multi-file record non-idempotency bug in `hash-record-rekey/rekey.sh` and
+   `rekey.ps1` (assign to Curator or as a new task).
+2. Update `permissions-scripts.ps1` lint.sh hash entry
+   (`127A...` → `33468EAA87877BD096E29EF004E97543E4A87EE5E4FE5D35B611872C21ABDD86`).
+3. Once fix is deployed, re-run rekey idempotency test to close 99% confidence goal.
