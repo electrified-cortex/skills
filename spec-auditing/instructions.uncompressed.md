@@ -2,7 +2,7 @@
 
 Disposition: strict, skeptical, evidence-based, non-creative during audit.
 
-Input: `<target-path> [--spec <spec-path>] [--fix] [--kind meta|domain]`
+Input: `<target-path> [--spec <spec-path>] [--kind meta|domain]`
 Default: audit (read-only). Audit one spec or one spec/target pair per
 invocation.
 Optional audit context: explicit spec-only request, repository or project
@@ -31,24 +31,16 @@ Cache check happens inline at the host surface; this executor receives `--report
    a. `--kind meta` explicitly provided → meta mode.
    b. `--kind domain` explicitly provided → domain mode.
    c. Neither provided → auto-detect:
-      - Spec path contains `spec-writing` → meta mode; report "auto-detected: meta mode."
-      - Spec path does not contain `spec-writing` → domain mode; report "auto-detected: domain mode."
+      - Spec path's directory components include `spec-writing` (path-component match, not substring; `/path/to/spec-writing/spec.md` matches; `/path/to/spec-writing-legacy/spec.md` does NOT) → meta mode; report "auto-detected: meta mode."
+      - Spec path does not have `spec-writing` as a directory component → domain mode; report "auto-detected: domain mode."
    d. Auto-detect is ambiguous (neither signal) → STOP: cannot determine audit kind — supply `--kind meta` or `--kind domain` explicitly.
-   Meta mode: run pair-audit with all 13 steps unmodified — 2 extraction steps plus 11 audit dimensions (current default behavior).
+   Meta mode: run the full pair-audit — 11 audit dimensions (§Audit pair-audit mode steps 3–13) plus 2 extraction steps (steps 1–2).
    Domain mode: run pair-audit with Unauthorized Additions check modified — see Audit section.
 4. Read all resolved files fully before judging. Partial → STOP: incomplete input.
 5. Precedence: this instruction file controls audit procedure; the audited spec controls domain content; the companion target is subordinate. Report every conflict; never normalize.
-6. `--fix` requires target git-tracked and clean. Untracked/modified/deleted/conflicted → STOP: target must be tracked and clean.
+6. `--fix` is not handled by the executor; fix iteration is caller-driven. If `--fix` is passed, ignore the flag, report "fix iteration is caller-driven — executor is single-pass read-only", and proceed with a read-only audit.
 7. Reject approve/stamp requests → STOP: approve mode not supported.
-8. Spec-only mode: skip companion-dependent gates (gate 4 reads spec only; skip gate 6 — no writes will occur; gate 7 unchanged). `--fix` in spec-only → report unsupported, proceed audit-only.
-
-## Fix mode
-
-1. Run full audit first (read-only pass).
-2. Apply fixes to target file only; spec is immutable. Spec defects found during audit → report as finding; do not repair spec.
-3. Apply in severity order: Critical → High → Medium → Low; within severity: semantic → terminology → structural → stylistic.
-4. Re-audit after each fix pass. Stop at 3 passes or on earlier alignment.
-5. When spec lacks sufficient detail to guide a fix, report as spec critique; do not guess.
+8. Spec-only mode: skip companion-dependent gates (gate 4 reads spec only; gate 7 unchanged).
 
 ## Interpretation
 
@@ -149,32 +141,19 @@ Informational: observation, maintainability note, optional improvement.
 
 **Step RW: write hash-record (when `--report-path` is provided)**
 
-After the verdict is determined, write the hash-record before returning:
+After the verdict is determined, write the hash-record before emitting the return token:
 
 1. Use `<report_path>` from the `--report-path` argument supplied by the host. If `--report-path` is absent or empty, skip this step (no-cache path).
 2. Create parent directories as needed.
-3. Write the file:
-
-```yaml
----
-hash: <manifest_hash>
-file_paths:
-  - <repo_relative_path_1>   # sorted lexically
-  - <repo_relative_path_2>   # if pair-audit mode
-operation_kind: spec-auditing/v1
-result: pass | pass_with_findings | fail | error   # Pass→pass; Pass with Findings→pass_with_findings; Fail→fail; error→error
----
-# Result
-<verdict>
-<one-line summary of findings count or "No findings">
-```
-
+3. Write the record using the schema defined in `hash-record/spec.md` §Record Frontmatter. Spec-auditing-specific fields:
+   - `operation_kind: spec-auditing/v1`
+   - `result:` — one of `pass | pass_with_findings | fail | error` (Pass→pass; Pass with Findings→pass_with_findings; Fail→fail; error→error)
 4. Emit the return token as the final stdout line (column 0, no indent, no list marker):
    `Pass: <cache_path>` | `Pass with Findings: <cache_path>` | `Fail: <cache_path>`
 
 ## Output
 
-1. Sections in order: `Audit Result`, `Executive Summary`, `Findings`, `Coverage Summary`, `Drift and Risk Notes`, `Repair Priorities`.
+1. Sections in order: `Audit Result`, `Executive Summary`, `Findings`, `Coverage Summary`, `Drift and Risk Notes`, `Repair Priorities`, then the return token (final stdout line).
 2. `Audit Result`: `Pass`, `Pass with Findings`, or `Fail`.
 3. `Executive Summary`: alignment state (or spec quality state in spec-only mode), mode used,
    biggest risks, threshold if customized.
@@ -184,7 +163,8 @@ result: pass | pass_with_findings | fail | error   # Pass→pass; Pass with Find
 6. `Drift and Risk Notes`: duplication, paraphrase drift, isolated assumptions, cross-ref gaps, likely future divergence.
    Spec-only mode: internal consistency observations only (no cross-file drift).
 7. `Repair Priorities`: highest-value fix order first.
-8. Quote evidence inline for every finding.
+8. Return token: after writing the hash-record (Step RW), emit as the final stdout line (column 0, no indent, no list marker): `Pass: <abs-path>` | `Pass with Findings: <abs-path>` | `Fail: <abs-path>` | `ERROR: <reason>`. Nothing follows this line.
+9. Quote evidence inline for every finding.
 
 When in doubt: optimize for preserving meaning, exposing mismatch, and preventing silent drift.
 
