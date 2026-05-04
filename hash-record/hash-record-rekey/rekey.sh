@@ -122,10 +122,6 @@ if [ -d "$FIRST_ARG" ]; then
 
   HASH_RECORD_ROOT="$REPO_ROOT_FWD/.hash-record"
 
-  if $DO_MANIFESTS; then
-    printf 'WARN: --manifests=true requested but manifest-entry rekeying is not implemented; manifest entries will not be updated\n' >&2
-  fi
-
   # ---------------------------------------------------------------------------
   # Helper: extract file_path / file_paths from YAML frontmatter
   # Prints one repo-relative path per line.
@@ -160,6 +156,49 @@ if [ -d "$FIRST_ARG" ]; then
         fi
       fi
     done < "$rec_file"
+  }
+
+  # ---------------------------------------------------------------------------
+  # Helper: compute manifest hash for a multi-file record
+  # sha256 of sorted "<blob_hash> <path>\n" lines for all files in file_paths
+  # Prints 64-char hex hash to stdout. Returns 1 on error.
+  # ---------------------------------------------------------------------------
+  _compute_manifest_hash() {
+    local rec_path="$1"
+    local repo_root="$2"
+
+    local -a paths=()
+    while IFS= read -r fpath; do
+      fpath="${fpath%$'\r'}"
+      fpath="${fpath## }"; fpath="${fpath%% }"
+      [ -n "$fpath" ] && paths+=("$fpath")
+    done < <(_get_frontmatter_paths "$rec_path" 2>/dev/null)
+
+    if [ "${#paths[@]}" -eq 0 ]; then
+      printf 'ERROR: no file_paths found in: %s\n' "$rec_path" >&2
+      return 1
+    fi
+
+    # Sort paths lexically
+    local -a sorted_paths
+    IFS=$'\n' read -r -d '' -a sorted_paths \
+      < <(printf '%s\n' "${paths[@]}" | LC_ALL=C sort; printf '\0') || true
+
+    # Build manifest string: "<blob_hash> <path>\n" per entry (sorted)
+    local manifest_str="" fpath blob_hash
+    for fpath in "${sorted_paths[@]}"; do
+      blob_hash=$(git hash-object "$repo_root/$fpath" 2>/dev/null) || {
+        printf 'ERROR: git hash-object failed for manifest member: %s\n' "$fpath" >&2
+        return 1
+      }
+      [ -z "$blob_hash" ] && {
+        printf 'ERROR: empty hash for manifest member: %s\n' "$fpath" >&2
+        return 1
+      }
+      manifest_str="${manifest_str}${blob_hash} ${fpath}"$'\n'
+    done
+
+    printf '%s' "$manifest_str" | sha256sum | cut -c1-64
   }
 
   # ---------------------------------------------------------------------------
@@ -203,6 +242,9 @@ if [ -d "$FIRST_ARG" ]; then
   cnt_not_found=0
   cnt_errors=0
   had_error=false
+
+  # Deferred multi-file records (processed after per-file loop)
+  declare -A DEFERRED_MANIFESTS=()
 
   # ---------------------------------------------------------------------------
   # Iterate over files in folder_path
@@ -276,11 +318,88 @@ if [ -d "$FIRST_ARG" ]; then
       # This record references our file
       file_records_found=$((file_records_found + 1))
 
-      if [ "$rec_hash" = "$current_hash" ]; then
+      # Detect single-file vs multi-file record
+      _rec_all_paths=()
+      while IFS= read -r _fp; do
+        _fp="${_fp%$'\r'}"; _fp="${_fp## }"; _fp="${_fp%% }"
+        [ -n "$_fp" ] && _rec_all_paths+=("$_fp")
+      done < <(_get_frontmatter_paths "$rec_path" 2>/dev/null)
+      _path_count="${#_rec_all_paths[@]}"
+
+      if [ "$_path_count" -le 1 ]; then
+        # Single-file record: rekey based on this file's current blob hash
+        if [ "$rec_hash" = "$current_hash" ]; then
+          printf 'CURRENT: %s\n' "$rec_path"
+          cnt_current=$((cnt_current + 1))
+        else
+          new_record_dir="$HASH_RECORD_ROOT/$current_shard/$current_hash/$rec_op_kind"
+          new_record_path="$new_record_dir/$rec_filename"
+
+          if $DRY_RUN; then
+            printf 'REKEYED: %s\n' "$new_record_path"
+            cnt_rekeyed=$((cnt_rekeyed + 1))
+          else
+            _rec_error=false
+
+            if ! mkdir -p "$new_record_dir" 2>/dev/null; then
+              printf 'ERROR: mkdir failed for: %s\n' "$new_record_dir"
+              cnt_errors=$((cnt_errors + 1))
+              had_error=true
+              _rec_error=true
+            fi
+
+            if ! $_rec_error; then
+              old_rel="${rec_path#${REPO_ROOT_FWD}/}"
+              new_rel="${new_record_path#${REPO_ROOT_FWD}/}"
+
+              if ! git -C "$REPO_ROOT" mv "$old_rel" "$new_rel" 2>/dev/null; then
+                printf 'ERROR: git mv failed: %s -> %s\n' "$old_rel" "$new_rel"
+                cnt_errors=$((cnt_errors + 1))
+                had_error=true
+                _rec_error=true
+              fi
+            fi
+
+            if ! $_rec_error; then
+              printf 'REKEYED: %s\n' "$new_record_path"
+              cnt_rekeyed=$((cnt_rekeyed + 1))
+              ALL_RECORDS=("${ALL_RECORDS[@]/$rec_entry/${new_record_path}	${current_hash}	${rec_op_kind}	${rec_filename}}")
+            fi
+          fi
+        fi
+      else
+        # Multi-file record: defer to manifest-hash processing after per-file loop
+        DEFERRED_MANIFESTS["$rec_path"]="${rec_hash}	${rec_op_kind}	${rec_filename}"
+      fi
+    done
+
+    if [ "$file_records_found" -eq 0 ]; then
+      printf 'NOT_FOUND: no record for %s\n' "$file_rel"
+      cnt_not_found=$((cnt_not_found + 1))
+    fi
+
+  done < <(find "$FOLDER_PATH" -type f -not -path '*/.git/*' 2>/dev/null | LC_ALL=C sort)
+
+  # ---------------------------------------------------------------------------
+  # Process deferred multi-file (manifest) records
+  # ---------------------------------------------------------------------------
+  if $DO_MANIFESTS && [ "${#DEFERRED_MANIFESTS[@]}" -gt 0 ]; then
+    for rec_path in "${!DEFERRED_MANIFESTS[@]}"; do
+      IFS='	' read -r rec_hash rec_op_kind rec_filename <<< "${DEFERRED_MANIFESTS[$rec_path]}"
+
+      manifest_hash=$(_compute_manifest_hash "$rec_path" "$REPO_ROOT_FWD") || {
+        printf 'ERROR: manifest hash computation failed for: %s\n' "$rec_path"
+        cnt_errors=$((cnt_errors + 1))
+        had_error=true
+        continue
+      }
+      manifest_shard="${manifest_hash:0:2}"
+
+      if [ "$rec_hash" = "$manifest_hash" ]; then
         printf 'CURRENT: %s\n' "$rec_path"
         cnt_current=$((cnt_current + 1))
       else
-        new_record_dir="$HASH_RECORD_ROOT/$current_shard/$current_hash/$rec_op_kind"
+        new_record_dir="$HASH_RECORD_ROOT/$manifest_shard/$manifest_hash/$rec_op_kind"
         new_record_path="$new_record_dir/$rec_filename"
 
         if $DRY_RUN; then
@@ -311,19 +430,11 @@ if [ -d "$FIRST_ARG" ]; then
           if ! $_rec_error; then
             printf 'REKEYED: %s\n' "$new_record_path"
             cnt_rekeyed=$((cnt_rekeyed + 1))
-            # Update in-memory entry so subsequent files see the new path/hash
-            ALL_RECORDS=("${ALL_RECORDS[@]/$rec_entry/${new_record_path}	${current_hash}	${rec_op_kind}	${rec_filename}}")
           fi
         fi
       fi
     done
-
-    if [ "$file_records_found" -eq 0 ]; then
-      printf 'NOT_FOUND: no record for %s\n' "$file_rel"
-      cnt_not_found=$((cnt_not_found + 1))
-    fi
-
-  done < <(find "$FOLDER_PATH" -type f -not -path '*/.git/*' 2>/dev/null | LC_ALL=C sort)
+  fi
 
   printf 'SUMMARY: rekeyed=%d current=%d manifest_updated=%d not_found=%d errors=%d\n' \
     "$cnt_rekeyed" "$cnt_current" "$cnt_manifest_updated" "$cnt_not_found" "$cnt_errors"

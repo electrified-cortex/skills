@@ -105,6 +105,36 @@ function Test-GlobMatch ([string]$Path, [string[]]$Globs) {
 }
 
 # ---------------------------------------------------------------------------
+# Helper: compute manifest hash for a multi-file record
+# sha256 of sorted "<blob_hash> <path>`n" lines for all files in file_paths
+# Returns 64-char hex string, or $null on error
+# ---------------------------------------------------------------------------
+function Get-ManifestHash ([string]$RecordFile, [string]$RepoRoot) {
+    $paths = Get-FrontmatterPaths $RecordFile
+    if ($paths.Count -eq 0) { return $null }
+
+    # Sort paths lexically
+    $sortedPaths = $paths | Sort-Object
+
+    # Build manifest string
+    $lines = [System.Text.StringBuilder]::new()
+    foreach ($fpath in $sortedPaths) {
+        $absPath = "$RepoRoot/$fpath"
+        $blobHash = (& git hash-object $absPath 2>$null)
+        if ($LASTEXITCODE -ne 0 -or -not $blobHash) { return $null }
+        $blobHash = $blobHash.Trim()
+        [void]$lines.Append("$blobHash $fpath`n")
+    }
+
+    $manifestStr = $lines.ToString()
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($manifestStr)
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    $hashBytes = $sha256.ComputeHash($bytes)
+    $sha256.Dispose()
+    return ($hashBytes | ForEach-Object { $_.ToString('x2') }) -join ''
+}
+
+# ---------------------------------------------------------------------------
 # Parse args manually to support repeatable flags
 # ---------------------------------------------------------------------------
 $args_list = [System.Collections.Generic.List[string]]::new()
@@ -197,10 +227,6 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
 
     $hashRecordRoot = "$repoRoot/.hash-record"
 
-    if ($doManifests) {
-        [Console]::Error.WriteLine("WARN: --manifests=true requested but manifest-entry rekeying is not implemented; manifest entries will not be updated")
-    }
-
     # -----------------------------------------------------------------------
     # Load all records from .hash-record/ into a list
     # Each entry: [rec_path_fwd, rec_hash, op_kind, rec_filename]
@@ -242,6 +268,9 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
     $files = Get-ChildItem -Path $folderPath -Recurse -File -ErrorAction SilentlyContinue |
         Where-Object { $_.FullName -notmatch '[/\\]\.git[/\\]' } |
         Sort-Object FullName -CaseSensitive
+
+    # Deferred multi-file records: hashtable rec.Path -> rec object
+    $deferredManifests = [System.Collections.Generic.Dictionary[string,object]]::new()
 
     foreach ($fileInfo in $files) {
         $fileAbsFwd = ConvertTo-ForwardSlash $fileInfo.FullName
@@ -304,18 +333,90 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
 
             $fileRecordsFound++
 
-            if ($rec.Hash -eq $currentHash) {
-                [Console]::Out.Write("CURRENT: $($rec.Path)`n")
+            # Detect single-file vs multi-file record
+            $recAllPaths = Get-FrontmatterPaths $rec.Path
+            $pathCount = $recAllPaths.Count
+
+            if ($pathCount -le 1) {
+                # Single-file record: rekey based on this file's current blob hash
+                if ($rec.Hash -eq $currentHash) {
+                    [Console]::Out.Write("CURRENT: $($rec.Path)`n")
+                    $cntCurrent++
+                } else {
+                    $newRecordDir  = "$hashRecordRoot/$currentShard/$currentHash/$($rec.OpKind)"
+                    $newRecordPath = "$newRecordDir/$($rec.Filename)"
+
+                    if ($dryRun) {
+                        [Console]::Out.Write("REKEYED: $newRecordPath`n")
+                        $cntRekeyed++
+                    } else {
+                        try {
+                            New-Item -ItemType Directory -Force -Path $newRecordDir -ErrorAction Stop | Out-Null
+                        } catch {
+                            [Console]::Out.Write("ERROR: mkdir failed for: $newRecordDir`n")
+                            $cntErrors++
+                            $hadError = $true
+                            continue
+                        }
+
+                        $oldRel = $rec.Path.Substring($repoRoot.Length).TrimStart('/')
+                        $newRel = $newRecordPath.Substring($repoRoot.Length).TrimStart('/')
+
+                        & git -C $repoRoot mv $oldRel $newRel 2>$null
+                        if ($LASTEXITCODE -ne 0) {
+                            [Console]::Out.Write("ERROR: git mv failed: $oldRel -> $newRel`n")
+                            $cntErrors++
+                            $hadError = $true
+                            continue
+                        }
+
+                        [Console]::Out.Write("REKEYED: $newRecordPath`n")
+                        $cntRekeyed++
+                        $rec.Path = $newRecordPath
+                        $rec.Hash = $currentHash
+                    }
+                }
+            } else {
+                # Multi-file record: defer to manifest-hash processing after per-file loop
+                if (-not $deferredManifests.ContainsKey($rec.Path)) {
+                    $deferredManifests[$rec.Path] = $rec
+                }
+            }
+        }
+
+        if ($fileRecordsFound -eq 0) {
+            [Console]::Out.Write("NOT_FOUND: no record for $fileRel`n")
+            $cntNotFound++
+        }
+    }
+
+    # ---------------------------------------------------------------------------
+    # Process deferred multi-file (manifest) records
+    # ---------------------------------------------------------------------------
+    if ($doManifests -and $deferredManifests.Count -gt 0) {
+        foreach ($recPath in @($deferredManifests.Keys)) {
+            $rec = $deferredManifests[$recPath]
+
+            $manifestHash = Get-ManifestHash $recPath $repoRoot
+            if (-not $manifestHash) {
+                [Console]::Out.Write("ERROR: manifest hash computation failed for: $recPath`n")
+                $cntErrors++
+                $hadError = $true
+                continue
+            }
+            $manifestShard = $manifestHash.Substring(0, 2)
+
+            if ($rec.Hash -eq $manifestHash) {
+                [Console]::Out.Write("CURRENT: $recPath`n")
                 $cntCurrent++
             } else {
-                $newRecordDir  = "$hashRecordRoot/$currentShard/$currentHash/$($rec.OpKind)"
+                $newRecordDir  = "$hashRecordRoot/$manifestShard/$manifestHash/$($rec.OpKind)"
                 $newRecordPath = "$newRecordDir/$($rec.Filename)"
 
                 if ($dryRun) {
                     [Console]::Out.Write("REKEYED: $newRecordPath`n")
                     $cntRekeyed++
                 } else {
-                    # Create new dir
                     try {
                         New-Item -ItemType Directory -Force -Path $newRecordDir -ErrorAction Stop | Out-Null
                     } catch {
@@ -325,7 +426,7 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
                         continue
                     }
 
-                    $oldRel = $rec.Path.Substring($repoRoot.Length).TrimStart('/')
+                    $oldRel = $recPath.Substring($repoRoot.Length).TrimStart('/')
                     $newRel = $newRecordPath.Substring($repoRoot.Length).TrimStart('/')
 
                     & git -C $repoRoot mv $oldRel $newRel 2>$null
@@ -338,16 +439,8 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
 
                     [Console]::Out.Write("REKEYED: $newRecordPath`n")
                     $cntRekeyed++
-                    # Update in-memory record so subsequent files see the new path/hash
-                    $rec.Path = $newRecordPath
-                    $rec.Hash = $currentHash
                 }
             }
-        }
-
-        if ($fileRecordsFound -eq 0) {
-            [Console]::Out.Write("NOT_FOUND: no record for $fileRel`n")
-            $cntNotFound++
         }
     }
 
