@@ -23,6 +23,37 @@ conventions, and custom severity thresholds.
    - No companion → spec-only mode; report "no companion present — auditing spec alone."
    c. `--spec` not provided AND target does NOT end in `spec.md`:
       - Resolve spec from sibling `<basename>.spec.md`. Missing → STOP: spec file missing.
+**Gate HC: hash-record cache check**
+
+Compute the manifest hash from all resolved input files:
+
+1. For each input file (target spec; companion file if pair-audit mode), run
+   `git hash-object <absolute_path>`.
+2. Sort the `<blob_hash> <repo_relative_path>` pairs lexically by path.
+3. Concatenate as `<blob_hash> <repo_relative_path>\n` for each pair.
+4. Compute `sha256sum` of the concatenated string.
+
+Compute repo root:
+
+```bash
+repo_root=$(git -C "$(dirname <spec_path>)" rev-parse --show-toplevel 2>/dev/null)
+[ -z "$repo_root" ] && repo_root="$(dirname <spec_path>)"
+```
+
+Check cache path:
+
+```text
+<repo_root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/spec-auditing/v1/report.md
+```
+
+- **Cache hit**: emit the return token (final stdout line):
+  `PATH: <abs-path-to-report.md>` and **stop immediately**.
+- **Cache miss**: proceed to Gate 3 (full audit). Record `<manifest_hash>`,
+  `<repo_root>`, and the input file paths for use in the write step.
+- **`git hash-object` fails or returns no output** (non-git environment, untracked file):
+  Proceed without caching — skip hash-record check and write, run full audit,
+  emit inline verdict (`PASS` | `PASS_WITH_FINDINGS` | `FAIL`) without a path.
+
 3. Audit kind (pair-audit mode only; skip in spec-only mode):
    a. `--kind meta` explicitly provided → meta mode.
    b. `--kind domain` explicitly provided → domain mode.
@@ -50,7 +81,7 @@ conventions, and custom severity thresholds.
 
 1. `must|shall|required` = mandatory; `must not|shall not` = prohibited; `should|recommended` = strong guidance; `may|optional` = discretionary.
 2. Examples non-normative unless explicitly marked.
-3. Similar wording â‰  matching meaning until verified.
+3. Similar wording ≠ matching meaning until verified.
 4. Ambiguous wording → state ambiguity, list readings, state risk, request minimum clarification.
 5. Spec lacks required data → say what's missing, why confidence blocked, whether result can pass, what resolves it.
 6. Never invent intent, never downgrade because intent seems obvious, never rewrite during audit, never modify spec.
@@ -132,6 +163,37 @@ Informational: observation, maintainability note, optional improvement.
 3. Explain what is wrong and why it matters.
 4. Label: direct evidence, reasonable inference, or uncertainty.
 5. Never present inference as fact.
+
+**Step RW: write hash-record (cache miss path only)**
+
+After the verdict is determined, write the hash-record before returning:
+
+1. Construct the cache path:
+   `<repo_root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/spec-auditing/v1/report.md`
+2. Create parent directories as needed.
+3. Write the file:
+
+```yaml
+---
+hash: <manifest_hash>
+file_paths:
+  - <repo_relative_path_1>   # sorted lexically
+  - <repo_relative_path_2>   # if pair-audit mode
+operation_kind: spec-auditing/v1
+model: <model_class>
+result: pass | pass_with_findings | fail | error   # Pass→pass; Pass with Findings→pass_with_findings; Fail→fail; error→error
+---
+# Result
+<verdict>
+<one-line summary of findings count or "No findings">
+```
+
+4. Emit the return token as the final stdout line (column 0, no indent, no list marker):
+   `Pass: <cache_path>` | `Pass with Findings: <cache_path>` | `Fail: <cache_path>`
+
+Model class: resolve from executing agent's model identifier:
+`claude-haiku-*` → `haiku-class`; `claude-sonnet-*` → `sonnet-class`;
+`claude-opus-*` → `opus-class`.
 
 ## Output
 

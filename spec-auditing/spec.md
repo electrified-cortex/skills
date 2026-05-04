@@ -30,6 +30,14 @@ The agent must behave as an auditor, not as an author, unless explicitly asked t
 
 ---
 
+## Version
+
+1
+
+Bump this when the audit semantics, output schema, or check codes change in a way that invalidates prior records. The version is reflected in the `operation_kind` used by the result record (`spec-auditing/v1`).
+
+---
+
 ## Scope
 
 The auditor operates in one of two modes:
@@ -168,7 +176,7 @@ The auditor supports two audit kind values, selectable via `--kind meta|domain` 
 
 **Domain mode** (`--kind domain`): Applies pair-audit with § Unauthorized Additions modified. Use when auditing a domain spec against a domain authority, or when no authority is declared. Domain-specific requirements in the companion must not be flagged as unauthorized simply because they do not appear in a meta-spec.
 
-**Auto-detection** (when `--kind` is not provided): if the spec path contains `spec-writing`, the auditor infers meta mode and reports the inference. Otherwise, the auditor infers domain mode and reports the inference. If neither signal is present, the auditor must stop and require an explicit `--kind` flag.
+**Auto-detection** (when `--kind` is not provided): if the spec path contains `spec-writing`, the auditor infers meta mode and reports the inference. Otherwise, the auditor infers domain mode and reports the inference.
 
 Audit kind applies to pair-audit mode only. Spec-only mode is unaffected.
 
@@ -491,6 +499,18 @@ Any structural observations about likely future divergence.
 
 A prioritized repair sequence, highest value first.
 
+### 7. Return Token
+
+After writing the report to the hash-record path, the auditor must emit exactly one final line of stdout — the return token. This line must be the last line of stdout, starting at column 0 with no indentation, no quoting, and no list-marker prefix. Nothing may follow it.
+
+Valid tokens:
+
+- `PATH: <abs-path>` — cache hit; no audit performed
+- `Pass: <abs-path>` — audit complete, no findings
+- `Pass with Findings: <abs-path>` — audit complete, findings present, no fail condition
+- `Fail: <abs-path>` — audit failed; Critical or 2+ High findings
+- `ERROR: <reason>` — pre-write failure; no report written
+
 ---
 
 ## Required Auditor Behavior
@@ -527,12 +547,123 @@ Atomic, testable requirements for the auditor:
 6. The auditor must report every conflict between files; silent normalization is prohibited.
 7. The auditor must classify each companion-only addition as Valid Extension, Derived but Unstated, or Unauthorized Addition.
 8. The auditor must apply the pass/fail gate rules in §Pass / Fail Rules and state the result as Pass, Pass with Findings, or Fail.
-9. The auditor must emit output sections in the order: Audit Result, Executive Summary, Findings, Coverage Summary, Drift and Risk Notes, Repair Priorities.
+9. The auditor must emit output sections in the order: Audit Result, Executive Summary, Findings, Coverage Summary, Drift and Risk Notes, Repair Priorities, Return Token.
 10. When `--fix` is active, the auditor must re-audit after each fix pass; maximum 3 passes.
 11. In fix mode, fixes must be applied in severity order: Critical → High → Medium → Low; within severity: semantic → terminology → structural → stylistic.
 12. The auditor must not propose rewrites until the full audit is complete.
 13. Evidence must be labeled: direct evidence, reasonable inference, or uncertainty. Inference must never be presented as fact.
 14. When a spec lacks sufficient information to audit the companion, the auditor must say so explicitly, state what is missing, and assess whether the result can still pass.
+
+Additional requirements covering hash-record cache behavior are defined in §Hash-Record Cache, sub-section Requirements (hash-record) (R-HR-1 through R-HR-6). Both sets are normative.
+
+---
+
+## Hash-Record Cache
+
+### Overview
+
+spec-auditing is a deterministic, read-only operation. Given the same set of
+input files, the same model class, and the same audit logic version, the
+result is identical. The hash-record cache exploits this: on a cache hit, the
+auditor returns the stored verdict immediately without dispatching an LLM.
+
+### Manifest Hash
+
+Compute from all input files (target spec and companion, if present):
+
+1. For each input file, compute `git hash-object <file>`.
+2. Sort file paths lexically (repo-relative).
+3. Concatenate as `<blob-hash> <repo-relative-path>\n` for each file.
+4. `sha256sum` the concatenation.
+
+Exclude dot-prefixed directories and non-input files. Include only the files
+actually audited in this invocation.
+
+### Cache Path
+
+```text
+<repo_root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/spec-auditing/v1/report.md
+```
+
+`<manifest_hash[0:2]>` is the first two characters of the manifest hash
+(shard directory). `spec-auditing/v1` is the operation kind for this version.
+
+### Cache Check (on entry)
+
+Before any other work, check if the cache path exists. On a hit, emit
+`PATH: <abs-path-to-report.md>` as the final line of stdout and stop. On a
+miss, proceed with the full audit.
+
+### Record Write (on miss)
+
+After completing the audit and before returning, write the hash-record to the
+cache path. The file must contain a YAML frontmatter block followed by the
+verdict:
+
+```yaml
+---
+hash: <manifest-hash>
+file_paths:
+  - <repo-relative-path>     # sorted lexically; one entry per audited file
+operation_kind: spec-auditing/v1
+model: <haiku-class|sonnet-class|opus-class>
+result: pass | pass_with_findings | fail | error
+---
+```
+
+`model` MUST be a model-class string, never a literal model ID. Map:
+`claude-haiku-*` → `haiku-class`; `claude-sonnet-*` → `sonnet-class`;
+`claude-opus-*` → `opus-class`.
+
+`result` maps: Pass → `pass`; Pass with Findings → `pass_with_findings`;
+Fail → `fail`; error → `error`.
+
+### Return Token
+
+The final line of stdout MUST be the return token, at column 0, no indent,
+no list markers, no quoting:
+
+```text
+PATH: <report_path>
+Pass: <report_path>
+Pass with Findings: <report_path>
+Fail: <report_path>
+ERROR: <reason>
+```
+
+`PATH:` on cache hit; `Pass:` | `Pass with Findings:` | `Fail:` on verdict;
+`ERROR:` on failure. `<report_path>` is the path to the written hash-record
+file (absolute or repo-relative). All narrative output MUST appear before this
+line; nothing may follow it.
+
+### Repo-Root Computation
+
+```bash
+repo_root=$(git -C "$(dirname <spec_path>)" rev-parse --show-toplevel 2>/dev/null)
+# Fallback if not in a git repo: place .hash-record/ adjacent to spec_path
+[ -z "$repo_root" ] && repo_root="$(dirname <spec_path>)"
+```
+
+### Requirements (hash-record)
+
+R-HR-1: The auditor MUST compute the manifest hash from all input files
+as the first act of processing — before reading file contents for analysis,
+before writing any output, and before any other side effect.
+
+R-HR-2: On a cache hit, the auditor MUST emit the return token pointing to
+the cached report and MUST stop immediately without dispatching an LLM.
+
+R-HR-3: On a cache miss, the auditor MUST write the hash-record to the
+canonical cache path before returning any result.
+
+R-HR-4: The `file_paths` frontmatter field MUST list only repo-relative
+paths, sorted lexically. Absolute paths are prohibited.
+
+R-HR-5: The `model` field MUST be a model-class string (haiku-class,
+sonnet-class, or opus-class). Literal model identifiers are prohibited.
+
+R-HR-6: The return token MUST be the final line of stdout with no indentation
+or prefix. No output may follow it.
 
 ---
 
@@ -556,13 +687,16 @@ Atomic, testable requirements for the auditor:
 
 ### Audit flow
 
-1. Resolve input paths and detect mode (pair-audit or spec-only) per §Inputs and §Spec-Only Mode.
+0. Resolve input paths and detect mode (pair-audit or spec-only) per §Inputs and §Spec-Only Mode.
+1. Compute manifest hash from all resolved input files and check cache (Gate HC, per §Hash-Record Cache). On a cache hit, emit `PATH: <abs-path-to-report.md>` as the final stdout line and STOP.
 2. Read all resolved files fully.
 3. Extract normative content (requirements, prohibitions, definitions, defaults, procedures, exceptions).
 4. Evaluate all applicable audit dimensions in sequence.
 5. Assign severity and evidence to each finding.
 6. Apply pass/fail gate rules.
+6a. Write hash-record to cache path before emitting any output. See §Hash-Record Cache / Record Write.
 7. Emit output in required section order.
+8. Emit return token as the final stdout line. See §Hash-Record Cache / Return Token.
 
 ### Pass/Fail gate
 
@@ -585,8 +719,7 @@ When `--fix` is active:
 
 ## Iteration Safety
 
-Do not re-audit unchanged files.
-See `../iteration-safety/SKILL.md`.
+See §Hash-Record Cache above for caching behavior. See `../iteration-safety/SKILL.md` for the broader iteration safety pattern.
 
 ---
 
@@ -603,6 +736,7 @@ See `../iteration-safety/SKILL.md`.
 | `--fix` passed in spec-only mode | Ignore the flag; report "fix mode unavailable in spec-only mode — no companion to modify"; continue with a read-only audit |
 | `--fix` passed with untracked/modified/conflicted target | STOP: report "target must be git-tracked and clean" |
 | Approve/stamp request received | STOP: report "approve mode not supported" |
+| `git hash-object` fails or returns no output (e.g. file untracked, non-git environment) | Proceed without caching: skip hash-record check and write, run full audit, emit inline verdict (`PASS` \| `PASS_WITH_FINDINGS` \| `FAIL`) without a path |
 
 ---
 
@@ -808,6 +942,7 @@ The auditor should be able to emit results in this shape:
 - Coverage Summary
 - Drift and Risk Notes
 - Repair Priorities
+- Return Token
 
 ---
 

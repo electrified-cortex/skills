@@ -2,44 +2,63 @@ Disposition: strict, skeptical, evidence-based, non-creative during audit.
 
 Input: `<target-path> [--spec <spec-path>] [--fix] [--kind meta|domain]`
 Default: audit (read-only). One spec or spec/target pair per invocation.
-Optional: explicit spec-only request, repo/project conventions, custom severity thresholds.
+Optional audit context: explicit spec-only request, repo/project conventions, custom severity thresholds.
 
 Gates:
-1. Resolve target. Missing/unreadable → STOP: target file missing.
+1. Resolve target path. Missing/unreadable → STOP: target file missing.
 2. Mode detection:
-   a. --spec provided → pair-audit. Verify spec resolves; missing → STOP.
-   b. --spec absent + target ends in spec.md:
-      Caller requested spec-only → spec-only mode.
-      Otherwise auto-detect companion: named file spec → <same-dir>/<name>.md.
-      Companion found → pair-audit; report auto-detected file. Multiple → first; report ambiguity.
-      Folder-level spec.md: no universal fallback.
-      No companion → spec-only; report "no companion present — auditing spec alone."
-   c. --spec absent + target doesn't end in spec.md → resolve spec.md in same directory. Missing → STOP: spec file missing.
+   a. `--spec` provided → pair-audit mode. Verify spec path resolves; missing → STOP.
+   b. `--spec` absent AND target ends in `spec.md`:
+      Caller explicitly requested spec-only → spec-only mode.
+      Else auto-detect companion: named-file spec → `<same-dir>/<name>.md`. Found → pair-audit; report auto-detected. Multiple candidates → first; report ambiguity. Folder-level `spec.md` has no universal fallback. No companion → spec-only; report "no companion present — auditing spec alone."
+   c. `--spec` absent AND target NOT `spec.md` → resolve `<basename>.spec.md`. Missing → STOP: spec file missing.
+
+GATE HC: hash-record cache check
+
+Compute manifest hash from all resolved input files:
+1. For each input file (target spec; companion if pair-audit), run `git hash-object <absolute_path>`.
+2. Sort `<blob_hash> <repo_relative_path>` pairs lexically by path.
+3. Concatenate as `<blob_hash> <repo_relative_path>\n` per pair.
+4. Compute `sha256sum` of concatenated string.
+
+Compute repo root:
+```bash
+repo_root=$(git -C "$(dirname <spec_path>)" rev-parse --show-toplevel 2>/dev/null)
+[ -z "$repo_root" ] && repo_root="$(dirname <spec_path>)"
+```
+
+Cache path: `<repo_root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/spec-auditing/v1/report.md`
+
+Cache hit: emit return token (final stdout line): `PATH: <abs-path-to-report.md>` — STOP.
+Cache miss: proceed to Gate 3 (full audit). Record `<manifest_hash>`, `<repo_root>`, input paths for write step.
+`git hash-object` fails or returns no output (non-git env, untracked file): proceed without caching — skip hash-record check/write, run full audit, emit inline verdict (`PASS` | `PASS_WITH_FINDINGS` | `FAIL`) without path.
+
 3. Audit kind (pair-audit only; skip in spec-only):
-   a. --kind meta → meta mode. b. --kind domain → domain mode.
-   c. Neither → auto-detect: spec path contains spec-writing → meta mode (report "auto-detected: meta mode"); else → domain mode (report "auto-detected: domain mode").
-   d. Ambiguous (no signal) → STOP: supply --kind meta or --kind domain explicitly.
-   Meta mode: all 13 checks unmodified. Domain mode: Unauthorized Additions check modified — see Audit section.
+   a. `--kind meta` → meta mode.
+   b. `--kind domain` → domain mode.
+   c. Neither → auto-detect: spec path contains `spec-writing` → meta (report "auto-detected: meta mode"); else → domain (report "auto-detected: domain mode").
+   d. Ambiguous → STOP: can't determine audit kind — supply `--kind meta` or `--kind domain` explicitly.
+   Meta mode: all 13 checks unmodified. Domain mode: Unauthorized Additions modified — see Audit.
 4. Read all resolved files fully before judging. Partial → STOP: incomplete input.
-5. Precedence: instructions > spec (domain) > companion. Report every conflict; never normalize.
-6. --fix requires target git-tracked and clean. Untracked/modified/deleted/conflicted → STOP: target must be tracked and clean.
-7. Approve/stamp requests → STOP: approve mode not supported.
-8. Spec-only: gate 4 reads spec only; skip gate 6 (no writes); gate 7 unchanged. --fix in spec-only → report unsupported, proceed audit-only.
+5. Precedence: this instruction file controls audit procedure; audited spec controls domain content; companion subordinate. Report every conflict; never normalize.
+6. `--fix` requires target git-tracked and clean. Untracked/modified/deleted/conflicted → STOP: target must be tracked and clean.
+7. Reject approve/stamp requests → STOP: approve mode not supported.
+8. Spec-only: skip companion-dependent gates (gate 4 reads spec only; skip gate 6 — no writes; gate 7 unchanged). `--fix` in spec-only → report unsupported, proceed audit-only.
 
 Fix mode:
-1. Run full audit first (read-only).
-2. Fix target only; spec is immutable. Spec defects → report as finding; don't repair.
-3. Apply in order: Critical → High → Medium → Low; within severity: semantic → terminology → structural → stylistic.
-4. Re-audit after each pass. Stop at 3 passes or earlier alignment.
+1. Run full audit first (read-only pass).
+2. Fix target only; spec immutable. Spec defects → report as finding; don't repair spec.
+3. Fix in severity order: Critical → High → Medium → Low; within severity: semantic → terminology → structural → stylistic.
+4. Re-audit after each fix pass. Stop at 3 passes or earlier alignment.
 5. Spec lacks detail to guide fix → report as spec critique; don't guess.
 
 Interpretation:
-1. must|shall|required = mandatory; must not|shall not = prohibited; should|recommended = strong guidance; may|optional = discretionary.
+1. `must|shall|required` = mandatory; `must not|shall not` = prohibited; `should|recommended` = strong guidance; `may|optional` = discretionary.
 2. Examples non-normative unless explicitly marked.
 3. Similar wording ≠ matching meaning until verified.
 4. Ambiguous wording → state ambiguity, list readings, state risk, request minimum clarification.
-5. Spec lacks required data → state what's missing, why confidence blocked, whether result can pass, what resolves it.
-6. Never invent intent, downgrade on obvious intent, rewrite during audit, or modify spec.
+5. Spec lacks required data → say what's missing, why confidence blocked, whether result can pass, what resolves it.
+6. Never invent intent, never downgrade because intent seems obvious, never rewrite during audit, never modify spec.
 7. Challenge ambiguous wording, identify hidden assumptions, call out missing definitions.
 8. Separate hard failures from optional improvements. Precision over politeness.
 9. Never assume paraphrase acceptable because it sounds similar.
@@ -47,57 +66,49 @@ Interpretation:
 11. Never propose rewrites until audit complete.
 
 Audit (pair-audit mode):
-1. Extract from spec: reqs, prohibitions, defaults, precedence, definitions, procedures, exceptions, audience.
+1. Extract from spec: requirements, prohibitions, defaults, precedence, definitions, procedures, exceptions, audience.
 2. Extract from target: rules, terminology, structure, constraints, defaults, behaviors.
 3. Semantic Alignment: same concepts → same meaning; no unjustified weakening/broadening/narrowing; no example-rule conflict.
 4. Requirement Coverage: every material req, prohibition, operational constraint at right fidelity.
-5. Contradiction Detection: direct conflicts, wording conflicts, contradictory defaults, precedence/definition clashes.
+5. Contradiction Detection: direct conflicts, wording conflicts, contradictory defaults, precedence clashes, definition clashes.
 6. Completeness: missing sections, dangling refs, undefined terms, incomplete procedures, missing exceptions/decision criteria.
 7. Enforceability: vague/subjective/aspirational/non-testable reqs; binding behavior without auditable criteria.
-8. Structural Integrity: logical order, stable headings, duplicate rules, hidden reqs, normative-language consistency; spec files must not contain YAML frontmatter (flag any leading `---` block as structural defect — frontmatter belongs in runtime artifacts only).
+8. Structural Integrity: logical order, stable headings, duplicate rules, hidden reqs, normative-language consistency; spec files mustn't contain YAML frontmatter (flag any leading `---` block as structural defect — frontmatter belongs in runtime artifacts only).
 9. Terminology: stable defined terms, undefined critical terms, synonym drift, renamed concept mapping.
 10. Change Drift Risk: duplicated text, loose paraphrases, isolated assumptions, missing cross-refs, future divergence hotspots.
 11. Unauthorized Additions:
-   - Meta mode: classify target-only additions as Valid Extension, Derived but Unstated, or Unauthorized Addition.
-   - Domain mode, authority supplied: apply same three-way classification against the domain spec provided via --spec.
-   - Domain mode, no authority supplied: skip. Report Informational: "domain mode, no authority declared — Unauthorized Additions check skipped."
-12. Economy: removal test on duplicated rules, unnecessary scaffolding, removable prose. Confirm effect before reporting waste. Consolidation = Informational; escalate to Low/Medium if waste creates drift risk.
+    Meta mode: classify target-only additions as `Valid Extension`, `Derived but Unstated`, or `Unauthorized Addition`.
+    Domain mode, authority supplied: authority spec = domain spec via `--spec`; apply same three-way classification.
+    Domain mode, no authority supplied: skip. Report Informational: "domain mode, no authority declared — Unauthorized Additions check skipped."
+12. Economy: apply removal test to duplicated rules, unnecessary scaffolding, prose removable without changing effect. Confirm effect before reporting waste. Consolidation = Informational; escalate to Low/Medium where waste creates drift risk.
 13. Compression fidelity: flag loss, gain, bloat. Loss/gain = governance failures (High+); bloat = quality issue (Medium).
 
-Audit (spec-only mode — apply instead of pair-audit when no companion):
-Six checks only. Numbered to match pair-audit; skip steps 2–5, 10–11, and 13 (require companion).
-Apply steps 1, 6, 7, 8, 9, 12 as defined in pair-audit above.
-Additionally: Internal Consistency — no contradictions within spec.
-(No Semantic Alignment, Requirement Coverage, Contradiction Detection, Change Drift Risk, Unauthorized Additions, Compression Fidelity — all require companion.)
+Audit (spec-only — apply instead of pair-audit when no companion):
+Six checks only. Numbered to match pair-audit; skip steps 2–5, 10–11, 13 (require companion).
+Apply steps 1, 6, 7, 8, 9, 12 as defined above.
+Additionally: Internal Consistency — no contradictions within spec itself.
+(No Semantic Alignment, Req Coverage, Contradiction Detection, Change Drift Risk, Unauthorized Additions, or Compression Fidelity — all require companion.)
 
 Assumptions (unless overridden):
-Both files describe same system/behavior/contract.
-Both files meaningfully aligned.
-Markdown headings, structure semantically relevant.
-Normative statements include explicit/implied reqs.
-Examples subordinate to rules unless explicitly normative.
-Mandatory behavior without normative keyword but contextually binding → flag as enforceability issue.
+Both files describe same system/behavior/contract; meaningfully aligned. Markdown headings/structure semantically relevant. Normative statements include explicit/implied reqs. Examples subordinate to rules unless explicitly normative. Mandatory behavior without normative keyword but contextually binding → flag as enforceability issue.
 
 Companion expectations:
-Reflect all material spec reqs without simplifying away meaning.
-Self-contained — never reference/depend on spec at runtime.
-Content not justified by spec's purpose = finding.
-Expected smaller than spec; if not, examine for unjustified additions.
+Reflect all material spec reqs without simplifying away meaning. Self-contained — never reference/depend on spec at runtime. Content not justified by spec's purpose = finding. Expected smaller than spec; if not, examine for unjustified additions.
 
-Dispatch-pattern exception: companion for dispatch skill may be intentionally thin invocation reference. Don't flag missing behavioral detail as omission when design explicitly delegates to companion dispatch instructions. Thin companion must cover: invocation syntax, params, return values, key error conditions.
+Dispatch-pattern exception: companion for dispatch skill may be intentionally thin invocation reference. Don't flag missing behavioral detail as omission when design explicitly delegates to companion dispatch instructions. Thin companion must still cover: invocation syntax, parameters, return values, key error conditions.
 
 Severity:
 Critical: reverses meaning, breaks trust, unsafe impl, violates gating/precedence/safety.
-High: materially weakens correctness, completeness, scope control, auditability.
+High: materially weakens correctness, completeness, scope control, or auditability.
 Medium: meaningful weakness, should fix, doesn't invalidate pair.
 Low: minor wording/structure/duplication, limited impact.
 Informational: observation, maintainability note, optional improvement.
 
 Result:
-1. Fail if any Critical, 2+ High, or stricter threshold says fail.
-2. Pass with Findings if any finding, no fail condition.
-3. Pass only when no findings.
-4. State threshold if caller provides one.
+1. `Fail` if any Critical exists, 2+ High exist, or stricter threshold says fail.
+2. `Pass with Findings` if audit produces any finding and no fail condition met.
+3. `Pass` only when no findings produced.
+4. State threshold used if caller provides one.
 
 Evidence:
 1. Every non-trivial finding must include evidence.
@@ -106,16 +117,44 @@ Evidence:
 4. Label: direct evidence, reasonable inference, or uncertainty.
 5. Never present inference as fact.
 
+STEP RW: write hash-record (cache miss path only)
+
+After verdict determined, write hash-record before returning:
+1. Construct cache path: `<repo_root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/spec-auditing/v1/report.md`
+2. Create parent dirs as needed.
+3. Write:
+
+```yaml
+---
+hash: <manifest_hash>
+file_paths:
+  - <repo_relative_path_1>   # sorted lexically
+  - <repo_relative_path_2>   # if pair-audit mode
+operation_kind: spec-auditing/v1
+model: <model_class>
+result: pass | pass_with_findings | fail | error   # Pass→pass; Pass with Findings→pass_with_findings; Fail→fail; error→error
+---
+# Result
+<verdict>
+<one-line summary of findings count or "No findings">
+```
+
+4. Emit return token as final stdout line (column 0, no indent, no list marker):
+   `Pass: <cache_path>` | `Pass with Findings: <cache_path>` | `Fail: <cache_path>`
+
+Model class: resolve from executing agent's model identifier:
+`claude-haiku-*` → `haiku-class`; `claude-sonnet-*` → `sonnet-class`; `claude-opus-*` → `opus-class`.
+
 Output:
-1. Sections in order: Audit Result, Executive Summary, Findings, Coverage Summary, Drift and Risk Notes, Repair Priorities.
-2. Audit Result: Pass, Pass with Findings, or Fail.
-3. Executive Summary: alignment state (spec quality state in spec-only mode), mode used, biggest risks, threshold if customized.
-4. Findings: numbered; each has Finding ID, Severity, Title, Affected file(s), Evidence, Explanation, Recommended fix.
-5. Coverage Summary: well-covered, missing/weak, fit for purpose. Spec-only: "N/A — spec-only mode, no companion present."
-6. Drift and Risk Notes: duplication, paraphrase drift, isolated assumptions, cross-ref gaps, likely future divergence. Spec-only: internal consistency observations only (no cross-file drift).
-7. Repair Priorities: highest-value fix order first.
+1. Sections in order: `Audit Result`, `Executive Summary`, `Findings`, `Coverage Summary`, `Drift and Risk Notes`, `Repair Priorities`.
+2. `Audit Result`: `Pass`, `Pass with Findings`, or `Fail`.
+3. `Executive Summary`: alignment state (or spec quality state in spec-only), mode used, biggest risks, threshold if customized.
+4. `Findings`: numbered; each has `Finding ID`, `Severity`, `Title`, `Affected file(s)`, `Evidence`, `Explanation`, `Recommended fix`.
+5. `Coverage Summary`: well-covered, missing/weak, fit for purpose. Spec-only: "N/A — spec-only mode, no companion present."
+6. `Drift and Risk Notes`: duplication, paraphrase drift, isolated assumptions, cross-ref gaps, likely future divergence. Spec-only: internal consistency observations only (no cross-file drift).
+7. `Repair Priorities`: highest-value fix order first.
 8. Quote evidence inline for every finding.
 
-When in doubt: preserve meaning, expose mismatch, prevent silent drift.
+When in doubt: optimize for preserving meaning, exposing mismatch, preventing silent drift.
 
-Non-goals: product strategy, inventing missing reqs, judging impl quality outside documents, resolving domain disputes without textual basis, approving vague specs on goodwill.
+Non-goals: not responsible for product strategy, inventing missing reqs, judging impl quality outside documents, resolving domain disputes without textual basis, or approving vague specs on goodwill.
