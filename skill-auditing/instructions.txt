@@ -13,7 +13,7 @@ Procedure:
 4. Run Step 1 → Step 2 → Step 3. Collect ALL findings before assigning verdict. Don't stop on first finding.
 5. Assign verdict per Verdict Rules.
 6. Scrub absolute paths from entire report — frontmatter `file_paths`, Notes columns, Findings, ALL prose. Forbidden tokens: Windows drive-letter paths (`<letter>:[/\\]`), POSIX root-anchored paths (`/Users/`, `/home/`, `/d/`, `/c/`, `/mnt/`, `/tmp/`, `/var/`). Evidence containing such path → describe abstractly ("hardcoded drive-letter path on line N") — never quote literal. Use repo-relative paths in Findings.
-7. Write report at `<report_path>` (overwrite if present). Use Bash tool to create the directory first: `mkdir -p $(dirname <report_path>)`. Then use Write tool to write the report. Frontmatter per `hash-record` skill contract (operation_kind: `skill-auditing/v2`, result: `clean | pass | findings | error | skipped`). Result mapping: CLEAN → `clean`; PASS → `pass`; NEEDS_REVISION → `findings`; FAIL → `findings`; error → `error`; cache hit → `skipped`.
+7. Write report at `<report_path>` (overwrite if present). Use Bash tool to create the directory first: `mkdir -p $(dirname <report_path>)`. Then use Write tool to write the report. Frontmatter per `hash-record` skill contract (operation_kind: `skill-auditing/v2`, result: `clean | pass | findings | error`). Result mapping: CLEAN → `clean`; PASS → `pass`; NEEDS_REVISION → `findings`; FAIL → `findings`; error → `error`.
 
    Repo-relative: resolve via `git -C <dir-containing-target-files> rev-parse --show-toplevel`, strip prefix. Same repo root governs cache dir layout (`<repo-root>/.hash-record/...`).
 
@@ -285,7 +285,7 @@ file_paths:
   ...
 operation_kind: skill-auditing/v2
 model: haiku-class  # or sonnet-class or opus-class — NEVER a literal model id
-result: pass | findings | error | skipped
+result: clean | pass | findings | error
 ---
 ```
 

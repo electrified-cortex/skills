@@ -89,7 +89,20 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
   does not affect verdict severity.
 - **MISS**: return token emitted when no cache record exists for the manifest hash; the full audit must run.
 - **HIT**: return token emitted when a cache record is found; verdict not re-computed.
-- **skipped**: result-frontmatter status flag indicating a cache-hit record — the audit was not re-run. The record body's `**Verdict:**` line carries the canonical verdict; the result tool reads that line and re-emits the corresponding verdict token (`CLEAN`, `PASS`, `NEEDS_REVISION`, or `FAIL`).
+
+The verdict vocabulary above (`CLEAN`, `PASS`, `NEEDS_REVISION`, `FAIL`)
+intentionally does NOT include a "skipped" verdict. Cache-hit and cache-miss
+are implementation concerns of the result tool — on a hit, the host re-emits
+the cached verdict (one of the four canonical ones); on a miss, the executor
+runs the full audit and writes a fresh verdict. The audit's verdict surface
+stays four-state — what the audit FOUND, not what the runtime decided about
+re-running it.
+
+If a 3-iteration off-ramp is needed (caller accepts a NEEDS_REVISION result
+as good-enough after 3 fix passes), the verdict on the audit record stays as
+the actual finding (e.g. `PASS` if findings are non-blocking; `NEEDS_REVISION`
+if they remain). Caller acceptance is a separate caller-side decision; it does
+not become a new auditor verdict.
 
 ## Requirements
 
@@ -167,7 +180,7 @@ Wrong:  Verdict: PASS. Wrote record to: PATH: <abs-prefix>/...
 
 The caller parses only the last line of stdout; mixed narrative breaks the parse contract.
 
-On completion, the auditor assigns one of four verdicts (CLEAN, PASS, NEEDS_REVISION, FAIL, or error) and writes the full structured report to `.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v2/report.md`. The record frontmatter uses a `file_paths` list (repo-relative paths for every file in the manifest, sorted lexically), `operation_kind: skill-auditing/v2`, `model` set to the executing agent's model class, and `result` mapped as: CLEAN → `clean`; PASS → `pass`; NEEDS_REVISION / FAIL → `findings`; error → `error`; cache hit → `skipped`. The record body opens with `# Result`, states the verdict, and lists findings. The auditor emits the appropriate verdict token from R10 (`CLEAN`, `PASS`, `NEEDS_REVISION`, or `FAIL` with the abs-path to the record; `ERROR: <reason>` on failure) as the final line of stdout and exits.
+On completion, the auditor assigns one of four verdicts (CLEAN, PASS, NEEDS_REVISION, FAIL, or error) and writes the full structured report to `.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v2/report.md`. The record frontmatter uses a `file_paths` list (repo-relative paths for every file in the manifest, sorted lexically), `operation_kind: skill-auditing/v2`, `model` set to the executing agent's model class, and `result` mapped as: CLEAN → `clean`; PASS → `pass`; NEEDS_REVISION / FAIL → `findings`; error → `error`. The record body opens with `# Result`, states the verdict, and lists findings. The auditor emits the appropriate verdict token from R10 (`CLEAN`, `PASS`, `NEEDS_REVISION`, or `FAIL` with the abs-path to the record; `ERROR: <reason>` on failure) as the final line of stdout and exits.
 
 ## Defaults and Assumptions
 
@@ -481,7 +494,7 @@ file_paths:
   - skill-auditing/uncompressed.md
 operation_kind: skill-auditing/v2
 model: <executing-model-class>
-result: pass | findings | error | skipped
+result: clean | pass | findings | error
 ---
 ```
 
