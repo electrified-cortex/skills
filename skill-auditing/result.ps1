@@ -27,7 +27,6 @@ the cached audit verdict by reading the report's frontmatter.
 
 Arguments:
   skill_dir        Absolute path to the skill folder being audited.
-                   Skill dir must be inside a git repository.
 
 Options:
   --help / -h      Print usage, exit 0.
@@ -74,15 +73,8 @@ foreach ($name in $semantic_names) {
     }
 }
 
-# Verify skill_dir is inside a git repo — fail explicitly instead of silent fallback
-$null = & git -C $skill_dir_full rev-parse --show-toplevel 2>$null
-if ($LASTEXITCODE -ne 0) {
-    [Console]::Out.Write("ERROR: skill_dir is not inside a git repository: $skill_dir_full`n")
-    exit 1
-}
-
 if ($files.Count -eq 0) {
-    [Console]::Out.Write("ERROR: no files found in skill_dir`n")
+    [Console]::Out.Write("ERROR: no semantic content files found in skill_dir`n")
     exit 1
 }
 

@@ -13,12 +13,14 @@ Procedure:
 4. Run Step 1 → Step 2 → Step 3. Collect ALL findings before assigning verdict. Don't stop on first finding.
 5. Assign verdict per Verdict Rules.
 6. Scrub absolute paths from entire report — frontmatter `file_paths`, Notes columns, Findings, ALL prose. Forbidden tokens: Windows drive-letter paths (`<letter>:[/\\]`), POSIX root-anchored paths (`/Users/`, `/home/`, `/d/`, `/c/`, `/mnt/`, `/tmp/`, `/var/`). Evidence containing such path → describe abstractly ("hardcoded drive-letter path on line N") — never quote literal. Use repo-relative paths in Findings.
-7. Write report at `<report_path>` (overwrite if present). Use Bash tool to create the directory first: `mkdir -p $(dirname <report_path>)`. Then use Write tool to write the report. Frontmatter: `file_paths: <YAML list of repo-relative paths>` (one entry per non-tool source file from step 1, sorted lexically). `operation_kind: skill-auditing/v2`. `model:` MUST be `haiku-class`, `sonnet-class`, or `opus-class` — NEVER a literal model id (e.g. `claude-sonnet-4-6`). `result:` PASS → `pass`; NEEDS_REVISION / FAIL → `findings`; error → `error`.
+7. Write report at `<report_path>` (overwrite if present). Use Bash tool to create the directory first: `mkdir -p $(dirname <report_path>)`. Then use Write tool to write the report. Frontmatter per `hash-record` skill contract (operation_kind: `skill-auditing/v2`, result: `pass | findings | error | skipped`).
 
    Repo-relative: resolve via `git -C <dir-containing-target-files> rev-parse --show-toplevel`, strip prefix. Same repo root governs cache dir layout (`<repo-root>/.hash-record/...`).
 
+   Skill-auditing-specific `file_paths` guidance (multi-file context — auditors commonly miss this):
+
    ```yaml
-   # Correct:
+   # Correct — list of repo-relative paths, one per non-tool source file from step 1, sorted lexically:
    file_paths:
      - skill-auditing/instructions.uncompressed.md
      - skill-auditing/spec.md
@@ -244,7 +246,7 @@ Frontmatter `description` MUST follow pattern: `<one-line action>. Triggers — 
 - Description stuffed with impl notes (e.g., "Dispatch skill", "Iteration-safe via hash-record", "Zero errors gate") — waste trigger-phrase budget, must be removed.
 
 (DS-4) Inline dispatch guard:
-Dispatch skills MUST use canonical prompt-only dispatch pattern. See `dispatch/dispatch-pattern.md` for context and rationale.
+Dispatch skills MUST use canonical prompt-only dispatch pattern. See `dispatch/dispatch-pattern.md` for context.
 Required elements in `uncompressed.md`:
 - `<instructions>` binding MUST include `NEVER READ` guard (e.g. `NEVER READ THIS FILE` or `NEVER READ`) on same line.
 - `<prompt>` binding MUST use `Read and follow <instructions-abspath>` form.
@@ -260,7 +262,7 @@ Violations:
 Consumer skills producing records (audit reports, hygiene reports, review reports) MUST NOT inline hash-record path schema, frontmatter shape, or shard layout from referenced substrate skill (e.g., `hash-record`). Reference substrate by name only. Duplication of path math, frontmatter schema, or shard layout → HIGH.
 
 (DS-6) No overbuilt sub-skill dispatches for trivial work:
-Sub-skill whose entire procedure fits within 2–3 inline steps in consumer's instructions is anti-pattern. Two inline steps cheaper than spawning another agent. Flag any sub-skill a consuming agent could execute directly in 2–3 steps → LOW (escalate to HIGH if sub-skill adds no logic beyond filesystem op plus write).
+Sub-skill whose entire procedure fits within 2–3 inline steps in consumer's instructions is anti-pattern. Flag any sub-skill a consuming agent could execute directly in 2–3 steps → LOW (escalate to HIGH if sub-skill adds no logic beyond filesystem op plus write).
 
 These checks extend Step 3. Violations recorded in Step 3 findings table under "Dispatch Skill Checks" group. HIGH violations → NEEDS_REVISION or FAIL depending on count; LOW → NEEDS_REVISION.
 

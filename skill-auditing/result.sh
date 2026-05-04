@@ -18,7 +18,6 @@ the cached audit verdict by reading the report's frontmatter.
 
 Arguments:
   skill_dir        Absolute path to the skill folder being audited.
-                   Skill dir must be inside a git repository.
 
 Options:
   --help / -h      Print usage, exit 0.
@@ -54,12 +53,6 @@ fi
 
 SKILL_DIR=$(cd "$SKILL_DIR" && pwd)
 
-# Verify skill_dir is inside a git repo — fail explicitly instead of silent fallback
-git -C "$SKILL_DIR" rev-parse --show-toplevel >/dev/null 2>&1 || {
-    echo "ERROR: skill_dir is not inside a git repository: $SKILL_DIR"
-    exit 1
-}
-
 # Enumerate only the semantic content files the audit agent reads.
 # Hashing all files causes indeterminism when non-semantic files are
 # added/modified between the pre- and post-dispatch result calls.
@@ -75,7 +68,7 @@ for NAME in "${SEMANTIC_NAMES[@]}"; do
 done
 
 if [ "${#FILES[@]}" -eq 0 ]; then
-  echo "ERROR: no files found in skill_dir"
+  echo "ERROR: no semantic content files found in skill_dir"
   exit 1
 fi
 
@@ -92,10 +85,7 @@ if [ ! -f "$MANIFEST_SH" ]; then
 fi
 
 # Invoke manifest
-MANIFEST_OUT=$(bash "$MANIFEST_SH" "$OP_KIND" "$RECORD_FILE" "${FILES[@]}") || {
-  echo "ERROR: hash-record-manifest failed for: $SKILL_DIR"
-  exit 1
-}
+MANIFEST_OUT=$(bash "$MANIFEST_SH" "$OP_KIND" "$RECORD_FILE" "${FILES[@]}")
 
 case "$MANIFEST_OUT" in
   "MISS: "*)

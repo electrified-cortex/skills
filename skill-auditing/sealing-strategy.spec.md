@@ -98,6 +98,14 @@ Applies to any skill directory containing: a `SKILL.md`, one or more executor sc
 / `instructions.uncompressed.md`.
 
 Out of scope: auditing skills that are themselves under active development mid-session.
+
+## Parameters
+
+None — this is a procedure spec, not a callable tool.
+
+## Output
+
+None — this is a procedure spec, not a callable tool.
 Sealing is a finalizing act, not a development loop.
 
 ## Definitions

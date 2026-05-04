@@ -17,12 +17,14 @@
 4. **Run Step 1 → Step 2 → Step 3.** Collect ALL findings before assigning a verdict. Do not stop on the first finding.
 5. **Assign verdict** per Verdict Rules.
 6. **Scrub absolute paths from the entire report** — frontmatter `file_paths`, Notes columns, Findings, ALL prose. Forbidden tokens: any Windows drive-letter path (`<letter>:[/\\]`), any POSIX root-anchored path (`/Users/`, `/home/`, `/d/`, `/c/`, `/mnt/`, `/tmp/`, `/var/`). When citing evidence containing such a path, describe abstractly ("hardcoded drive-letter path on line N") rather than quoting the literal path. Use repo-relative paths for any path in Findings.
-7. **Write report** at `<report_path>` (overwrite if present). Use Bash tool to create the directory first: `mkdir -p $(dirname <report_path>)`. Then use Write tool to write the report. Frontmatter: `file_paths: <YAML list of repo-relative paths>` (one entry per non-tool source file from step 1, sorted lexically). `operation_kind: skill-auditing/v2`. `model:` MUST be one of `haiku-class`, `sonnet-class`, or `opus-class` — NEVER a literal model identifier (e.g. `claude-sonnet-4-6`). `result:` mapped as: PASS → `pass`; NEEDS_REVISION / FAIL → `findings`; error → `error`.
+7. **Write report** at `<report_path>` (overwrite if present). Use Bash tool to create the directory first: `mkdir -p $(dirname <report_path>)`. Then use Write tool to write the report. Write report frontmatter per the `hash-record` skill contract (operation_kind: `skill-auditing/v2`, result: `pass | findings | error | skipped`).
 
    **"Repo-relative":** resolve via `git -C <dir-containing-target-files> rev-parse --show-toplevel` and strip that prefix. The same repo root governs the cache directory layout (`<repo-root>/.hash-record/...`).
 
+   **Skill-auditing-specific `file_paths` guidance** (multi-file context — auditors commonly miss this):
+
    ```yaml
-   # Correct:
+   # Correct — list of repo-relative paths, one per non-tool source file from step 1, sorted lexically:
    file_paths:
      - skill-auditing/instructions.uncompressed.md
      - skill-auditing/spec.md
@@ -305,7 +307,7 @@ The frontmatter `description` MUST follow the pattern: `<one-line action>. Trigg
 
 ### (DS-4) Inline dispatch guard
 
-Dispatch skills MUST use the canonical prompt-only dispatch pattern. See `dispatch/dispatch-pattern.md` for context and rationale.
+Dispatch skills MUST use the canonical prompt-only dispatch pattern. See `dispatch/dispatch-pattern.md` for context.
 
 Required elements in `uncompressed.md`:
 
@@ -326,7 +328,7 @@ Consumer skills that produce records (audit reports, hygiene reports, review rep
 
 ### (DS-6) No overbuilt sub-skill dispatches for trivial work
 
-A sub-skill folder whose entire procedure fits within 2–3 inline steps in the consumer's instructions is an anti-pattern. Two extra inline steps are cheaper than spawning another agent for those two steps. Flag any sub-skill whose procedure a consuming agent could execute directly in 2–3 steps → LOW (escalate to HIGH if the sub-skill adds no logic beyond a filesystem operation plus a write).
+A sub-skill folder whose entire procedure fits within 2–3 inline steps in the consumer's instructions is an anti-pattern. Flag any sub-skill whose procedure a consuming agent could execute directly in 2–3 steps → LOW (escalate to HIGH if the sub-skill adds no logic beyond a filesystem operation plus a write).
 
 These checks extend Step 3. Violations recorded in the Step 3 findings table under a "Dispatch Skill Checks" group. HIGH violations contribute to NEEDS_REVISION or FAIL depending on count; LOW violations contribute to NEEDS_REVISION.
 
