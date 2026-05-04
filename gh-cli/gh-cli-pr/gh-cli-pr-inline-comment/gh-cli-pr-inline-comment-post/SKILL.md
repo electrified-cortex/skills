@@ -1,6 +1,6 @@
 ---
 name: gh-cli-pr-inline-comment-post
-description: Post a single or multi-line inline review comment on a PR diff line via GitHub CLI. Handles SHA lookup, diff verification, deduplication, and POST.
+description: Post an inline PR review comment on a diff line. Triggers — post inline comment, pr review comment, inline diff comment, pr inline annotation, gh api pr comment.
 ---
 
 Input: OWNER, REPO, PR_NUMBER, FILE_PATH, LINE_NUMBER, BODY, SIDE (optional — default RIGHT), START_LINE (optional — multi-line only)
@@ -12,16 +12,5 @@ Input: OWNER, REPO, PR_NUMBER, FILE_PATH, LINE_NUMBER, BODY, SIDE (optional — 
 `<description>` = post inline PR comment on {FILE_PATH}:{LINE_NUMBER}
 `<prompt>` = Read and follow `<instructions-abspath>`. Input: `<input-args>`
 
-Follow dispatch skill: `../../../../dispatch/SKILL.md`
-Should return: `{ "status": "posted" | "duplicate" | "error", "comment_id": <id or null>, "message": "<one line>" }`
-
-## Known Gotchas (Verified Against Live API)
-
-| Gotcha | Symptom | Fix |
-| --- | --- | --- |
-| `gh pr diff {PR} -- {file}` is invalid | `accepts at most 1 arg(s), received 2` | `gh pr diff` takes only the PR number; no file-filter arg. Get full patch and parse hunk headers per file. |
-| Line not in diff | 422: `pull_request_review_thread.line` → `"could not be resolved"` | Line is outside all hunk ranges for the file. Check valid ranges from `@@ -OLD,LEN +NEW,LEN @@` headers. |
-| `--json` missing `--repo` on forked repos | `Could not resolve to a PullRequest` | Always pass `--repo {OWNER}/{REPO}` to `gh pr view` and `gh pr diff` when not in a local clone. |
-| Leading `/` in `gh api` path on Windows Git Bash | Shell rewrites `/repos/...` as `C:/Program Files/Git/repos/...` — command fails | Omit the leading `/`: use `repos/{OWNER}/...` not `/repos/{OWNER}/...` |
-| `gh auth status` output goes to stderr | Command produces no stdout output | Use `gh auth status 2>&1` to capture. |
-| Compact hunk format `@@ -N +M @@` | Missing length means 1, not 0 — single-line hunks omit the count | Treat absent count as 1; e.g. `@@ -10 +10 @@` = `@@ -10,1 +10,1 @@` |
+Follow dispatch skill.
+Should return: `{ "status": "posted" | "duplicate" | "error", "comment_id": <integer or null>, "comment_url": "<https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r{ID} or null>", "message": "<one-line summary>" }`

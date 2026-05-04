@@ -1,8 +1,3 @@
----
-name: gh-cli-pr-inline-comment-post
-description: Spec for posting a single or multi-line inline review comment on a PR diff line via GitHub CLI.
----
-
 # gh-cli-pr-inline-comment-post — Spec
 
 ## Purpose
@@ -70,3 +65,16 @@ fetch SHA → verify file in diff → verify line in diff → dedup check → PO
 - Never use the deprecated `position` parameter. Always use `line` + `side`.
 - `commit_id` must be fetched fresh each invocation — never reuse a cached SHA.
 - Edit and delete operations are out of scope — see sibling sub-skills.
+
+## Return Shape
+
+Every invocation returns a JSON object with these fields:
+
+| Field | Type | Notes |
+| ----- | ---- | ----- |
+| `status` | `"posted" \| "duplicate" \| "error"` | `"posted"` = new comment created; `"duplicate"` = comment already existed; `"error"` = failure |
+| `comment_id` | integer or null | GitHub comment ID. Null on error. |
+| `comment_url` | string or null | Full URL to the comment: `https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r{COMMENT_ID}`. Null on error. |
+| `message` | string | One-line human summary. |
+
+The `comment_url` MUST be returned on both the `"posted"` and `"duplicate"` paths so callers can surface it to the operator without making additional API calls.
