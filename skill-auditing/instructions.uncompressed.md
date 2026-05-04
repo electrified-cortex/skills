@@ -233,9 +233,9 @@ Scan `SKILL.md`, `uncompressed.md`, `instructions.uncompressed.md`, and `instruc
 
 Check all artifacts for descriptor lines that carry no operational value (e.g., "inline apply directly no dispatch," "dispatch skill," bare type labels not used as actionable instructions). Any found → LOW.
 
-### (A-FM-7) No empty sections
+### (A-FM-7) No empty leaves
 
-Verify every heading in every artifact has body content before the next heading or end of file. An empty section → HIGH.
+Empty section = leaf heading with no body AND no subheadings before the next heading at the same level or higher (or EOF) → HIGH. Headings with subsections are never empty.
 
 ### (A-FM-8) Iteration-safety placement
 

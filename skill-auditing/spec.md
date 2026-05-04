@@ -339,9 +339,9 @@ Verify the companion spec is structurally sound, then verify the compiled artifa
     lines that carry no operational value (e.g., "inline apply directly no
     dispatch," "dispatch skill," bare type labels not used as actionable
     instructions). Any found → LOW.
-19. **(A-FM-7) No empty sections** — verify every heading in every artifact
-    has body content before the next heading or end of file. An empty
-    section → HIGH.
+19. **(A-FM-7) No empty leaves** — empty section = leaf heading with no
+    body AND no subheadings before the next heading at the same level or
+    higher (or EOF) → HIGH. Headings with subsections are never empty.
 20. **(A-FM-8) Iteration-safety placement** — verify the Iteration Safety
     blurb is absent from `instructions.uncompressed.md` and
     `instructions.txt`. Presence in either → HIGH. Additionally, if the
