@@ -209,14 +209,20 @@ Quick structural verification of the SKILL.md.
    Additionally:
    - (A-FM-1) `name` field MUST equal the skill's folder name exactly. Check
      both `uncompressed.md` and `SKILL.md`; mismatch in either → FAIL.
-   - (A-FM-3) H1 presence: `SKILL.md` MUST NOT contain an H1 (`# ...` line).
-     If `uncompressed.md` is present, it MUST contain an H1.
-     `instructions.uncompressed.md` (if present) MUST contain an H1.
-     `instructions.txt` (if present) MUST NOT contain an H1. Violation in
-     `SKILL.md` or `instructions.txt` → HIGH. Absence of `uncompressed.md`
-     is not a finding. Missing H1 in `uncompressed.md` or
-     `instructions.uncompressed.md` is out of skill-auditing's scope;
-     markdown-hygiene runs separately and covers H1 enforcement.
+   - (A-FM-3) H1 presence — applies ONLY to `.md` files (markdown). `.txt`
+     files (e.g. `instructions.txt`) are NOT markdown and the H1 rule does
+     NOT apply to them; never flag a `.txt` file under A-FM-3 regardless of
+     content. For `.md` files: a "real H1" is a line that **starts at
+     column 0** and matches `^# ` literally. References to H1 markers
+     INSIDE fenced code blocks (```...```), inline code (`# ...`), or quoted
+     prose are TEMPLATE / EXAMPLE content — NEVER count them as H1s. To
+     detect: regex on `^# ` in the file, then verify the line is NOT inside
+     a fence by tracking ``` toggles. Rule: `SKILL.md` MUST NOT contain a
+     real H1. If `uncompressed.md` is present, it MUST contain a real H1.
+     `instructions.uncompressed.md` (if present) MUST contain a real H1.
+     Violation in `SKILL.md` → HIGH. Absence of `uncompressed.md` is not a
+     finding. Missing H1 in `uncompressed.md` or `instructions.uncompressed.md`
+     is out of skill-auditing's scope; markdown-hygiene covers H1 enforcement.
 5. **No duplication** — skill does not duplicate an existing capability.
    If similar skill exists, recommend merge or distinguish clearly.
 6. **(A-FS-1) Orphan files** — scan all files in the skill directory

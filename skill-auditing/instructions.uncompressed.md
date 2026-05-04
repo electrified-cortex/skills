@@ -99,7 +99,17 @@ If dispatch: verify SKILL.md is a short routing card. If inline: verify SKILL.md
 
 **(A-FM-1) Name matches folder** — `name` field MUST equal the skill's folder name exactly. Check both `uncompressed.md` and `SKILL.md`; mismatch in either → FAIL.
 
-**(A-FM-3) H1 per artifact** — `SKILL.md` MUST NOT contain an H1 (`# ...` line). If `uncompressed.md` is present, it MUST contain an H1. `instructions.uncompressed.md` (if present) MUST contain an H1. `instructions.txt` (if present) MUST NOT contain an H1. Violation in `SKILL.md` or `instructions.txt` → HIGH. Absence of `uncompressed.md` is not a finding — it is optional. Missing H1 in `uncompressed.md` or `instructions.uncompressed.md` is out of scope — markdown-hygiene covers H1 enforcement.
+**(A-FM-3) H1 per artifact** — applies ONLY to `.md` files (markdown). `.txt` files (e.g. `instructions.txt`) are NOT markdown; the H1 rule does NOT apply to them — never flag a `.txt` file under A-FM-3 regardless of content.
+
+For `.md` files, a "real H1" is a line that:
+
+- Starts at column 0 (no leading whitespace).
+- Matches `^# ` literally — the line begins with `#` followed by a space.
+- Is NOT inside a fenced code block (```...```), inline code (`` `# ...` ``), or quoted prose.
+
+H1 markers inside fenced markdown blocks are TEMPLATE / EXAMPLE content showing what the executor should write to a generated artifact — they are NOT the file's own H1 and MUST never be counted as a real H1. To detect: scan for `^# ` AND verify the line is not inside a ``` fence by tracking fence open/close toggles as you walk the file.
+
+Rule: `SKILL.md` MUST NOT contain a real H1. `uncompressed.md` (if present) MUST contain a real H1. `instructions.uncompressed.md` (if present) MUST contain a real H1. Violation in `SKILL.md` → HIGH. Absence of `uncompressed.md` is not a finding — it is optional. Missing H1 in `uncompressed.md` or `instructions.uncompressed.md` is out of scope — markdown-hygiene covers H1 enforcement.
 
 ### No duplication
 
