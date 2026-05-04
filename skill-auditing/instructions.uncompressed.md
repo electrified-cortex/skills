@@ -346,7 +346,6 @@ Frontmatter (required):
 
 ```yaml
 ---
-hash: <manifest-hash>
 file_paths:
   - <repo-relative path to first source file>
   - <repo-relative path to second source file>

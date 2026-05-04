@@ -462,7 +462,6 @@ Record frontmatter (written to hash-record path):
 
 ```yaml
 ---
-hash: <manifest-hash>
 file_paths:
   - skill-auditing/instructions.uncompressed.md
   - skill-auditing/SKILL.md
@@ -473,6 +472,8 @@ model: <executing-model-class>
 result: clean | pass | findings | fail
 ---
 ```
+
+**No `hash:` field in frontmatter.** The record's directory path already encodes the manifest hash (`.hash-record/<aa>/<full-hash>/...`). Putting the same hash in the body creates a duplicate source of truth that drifts on hand-edit and complicates rekeying. Path is authoritative; body MUST NOT restate it. This rule applies fleet-wide — auditing skills writing hash-record artifacts MUST NOT include a `hash:` field when the path already encodes the hash.
 
 `file_paths` MUST be a YAML list of repo-relative path strings — one entry per source
 file consumed in the manifest hash, sorted lexically. The repo root MUST be resolved
