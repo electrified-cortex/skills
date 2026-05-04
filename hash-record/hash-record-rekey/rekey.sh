@@ -133,6 +133,7 @@ if [ -d "$FIRST_ARG" ]; then
     while IFS= read -r line; do
       # Strip CR for Windows line endings
       line="${line%$'\r'}"
+      line="${line#$'\xef\xbb\xbf'}"         # strip UTF-8 BOM if present
       if [ "$past_open" -eq 0 ]; then
         [ "$line" = "---" ] && past_open=1
         continue
