@@ -455,3 +455,15 @@ Omit rows that are N/A for the given file type. Add one row group per file check
 - One skill per dispatch.
 - Evidence-based verdicts.
 - When in doubt, NEEDS_REVISION over PASS.
+
+## Banned terminology
+
+Do not use the term **"non-goals"** in any finding text, recommendation, or
+output. The term is ambiguous and confusing to humans and downstream agents
+alike. Use **"Out of Scope"** instead.
+
+When auditing skill content, flag any occurrence of "non-goals" in
+`SKILL.md`, `uncompressed.md`, `instructions*.md`, or `spec.md` as a HIGH
+terminology finding under Step 1 (Compiled Artifacts) or Step 3 (Spec
+Alignment) as appropriate. Recommend renaming the section/heading/term to
+"Out of Scope".

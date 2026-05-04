@@ -386,3 +386,5 @@ Rules:
 - One skill per dispatch.
 - Evidence-based verdicts.
 - When in doubt, NEEDS_REVISION over PASS.
+
+Banned terminology: do NOT use "non-goals" in findings/output — ambiguous and confusing. Use "Out of Scope" instead. Flag any occurrence in SKILL.md / uncompressed.md / instructions*.md / spec.md as HIGH terminology finding under Step 1 or Step 3; recommend rename to "Out of Scope".

@@ -18,7 +18,7 @@ haiku-class models can run.
 - Verifying error handling patterns
 - Checking output format consistency
 
-### Out of Scope
+### Out of scope
 
 - Executing the script (audit is read-only)
 - Evaluating script logic correctness

@@ -49,6 +49,8 @@ Interpretation:
 10. Never silently normalize contradictions.
 11. Never propose rewrites until audit complete.
 
+Banned terminology: do NOT use "non-goals" in findings/output — ambiguous and confusing. Use "Out of scope" instead. Flag any occurrence in target/companion as Medium terminology finding (Audit step 9); recommend rename to "Out of scope".
+
 Audit (pair-audit mode):
 1. Extract from spec: requirements, prohibitions, defaults, precedence, definitions, procedures, exceptions, audience.
 2. Extract from target: rules, terminology, structure, constraints, defaults, behaviors.
@@ -137,7 +139,7 @@ Output:
 
 When in doubt: optimize for preserving meaning, exposing mismatch, preventing silent drift.
 
-Out of Scope:
+Out of scope:
 Product strategy
 Inventing missing requirements
 Judging implementation quality outside documents

@@ -408,8 +408,8 @@ operator visibility.
 
 After a successful folder-mode rekey:
 
-- Running the same folder-mode rekey again MUST produce 100% `CURRENT`
-  + `MANIFEST_UPDATED-no-change` lines (no `REKEYED`).
+- Running the same folder-mode rekey again
+  MUST produce 100% `CURRENT` + `MANIFEST_UPDATED-no-change` lines (no `REKEYED`).
 - Re-running any of the upstream operations
   (skill-audit, spec-audit, tool-audit, hygiene) on the same folder
   MUST hit cache (operation's executor sees a record with current hash

@@ -64,6 +64,16 @@ Cache check happens inline at the host surface; this executor receives `--report
 10. Never silently normalize contradictions.
 11. Never propose rewrites until audit is complete.
 
+## Banned terminology
+
+Do not use the term **"non-goals"** in any finding text, recommendation,
+or output. The term is ambiguous and confusing to humans and downstream
+agents alike. Use **"Out of scope"** instead.
+
+When auditing target or companion content, flag any occurrence of
+"non-goals" as a Medium-severity terminology finding (Audit step 9).
+Recommend renaming the section/heading/term to "Out of scope".
+
 ## Audit (pair-audit mode)
 
 1. Extract from spec: requirements, prohibitions, defaults, precedence, definitions, procedures, exceptions, audience.
@@ -178,7 +188,7 @@ result: pass | pass_with_findings | fail | error   # Pass→pass; Pass with Find
 
 When in doubt: optimize for preserving meaning, exposing mismatch, and preventing silent drift.
 
-## Out of Scope
+## Out of scope
 
 - Product strategy
 - Inventing missing requirements
