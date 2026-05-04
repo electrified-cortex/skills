@@ -33,9 +33,7 @@ The tool hashes ONLY the semantic content files of the skill bundle. Whitelist (
    - `HIT: <abs-path>` -> read the frontmatter `result:` field of `<abs-path>`:
      - `clean` -> emit `CLEAN: <abs-path>`, exit 0.
      - `pass` -> emit `PASS: <abs-path>`, exit 0.
-     - `findings` -> read the body `**Verdict:**` line to determine specific verdict:
-       - body contains `FAIL` -> emit `FAIL: <abs-path>`, exit 0.
-       - otherwise -> emit `NEEDS_REVISION: <abs-path>`, exit 0.
+     - `findings` -> emit `NEEDS_REVISION: <abs-path>`, exit 0.
      - `fail` -> emit `FAIL: <abs-path>`, exit 0.
      - any other value -> emit `ERROR: malformed cache record at <abs-path>`, exit 1.
 
@@ -48,8 +46,7 @@ See Procedure step 4 for branch logic. This table is authoritative; Procedure st
 | ------------------------------------------------------ | ------------------------------- | ---- |
 | HIT, `result: clean` | `CLEAN: <abs-path>` | 0 |
 | HIT, `result: pass` | `PASS: <abs-path>` | 0 |
-| HIT, `result: findings`, body verdict = NEEDS_REVISION | `NEEDS_REVISION: <abs-path>` | 0 |
-| HIT, `result: findings`, body verdict = FAIL | `FAIL: <abs-path>` | 0 |
+| HIT, `result: findings` | `NEEDS_REVISION: <abs-path>` | 0 |
 | HIT, `result: fail` | `FAIL: <abs-path>` | 0 |
 | MISS | `MISS: <abs-path>` | 0 |
 | Argument or runtime error | `ERROR: <reason>` | 1 |
