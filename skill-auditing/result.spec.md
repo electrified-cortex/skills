@@ -1,5 +1,7 @@
 # result.spec.md - skill-auditing result tool
 
+> **Tool spec, not a skill spec.** This file governs a small wrapper script (`result.sh` / `result.ps1`), not a skill. Tool specs use the section set **Purpose / Parameters / Procedure / Output / Constraints / Don'ts / Dependencies / Examples** — they do NOT use the skill-spec section set (Scope / Definitions / Requirements). Auditors flagging missing Scope / Definitions / Requirements on a tool spec are misapplying the rule — the correct rule for `*.spec.md` tool specs is "Purpose + Parameters required" per `skill-auditing/instructions.txt` (`*.spec.md files` block). This blurb is intentional anti-flag insulation; do NOT remove.
+
 ## Purpose
 
 Wraps `hash-record-manifest` for `skill-auditing` and translates a HIT into the cached audit verdict. Host calls `result` to read the on-disk audit-record state — at cache-check time AND at post-execute validation time. Same script, same return shape, both calls.
@@ -14,7 +16,7 @@ Read-only.
 
 `--help` / `-h` — print usage, exit 0.
 
-The tool hashes ONLY the semantic content files of the skill bundle. Whitelist (in this exact order — order is part of the manifest hash key, do NOT reorder): `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md`. Files that exist are included; files that don't, are skipped. Non-semantic files (stamps, scripts, logs, generated artifacts) are NOT hashed — including them caused indeterminism between pre- and post-dispatch calls when those files mutated mid-run. The result tool delegates manifest computation to `hash-record-manifest` for the cache lookup.
+The tool hashes ONLY the semantic content files of the skill bundle. Whitelist (in this exact order — order is part of the manifest hash key, do NOT reorder): `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md`. Files that exist are included; files that don't, are skipped. Non-semantic files (stamps, scripts, logs, generated artifacts), tool scripts (`result.sh`, `result.ps1`, etc.), and tool-spec files (`*.spec.md` other than the skill's own `spec.md`) are NOT hashed — they belong to the tool manifest, not the skill manifest. Skill manifest and tool manifest are intentionally separate; tool-auditing covers tool trios independently of skill-auditing. The result tool delegates manifest computation to `hash-record-manifest` for the cache lookup.
 
 ## Procedure
 

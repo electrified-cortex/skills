@@ -7,7 +7,7 @@ HARD PROHIBITION: DON'T author scripts (`.ps1`, `.sh`, `.py`, etc.), helper file
 CHECK INVENTION PROHIBITION: only evaluate checks explicitly named and defined here. Don't invent, infer, or apply unlisted checks — even if pattern looks suspicious. No named check = no finding.
 
 Procedure:
-1. Enumerate files in `skill_dir` recursively; skip dot-prefixed dirs and `optimize-log.md`. Tool files (`.sh`, `.ps1`) out of scope for Steps 1–3 — skip in step checks but include in A-FS-1 enumeration.
+1. Enumerate files in `skill_dir` recursively; skip dot-prefixed dirs and `optimize-log.md`. Tool files (`.sh`, `.ps1`) and tool-spec files (`*.spec.md` other than the skill's own `spec.md` co-located with `SKILL.md`) are out of scope for Steps 1–3 AND excluded from the manifest `file_paths` — they belong to the tool manifest (audited separately by tool-auditing). Skill manifest covers only the skill bundle: `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` (whichever exist). Include tool/.spec.md files in A-FS-1 enumeration only.
 2. Read `SKILL.md`. Determine skill type (inline or dispatch) by file-system evidence: any allowed dispatch instruction file present (`instructions.txt`, `<name>.md`, or file explicitly referenced by `SKILL.md`) → dispatch; none → inline. Locate companion `spec.md` co-located with `skill_dir`.
 3. Run Per-file basic checks (always; findings → separate Per-file section; don't block Steps 1–3).
 4. Run Step 1 → Step 2 → Step 3. Collect ALL findings before assigning verdict. Don't stop on first finding.
@@ -264,6 +264,13 @@ Consumer skills producing records (audit reports, hygiene reports, review report
 
 (DS-6) No overbuilt sub-skill dispatches for trivial work:
 Sub-skill whose entire procedure fits within 2–3 inline steps in consumer's instructions is anti-pattern. Flag any sub-skill a consuming agent could execute directly in 2–3 steps → LOW (escalate to HIGH if sub-skill adds no logic beyond filesystem op plus write).
+
+(DS-7) Tool integration alignment:
+For skills shipping a co-located tool trio (`<stem>.sh` + `<stem>.ps1` + `<stem>.spec.md`), check integration WITHOUT auditing the tool (tool-auditing does that):
+- Orphan tool — every tool present in `skill_dir` MUST be referenced by `SKILL.md` or `spec.md` (by stem name or relative path). Unreferenced tool present → HIGH.
+- Missing tool — every tool referenced by `SKILL.md` or `spec.md` MUST exist in `skill_dir` as a complete trio. Referenced tool absent or incomplete trio → FAIL.
+- Tool-spec alignment — IF a referenced tool has `*.spec.md`, its declared behavior (Purpose, Output, return contract) MUST be consistent with how `SKILL.md` / `spec.md` describes the tool's role. Contradiction (main spec says "moves A to B"; tool spec says "deletes") → FAIL.
+Auditor reads tool-spec text for this check; tool files remain excluded from manifest hash per Step 1.
 
 These checks extend Step 3. Violations recorded in Step 3 findings table under "Dispatch Skill Checks" group. HIGH violations → NEEDS_REVISION or FAIL depending on count; LOW → NEEDS_REVISION.
 
