@@ -25,34 +25,7 @@ conventions, and custom severity thresholds.
       - Resolve spec from sibling `<basename>.spec.md`. Missing → STOP: spec file missing.
 **Gate HC: hash-record cache check**
 
-Compute the manifest hash from all resolved input files:
-
-1. For each input file (target spec; companion file if pair-audit mode), run
-   `git hash-object <absolute_path>`.
-2. Sort the `<blob_hash> <repo_relative_path>` pairs lexically by path.
-3. Concatenate as `<blob_hash> <repo_relative_path>\n` for each pair.
-4. Compute `sha256sum` of the concatenated string.
-
-Compute repo root:
-
-```bash
-repo_root=$(git -C "$(dirname <spec_path>)" rev-parse --show-toplevel 2>/dev/null)
-[ -z "$repo_root" ] && repo_root="$(dirname <spec_path>)"
-```
-
-Check cache path:
-
-```text
-<repo_root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/spec-auditing/v1/report.md
-```
-
-- **Cache hit**: emit the return token (final stdout line):
-  `PATH: <abs-path-to-report.md>` and **stop immediately**.
-- **Cache miss**: proceed to Gate 3 (full audit). Record `<manifest_hash>`,
-  `<repo_root>`, and the input file paths for use in the write step.
-- **`git hash-object` fails or returns no output** (non-git environment, untracked file):
-  Proceed without caching — skip hash-record check and write, run full audit,
-  emit inline verdict (`PASS` | `PASS_WITH_FINDINGS` | `FAIL`) without a path.
+Cache check happens inline at the host surface; this executor receives `--report-path <path>` and writes the verdict there. Do not re-check or re-compute.
 
 3. Audit kind (pair-audit mode only; skip in spec-only mode):
    a. `--kind meta` explicitly provided → meta mode.
@@ -164,12 +137,11 @@ Informational: observation, maintainability note, optional improvement.
 4. Label: direct evidence, reasonable inference, or uncertainty.
 5. Never present inference as fact.
 
-**Step RW: write hash-record (cache miss path only)**
+**Step RW: write hash-record (when `--report-path` is provided)**
 
 After the verdict is determined, write the hash-record before returning:
 
-1. Construct the cache path:
-   `<repo_root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/spec-auditing/v1/report.md`
+1. Use `<report_path>` from the `--report-path` argument supplied by the host. If `--report-path` is absent or empty, skip this step (no-cache path).
 2. Create parent directories as needed.
 3. Write the file:
 
@@ -180,7 +152,6 @@ file_paths:
   - <repo_relative_path_1>   # sorted lexically
   - <repo_relative_path_2>   # if pair-audit mode
 operation_kind: spec-auditing/v1
-model: <model_class>
 result: pass | pass_with_findings | fail | error   # Pass→pass; Pass with Findings→pass_with_findings; Fail→fail; error→error
 ---
 # Result
@@ -190,10 +161,6 @@ result: pass | pass_with_findings | fail | error   # Pass→pass; Pass with Find
 
 4. Emit the return token as the final stdout line (column 0, no indent, no list marker):
    `Pass: <cache_path>` | `Pass with Findings: <cache_path>` | `Fail: <cache_path>`
-
-Model class: resolve from executing agent's model identifier:
-`claude-haiku-*` → `haiku-class`; `claude-sonnet-*` → `sonnet-class`;
-`claude-opus-*` → `opus-class`.
 
 ## Output
 

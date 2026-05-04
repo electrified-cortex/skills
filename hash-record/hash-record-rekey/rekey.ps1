@@ -114,7 +114,11 @@ function Get-ManifestHash ([string]$RecordFile, [string]$RepoRoot) {
     if ($paths.Count -eq 0) { return $null }
 
     # Sort paths lexically
-    $sortedPaths = $paths | Sort-Object
+    $sortedPaths = [System.Linq.Enumerable]::OrderBy(
+        [string[]]$paths,
+        [System.Func[string, string]]{ $_ },
+        [System.StringComparer]::Ordinal
+    )
 
     # Build manifest string
     $lines = [System.Text.StringBuilder]::new()

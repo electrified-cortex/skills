@@ -15,23 +15,7 @@ Gates:
 
 GATE HC: hash-record cache check
 
-Compute manifest hash from all resolved input files:
-1. For each input file (target spec; companion if pair-audit), run `git hash-object <absolute_path>`.
-2. Sort `<blob_hash> <repo_relative_path>` pairs lexically by path.
-3. Concatenate as `<blob_hash> <repo_relative_path>\n` per pair.
-4. Compute `sha256sum` of concatenated string.
-
-Compute repo root:
-```bash
-repo_root=$(git -C "$(dirname <spec_path>)" rev-parse --show-toplevel 2>/dev/null)
-[ -z "$repo_root" ] && repo_root="$(dirname <spec_path>)"
-```
-
-Cache path: `<repo_root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/spec-auditing/v1/report.md`
-
-Cache hit: emit return token (final stdout line): `PATH: <abs-path-to-report.md>` — STOP.
-Cache miss: proceed to Gate 3 (full audit). Record `<manifest_hash>`, `<repo_root>`, input paths for write step.
-`git hash-object` fails or returns no output (non-git env, untracked file): proceed without caching — skip hash-record check/write, run full audit, emit inline verdict (`PASS` | `PASS_WITH_FINDINGS` | `FAIL`) without path.
+Cache check happens inline at the host surface; this executor receives `--report-path <path>` and writes the verdict there. Do not re-check or re-compute.
 
 3. Audit kind (pair-audit only; skip in spec-only):
    a. `--kind meta` → meta mode.
@@ -117,10 +101,10 @@ Evidence:
 4. Label: direct evidence, reasonable inference, or uncertainty.
 5. Never present inference as fact.
 
-STEP RW: write hash-record (cache miss path only)
+STEP RW: write hash-record (when `--report-path` is provided)
 
 After verdict determined, write hash-record before returning:
-1. Construct cache path: `<repo_root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/spec-auditing/v1/report.md`
+1. Use `<report_path>` from `--report-path` argument supplied by the host. If absent or empty, skip this step (no-cache path).
 2. Create parent dirs as needed.
 3. Write:
 
@@ -131,7 +115,6 @@ file_paths:
   - <repo_relative_path_1>   # sorted lexically
   - <repo_relative_path_2>   # if pair-audit mode
 operation_kind: spec-auditing/v1
-model: <model_class>
 result: pass | pass_with_findings | fail | error   # Pass→pass; Pass with Findings→pass_with_findings; Fail→fail; error→error
 ---
 # Result
@@ -141,9 +124,6 @@ result: pass | pass_with_findings | fail | error   # Pass→pass; Pass with Find
 
 4. Emit return token as final stdout line (column 0, no indent, no list marker):
    `Pass: <cache_path>` | `Pass with Findings: <cache_path>` | `Fail: <cache_path>`
-
-Model class: resolve from executing agent's model identifier:
-`claude-haiku-*` → `haiku-class`; `claude-sonnet-*` → `sonnet-class`; `claude-opus-*` → `opus-class`.
 
 Output:
 1. Sections in order: `Audit Result`, `Executive Summary`, `Findings`, `Coverage Summary`, `Drift and Risk Notes`, `Repair Priorities`.

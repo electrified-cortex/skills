@@ -501,11 +501,11 @@ A prioritized repair sequence, highest value first.
 
 ### 7. Return Token
 
-After writing the report to the hash-record path, the auditor must emit exactly one final line of stdout — the return token. This line must be the last line of stdout, starting at column 0 with no indentation, no quoting, and no list-marker prefix. Nothing may follow it.
+After writing the report to the hash-record path, the executor must emit exactly one final line of stdout — the return token. This line must be the last line of stdout, starting at column 0 with no indentation, no quoting, and no list-marker prefix. Nothing may follow it.
 
-Valid tokens:
+`PATH: <abs-path>` is emitted by the HOST on a cache hit (executor not invoked).
+The executor emits one of the following:
 
-- `PATH: <abs-path>` — cache hit; no audit performed
 - `Pass: <abs-path>` — audit complete, no findings
 - `Pass with Findings: <abs-path>` — audit complete, findings present, no fail condition
 - `Fail: <abs-path>` — audit failed; Critical or 2+ High findings
@@ -554,7 +554,7 @@ Atomic, testable requirements for the auditor:
 13. Evidence must be labeled: direct evidence, reasonable inference, or uncertainty. Inference must never be presented as fact.
 14. When a spec lacks sufficient information to audit the companion, the auditor must say so explicitly, state what is missing, and assess whether the result can still pass.
 
-Additional requirements covering hash-record cache behavior are defined in §Hash-Record Cache, sub-section Requirements (hash-record) (R-HR-1 through R-HR-6). Both sets are normative.
+Additional requirements covering hash-record cache behavior are defined in §Hash-Record Cache, sub-section Requirements (hash-record) (R-HR-1 through R-HR-5). Both sets are normative.
 
 ---
 
@@ -563,9 +563,9 @@ Additional requirements covering hash-record cache behavior are defined in §Has
 ### Overview
 
 spec-auditing is a deterministic, read-only operation. Given the same set of
-input files, the same model class, and the same audit logic version, the
-result is identical. The hash-record cache exploits this: on a cache hit, the
-auditor returns the stored verdict immediately without dispatching an LLM.
+input files and the same audit logic version, the result is identical. The
+hash-record cache exploits this: on a cache hit, the auditor returns the
+stored verdict immediately without dispatching an LLM.
 
 ### Manifest Hash
 
@@ -588,17 +588,22 @@ actually audited in this invocation.
 `<manifest_hash[0:2]>` is the first two characters of the manifest hash
 (shard directory). `spec-auditing/v1` is the operation kind for this version.
 
-### Cache Check (on entry)
+### Cache Check (at host surface)
 
-Before any other work, check if the cache path exists. On a hit, emit
-`PATH: <abs-path-to-report.md>` as the final line of stdout and stop. On a
-miss, proceed with the full audit.
+The host runs the inline hash check (via `hash-record-manifest/manifest.sh` or `.ps1`) with `op_kind = spec-auditing/v1` and `record_filename = report.md` before any dispatch.
 
-### Record Write (on miss)
+- **Hit** (`HIT: <abs-path>`): host emits `PATH: <abs-path>` and stops. No executor dispatched.
+- **Miss** (`MISS: <abs-path>`): host binds `<report_path>` and passes it via `--report-path` to the executor.
+- **Error** (untracked / non-git): host skips caching; executor runs without `--report-path` and omits record write.
+
+The executor must NOT re-check or re-compute the cache. It receives `--report-path` from the host and writes there on completion.
+
+### Record Write (executor, when `--report-path` is provided)
 
 After completing the audit and before returning, write the hash-record to the
-cache path. The file must contain a YAML frontmatter block followed by the
-verdict:
+path supplied via `--report-path`. If `--report-path` is absent or empty (no-cache
+path), skip this step. The file must contain a YAML frontmatter block followed
+by the verdict:
 
 ```yaml
 ---
@@ -606,35 +611,33 @@ hash: <manifest-hash>
 file_paths:
   - <repo-relative-path>     # sorted lexically; one entry per audited file
 operation_kind: spec-auditing/v1
-model: <haiku-class|sonnet-class|opus-class>
 result: pass | pass_with_findings | fail | error
 ---
 ```
-
-`model` MUST be a model-class string, never a literal model ID. Map:
-`claude-haiku-*` → `haiku-class`; `claude-sonnet-*` → `sonnet-class`;
-`claude-opus-*` → `opus-class`.
 
 `result` maps: Pass → `pass`; Pass with Findings → `pass_with_findings`;
 Fail → `fail`; error → `error`.
 
 ### Return Token
 
-The final line of stdout MUST be the return token, at column 0, no indent,
-no list markers, no quoting:
+The final line of stdout of the overall skill invocation MUST be the return
+token, at column 0, no indent, no list markers, no quoting.
 
+Host emits (cache hit, executor not invoked):
 ```text
 PATH: <report_path>
+```
+
+Executor emits (after full audit and hash-record write):
+```text
 Pass: <report_path>
 Pass with Findings: <report_path>
 Fail: <report_path>
 ERROR: <reason>
 ```
 
-`PATH:` on cache hit; `Pass:` | `Pass with Findings:` | `Fail:` on verdict;
-`ERROR:` on failure. `<report_path>` is the path to the written hash-record
-file (absolute or repo-relative). All narrative output MUST appear before this
-line; nothing may follow it.
+`<report_path>` is the absolute path to the written hash-record file. All
+narrative output MUST appear before this line; nothing may follow it.
 
 ### Repo-Root Computation
 
@@ -646,23 +649,21 @@ repo_root=$(git -C "$(dirname <spec_path>)" rev-parse --show-toplevel 2>/dev/nul
 
 ### Requirements (hash-record)
 
-R-HR-1: The auditor MUST compute the manifest hash from all input files
-as the first act of processing — before reading file contents for analysis,
-before writing any output, and before any other side effect.
+R-HR-1: The HOST MUST invoke the manifest tool (`hash-record-manifest/manifest.sh`
+or `.ps1`) before dispatching the executor — before any LLM is dispatched and
+before any other side effect related to this invocation.
 
-R-HR-2: On a cache hit, the auditor MUST emit the return token pointing to
-the cached report and MUST stop immediately without dispatching an LLM.
+R-HR-2: On a cache hit (`HIT:`), the host MUST emit `PATH: <abs-path>` as the
+final line of stdout and MUST stop immediately without dispatching an executor.
 
-R-HR-3: On a cache miss, the auditor MUST write the hash-record to the
-canonical cache path before returning any result.
+R-HR-3: On a cache miss, the host MUST pass the computed cache path to the
+executor via `--report-path <path>`. The executor MUST write the hash-record to
+that path before returning any result.
 
 R-HR-4: The `file_paths` frontmatter field MUST list only repo-relative
 paths, sorted lexically. Absolute paths are prohibited.
 
-R-HR-5: The `model` field MUST be a model-class string (haiku-class,
-sonnet-class, or opus-class). Literal model identifiers are prohibited.
-
-R-HR-6: The return token MUST be the final line of stdout with no indentation
+R-HR-5: The return token MUST be the final line of stdout with no indentation
 or prefix. No output may follow it.
 
 ---
@@ -687,16 +688,16 @@ or prefix. No output may follow it.
 
 ### Audit flow
 
-0. Resolve input paths and detect mode (pair-audit or spec-only) per §Inputs and §Spec-Only Mode.
-1. Compute manifest hash from all resolved input files and check cache (Gate HC, per §Hash-Record Cache). On a cache hit, emit `PATH: <abs-path-to-report.md>` as the final stdout line and STOP.
-2. Read all resolved files fully.
-3. Extract normative content (requirements, prohibitions, definitions, defaults, procedures, exceptions).
-4. Evaluate all applicable audit dimensions in sequence.
-5. Assign severity and evidence to each finding.
-6. Apply pass/fail gate rules.
-6a. Write hash-record to cache path before emitting any output. See §Hash-Record Cache / Record Write.
-7. Emit output in required section order.
-8. Emit return token as the final stdout line. See §Hash-Record Cache / Return Token.
+0. **[Host]** Resolve input paths and detect mode (pair-audit or spec-only) per §Inputs and §Spec-Only Mode.
+1. **[Host]** Invoke manifest tool inline (per §Hash-Record Cache / Cache Check). On a hit, emit `PATH: <abs-path>` and STOP — no executor dispatched. On a miss, bind `<report_path>` and pass via `--report-path` to the executor.
+2. **[Executor]** Read all resolved files fully.
+3. **[Executor]** Extract normative content (requirements, prohibitions, definitions, defaults, procedures, exceptions).
+4. **[Executor]** Evaluate all applicable audit dimensions in sequence.
+5. **[Executor]** Assign severity and evidence to each finding.
+6. **[Executor]** Apply pass/fail gate rules.
+6a. **[Executor]** Write hash-record to the path from `--report-path` before emitting any output. Skip if `--report-path` is absent or empty. See §Hash-Record Cache / Record Write.
+7. **[Executor]** Emit output in required section order.
+8. **[Executor]** Emit return token as the final stdout line. See §Hash-Record Cache / Return Token.
 
 ### Pass/Fail gate
 
@@ -736,7 +737,7 @@ See §Hash-Record Cache above for caching behavior. See `../iteration-safety/SKI
 | `--fix` passed in spec-only mode | Ignore the flag; report "fix mode unavailable in spec-only mode — no companion to modify"; continue with a read-only audit |
 | `--fix` passed with untracked/modified/conflicted target | STOP: report "target must be git-tracked and clean" |
 | Approve/stamp request received | STOP: report "approve mode not supported" |
-| `git hash-object` fails or returns no output (e.g. file untracked, non-git environment) | Proceed without caching: skip hash-record check and write, run full audit, emit inline verdict (`PASS` \| `PASS_WITH_FINDINGS` \| `FAIL`) without a path |
+| Manifest tool returns `ERROR:` (e.g. file untracked, non-git environment) | Host skips caching; dispatches executor without `--report-path`; executor runs full audit, omits hash-record write, emits verdict without path |
 
 ---
 
