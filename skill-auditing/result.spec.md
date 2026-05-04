@@ -65,7 +65,7 @@ The host:
 - Delegates manifest computation entirely to `hash-record-manifest` — no duplication.
 - Skill version (`v2`) is hardcoded in the script. Bump version + update script in lockstep when contract changes.
 
-## Non-goals
+## Don'ts
 
 - **No compiled/uncompressed cache split.** Single canonical `op_kind = skill-auditing/v2`. If both compressed and uncompressed audit sources need their own audit records, they coexist as sibling files inside `<op>/<version>/` (e.g. `report.md` + `uncompressed.md`) — never as parallel `<op>/<version>-compiled/` and `<op>/<version>-uncompressed/` folders.
 - **No version dot-subversions.** Version segment is `v<N>` flat integer (cache-bust key). `v2.1` / `v2.0.3` are red flags — surface and revert.

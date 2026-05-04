@@ -269,7 +269,7 @@ the activity log becomes the primary record that each sub-phase completed.
 
 Target: happy path. Report and escalate if worst case is reached.
 
-## Non-goals
+## Out of Scope
 
 - Does not govern mid-development audit loops.
 - Does not govern bulk-sealing multiple skills in sequence.

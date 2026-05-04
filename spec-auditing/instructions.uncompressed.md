@@ -178,4 +178,10 @@ result: pass | pass_with_findings | fail | error   # Pass→pass; Pass with Find
 
 When in doubt: optimize for preserving meaning, exposing mismatch, and preventing silent drift.
 
-Non-goals: not responsible for product strategy, inventing missing requirements, judging implementation quality outside documents, resolving domain disputes without textual basis, or approving vague specs on goodwill.
+## Out of Scope
+
+- Product strategy
+- Inventing missing requirements
+- Judging implementation quality outside documents
+- Resolving domain disputes without textual basis
+- Approving vague specs on goodwill.
