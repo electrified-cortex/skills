@@ -7,30 +7,6 @@ the source of truth for skill quality. Skill writers conform to the
 auditor's rules. The auditor can verify its own skill for compliance
 (dogfooding).
 
-## Design Goal — Haiku Wins the Eval Game
-
-Sonnet-class is the baseline — table stakes. A working skill must run
-correctly under sonnet. Haiku-class is the **winning bar**: a skill that
-also runs reliably under haiku has won the eval game. Cheap, deterministic,
-predictable across runs.
-
-The audit's job is to push every skill toward the haiku bar. A
-haiku-executable skill is one a haiku-class agent can run almost like
-reading a program — small, concise, unambiguous instructions, explicit
-decision branches, minimal prose, and zero interpretive slack.
-
-When a skill needs sonnet to "make sense of" the instructions, the fix
-is rarely "use a stronger model." It's almost always tighten the
-instructions: replace prose conditionals with decision trees, replace
-ambiguous directives with explicit step lists, replace implied behavior
-with normative statements. Audit findings that close interpretive slack
-take priority — they're the moves that get a skill from "works on
-sonnet" to "wins on haiku."
-
-Token cost compounds across calls. A skill invoked 100 times saves real
-money when its haiku runs hold up. Verdicts are weighted toward findings
-that move a skill closer to reliable haiku execution.
-
 ## Finding Priority Ordering — Big Rough First
 
 When iterating toward a seal, fix in this order:
@@ -695,3 +671,29 @@ See `../iteration-safety/SKILL.md`.
 - Do not pass A-XR-1 if any skill artifact (other than skill-auditing's own files as subject-matter context) contains a path-based cross-reference to another skill's `uncompressed.md` or `spec.md`.
 - Do not pass A-FM-8 if the Iteration Safety blurb appears in `instructions.uncompressed.md` or `instructions.txt`, even if it is also present in `SKILL.md`.
 - Do not rate A-FM-9a/9b as N/A unless the skill contains no iteration-safety reference at all; if any reference is present, check pointer form and verbatim restatement.
+
+## Appendix — Design Goal: Haiku Wins the Eval Game
+
+(Rationale; non-normative.)
+
+Sonnet-class is the baseline — table stakes. A working skill must run
+correctly under sonnet. Haiku-class is the **winning bar**: a skill that
+also runs reliably under haiku has won the eval game. Cheap, deterministic,
+predictable across runs.
+
+The audit's job is to push every skill toward the haiku bar. A
+haiku-executable skill is one a haiku-class agent can run almost like
+reading a program — small, concise, unambiguous instructions, explicit
+decision branches, minimal prose, and zero interpretive slack.
+
+When a skill needs sonnet to "make sense of" the instructions, the fix
+is rarely "use a stronger model." It's almost always tighten the
+instructions: replace prose conditionals with decision trees, replace
+ambiguous directives with explicit step lists, replace implied behavior
+with normative statements. Audit findings that close interpretive slack
+take priority — they're the moves that get a skill from "works on
+sonnet" to "wins on haiku."
+
+Token cost compounds across calls. A skill invoked 100 times saves real
+money when its haiku runs hold up. Verdicts are weighted toward findings
+that move a skill closer to reliable haiku execution.
