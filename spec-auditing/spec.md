@@ -108,7 +108,7 @@ spec-only mode — it appears under §What is audited above.
 
 The executor is single-pass read-only; fix iteration is caller-driven. In spec-only mode there is no companion, so there is nothing for a fix agent to act on. Fixing the spec itself is an authorial act requiring domain judgment and is never done by the auditor.
 
-If `--fix` is passed in spec-only mode: ignore the flag, report that fix mode is unavailable in this mode, and run a read-only audit. Any spec defects surface as findings for the caller to act on.
+If `--fix` is passed in spec-only mode, the executor ignores the flag and runs a read-only audit. The required report string and exact behavior are defined canonically in the §Error Handling table row for "`--fix` passed in any mode." Any spec defects surface as findings for the caller to act on.
 
 ### Output in spec-only mode
 
@@ -740,7 +740,7 @@ or prefix. No output may follow it.
 6. The auditor must not treat examples as authoritative unless explicitly marked normative.
 7. The auditor must not assume a companion paraphrase is acceptable merely because it sounds similar.
 8. The auditor must not downgrade a finding's severity merely because the likely intent seems obvious.
-9. The executor does not handle `--fix`; fix iteration is caller-driven. If `--fix` is passed, ignore the flag, report that fix mode is not handled by the executor, and continue with a read-only audit. In spec-only mode, additionally report that there is no companion to fix.
+9. The executor does not handle `--fix`; fix iteration is caller-driven. If `--fix` is passed, ignore the flag and continue with a read-only audit per the canonical handling defined in the §Error Handling table row for "`--fix` passed in any mode."
 10. The auditor must not invent product requirements or resolve domain disputes without textual basis.
 11. One spec or spec/target pair per invocation. Multi-subject audits must be chained as separate runs.
 
