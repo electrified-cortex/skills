@@ -34,7 +34,7 @@ Cache check happens inline at the host surface; this executor receives `--report
       - Spec path contains `spec-writing` → meta mode; report "auto-detected: meta mode."
       - Spec path does not contain `spec-writing` → domain mode; report "auto-detected: domain mode."
    d. Auto-detect is ambiguous (neither signal) → STOP: cannot determine audit kind — supply `--kind meta` or `--kind domain` explicitly.
-   Meta mode: run pair-audit with all 13 checks unmodified (current default behavior).
+   Meta mode: run pair-audit with all 13 steps unmodified — 2 extraction steps plus 11 audit dimensions (current default behavior).
    Domain mode: run pair-audit with Unauthorized Additions check modified — see Audit section.
 4. Read all resolved files fully before judging. Partial → STOP: incomplete input.
 5. Precedence: this instruction file controls audit procedure; the audited spec controls domain content; the companion target is subordinate. Report every conflict; never normalize.

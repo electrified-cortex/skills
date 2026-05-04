@@ -1,6 +1,6 @@
 ---
 name: spec-auditing
-description: Audit a spec or companion file for alignment and completeness. Triggers — spec validation, requirements coverage, contradiction detection, document alignment, specification quality, validate spec, spec audit.
+description: Audit a spec or companion file for alignment and completeness. Triggers — spec validation, requirements coverage, contradiction detection, specification quality, validate spec, spec audit.
 ---
 
 Inputs:

@@ -22,7 +22,7 @@ Cache check happens inline at the host surface; this executor receives `--report
    b. `--kind domain` → domain mode.
    c. Neither → auto-detect: spec path contains `spec-writing` → meta (report "auto-detected: meta mode"); else → domain (report "auto-detected: domain mode").
    d. Ambiguous → STOP: can't determine audit kind — supply `--kind meta` or `--kind domain` explicitly.
-   Meta mode: all 13 checks unmodified. Domain mode: Unauthorized Additions modified — see Audit.
+   Meta mode: all 13 steps unmodified (2 extraction steps + 11 audit dimensions). Domain mode: Unauthorized Additions modified — see Audit.
 4. Read all resolved files fully before judging. Partial → STOP: incomplete input.
 5. Precedence: this instruction file controls audit procedure; audited spec controls domain content; companion subordinate. Report every conflict; never normalize.
 6. `--fix` requires target git-tracked and clean. Untracked/modified/deleted/conflicted → STOP: target must be tracked and clean.

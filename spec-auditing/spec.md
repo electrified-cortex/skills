@@ -67,6 +67,58 @@ The auditor must treat the spec as normative unless this file explicitly declare
 
 ---
 
+## Spec-Only Mode
+
+When the target is a `spec.md` file and the caller explicitly requests
+spec-only mode, or when no companion is present (see §Companion Auto-Detect),
+the auditor operates in spec-only mode.
+
+### What is audited
+
+In spec-only mode the auditor evaluates the spec file against its own quality
+criteria:
+
+- **Completeness** — are all required sections present; are terms defined; are
+  procedures complete?
+- **Enforceability** — are requirements testable; is language precise; are
+  vague/aspirational statements flagged?
+- **Structural Integrity** — logical ordering; stable headings; no hidden
+  requirements in examples; normative language consistent.
+- **Economy** — duplicated rules, unnecessary scaffolding, or prose that can be
+  removed without changing the spec's effect.
+- **Terminology** — defined terms used consistently; undefined critical terms
+  flagged; synonym drift flagged.
+- **Internal Consistency** — no contradictions within the spec itself.
+
+### What is not audited
+
+The following checks require a companion file and are skipped:
+
+- Semantic Alignment (spec vs companion)
+- Requirement Coverage (companion coverage of spec requirements)
+- Contradiction Detection (spec vs companion)
+- Unauthorized Additions (companion scope expansion)
+- Compression Fidelity (loss/gain/bloat)
+- Change Drift Risk (cross-file divergence)
+
+### Fix mode in spec-only
+
+`--fix` modifies the companion file to align it with the spec. In spec-only
+mode there is no companion, so there is nothing for `--fix` to act on. Fixing
+the spec itself is an authorial act requiring domain judgment and is never
+done by the auditor.
+
+If `--fix` is passed in spec-only mode: ignore the flag, report that fix mode
+is unavailable in this mode, and run a read-only audit. Any spec defects
+surface as findings for the caller to act on.
+
+### Output in spec-only mode
+
+Use the standard output structure. Set Coverage Summary to:
+"N/A — spec-only mode, no companion present."
+
+---
+
 ## Definitions
 
 - **Spec file**: the normative markdown document describing rules, requirements, expectations, structure, or behavior for a system or artifact.
@@ -82,6 +134,9 @@ The auditor must treat the spec as normative unless this file explicitly declare
 - **Unauthorized addition**: content in the companion that has no basis in the spec and that the spec does not permit via extension. A defect.
 - **Valid extension**: an addition in the companion that fits within an extension point explicitly permitted by the spec.
 - **Derived but unstated**: an addition in the companion that is a reasonable inference from the spec but is not explicitly stated. Must be flagged.
+- **Meaningful** (as in "meaningful conflict" or "meaningful requirement"): any requirement, prohibition, or constraint that affects observable behavior or that an implementor or auditor would need to act on; excludes phrasing variation with identical effect.
+- **Material** (as in "materially incomplete"): a gap or weakness significant enough that a reader cannot reliably interpret or act on the document; excludes minor wording issues or incomplete examples that do not affect the normative content.
+- **Sufficient** (as in "sufficient information to audit"): enough normative content exists to evaluate the companion against the spec without guessing at intent; the auditor can formulate a testable criterion for each checked dimension.
 
 ---
 
@@ -124,7 +179,8 @@ The auditor must never silently reconcile conflicts. All meaningful conflicts mu
 The auditor expects:
 
 - one target path: either the spec file or the companion file being audited
-- optional explicit spec path override when the target path points to a companion file
+- optional explicit spec path override when the target path points to a companion file (`--spec <spec-path>`)
+- required report output path supplied by the host (`--report-path <path>`); executor writes the hash-record verdict there; skip write if absent or empty (no-cache path)
 - optional audit context, including an explicit request for spec-only mode when the caller wants to audit a spec in isolation
 - optional repository or project conventions
 - optional severity thresholds
@@ -172,7 +228,7 @@ This skill must be invoked via a dispatch agent with zero inherited context. Inl
 
 The auditor supports two audit kind values, selectable via `--kind meta|domain` or auto-detected:
 
-**Meta mode** (`--kind meta`): Applies full pair-audit with all 13 checks unchanged. Use when pairing a companion against a meta-spec (e.g., `spec-writing/spec.md`). This is the mode produced by the 13-check pair-audit procedure as defined in §Required Audit Dimensions.
+**Meta mode** (`--kind meta`): Applies full pair-audit with all 13 steps unchanged — 2 extraction steps plus 11 audit dimensions (see §Required Audit Dimensions and §Behavior). Use when pairing a companion against a meta-spec (e.g., `spec-writing/spec.md`).
 
 **Domain mode** (`--kind domain`): Applies pair-audit with § Unauthorized Additions modified. Use when auditing a domain spec against a domain authority, or when no authority is declared. Domain-specific requirements in the companion must not be flagged as unauthorized simply because they do not appear in a meta-spec.
 
@@ -680,9 +736,15 @@ or prefix. No output may follow it.
 6. The auditor must not treat examples as authoritative unless explicitly marked normative.
 7. The auditor must not assume a companion paraphrase is acceptable merely because it sounds similar.
 8. The auditor must not downgrade a finding's severity merely because the likely intent seems obvious.
-9. The auditor must not apply `--fix` in spec-only mode.
+9. The auditor must not apply `--fix` in spec-only mode; if `--fix` is passed in spec-only mode, ignore the flag, report that fix mode is unavailable, and continue with a read-only audit.
 10. The auditor must not invent product requirements or resolve domain disputes without textual basis.
 11. One spec or spec/target pair per invocation. Multi-subject audits must be chained as separate runs.
+
+## Banned Terminology
+
+The auditor must not use the term **"non-goals"** in any finding text, recommendation, or output. The term is ambiguous and confusing. Use **"Out of Scope"** instead.
+
+When auditing target or companion content, the auditor must flag any occurrence of "non-goals" as a Medium-severity Terminology finding (Audit step 9) and recommend renaming the section, heading, or term to "Out of Scope".
 
 ---
 
@@ -697,9 +759,9 @@ or prefix. No output may follow it.
 4. **[Executor]** Evaluate all applicable audit dimensions in sequence.
 5. **[Executor]** Assign severity and evidence to each finding.
 6. **[Executor]** Apply pass/fail gate rules.
-6a. **[Executor]** Write hash-record to the path from `--report-path` before emitting any output. Skip if `--report-path` is absent or empty. See §Hash-Record Cache / Record Write.
-7. **[Executor]** Emit output in required section order.
-8. **[Executor]** Emit return token as the final stdout line. See §Hash-Record Cache / Return Token.
+7. **[Executor]** MUST write hash-record to the path from `--report-path` before emitting any output. Skip if `--report-path` is absent or empty. See §Hash-Record Cache / Record Write.
+8. **[Executor]** Emit output in required section order.
+9. **[Executor]** Emit return token as the final stdout line. See §Hash-Record Cache / Return Token.
 
 ### Pass/Fail gate
 
@@ -711,12 +773,16 @@ or prefix. No output may follow it.
 
 ### Fix mode behavior
 
+This is the normative home for fix-mode mechanics. §Optional Modes / §Repair Mode references this section.
+
 When `--fix` is active:
 
-1. Run full audit first.
-2. Apply fixes to the target file only; spec is immutable.
-3. Re-audit after each pass. Stop at 3 passes or earlier alignment.
-4. When the spec lacks sufficient detail to guide a fix, report as a spec critique rather than guessing.
+1. Run full audit first (read-only pass).
+2. The target file must be tracked in git with a clean working tree; untracked/modified/conflicted → STOP: report "target must be git-tracked and clean".
+3. Apply fixes to the target file only; spec is immutable. If the audit surfaces a defect in the spec itself, report it as a finding — do not repair the spec.
+4. Apply in severity order: Critical → High → Medium → Low; within severity: semantic → terminology → structural → stylistic.
+5. Re-audit after each fix pass. Stop at 3 passes or earlier alignment.
+6. When the spec lacks sufficient detail to guide a fix, report as a spec critique ("section X too vague", "no rationale for rule Y") rather than guessing.
 
 ---
 
@@ -846,80 +912,11 @@ Fail the audit for any High or above finding.
 
 ### Repair Mode
 
-After the audit, propose exact revisions.
+After the audit, propose and apply exact revisions to the target file.
 
-Repair mechanics:
-
-1. The target file must be tracked in git with a clean working tree (safety net: `git restore`).
-2. Fix findings in severity order: Critical → High → Medium → Low.
-3. When the spec lacks sufficient detail to guide a fix, report it as a spec
-   critique ("section X too vague", "no rationale for rule Y") rather than guessing.
-4. Re-audit after fixes. Maximum 3 passes. Stop early if aligned.
-5. Report: findings, fixes applied, remaining issues, spec critiques.
-
-The auditor never modifies the spec. Spec shortfalls are reported, not fixed.
+Full repair mechanics are defined in §Behavior / Fix mode behavior. The auditor never modifies the spec; spec shortfalls are reported as findings for the caller to act on.
 
 If no mode is specified, use the default balanced mode.
-
----
-
-## Spec-Only Mode
-
-When the target is a `spec.md` file and the caller explicitly requests
-spec-only mode, or when no companion is present (see §Companion Auto-Detect),
-the auditor operates in spec-only mode.
-
-### What is audited
-
-In spec-only mode the auditor evaluates the spec file against its own quality
-criteria:
-
-- **Completeness** — are all required sections present; are terms defined; are
-  procedures complete?
-- **Enforceability** — are requirements testable; is language precise; are
-  vague/aspirational statements flagged?
-- **Structural Integrity** — logical ordering; stable headings; no hidden
-  requirements in examples; normative language consistent.
-- **Economy** — duplicated rules, unnecessary scaffolding, or prose that can be
-  removed without changing the spec's effect.
-- **Terminology** — defined terms used consistently; undefined critical terms
-  flagged; synonym drift flagged.
-- **Internal Consistency** — no contradictions within the spec itself.
-
-### What is not audited
-
-The following checks require a companion file and are skipped:
-
-- Semantic Alignment (spec vs companion)
-- Requirement Coverage (companion coverage of spec requirements)
-- Contradiction Detection (spec vs companion)
-- Unauthorized Additions (companion scope expansion)
-- Compression Fidelity (loss/gain/bloat)
-- Change Drift Risk (cross-file divergence)
-
-### Fix mode in spec-only
-
-`--fix` modifies the companion file to align it with the spec. In spec-only
-mode there is no companion, so there is nothing for `--fix` to act on. Fixing
-the spec itself is an authorial act requiring domain judgment and is never
-done by the auditor.
-
-If `--fix` is passed in spec-only mode: ignore the flag, report that fix mode
-is unavailable in this mode, and run a read-only audit. Any spec defects
-surface as findings for the caller to act on.
-
-### Output in spec-only mode
-
-Use the standard output structure. Set Coverage Summary to:
-"N/A — spec-only mode, no companion present."
-
----
-
-## Footguns
-
-**F1: Spec file contains YAML frontmatter** — specs are governance documents for humans and auditors, not runtime artifacts. Frontmatter (`name:`, `description:`, `type:`) belongs only in `SKILL.md`, agent files, and tool scripts. A spec with frontmatter signals confused authoring intent.
-Why: tooling may classify the file as a runtime artifact; the frontmatter carries no meaning at audit time and creates noise.
-Mitigation: strip frontmatter from `spec.md` files at authoring time. Flag any `---` YAML block at the top of a spec file as a Structural Integrity finding.
 
 ---
 
@@ -932,20 +929,6 @@ The auditor is not responsible for:
 - judging implementation quality outside the documents
 - resolving domain disputes without textual basis
 - approving vague specs on goodwill
-
----
-
-## Minimal Output Template
-
-The auditor should be able to emit results in this shape:
-
-- Audit Result
-- Executive Summary
-- Findings
-- Coverage Summary
-- Drift and Risk Notes
-- Repair Priorities
-- Return Token
 
 ---
 
