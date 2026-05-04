@@ -253,6 +253,37 @@ current independently]." A manifest rekey ALWAYS cascades into
 its member files; you cannot rekey a manifest without first
 ensuring its members are current.
 
+### Procedure (folder/manifest mode, operator-defined 2026-05-04)
+
+Five steps, executed in order:
+
+1. **Detect changes via `git status`.** Determine which files in
+   the folder scope (and their referencing manifests) have
+   changed. Build the rekey set: every changed file + every
+   manifest that references a changed file.
+
+2. **Stage the rekey set.** `git add <files>` to capture current
+   content. Prevents loss of changes during the move.
+
+3. **Apply rekey moves.** For each item in the rekey set:
+   - Compute new key (single-file: blob hash; manifest: combined
+     hash).
+   - If new key == old key: CURRENT, no-op.
+   - Else: `git mv <old> <new>` (this stages the rename
+     automatically).
+   - For manifests: also rewrite internal references then `git
+     add` the rewritten manifest.
+
+4. **Diff verification.** Final pass: `git diff --cached <files>`
+   confirms changes look right (renames + reference updates only,
+   no content corruption). If anything looks off, surface as
+   error before committing.
+
+5. **Hand off staged set.** All rekey activity is now staged.
+   The caller (or operator) commits when ready. `git mv` is itself
+   a staged operation, so step 5 is just "tell the caller it's
+   ready."
+
 ### Pre-move git-state smoke check
 
 Before each `git mv`, classify the file's git state:
