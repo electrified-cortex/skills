@@ -5,11 +5,11 @@ description: Audit a tool script for companion spec, conventions, and error hand
 
 ## Input
 
-`<tool_path>` — absolute path to ANY member of the **tool trio**: `<stem>.sh`, `<stem>.ps1`, or `<stem>.spec.md`. Audit covers the trio together: ALL three MUST exist; any missing member causes audit FAIL on Check 1.
+`<tool_path>` — absolute path to ANY member of the **tool trio**: `<stem>.sh`, `<stem>.ps1`, or `<stem>.spec.md`. The audit covers the trio together: ALL three (`<stem>.sh`, `<stem>.ps1`, `<stem>.spec.md`) MUST exist; any missing member causes audit FAIL on Check 1.
 
-## Inline result check
+## Inline result check (pre-inspect)
 
-Run `result` tool (this folder), per runtime. DON'T READ the trio source at any point — before, during, or after invocation. Run it, branch on stdout, move on.
+Run the `result` tool (in this folder), whichever your runtime has. DON'T READ the trio source at any point — before, during, or after invocation. Run it, branch on stdout, move on.
 
 - Bash: `bash result.sh <tool_path>`
 - PS7: `pwsh result.ps1 <tool_path>`
@@ -35,7 +35,7 @@ If returns `ERROR: <reason>` -> stop, surface reason.
 ## Inline result check (post-execute)
 
 You (the host) run `result` again directly — do NOT dispatch it.
-Same invocation as first Inline result check.
+Same invocation as the first Inline result check (pre-inspect).
 Branch on stdout (last line):
 
 - `PASS: <report_path>` -> done.
