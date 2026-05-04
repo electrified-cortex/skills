@@ -31,28 +31,35 @@ The tool hashes ONLY the semantic content files of the skill bundle. Whitelist (
    - `MISS: <abs-path>` -> emit `MISS: <abs-path>`, exit 0.
    - `ERROR: <reason>` -> emit `ERROR: <reason>`, exit 1.
    - `HIT: <abs-path>` -> read the frontmatter `result:` field of `<abs-path>`:
+     - `clean` -> emit `CLEAN: <abs-path>`, exit 0.
      - `pass` -> emit `PASS: <abs-path>`, exit 0.
-     - `findings` -> emit `NEEDS_REVISION: <abs-path>`, exit 0.
-     - `error` -> emit `FAIL: <abs-path>`, exit 0.
+     - `findings` -> read the body `**Verdict:**` line to determine specific verdict:
+       - body contains `FAIL` -> emit `FAIL: <abs-path>`, exit 0.
+       - otherwise -> emit `NEEDS_REVISION: <abs-path>`, exit 0.
+     - `error` -> emit `ERROR: <abs-path>`, exit 0.
      - any other value -> emit `ERROR: malformed cache record at <abs-path>`, exit 1.
 
 ## Output
 
 One line, no trailing whitespace, LF terminator. Forward-slash paths.
+See Procedure step 4 for branch logic. This table is authoritative; Procedure step 4 is the implementation.
 
 | Condition | Output | Exit |
-| ------------------ | ------------------------------- | ---- |
+| ------------------------------------------------------ | ------------------------------- | ---- |
+| HIT, `result: clean` | `CLEAN: <abs-path>` | 0 |
 | HIT, `result: pass` | `PASS: <abs-path>` | 0 |
-| HIT, `result: findings` | `NEEDS_REVISION: <abs-path>` | 0 |
-| HIT, `result: error` | `FAIL: <abs-path>` | 0 |
+| HIT, `result: findings`, body verdict = NEEDS_REVISION | `NEEDS_REVISION: <abs-path>` | 0 |
+| HIT, `result: findings`, body verdict = FAIL | `FAIL: <abs-path>` | 0 |
+| HIT, `result: error` | `ERROR: <abs-path>` | 0 |
 | MISS | `MISS: <abs-path>` | 0 |
 | Argument or runtime error | `ERROR: <reason>` | 1 |
 
 The host:
 
+- `CLEAN: <path>` -> done; audit clean — no findings.
 - `PASS: <path>` -> done; cached audit said pass.
 - `NEEDS_REVISION: <path>` -> done with findings; caller may dispatch a fix pass.
-- `FAIL: <path>` -> done with audit error verdict; caller surfaces.
+- `FAIL: <path>` -> done with fail verdict; caller surfaces.
 - `MISS: <path>` -> dispatch the skill-auditing executor with `--report-path <path>`.
 - `ERROR: <reason>` -> stop, surface reason.
 
