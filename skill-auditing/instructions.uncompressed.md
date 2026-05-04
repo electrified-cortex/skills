@@ -17,7 +17,7 @@
 4. **Run Step 1 → Step 2 → Step 3.** Collect ALL findings before assigning a verdict. Do not stop on the first finding.
 5. **Assign verdict** per Verdict Rules.
 6. **Scrub absolute paths from the entire report** — frontmatter `file_paths`, Notes columns, Findings, ALL prose. Forbidden tokens: any Windows drive-letter path (`<letter>:[/\\]`), any POSIX root-anchored path (`/Users/`, `/home/`, `/d/`, `/c/`, `/mnt/`, `/tmp/`, `/var/`). When citing evidence containing such a path, describe abstractly ("hardcoded drive-letter path on line N") rather than quoting the literal path. Use repo-relative paths for any path in Findings.
-7. **Write report** at `<report_path>` (overwrite if present). Use Bash tool to create the directory first: `mkdir -p $(dirname <report_path>)`. Then use Write tool to write the report. Write report frontmatter per the `hash-record` skill contract (operation_kind: `skill-auditing/v2`, result: `clean | pass | findings | error`). Result mapping: CLEAN → `clean`; PASS → `pass`; NEEDS_REVISION → `findings`; FAIL → `findings`; error → `error`.
+7. **Write report** at `<report_path>` (overwrite if present). Use Bash tool to create the directory first: `mkdir -p $(dirname <report_path>)`. Then use Write tool to write the report. Write report frontmatter per the `hash-record` skill contract (operation_kind: `skill-auditing/v2`, result: `clean | pass | findings | fail`). Result mapping: CLEAN → `clean`; PASS → `pass`; NEEDS_REVISION → `findings`; FAIL → `fail`. Errors are never persisted — runtime/argument failures emit `ERROR: <reason>` and exit 1 (no path).
 
    **"Repo-relative":** resolve via `git -C <dir-containing-target-files> rev-parse --show-toplevel` and strip that prefix. The same repo root governs the cache directory layout (`<repo-root>/.hash-record/...`).
 
@@ -353,7 +353,7 @@ file_paths:
   ...
 operation_kind: skill-auditing/v2
 model: haiku-class  # or sonnet-class or opus-class — NEVER a literal model id
-result: clean | pass | findings | error
+result: clean | pass | findings | fail
 ---
 ```
 

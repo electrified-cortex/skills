@@ -6,7 +6,7 @@
 #   CLEAN: <abs-path>           (HIT, result: clean)        (exit 0)
 #   PASS: <abs-path>            (HIT, result: pass)         (exit 0)
 #   NEEDS_REVISION: <abs-path>  (HIT, result: findings)     (exit 0)
-#   FAIL: <abs-path>            (HIT, result: error)        (exit 0)
+#   FAIL: <abs-path>            (HIT, result: fail)         (exit 0)
 #   MISS: <abs-path>            (no cache; this is the report path) (exit 0)
 #   ERROR: <reason>             (argument or runtime error) (exit 1)
 
@@ -36,7 +36,7 @@ Output (stdout, one line):
   CLEAN: <abs-path>           Cached report says result: clean.
   PASS: <abs-path>            Cached report says result: pass.
   NEEDS_REVISION: <abs-path>  Cached report says result: findings.
-  FAIL: <abs-path>            Cached report says result: error.
+  FAIL: <abs-path>            Cached report says result: fail.
   MISS: <abs-path>            No cache entry; executor MUST write here.
   ERROR: <reason>             Argument, runtime, or malformed-record error.
 
@@ -145,7 +145,7 @@ if ($manifest_out -like 'HIT: *') {
             [Console]::Out.Write("NEEDS_REVISION: $report_path`n")
             exit 0
         }
-        'error' {
+        'fail' {
             [Console]::Out.Write("FAIL: $report_path`n")
             exit 0
         }

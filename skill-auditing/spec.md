@@ -180,7 +180,7 @@ Wrong:  Verdict: PASS. Wrote record to: PATH: <abs-prefix>/...
 
 The caller parses only the last line of stdout; mixed narrative breaks the parse contract.
 
-On completion, the auditor assigns one of four verdicts (CLEAN, PASS, NEEDS_REVISION, FAIL, or error) and writes the full structured report to `.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v2/report.md`. The record frontmatter uses a `file_paths` list (repo-relative paths for every file in the manifest, sorted lexically), `operation_kind: skill-auditing/v2`, `model` set to the executing agent's model class, and `result` mapped as: CLEAN → `clean`; PASS → `pass`; NEEDS_REVISION / FAIL → `findings`; error → `error`. The record body opens with `# Result`, states the verdict, and lists findings. The auditor emits the appropriate verdict token from R10 (`CLEAN`, `PASS`, `NEEDS_REVISION`, or `FAIL` with the abs-path to the record; `ERROR: <reason>` on failure) as the final line of stdout and exits.
+On completion, the auditor assigns one of four verdicts (CLEAN, PASS, NEEDS_REVISION, or FAIL) and writes the full structured report to `.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v2/report.md`. The record frontmatter uses a `file_paths` list (repo-relative paths for every file in the manifest, sorted lexically), `operation_kind: skill-auditing/v2`, `model` set to the executing agent's model class, and `result` mapped as: CLEAN → `clean`; PASS → `pass`; NEEDS_REVISION → `findings`; FAIL → `fail`. Errors are never persisted as records; runtime/argument failures of the tool emit `ERROR: <reason>` and exit 1. The record body opens with `# Result`, states the verdict, and lists findings. The auditor emits the appropriate verdict token from R10 (`CLEAN`, `PASS`, `NEEDS_REVISION`, or `FAIL` with the abs-path to the record) as the final line of stdout and exits. `ERROR: <reason>` is reserved for runtime/argument failures of the tool itself; errors are NEVER persisted as records — they are transient runtime conditions reported to the caller.
 
 ## Defaults and Assumptions
 
@@ -494,7 +494,7 @@ file_paths:
   - skill-auditing/uncompressed.md
 operation_kind: skill-auditing/v2
 model: <executing-model-class>
-result: clean | pass | findings | error
+result: clean | pass | findings | fail
 ---
 ```
 

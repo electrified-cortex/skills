@@ -36,7 +36,7 @@ The tool hashes ONLY the semantic content files of the skill bundle. Whitelist (
      - `findings` -> read the body `**Verdict:**` line to determine specific verdict:
        - body contains `FAIL` -> emit `FAIL: <abs-path>`, exit 0.
        - otherwise -> emit `NEEDS_REVISION: <abs-path>`, exit 0.
-     - `error` -> emit `ERROR: <abs-path>`, exit 0.
+     - `fail` -> emit `FAIL: <abs-path>`, exit 0.
      - any other value -> emit `ERROR: malformed cache record at <abs-path>`, exit 1.
 
 ## Output
@@ -50,7 +50,7 @@ See Procedure step 4 for branch logic. This table is authoritative; Procedure st
 | HIT, `result: pass` | `PASS: <abs-path>` | 0 |
 | HIT, `result: findings`, body verdict = NEEDS_REVISION | `NEEDS_REVISION: <abs-path>` | 0 |
 | HIT, `result: findings`, body verdict = FAIL | `FAIL: <abs-path>` | 0 |
-| HIT, `result: error` | `ERROR: <abs-path>` | 0 |
+| HIT, `result: fail` | `FAIL: <abs-path>` | 0 |
 | MISS | `MISS: <abs-path>` | 0 |
 | Argument or runtime error | `ERROR: <reason>` | 1 |
 
