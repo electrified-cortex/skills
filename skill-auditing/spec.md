@@ -89,7 +89,7 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
   does not affect verdict severity.
 - **MISS**: return token emitted when no cache record exists for the manifest hash; the full audit must run.
 - **HIT**: return token emitted when a cache record is found; verdict not re-computed.
-- **skipped**: result value emitted when the record is a cache hit; the audit was not re-run.
+- **skipped**: result-frontmatter status flag indicating a cache-hit record — the audit was not re-run. The record body's `**Verdict:**` line carries the canonical verdict; the result tool reads that line and re-emits the corresponding verdict token (`CLEAN`, `PASS`, `NEEDS_REVISION`, or `FAIL`).
 
 ## Requirements
 
@@ -148,7 +148,7 @@ Fix iteration is caller-driven; the executor is single-pass read-only. Callers d
 
 The audit executes as a single sweep in three ordered steps. All findings are collected before a verdict is assigned — the sweep does not stop on the first finding.
 
-On entry, the auditor computes a manifest hash from the semantic-content whitelist in `skill_dir` (top-level only, in this exact order: `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` — files that exist are included; missing files are skipped; order is part of the hash key) using the hash-record manifest procedure, and checks the cache at `.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v2/report.md`. On a cache hit, the auditor outputs the cached path and stops. On a miss, the auditor proceeds with the full audit.
+On entry, the host (via `result.sh` / `result.ps1`) computes a manifest hash from the semantic-content whitelist in `skill_dir` (top-level only, in this exact order: `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` — files that exist are included; missing files are skipped; order is part of the hash key) using the hash-record manifest procedure, and checks the cache at `.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v2/report.md`. On a cache hit, the host re-emits the cached verdict token and stops — the executor is not dispatched. On a miss, the host dispatches the executor with `--report-path <abs-path>` and the executor runs the full audit.
 
 The auditor reads `SKILL.md`, determines skill type (inline or dispatch) by file-system evidence, collects all non-tool files referenced from `SKILL.md` within `skill_dir`, and proceeds through the three steps:
 
@@ -246,6 +246,22 @@ Quick structural verification of the SKILL.md.
    `result.sh`, `result.ps1`, `verify.sh`, `verify.ps1`, or any other
    path literal). Each referenced file MUST exist on disk. Missing file
    → HIGH.
+
+### Per-file Basic Checks
+
+Run against all `.md` and `*.spec.md` files in `skill_dir` (recursively; skip dot-prefixed directories and `optimize-log.md`). Tool files (`.sh`, `.ps1`) are out of scope. Findings accumulate into a separate Per-file section of the report; they do NOT block Steps 1–3.
+
+**`.md` files:**
+
+- **Not empty** — file must contain non-whitespace content. Empty → HIGH.
+- **Frontmatter where required** — `SKILL.md` and `agent.md` MUST have YAML frontmatter (`---` block at line 1). Missing → HIGH.
+- **No absolute-path leaks** — body must not contain Windows-style (`<letter>:\` or `<letter>:/`) or Unix root-anchored paths (`/Users/`, `/home/`, `/d/`). Any found → HIGH.
+
+**`*.spec.md` files (name ends in `.spec.md`):**
+
+- **Purpose section present** — must contain `## Purpose` or `# Purpose`. Missing → HIGH.
+- **Parameters section present** — must contain `## Parameters` or `# Parameters`. Missing → HIGH.
+- **Output section present** — must contain `## Output` or `# Output`. Missing → HIGH.
 
 ### Step 2 — Parity Check
 
@@ -438,6 +454,12 @@ under a "Dispatch Skill Checks" group and contribute to the verdict per the norm
 severity mapping (HIGH → NEEDS_REVISION or FAIL depending on count; LOW →
 NEEDS_REVISION).
 
+## Banned Terminology
+
+The executor MUST NOT use the term **"non-goals"** in any finding text, recommendation, or output. The term is ambiguous. Use **"Out of Scope"** instead.
+
+When auditing skill content, the executor MUST flag any occurrence of "non-goals" in `SKILL.md`, `uncompressed.md`, `instructions*.md`, or `spec.md` as a HIGH terminology finding under Step 1 (Compiled Artifacts) or Step 3 (Spec Alignment) as appropriate, and recommend renaming the section or term to "Out of Scope".
+
 ## Verdict Rules
 
 - **CLEAN**: All steps pass with zero findings (no HIGH, no LOW, no informational). Audit produced nothing to report.
@@ -509,6 +531,7 @@ CLEAN | PASS | NEEDS_REVISION | FAIL
 
 **Verdict:** CLEAN | PASS | NEEDS_REVISION | FAIL
 **Type:** inline | dispatch
+**Path:** <repo-relative path>
 
 ### Step 1 — Compiled Artifacts
 
@@ -523,6 +546,8 @@ CLEAN | PASS | NEEDS_REVISION | FAIL
 | Name matches folder (A-FM-1) | PASS/FAIL | |
 | H1 per artifact (A-FM-3) | PASS/FAIL | |
 | No duplication | PASS/FAIL | |
+| Orphan files (A-FS-1) | PASS/FAIL | |
+| Missing referenced files (A-FS-2) | PASS/FAIL | |
 
 ### Step 2 — Parity
 
@@ -540,11 +565,6 @@ CLEAN | PASS | NEEDS_REVISION | FAIL
 | Normative language | PASS/FAIL/SKIP | |
 | Internal consistency | PASS/FAIL/SKIP | |
 | Spec completeness | PASS/FAIL/SKIP | |
-
-### Spec Compliance
-
-| Check | Result | Notes |
-| --- | --- | --- |
 | Coverage | PASS/FAIL | |
 | No contradictions | PASS/FAIL | |
 | No unauthorized additions | PASS/FAIL | |
@@ -562,6 +582,7 @@ CLEAN | PASS | NEEDS_REVISION | FAIL
 | Iteration-safety placement (A-FM-8) | PASS/FAIL/N/A | |
 | Iteration-safety pointer form (A-FM-9a) | PASS/FAIL/N/A | |
 | No verbatim Rule A/B (A-FM-9b) | PASS/FAIL/N/A | |
+| Cross-reference anti-pattern (A-XR-1) | PASS/FAIL | |
 | Return shape declared (DS-1) | PASS/FAIL/N/A | |
 | Host card minimalism (DS-2) | PASS/FAIL/N/A | |
 | Description trigger phrases (DS-3) | PASS/FAIL/N/A | |
