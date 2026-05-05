@@ -4,11 +4,10 @@
 
 Define the invocation contract for spawning a zero-context sub-agent.
 
-This skill governs three artifacts:
+This skill governs two artifacts:
 
 - `spec.md` (this file): the normative specification. Audited but never loaded at runtime.
-- `uncompressed.md`: the human-readable source for the runtime card. Edited by `--fix` mode.
-- `SKILL.md`: the compiled runtime card (compressed from `uncompressed.md`). Loaded by every caller.
+- `SKILL.md`: the runtime card, edited directly. Loaded by every caller.
 
 ## Scope
 
@@ -42,6 +41,8 @@ This skill is a **runtime** skill, not an authoring skill. Cross-references are 
 
 **concrete-model**: the resolved model string passed to the dispatch primitive.
 
+**model**: An identifier or alias for the LLM backend. In Claude Code contexts, model aliases (`haiku`, `sonnet`, `opus`) map to concrete Claude API model strings. In VS Code/Copilot contexts, full model names are used (e.g., `Claude Haiku 4.5`). See R5 and R6 for platform-specific tier-to-model tables.
+
 **fast-cheap**: cost-optimized tier (Haiku-class).
 
 **standard**: capable default tier (Sonnet-class).
@@ -73,7 +74,7 @@ R2. The runtime card must define: `concrete-model` = `model-override` if set, el
 
 ### Process
 
-R3. The runtime card must include the process note: if `prompt` instructs the sub-agent to read a file, do not read that file inline — the sub-agent does.
+R3. The runtime card must include a process note in the Process section with content: "If `prompt` instructs the sub-agent to read a file, do not read that file inline — the sub-agent does." No specific formatting is required; the note may be inline text or a distinct callout.
 
 ### Runtime Sections
 
@@ -120,19 +121,19 @@ R10. Use role-agnostic language. Project-internal role names must not appear. Us
 
 C1. `SKILL.md` (compiled runtime) must not exceed approximately 3000 bytes. Skim-friendly under load is the priority.
 
-C2. `uncompressed.md` is the source the auditor edits in `--fix` mode. It must be a tight reference card, not exposition.
+C2. `SKILL.md` is edited directly. It must be a tight reference card, not exposition.
 
 C4. The runtime card must not enumerate the current Claude Code `subagent_type` list as if stable. Names appear as examples only and must signal evolution.
 
 C5. The runtime card must not embed project-internal procedural detail.
 
-C7. The runtime card must remain answerable end-to-end without reading any supplemental file.
+C7. The runtime card must remain answerable end-to-end for core dispatch invocation without reading any supplemental file. Extended reference content (CLI dispatch mode, hash-record integration, context inheritance gotchas) may reside in `supplemental.md`; the runtime card satisfies this constraint by including a "See also" pointer to `supplemental.md` for that content.
 
 ## Defaults and Assumptions
 
 D1. Default for "is this work worth dispatching at all" is **inline**. Dispatch is the exception.
 
-D2. Default model for a dispatch where the host has not specified one is the host's own model.
+D2. Design principle: default model for a dispatch where the host has not specified one is the host's own model. In practice, R1 defaults tier to `standard` (Sonnet-class) as a safe baseline. Callers seeking model-matching behavior should pass an explicit `model-override` parameter.
 
 D3. Default for foreground vs background when the host is in a long-poll loop or has any responsiveness obligation is **background**.
 
@@ -306,6 +307,6 @@ Cross-reference: `copilot-cli` skill for operation routing, flag assembly, and o
 | Defaults and Assumptions (D1–D3) | Normative spec | Yes |
 | Precedence Rules (P1–P3) | Normative spec | Yes |
 | Don'ts (DN1–DN12) | Normative spec | Yes |
-| Platform Gotchas (PG1–PG4) | Normative deviation | Yes |
-| CLI Dispatch Mode (CDR1–CDR17, CDRC1–CDRC3, CDRDN1–CDRDN5) | Normative spec | Yes |
-| CLI Dispatch Examples | Normative illustration | Yes |
+| Platform Gotchas (PG1–PG4) | Normative deviation | Core gotchas (PG1–PG3) required; PG4 supplemental-permitted |
+| CLI Dispatch Mode (CDR1–CDR17, CDRC1–CDRC3, CDRDN1–CDRDN5) | Deep reference | Supplemental-permitted |
+| CLI Dispatch Examples | Normative illustration | Supplemental-permitted |
