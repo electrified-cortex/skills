@@ -1,6 +1,6 @@
 ---
 name: copilot-cli-ask
-description: General query or advice operation via the standalone Copilot CLI binary. Returns Copilot's plain text answer.
+description: General query or advice operation via the standalone Copilot CLI binary. Returns Copilot's plain text answer. Triggers - ask copilot, copilot question, get advice from copilot, query copilot, copilot answer.
 ---
 
 ## Prerequisites

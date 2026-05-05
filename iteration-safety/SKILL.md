@@ -1,6 +1,6 @@
 ---
 name: iteration-safety
-description: Rules for iterating audit, compression, hygiene, or review passes. Reference this skill from callers; do not embed these rules elsewhere.
+description: Rules for iterating audit, compression, hygiene, or review passes. Reference this skill from callers; do not embed these rules elsewhere. Triggers - iteration rules, re-audit rules, when to re-run a pass, prevent redundant re-runs, pass iteration safety.
 ---
 
 ## Rules

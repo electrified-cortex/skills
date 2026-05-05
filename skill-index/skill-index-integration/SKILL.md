@@ -1,8 +1,6 @@
 ---
 name: skill-index-integration
-description: >-
-  Wire a skill-index cascade into an agent's context: place the index pointer,
-  write the discovery mandate, enforce demand loading, and verify keyword quality.
+description: Wire a skill-index cascade into an agent's context: place the index pointer, write the discovery mandate, enforce demand loading, and verify keyword quality. Triggers - integrate skill index, set up skill discovery, wire skill index, add index to agent, skill index setup.
 ---
 
 Wire the skill-index discovery system into an agent so it scans for relevant skills on every task and loads them on demand.

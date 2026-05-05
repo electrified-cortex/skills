@@ -1,6 +1,6 @@
 ---
 name: gh-cli
-description: GitHub CLI operations — routes to domain-specific sub-skills via dispatch.
+description: GitHub CLI operations — routes to domain-specific sub-skills via dispatch. Triggers - use GitHub CLI, gh command, github CLI task, github operations, gh CLI.
 ---
 
 Routes GitHub CLI tasks to correct domain sub-skill. Doesn't run `gh` commands itself.

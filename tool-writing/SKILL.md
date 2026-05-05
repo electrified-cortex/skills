@@ -1,8 +1,6 @@
 ---
 name: tool-writing
-description: >-
-  Write tool scripts with companion specs. Bash is the default; PowerShell is a legitimate
-  alternative. Spec first, build, audit, repeat until PASS.
+description: Write tool scripts with companion specs. Bash is the default; PowerShell is a legitimate alternative. Spec first, build, audit, repeat until PASS. Triggers - write a tool, create tool script, new bash script, build a tool, write shell script, tool spec.
 ---
 
 ## Language Tiers

@@ -1,6 +1,6 @@
 ---
 name: spec-writing
-description: Write precise, testable, auditable specification documents with explicit scope, stable terminology, and enforceable requirements.
+description: Write precise, testable, auditable specification documents with explicit scope, stable terminology, and enforceable requirements. Triggers - write a spec, create specification, draft spec document, new spec file, spec document.
 ---
 
 Write specs: clear, complete, enforceable, internally consistent, externally auditable.

@@ -1,6 +1,6 @@
 ---
 name: gh-cli-pr-review
-description: Approve, request changes on, dismiss pull request review via GitHub CLI.
+description: Approve, request changes on, dismiss pull request review via GitHub CLI. Triggers - approve PR, request changes, dismiss review, pr approval, review pull request.
 ---
 
 PR review + dismiss via `gh pr review`.
