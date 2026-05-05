@@ -1,6 +1,6 @@
 ---
 name: hash-record-rekey
-description: Re-key a stale hash-record entry after a file's content changes. Finds the old record under any blob hash, moves it to the new hash path via git mv. Triggers — rekey hash-record, move stale hash record, update hash record after lint, refresh hash-record key, phase 4A rekey, hash-record-rekey.
+description: Re-key a stale hash-record entry after a file's content changes. Finds the old record under any blob hash, moves it to the new hash path via git mv. Triggers - rekey hash-record, move stale hash record, update hash record after lint, refresh hash-record key, hash-record entry changed.
 ---
 
 Invoke directly via Bash or PowerShell — no agent dispatch.

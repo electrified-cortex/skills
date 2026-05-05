@@ -1,6 +1,6 @@
 ---
 name: gh-cli-pr
-description: Entry point for pull request management via the GitHub CLI. Handles common PR inspection and routes write operations to sub-skills.
+description: Entry point for pull request management via the GitHub CLI. Handles common PR inspection and routes write operations to sub-skills. Triggers - manage pull request, PR status, view PR, list PRs, pull request operations, check PR.
 ---
 
 When to Use:

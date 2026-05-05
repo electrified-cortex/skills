@@ -1,6 +1,6 @@
 ---
 name: code-review-setup
-description: Preflight readiness check — verify the host environment can run code-review. Inline. Returns structured ready / not-ready report with remediation.
+description: Preflight readiness check — verify the host environment can run code-review. Inline. Returns structured ready / not-ready report with remediation. Triggers - check code review setup, verify code review environment, code review prerequisites, preflight check, setup readiness check.
 ---
 
 Inline sub-skill of `code-review`. Run once per environment before first code-review claim. Read-only, idempotent, fast (<5s).

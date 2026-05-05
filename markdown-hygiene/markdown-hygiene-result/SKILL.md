@@ -1,6 +1,6 @@
 ---
 name: markdown-hygiene-result
-description: Check cache state of a markdown-hygiene sub-document. Returns path and cache status for report, lint, or analysis.
+description: Check cache state of a markdown-hygiene sub-document. Returns path and cache status for report, lint, or analysis. Triggers - check hygiene cache, hygiene result cache, get cached report, markdown hygiene hit or miss.
 ---
 
 Run `result.sh` / `result.ps1` from `markdown-hygiene-result/`, whichever your runtime has. DON'T READ the script source.

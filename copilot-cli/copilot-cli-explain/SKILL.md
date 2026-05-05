@@ -1,6 +1,6 @@
 ---
 name: copilot-cli-explain
-description: Explain operation via the standalone Copilot CLI binary. Returns an explanatory markdown description of a code region or file.
+description: Explain operation via the standalone Copilot CLI binary. Returns an explanatory markdown description of a code region or file. Triggers - explain this code, copilot explain, what does this do, explain this file, describe this function.
 ---
 
 ## Prerequisites

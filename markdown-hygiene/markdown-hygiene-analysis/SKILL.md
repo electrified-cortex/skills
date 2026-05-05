@@ -1,6 +1,6 @@
 ---
 name: markdown-hygiene-analysis
-description: Semantic advisory scan of a .md file against SA001-SA038 rules. Triggers — analysis phase, SA rules, semantic advisory, style advisories.
+description: Semantic advisory scan of a .md file against SA001-SA038 rules. Triggers - semantic advisory, style advisories, markdown analysis, style rule scan, advisory analysis.
 ---
 
 ## Input
