@@ -1,31 +1,59 @@
-# copilot-cli-explain — Uncompressed
+# copilot-cli-explain — Expanded Reference
 
-This file preserves the full design rationale for the explain sub-skill before compression to SKILL.md.
+Full operational reference for the explain sub-skill. Compressed form: `SKILL.md`.
 
-## Why this sub-skill exists
+## Prerequisites
 
-The `copilot-cli` router needs a dedicated handler for code explanation requests that return prose, not structured findings. A separate sub-skill keeps the surface area narrow and ensures the prompt framing is always explanation-oriented.
+```bash
+copilot --version   # must resolve; fail-fast if not
+```
 
-## Inline-only content rationale
+If this fails: return `Status: UNAVAILABLE`; surface stderr; stop. Do NOT attempt installation.
 
-Copilot CLI does not accept a file path argument for content input. The only input surface is the prompt string passed via `-p`. Callers must serialize their code content into a string before invocation. This is consistent with the `copilot-cli-review` sub-skill (R6 in that spec). Accepting file paths in the prompt template would be misleading: the model reads the path string as text, not as a file reference.
+## Invocation
 
-## UNAVAILABLE vs ERROR distinction
+```bash
+copilot -p "<prompt>" -s --allow-all-tools
+```
 
-`UNAVAILABLE` means the skill could not even attempt the explanation because `copilot` is not installed. `ERROR` means the binary was found but the invocation failed. Callers may handle these differently.
+MAY add `--model <model>` only when the caller explicitly supplied a model name. Omit otherwise; do not pin a model inside the skill.
 
-## Working-directory constraint
+Constrain working directory to the repo containing the target file — never `/`, `~`, or a directory containing secrets.
 
-Setting the working directory to the repo containing the target file gives `--allow-all-tools` access to the relevant codebase context. This is intentional: Copilot may read surrounding files to produce a more accurate explanation. The constraint prevents exposure of unrelated directories.
+## Prompt Construction
 
-## One code region per invocation
+Frame the prompt to request an explanation:
 
-Explaining multiple unrelated code regions in a single invocation produces an interleaved response that is harder to attribute. The skill is one-in / one-out: one region, one structured explanation.
+```text
+Explain the following code. Describe what it does, why it works that way, and any
+non-obvious behavior. Be concise.
 
-## --model flag and R3
+<inline code content>
+```
 
-The `--model` flag is optional and only passed when the caller explicitly supplies a model name. The skill does not pin a default model; this keeps the skill aligned with Copilot's own default behavior and prevents the skill from breaking silently when model availability changes.
+Replace `<inline code content>` with the caller-supplied content serialized to a string. Copilot CLI has no file-input flag; all content must be embedded inline.
 
-## Threat Model — --allow-all-tools
+## Output Shape
 
-`--allow-all-tools` permits the Copilot CLI to read within the working directory. For explain operations, setting the working directory to the repo containing the target file is intentional — it gives Copilot access to surrounding context for a more accurate explanation. The constraint prevents exposure of unrelated directories. This rationale is documented here in uncompressed rationale, not in the runtime card.
+```text
+Status: OK | ERROR | UNAVAILABLE
+Explanation: <Copilot's markdown explanation>
+```
+
+| Status | Condition |
+| --- | --- |
+| `OK` | Copilot returned a response |
+| `ERROR` | Binary returned non-zero exit code |
+| `UNAVAILABLE` | `copilot --version` failed before invocation |
+
+## Error Handling
+
+- `copilot --version` fails → return `Status: UNAVAILABLE`; surface stderr; stop.
+- Model unavailable → surface "model not available" and stop.
+- Copilot exits non-zero → surface the stderr output as the error and stop.
+
+## Rules
+
+- Return the explanation verbatim in the `Explanation` field — do not summarize or reinterpret.
+- One code region per invocation.
+- Constrain the working directory to the repo containing the target file.

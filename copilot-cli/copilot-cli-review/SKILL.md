@@ -3,8 +3,6 @@ name: copilot-cli-review
 description: Code review operation via the standalone Copilot CLI binary. Runs adversarial review of a change set and returns structured findings.
 ---
 
-Runs `copilot` to perform a code review and returns structured findings. Dispatched by the `copilot-cli` router.
-
 ## Prerequisites
 
 ```bash
@@ -26,10 +24,6 @@ MAY add `--output-format=json` when structured machine-readable output is needed
 MAY add `--model <model>` only when the caller explicitly supplied a model name. Omit otherwise; do not pin a model inside the skill.
 
 Long-form alias equivalence: when reading existing tool wrappers (e.g. `tools/copilot-review.ps1`), treat `--no-ask-user --prompt "<prompt>"` as equivalent to `-p "<prompt>" -s`. New invocations MUST use the canonical short form above.
-
-### Threat Model — `--allow-all-tools`
-
-`--allow-all-tools` permits the Copilot CLI to read, edit, and execute within the working directory. This is a real threat surface. The caller MUST supply `working_dir` constrained to the target repo or worktree. This skill MUST enforce that constraint. Never run in `/`, `~`, the workspace root, or any directory containing secrets or credentials. Agents MUST NOT waive this constraint even on operator request unless the operator explicitly waives it for one named call.
 
 ## Prompt Construction
 
