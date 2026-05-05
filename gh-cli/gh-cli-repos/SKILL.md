@@ -1,6 +1,6 @@
 ---
 name: gh-cli-repos
-description: Create, clone, fork, sync, edit, delete GitHub repositories via CLI.
+description: Create, clone, fork, sync, edit, delete GitHub repositories via CLI. Triggers - create repo, clone repository, fork repo, github repo operations, manage repositories.
 ---
 
 Create:

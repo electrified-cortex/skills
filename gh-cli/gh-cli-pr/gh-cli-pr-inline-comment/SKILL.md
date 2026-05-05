@@ -1,6 +1,6 @@
 ---
 name: gh-cli-pr-inline-comment
-description: Post, edit, or delete inline code review comments on PR diff lines. Routes to sub-skills by operation.
+description: Post, edit, or delete inline code review comments on PR diff lines. Routes to sub-skills by operation. Triggers - inline comment, PR diff comment, comment on code line, annotate diff, inline review comment.
 ---
 
 | Operation | Sub-skill | Notes |

@@ -1,6 +1,6 @@
 ---
 name: gh-cli-pr-inline-comment-edit
-description: Edit the body of an existing inline PR review comment by comment ID via GitHub CLI.
+description: Edit the body of an existing inline PR review comment by comment ID via GitHub CLI. Triggers - edit inline comment, update PR comment, modify review comment, change diff annotation.
 ---
 
 Input: OWNER, REPO, COMMENT_ID, BODY
