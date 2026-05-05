@@ -1,4 +1,4 @@
-# Skill Auditing Specification
+﻿# Skill Auditing Specification
 
 ## Purpose
 
@@ -459,6 +459,20 @@ Applies to dispatch skills only. Auditor runs these checks against `uncompressed
      (main spec says "moves A to B"; tool spec says "deletes") → FAIL.
    The auditor reads tool-spec text for this check; tool files (`.sh`, `.ps1`,
    `*.spec.md`) remain excluded from the manifest hash per Step 1.
+
+9. **(DS-8) Canonical trigger phrase** — for dispatch skills, the `description:`
+   field in `SKILL.md` MUST contain the canonical action phrase for the skill.
+   The canonical phrase is derived by replacing hyphens with spaces in the skill
+   directory name (e.g., `spec-auditing` → "spec audit", `tool-auditing` →
+   "tool audit", `markdown-hygiene` → "markdown hygiene").
+
+   A multi-word trigger of the form `<verb> <root>` or `<root>` (root alone,
+   hyphenated or space-separated) MUST appear verbatim (case-insensitive) in
+   the description triggers list.
+
+   Finding: if the canonical phrase (or its hyphenated equivalent) does not
+   appear in `description:`, emit HIGH: "Canonical trigger phrase '<phrase>'
+   missing from description triggers."
 
 These checks extend Step 3. Violations are recorded in the Step 3 findings table
 under a "Dispatch Skill Checks" group and contribute to the verdict per the normal
