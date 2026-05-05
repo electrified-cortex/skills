@@ -32,17 +32,9 @@ Supports SHA-256 integrity stamp suite Verify stamp drift or write/update stamps
 
 Supports Rules for iterating audit, compression, hygiene, or review passes Reference this skill from callers; do not e.
 
-## janitor
-
-Supports prune accumulated artifacts, session-log hygiene, audit-report sweep, handoff cleanup, dry-run delete preview.
-
 ## markdown-hygiene
 
 Full markdown hygiene pipeline covering lint fixes, MD rule scanning, and semantic advisory analysis for .md files.
-
-## session-logging
-
-Supports Standards for creating session log entries in logs/session/ and logs/telegram/ Use when writing any log entry.
 
 ## skill-auditing
 

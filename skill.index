@@ -6,9 +6,7 @@ gh-cli/: GitHub CLI operations — routes to domain-specific sub-skills via disp
 hash-record/: Content-hash-keyed durable record store. Probe / Read / Write / Invalidate API. Replaces .audit-reports/ and, hash record, hash record skill, hash record workflow
 hash-stamping/: SHA-256 integrity stamp suite. Verify stamp drift or write/update stamps. Triggers — verify stamp, check integ, hash stamping, hash stamping skill, hash stamping workflow
 iteration-safety: Rules for iterating audit, compression, hygiene, or review passes. Reference this skill from callers; do not e, iteration safety, iteration safety skill, iteration safety workflow
-janitor: prune accumulated artifacts, session-log hygiene, audit-report sweep, handoff cleanup, dry-run delete preview, janitor skill, janitor workflow
 markdown-hygiene/: Full markdown hygiene pass on a .md file — lint fixes, MD rule scan, semantic advisory analysis. Triggers — lint markdown, fix markdown, MD violations, markdownlint pass, hygiene check, markdown hygiene, markdown hygiene skill, markdown hygiene workflow
-session-logging: Standards for creating session log entries in logs/session/ and logs/telegram/. Use when writing any log entry, session logging, session logging skill, session logging workflow
 skill-auditing: Audit a skill for quality, classification, cost, and compliance with the skill-writing spec. Triggers — audit, skill auditing, skill auditing skill, skill auditing workflow
 skill-index/: Root skill for the skill-index toolkit. Governs sub-skills that let agents discover available skills by readin, skill index, skill index skill, skill index workflow
 skill-optimize: Analyzes single skill for architectural and structural improvement. Dispatches topic analysis to sub-agents. Triggers — optimize skill, skill review, architectural review, skill improvement, find skill issues, analyze skill structure, skill optimize, skill optimize skill, skill optimize workflow
