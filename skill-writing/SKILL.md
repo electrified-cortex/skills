@@ -20,7 +20,7 @@ New skill — follow order. Never skip steps.
 3. Markdown hygiene — run `markdown-hygiene` on every uncompressed source file (`uncompressed.md`, and `instructions.uncompressed.md` if present). Zero errors required before proceeding.
 4. Intermediate audit — `skill-auditing --uncompressed` on the skill. FAIL → fix source → re-audit. Repeat until PASS.
 5. Compress via `compression` skill (`--source uncompressed.md --target SKILL.md`; same for instructions if dispatch). SKILL.md = compressed runtime.
-6. Final audit — `skill-auditing` (default mode) on `SKILL.md`. FAIL → fix source → recompress → re-audit until PASS.
+6. Pre-submit dispatch gate — dispatch `skill-auditing` on the completed skill folder following the dispatch pattern in `skill-auditing/SKILL.md`. Do not declare done without a returned PASS. FAIL → fix source → recompress → re-dispatch until PASS.
 
 Dispatch skills: companion instruction source file written in step 2; both compressed in step 5.
 
@@ -30,7 +30,7 @@ Low-frequency / one-off → sonnet-class is fine; `eval.md` not required.
 Examples: markdown-hygiene, code-review = high-frequency (haiku justified). compression = low-frequency (sonnet fine).
 
 Completion Gate:
-NOT done until both audits return PASS. Intermediate gate (step 4): PASS required before compression. Final gate (step 6): PASS required before declaring complete. No exceptions. Receiving FAIL and stopping is a workflow violation.
+NOT done until both audits return PASS. Intermediate gate (step 4): PASS required before compression. Final gate (step 6): PASS required — skill-auditing MUST be dispatched (not applied inline); do not submit without a returned PASS. No exceptions. Receiving FAIL and stopping is a workflow violation.
 
 Revising: update spec first. Exception: non-normative changes (README, examples, typo fixes) → skip to step 2. Update `uncompressed.md` → hygiene → intermediate audit (`--uncompressed`) → compress → final audit. Never modify SKILL.md directly — compiled artifact.
 

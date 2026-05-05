@@ -438,8 +438,10 @@ change history, credits, publication notes.
    that are not in the spec.
 3. Compress using the `compression` skill (`--source uncompressed.md
    --target SKILL.md`).
-4. Audit with `skill-auditing`. Fix findings, recompress, re-audit
-   until PASS.
+4. Audit — dispatch `skill-auditing` on the skill folder following
+   the dispatch pattern in `skill-auditing/SKILL.md` (not inline).
+   Do not declare done without a returned PASS. Fix findings,
+   recompress, re-dispatch until PASS.
 
 For dispatch skills: also write the companion agent/instruction file
 (step 2) and verify it is reachable (step 4).
@@ -451,7 +453,8 @@ For dispatch skills: also write the companion agent/instruction file
    sections) — in that case skip to step 2.
 2. Update `uncompressed.md` to reflect the spec change.
 3. Recompress to `SKILL.md`.
-4. Re-audit.
+4. Re-audit — dispatch `skill-auditing` on the skill folder (not
+   inline). PASS required before declaring the revision complete.
 
 Never modify `SKILL.md` directly — it is a compiled artifact.
 Flow: spec → uncompressed → compressed.
