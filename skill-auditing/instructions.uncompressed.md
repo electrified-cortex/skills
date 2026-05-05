@@ -43,7 +43,9 @@
 
    Body: open with `# Result` H1, state verdict, list findings (with step and check references).
 
-8. **Return** the verdict token as the final line of stdout, starting at column 0 with no indentation, no quoting, no list-marker prefix. Nothing may follow it.
+8. **Verify report on disk.** Before returning a verdict, run `ls -la <report_path>` (or equivalent) and confirm the file exists with non-zero size at the EXACT path supplied via `--report-path`. If missing, empty, or written to a different location → return `ERROR: report not at <report_path>` and stop. Do NOT return `CLEAN`, `PASS`, `NEEDS_REVISION`, or `FAIL` without a verified file. The host post-execute cache check is the second line of defense; this self-check is the first.
+
+9. **Return** the verdict token as the final line of stdout, starting at column 0 with no indentation, no quoting, no list-marker prefix. Nothing may follow it.
    - `CLEAN: <report_path>`
    - `PASS: <report_path>`
    - `NEEDS_REVISION: <report_path>`
