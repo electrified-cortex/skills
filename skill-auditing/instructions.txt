@@ -243,9 +243,10 @@ The host card (`uncompressed.md` when present; `SKILL.md` for SKILL.md-only disp
 - Prose describing what skill does or how it works internally — belongs in `spec.md`. Card answers: how to dispatch, what params, what return shape, what modes. Nothing else.
 
 (DS-3) Description trigger phrases:
-Frontmatter `description` MUST follow pattern: `<one-line action>. Triggers — <phrase1>, <phrase2>, ..., <phraseN>.` with 3–6 comma-separated trigger phrases. Violations → LOW:
-- Description as prose without trigger phrases.
-- Description stuffed with impl notes (e.g., "Dispatch skill", "Iteration-safe via hash-record", "Zero errors gate") — waste trigger-phrase budget, must be removed.
+Frontmatter `description` MUST follow pattern: `<one-line action>. Triggers - <phrase1>, <phrase2>, ..., <phraseN>.` with comma-separated trigger phrases. Trigger phrases MUST be present. Violations:
+- No trigger phrases at all (prose without any `Triggers -` block) -> HIGH. Skill is undiscoverable.
+- Trigger phrases stuffed with impl notes (e.g., "Dispatch skill", "Iteration-safe via hash-record", "Zero errors gate") -> HIGH. Waste trigger budget, must be removed.
+- Phrase count is not policed.
 
 (DS-4) Inline dispatch guard:
 Dispatch skills MUST use canonical prompt-only dispatch pattern. See `dispatch/dispatch-pattern.md` for context.

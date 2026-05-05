@@ -314,10 +314,11 @@ The host card — `uncompressed.md` when present, or `SKILL.md` for SKILL.md-onl
 
 ### (DS-3) Description trigger phrases
 
-The frontmatter `description` MUST follow the pattern: `<one-line action>. Triggers — <phrase1>, <phrase2>, ..., <phraseN>.` with 3–6 comma-separated trigger phrases. Violations → LOW:
+The frontmatter `description` MUST follow the pattern: `<one-line action>. Triggers - <phrase1>, <phrase2>, ..., <phraseN>.` with comma-separated trigger phrases. **Trigger phrases MUST be present.** Violations:
 
-- Description written as prose without trigger phrases.
-- Description stuffed with implementation notes (e.g., "Dispatch skill", "Iteration-safe via hash-record", "Zero errors gate") — these waste trigger-phrase budget and must be removed.
+- **No trigger phrases at all** — description is prose without any `Triggers -` block. The skill is undiscoverable. → **HIGH**.
+- **Trigger phrases stuffed with implementation notes** (e.g., "Dispatch skill", "Iteration-safe via hash-record", "Zero errors gate") — waste trigger-phrase budget, must be removed. → **HIGH**.
+- Phrase count is not policed.
 
 ### (DS-4) Inline dispatch guard
 
