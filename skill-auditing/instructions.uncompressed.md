@@ -1,4 +1,4 @@
-﻿# Skill Auditing Instructions
+# Skill Auditing Instructions
 
 ## Inputs
 

@@ -251,7 +251,7 @@ P3. Availability gate result takes precedence over selection result: a personali
 
 P4. Read-only constraint (C1) takes precedence over any personality-specific instruction. No personality prompt may authorize a sub-agent to edit, commit, or run side-effecting commands.
 
-P5. Synthesis word budget (C5 2000-word cap) takes precedence over completeness. Truncation is required over exceeding the cap.
+P5. Synthesis word budget (2000-word cap, see Step 8) takes precedence over completeness. Truncation is required over exceeding the cap.
 
 ## Don'ts
 

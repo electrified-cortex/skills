@@ -1,4 +1,4 @@
-﻿# Skill Auditing Specification
+# Skill Auditing Specification
 
 ## Purpose
 
@@ -471,7 +471,7 @@ Applies to dispatch skills only. Auditor runs these checks against `uncompressed
    the description triggers list.
 
    Finding: if the canonical phrase (or its hyphenated equivalent) does not
-   appear in `description:`, emit HIGH: "Canonical trigger phrase '<phrase>'
+   appear in `description:`, emit HIGH: "Canonical trigger phrase `<phrase>`
    missing from description triggers."
 
 These checks extend Step 3. Violations are recorded in the Step 3 findings table
