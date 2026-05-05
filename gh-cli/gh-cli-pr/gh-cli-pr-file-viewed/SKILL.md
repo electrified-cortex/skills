@@ -1,6 +1,6 @@
 ---
 name: gh-cli-pr-file-viewed
-description: Mark or unmark one, multiple, or all files in a PR as viewed via GitHub GraphQL mutations. Handles node ID resolution and pagination for large PRs.
+description: Mark or unmark one, multiple, or all files in a PR as viewed via GitHub GraphQL mutations. Handles node ID resolution and pagination for large PRs. Triggers - mark file as viewed, PR file viewed, unmark file, mark all files reviewed, PR file review status.
 ---
 
 ## When to Use

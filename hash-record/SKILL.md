@@ -1,7 +1,7 @@
 ---
 name: hash-record
 version: 0.1
-description: Content-hash-keyed durable record store. Probe / Read / Write / Invalidate API. Replaces .audit-reports/ and .code-reviews/ with one substrate that consumer skills call into directly.
+description: Content-hash-keyed durable record store. Probe / Read / Write / Invalidate API. Replaces .audit-reports/ and .code-reviews/ with one substrate that consumer skills call into directly. Triggers - cache result, store audit result, look up cached record, skip if already done, hash-record store.
 ---
 
 Consumer skills call into this for storage; hash-record never runs operations of its own.

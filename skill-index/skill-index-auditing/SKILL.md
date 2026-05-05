@@ -1,8 +1,6 @@
 ---
 name: skill-index-auditing
-description: >-
-  Validator for a skill-index cascade. Returns ok, rebuild-needed, or
-  inconclusive. Never invokes the builder.
+description: Validator for a skill-index cascade. Returns ok, rebuild-needed, or inconclusive. Never invokes the builder. Triggers - validate skill index, audit skill index, check if index is stale, skill index health, verify index cascade.
 ---
 
 ## Dispatch

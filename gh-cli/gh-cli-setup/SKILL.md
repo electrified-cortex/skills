@@ -1,6 +1,6 @@
 ---
 name: gh-cli-setup
-description: Install, authenticate, and configure the GitHub CLI. Prerequisite for all other gh-cli skills.
+description: Install, authenticate, and configure the GitHub CLI. Prerequisite for all other gh-cli skills. Triggers - install gh CLI, authenticate github CLI, gh auth login, setup github CLI, configure gh.
 ---
 
 Install, auth, configure `gh`. Prereq — all other gh-cli skills depend on this.

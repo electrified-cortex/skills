@@ -1,6 +1,6 @@
 ---
 name: gh-cli-projects
-description: Create, manage GitHub Projects v2 boards, items, fields via CLI.
+description: Create, manage GitHub Projects v2 boards, items, fields via CLI. Triggers - github projects, manage project board, add item to project, project board, github project v2.
 ---
 
 Commands use project numbers, not names. Resolve name -> number first:
