@@ -8,8 +8,8 @@ Read-only.
 
 ## Parameters
 
-| Positional | Type | Required | Description                              |
-| ---------- | ---- | -------- | ---------------------------------------- |
+| Positional | Type | Required | Description |
+| --- | --- | --- | --- |
 | `tool_path` | string | yes | Absolute path to ANY member of the tool trio: `<stem>.sh`, `<stem>.ps1`, or `<stem>.spec.md`. |
 
 `--help` / `-h` — print usage, exit 0.
@@ -55,13 +55,13 @@ Missing trio members are reported as audit FAIL by the executor (Check 1). `resu
 
 ## Output contract
 
-| Condition          | Output                                | Exit |
-| ------------------ | ------------------------------------- | ---- |
-| HIT, `result: pass` | `PASS: <abs-path>`                   | 0    |
+| Condition | Output | Exit |
+| --- | --- | --- |
+| HIT, `result: pass` | `PASS: <abs-path>` | 0 |
 | HIT, `result: pass-with-findings` | `PASS_WITH_FINDINGS: <abs-path>` | 0 |
-| HIT, `result: fail` | `FAIL: <abs-path>`                   | 0    |
-| MISS               | `MISS: <abs-path>`                    | 0    |
-| Argument or runtime error | `ERROR: <reason>`              | 1    |
+| HIT, `result: fail` | `FAIL: <abs-path>` | 0 |
+| MISS | `MISS: <abs-path>` | 0 |
+| Argument or runtime error | `ERROR: <reason>` | 1 |
 
 ## Constraints
 
