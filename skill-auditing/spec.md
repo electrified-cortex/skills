@@ -398,12 +398,15 @@ Applies to dispatch skills only. Auditor runs these checks against `uncompressed
      what modes. Nothing else.
 
 3. **Description trigger phrases (DS-3)** — the frontmatter `description` MUST follow
-   the pattern: `` `<one-line action>`. Triggers — `<phrase1>`, `<phrase2>`, ..., `<phraseN>`.``
-   with 3–6 comma-separated trigger phrases. Violations → LOW:
-   - Description that describes what the skill does in prose without trigger phrases.
-   - Description stuffed with implementation notes (e.g., "Dispatch skill",
+   the pattern: `<one-line action>. Triggers - <phrase1>, <phrase2>, ..., <phraseN>.`
+   with comma-separated trigger phrases. **Trigger phrases must be present.** Violations:
+   - **No trigger phrases at all** — description is prose without any `Triggers -` block.
+     The skill is undiscoverable. → **HIGH**.
+   - **Trigger phrases stuffed with implementation notes** (e.g., "Dispatch skill",
      "Iteration-safe via hash-record", "Zero errors gate") — these waste trigger-phrase
-     budget and must be removed.
+     budget and must be removed. → **HIGH**.
+   - Phrase count is not policed (any count is acceptable; the upper bound is
+     practical not normative).
 
 4. **Inline dispatch guard (DS-4)** — dispatch skills MUST use the canonical
    prompt-only dispatch pattern. See `dispatch/dispatch-pattern.md` for context.
