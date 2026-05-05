@@ -161,8 +161,12 @@ if [ -d "$FIRST_ARG" ]; then
 
   # ---------------------------------------------------------------------------
   # Helper: compute manifest hash for a multi-file record
-  # sha256 of sorted "<blob_hash> <path>\n" lines for all files in file_paths
-  # Prints 64-char hex hash to stdout. Returns 1 on error.
+  # git-blob hash (SHA-1, 40-char hex) of the sorted "<blob_hash> <path>\n"
+  # manifest string. Matches `hash-record-manifest/manifest.ps1` semantics
+  # exactly: write manifest text to a temp file, run `git hash-object` on
+  # it. The result tools also use `git hash-object` to compute lookups, so
+  # using SHA-1-via-git keeps rekey output and result-tool input in sync.
+  # Prints 40-char hex hash to stdout. Returns 1 on error.
   # ---------------------------------------------------------------------------
   _compute_manifest_hash() {
     local rec_path="$1"
@@ -180,14 +184,12 @@ if [ -d "$FIRST_ARG" ]; then
       return 1
     fi
 
-    # Sort paths lexically
-    local -a sorted_paths
-    IFS=$'\n' read -r -d '' -a sorted_paths \
-      < <(printf '%s\n' "${paths[@]}" | LC_ALL=C sort; printf '\0') || true
-
-    # Build manifest string: "<blob_hash> <path>\n" per entry (sorted)
-    local manifest_str="" fpath blob_hash
-    for fpath in "${sorted_paths[@]}"; do
+    # Build pairs first ("<path> <blob_hash>"), then sort the FULL pair
+    # strings — exact mirror of hash-record-manifest/manifest.ps1
+    # (lines 99 + 106). Sorting only by path can produce a different order
+    # in edge cases and yields an incompatible hash.
+    local -a pairs=() fpath blob_hash
+    for fpath in "${paths[@]}"; do
       blob_hash=$(git hash-object "$repo_root/$fpath" 2>/dev/null) || {
         printf 'ERROR: git hash-object failed for manifest member: %s\n' "$fpath" >&2
         return 1
@@ -196,10 +198,43 @@ if [ -d "$FIRST_ARG" ]; then
         printf 'ERROR: empty hash for manifest member: %s\n' "$fpath" >&2
         return 1
       }
-      manifest_str="${manifest_str}${blob_hash} ${fpath}"$'\n'
+      # Format MUST match manifest.ps1: `<path> <blob_hash>` (path first).
+      pairs+=("${fpath} ${blob_hash}")
     done
 
-    printf '%s' "$manifest_str" | sha256sum | cut -c1-64
+    # Same sort as manifest.ps1: ordinal, byte-order. LC_ALL=C ensures
+    # bash `sort` matches PowerShell `Sort-Object -CaseSensitive -Culture ''`.
+    local -a sorted_pairs
+    IFS=$'\n' read -r -d '' -a sorted_pairs \
+      < <(printf '%s\n' "${pairs[@]}" | LC_ALL=C sort; printf '\0') || true
+
+    local manifest_str="" pair
+    for pair in "${sorted_pairs[@]}"; do
+      manifest_str="${manifest_str}${pair}"$'\n'
+    done
+
+    # Write manifest to a temp file and run `git hash-object`. Direct
+    # sha256sum would produce a different, incompatible 64-char hex; the
+    # result tools cannot find that path. Use git's content-blob hash so
+    # rekey paths and result-tool lookups agree.
+    local tmpf
+    tmpf=$(mktemp) || {
+      printf 'ERROR: mktemp failed\n' >&2
+      return 1
+    }
+    printf '%s' "$manifest_str" > "$tmpf"
+    local manifest_hash
+    manifest_hash=$(git hash-object "$tmpf" 2>/dev/null) || {
+      rm -f "$tmpf"
+      printf 'ERROR: git hash-object failed for manifest tmp file\n' >&2
+      return 1
+    }
+    rm -f "$tmpf"
+    [ -z "$manifest_hash" ] && {
+      printf 'ERROR: git hash-object returned empty manifest hash\n' >&2
+      return 1
+    }
+    printf '%s\n' "$manifest_hash"
   }
 
   # ---------------------------------------------------------------------------
