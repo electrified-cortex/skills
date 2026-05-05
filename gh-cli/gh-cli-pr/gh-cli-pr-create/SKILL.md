@@ -1,6 +1,6 @@
 ---
 name: gh-cli-pr-create
-description: Open pull request via GitHub CLI.
+description: Open pull request via GitHub CLI. Triggers - create pull request, open PR, submit PR, new pull request, open a pull request.
 ---
 
 Before Creating:

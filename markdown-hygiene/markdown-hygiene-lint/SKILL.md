@@ -1,6 +1,6 @@
 ---
 name: markdown-hygiene-lint
-description: MD rule violation scan for a .md file. Fixes known safe rules in-place before scanning. Triggers — lint phase, MD violations, markdownlint scan.
+description: MD rule violation scan for a .md file. Fixes known safe rules in-place before scanning. Triggers - markdown lint, MD violations, markdownlint scan, lint markdown file, fix markdown rules.
 ---
 
 Inputs:

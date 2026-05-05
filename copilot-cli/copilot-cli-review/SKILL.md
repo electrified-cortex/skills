@@ -1,6 +1,6 @@
 ---
 name: copilot-cli-review
-description: Code review operation via the standalone Copilot CLI binary. Runs adversarial review of a change set and returns structured findings.
+description: Code review operation via the standalone Copilot CLI binary. Runs adversarial review of a change set and returns structured findings. Triggers - copilot review, review these changes, adversarial review, copilot code review, review this diff.
 ---
 
 # copilot-cli-review
