@@ -16,7 +16,9 @@ Derived:
 
 Process:
 
-If `<prompt>` instructs sub-agent to read a file, don't read it yourself — sub-agent does. Spawn zero-context Dispatch sub-agent:
+If `<prompt>` instructs sub-agent to read a file, don't read it yourself — sub-agent does. Spawn zero-context Dispatch sub-agent.
+
+DO NOT DISPATCH SKILLS — read them. The skill itself tells you when (and how) to dispatch.
 
 Claude Code:
 

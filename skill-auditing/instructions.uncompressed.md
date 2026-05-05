@@ -63,6 +63,7 @@ Findings accumulate into the Per-file section of the report and do NOT block Ste
 - **Not empty** — file must contain non-whitespace content. Empty → HIGH.
 - **Frontmatter where required** — `SKILL.md` and `agent.md` MUST have YAML frontmatter (`---` block at line 1). Missing frontmatter on these files → HIGH.
 - **No absolute-path leaks** — body must not contain Windows-style (`<letter>:\` or `<letter>:/`) or Unix root-anchored paths (`/Users/`, `/home/`, `/d/`). Any found → HIGH.
+- **Canonical trigger phrase (dispatch skills only)** — For dispatch skills (frontmatter `type: dispatch`), the `description:` field MUST include the canonical action phrase: `<verb> <skill-root>` where skill-root = directory name with hyphens replaced by spaces (e.g., `spec-auditing` -> "spec audit"). Check case-insensitively. Missing phrase -> HIGH (DS-8). Applies only to `SKILL.md`, not sub-skill files.
 
 ### `*.spec.md` files (files whose name ends in `.spec.md`)
 
@@ -293,7 +294,7 @@ Any of the following → HIGH:
 
 Content must go in `instructions.uncompressed.md` (executor procedure) or `spec.md` (rationale/behavior).
 
-### Dispatch Skill Checks (DS-1..DS-6)
+### Dispatch Skill Checks (DS-1..DS-8)
 
 Applies to dispatch skills only (N/A for inline skills). Run against `uncompressed.md` (the host-facing card).
 
@@ -352,6 +353,16 @@ For skills shipping a co-located tool trio (`<stem>.sh` + `<stem>.ps1` + `<stem>
 - **Tool-spec alignment** — IF a referenced tool has a `*.spec.md`, its declared behavior (Purpose, Output, return contract) MUST be consistent with how `SKILL.md` / `spec.md` describes the tool's role. Contradiction (main spec says "moves A to B"; tool spec says "deletes") → FAIL.
 
 The auditor reads tool-spec text for this check; tool files (`.sh`, `.ps1`, `*.spec.md`) remain excluded from the manifest hash per Step 1.
+
+### (DS-8) Canonical trigger phrase
+
+Applies to dispatch skills only. N/A for inline skills. Applies only to `SKILL.md`, not sub-skill files.
+
+For dispatch skills (frontmatter `type: dispatch`), the `description:` field MUST include the canonical action phrase. The canonical phrase = directory name with hyphens replaced by spaces (e.g., `spec-auditing` → "spec audit", `tool-auditing` → "tool audit", `markdown-hygiene` → "markdown hygiene").
+
+Check case-insensitively. A trigger of the form `<verb> <root>` or `<root>` alone (hyphenated or space-separated) MUST appear verbatim in the description triggers list.
+
+Missing phrase → HIGH (DS-8). Finding text: `Canonical trigger phrase '<phrase>' missing from description triggers.`
 
 These checks extend Step 3. Violations recorded in the Step 3 findings table under a "Dispatch Skill Checks" group. HIGH violations contribute to NEEDS_REVISION or FAIL depending on count; LOW violations contribute to NEEDS_REVISION.
 
@@ -450,6 +461,8 @@ CLEAN | PASS | NEEDS_REVISION | FAIL
 | Inline dispatch guard (DS-4) | PASS/FAIL/N/A | |
 | No substrate duplication (DS-5) | PASS/FAIL/N/A | |
 | No overbuilt sub-skill dispatch (DS-6) | PASS/FAIL/N/A | |
+| Tool integration alignment (DS-7) | PASS/FAIL/N/A | |
+| Canonical trigger phrase (DS-8) | PASS/FAIL/N/A | |
 
 ### Per-file Basic Checks
 

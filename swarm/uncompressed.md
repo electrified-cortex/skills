@@ -22,7 +22,7 @@
 
 ## Personality Registry
 
-The registry is external to the skill. Built-in personality definitions live as separate files at `swarm/reviewers/<name>.md`. The registry is the directory listing — every `*.md` file present in `reviewers/` at runtime is a registered personality. Adding a personality requires only dropping a new file; no spec or SKILL.md edit required.
+The registry is external to the skill. Built-in personality definitions live as separate files at `swarm/reviewers/<name>.md`. The registry is the directory listing — every `*.md` file present in `reviewers/` that passes the metadata-validation gate is a registered personality. Adding a personality requires only dropping a new file; no spec or SKILL.md edit required.
 
 **Registry loading**: crawl `reviewers/` at runtime when a swarm invocation begins. Compile-time enumeration is not used. `reviewers/index.md` serves as the ordered manifest for the registry — it provides metadata and ordering for personalities discovered during the crawl.
 
@@ -195,7 +195,7 @@ Required synthesis output fields:
 
 Synthesis output template (use this structure exactly):
 
-```
+```md
 **Summary**: <consolidated findings in host voice>
 
 **Disagreements**: <each disagree-set item with tension stated and judgment applied; "None" if disagree set is empty>
@@ -251,6 +251,7 @@ D5. Custom menu entry with no model class and no caller override: default `sonne
 D6. Confidence rating default: Medium. Raised to High when all personalities agree and all findings cite evidence. Lowered to Low when disagree set is non-empty on a high-severity point, or when any personality returns no findings.
 
 Calibration examples:
+
 - **High**: Security Auditor, Code Quality Critic, and Devil's Advocate all flag the same SQL injection risk with evidence cites; no disagreements. → High.
 - **Medium** (default): Reviewers agree on two findings but one personality returns "No findings." Wait — "any personality returns no findings" triggers Low, not Medium. → Low.
 - **Medium** (true): Reviewers produce 3 findings with evidence; no high-severity disagreements; all personalities contributed. → Medium.

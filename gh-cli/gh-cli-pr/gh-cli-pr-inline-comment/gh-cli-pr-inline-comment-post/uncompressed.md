@@ -29,7 +29,7 @@ Posts an inline review comment anchored to a specific line in a PR diff.
 `<description>` = post inline PR comment on {FILE_PATH}:{LINE_NUMBER}
 `<prompt>` = Read and follow `<instructions-abspath>`. Input: `<input-args>`
 
-Follow dispatch skill.
+Follow dispatch skill. See `../../../../dispatch/SKILL.md`.
 Should return: `{ "status": "posted" | "duplicate" | "error", "comment_id": <integer or null>, "comment_url": "<https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r{ID} or null>", "message": "<one-line summary>" }`
 
 ## Return

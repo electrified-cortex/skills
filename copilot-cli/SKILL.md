@@ -3,7 +3,9 @@ name: copilot-cli
 description: Router — accepts any GitHub Copilot CLI task and dispatches to the correct operation sub-skill. Does not execute copilot commands itself.
 ---
 
-Routes Copilot CLI tasks to the correct operation sub-skill. Execution, flag assembly, prompt framing, and output parsing live inside the dispatched sub-skill — not here.
+# copilot-cli
+
+Execution, flag assembly, prompt framing, and output parsing live inside the dispatched sub-skill — not here.
 
 ## Operation Routing Table
 
@@ -30,3 +32,7 @@ Routes Copilot CLI tasks to the correct operation sub-skill. Execution, flag ass
 - Sub-skill missing → report that and stop; do not improvise.
 
 Related: `copilot-cli-review`, `copilot-cli-ask`, `copilot-cli-explain`
+
+## Skill Index
+
+`skill.index` and `skill.index.md` — machine-readable search index for this skill bundle and all sub-skills.

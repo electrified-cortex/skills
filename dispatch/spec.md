@@ -170,6 +170,8 @@ DN11. Do not move runtime instructions into `supplemental.md`. Supplemental is f
 
 DN12. Do not move spec rationale into `supplemental.md`. Spec rationale lives in the spec.
 
+DN13. DO NOT DISPATCH SKILLS — read them. The skill itself tells you when (and how) to dispatch. Skills are content the calling agent loads and applies inline; only `<prompt>` is dispatched. Treating a skill name or path as if it were a runnable unit (e.g. "dispatch the `markdown-hygiene` skill") is invalid.
+
 ## Platform Gotchas
 
 The skill is written primarily against the Claude Code runtime. Other environments that read and apply this skill may have structural differences. Platform gotchas are normative deviations from the general model — not suggestions.

@@ -109,8 +109,6 @@ All four canonical severities (`blocker`, `major`, `minor`, `nit`) pass through 
 
 ## Safety and working-dir constraint (R8, R9)
 
-`--allow-all-tools` permits the Copilot CLI to read, edit, and execute within the working directory. This is a real threat surface.
-
 - The caller MUST supply `working_dir` pointing to the target repo or worktree.
 - This skill MUST enforce that constraint. Never run `copilot` in `/`, `~`, the workspace root, or any directory containing secrets or credentials.
 - Agents MUST NOT waive this constraint even on operator request, unless the operator explicitly waives R8 for a single named call.
