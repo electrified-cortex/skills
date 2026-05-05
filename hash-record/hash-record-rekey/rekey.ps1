@@ -106,36 +106,54 @@ function Test-GlobMatch ([string]$Path, [string[]]$Globs) {
 
 # ---------------------------------------------------------------------------
 # Helper: compute manifest hash for a multi-file record
-# sha256 of sorted "<blob_hash> <path>`n" lines for all files in file_paths
-# Returns 64-char hex string, or $null on error
+# git-blob hash (SHA-1, 40-char hex) of the manifest string (sorted
+# "<blob_hash> <path>`n" lines for all files in file_paths). Matches
+# `hash-record-manifest/manifest.ps1` semantics: write manifest text to a
+# temp file, run `git hash-object` on it. Using SHA-1-via-git-hash-object
+# ensures the path computed here equals the path the result tools compute
+# on the same content. Returns 40-char hex, or $null on error.
 # ---------------------------------------------------------------------------
 function Get-ManifestHash ([string]$RecordFile, [string]$RepoRoot) {
     $paths = Get-FrontmatterPaths $RecordFile
     if ($paths.Count -eq 0) { return $null }
 
-    # Sort paths lexically
-    $sortedPaths = [System.Linq.Enumerable]::OrderBy(
-        [string[]]$paths,
-        [System.Func[string, string]]{ $_ },
-        [System.StringComparer]::Ordinal
-    )
-
-    # Build manifest string
-    $lines = [System.Text.StringBuilder]::new()
-    foreach ($fpath in $sortedPaths) {
+    # Build pairs first (path + space + blob hash), then sort the FULL pair
+    # string. This mirrors `hash-record-manifest/manifest.ps1` lines 99 +
+    # 106 exactly. Sorting only by path key produces a different ordering
+    # in edge cases and yields an incompatible hash.
+    $pairs = @()
+    foreach ($fpath in $paths) {
         $absPath = "$RepoRoot/$fpath"
         $blobHash = (& git hash-object $absPath 2>$null)
         if ($LASTEXITCODE -ne 0 -or -not $blobHash) { return $null }
         $blobHash = $blobHash.Trim()
-        [void]$lines.Append("$blobHash $fpath`n")
+        # Format MUST match manifest.ps1: `<path> <blob_hash>` (path first).
+        $pairs += "$fpath $blobHash"
     }
 
-    $manifestStr = $lines.ToString()
+    # Same sort as manifest.ps1: ordinal, case-sensitive, byte-order.
+    $sortedPairs = $pairs | Sort-Object -CaseSensitive -Culture ''
+
+    # Build manifest text with explicit LF line endings (matches manifest.ps1).
+    $manifestStr = ''
+    foreach ($pair in $sortedPairs) {
+        $manifestStr += "$pair`n"
+    }
+
+    # Write manifest text to a temp file and run `git hash-object` — exact
+    # mirror of `hash-record-manifest/manifest.ps1` (lines 119-128). Use
+    # the same byte path: `Encoding.UTF8.GetBytes` + `WriteAllBytes` to
+    # avoid BOM/line-ending drift that can shift the hash.
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($manifestStr)
-    $sha256 = [System.Security.Cryptography.SHA256]::Create()
-    $hashBytes = $sha256.ComputeHash($bytes)
-    $sha256.Dispose()
-    return ($hashBytes | ForEach-Object { $_.ToString('x2') }) -join ''
+    $tmpFile = [System.IO.Path]::GetTempFileName()
+    try {
+        [System.IO.File]::WriteAllBytes($tmpFile, $bytes)
+        $manifestHash = (& git hash-object $tmpFile 2>$null)
+        if ($LASTEXITCODE -ne 0 -or -not $manifestHash) { return $null }
+        return $manifestHash.Trim()
+    } finally {
+        if (Test-Path -LiteralPath $tmpFile) { Remove-Item -LiteralPath $tmpFile -Force }
+    }
 }
 
 # ---------------------------------------------------------------------------
