@@ -2,7 +2,7 @@
 
 Disposition: strict, skeptical, evidence-based, non-creative during audit.
 
-Input: `<target-path> [--spec <spec-path>] [--fix] [--kind meta|domain]`
+Input: `<target-path> [--spec <spec-path>] [--kind meta|domain]`
 Default: audit (read-only). Audit one spec or one spec/target pair per
 invocation.
 Optional audit context: explicit spec-only request, repository or project
@@ -23,34 +23,30 @@ conventions, and custom severity thresholds.
    - No companion → spec-only mode; report "no companion present — auditing spec alone."
    c. `--spec` not provided AND target does NOT end in `spec.md`:
       - Resolve spec from sibling `<basename>.spec.md`. Missing → STOP: spec file missing.
+**Gate HC: hash-record cache check**
+
+Cache check happens inline at the host surface; this executor receives `--report-path <path>` and writes the verdict there. Do not re-check or re-compute.
+
 3. Audit kind (pair-audit mode only; skip in spec-only mode):
    a. `--kind meta` explicitly provided → meta mode.
    b. `--kind domain` explicitly provided → domain mode.
    c. Neither provided → auto-detect:
-      - Spec path contains `spec-writing` → meta mode; report "auto-detected: meta mode."
-      - Spec path does not contain `spec-writing` → domain mode; report "auto-detected: domain mode."
+      - Spec path's directory components include `spec-writing` (path-component match, not substring; `/path/to/spec-writing/spec.md` matches; `/path/to/spec-writing-legacy/spec.md` does NOT) → meta mode; report "auto-detected: meta mode."
+      - Spec path does not have `spec-writing` as a directory component → domain mode; report "auto-detected: domain mode."
    d. Auto-detect is ambiguous (neither signal) → STOP: cannot determine audit kind — supply `--kind meta` or `--kind domain` explicitly.
-   Meta mode: run pair-audit with all 13 checks unmodified (current default behavior).
+   Meta mode: run the full pair-audit — 11 audit dimensions (§Audit pair-audit mode steps 3–13) plus 2 extraction steps (steps 1–2).
    Domain mode: run pair-audit with Unauthorized Additions check modified — see Audit section.
 4. Read all resolved files fully before judging. Partial → STOP: incomplete input.
 5. Precedence: this instruction file controls audit procedure; the audited spec controls domain content; the companion target is subordinate. Report every conflict; never normalize.
-6. `--fix` requires target git-tracked and clean. Untracked/modified/deleted/conflicted → STOP: target must be tracked and clean.
+6. `--fix` is not handled by the executor; fix iteration is caller-driven. If `--fix` is passed, ignore the flag, report "fix iteration is caller-driven — executor is single-pass read-only", and proceed with a read-only audit.
 7. Reject approve/stamp requests → STOP: approve mode not supported.
-8. Spec-only mode: skip companion-dependent gates (gate 4 reads spec only; skip gate 6 — no writes will occur; gate 7 unchanged). `--fix` in spec-only → report unsupported, proceed audit-only.
-
-## Fix mode
-
-1. Run full audit first (read-only pass).
-2. Apply fixes to target file only; spec is immutable. Spec defects found during audit → report as finding; do not repair spec.
-3. Apply in severity order: Critical → High → Medium → Low; within severity: semantic → terminology → structural → stylistic.
-4. Re-audit after each fix pass. Stop at 3 passes or on earlier alignment.
-5. When spec lacks sufficient detail to guide a fix, report as spec critique; do not guess.
+8. Spec-only mode: skip companion-dependent gates (gate 4 reads spec only; gate 7 unchanged).
 
 ## Interpretation
 
 1. `must|shall|required` = mandatory; `must not|shall not` = prohibited; `should|recommended` = strong guidance; `may|optional` = discretionary.
 2. Examples non-normative unless explicitly marked.
-3. Similar wording â‰  matching meaning until verified.
+3. Similar wording ≠ matching meaning until verified.
 4. Ambiguous wording → state ambiguity, list readings, state risk, request minimum clarification.
 5. Spec lacks required data → say what's missing, why confidence blocked, whether result can pass, what resolves it.
 6. Never invent intent, never downgrade because intent seems obvious, never rewrite during audit, never modify spec.
@@ -59,6 +55,16 @@ conventions, and custom severity thresholds.
 9. Never assume paraphrase acceptable because it sounds similar.
 10. Never silently normalize contradictions.
 11. Never propose rewrites until audit is complete.
+
+## Banned terminology
+
+Do not use the term **"non-goals"** in any finding text, recommendation,
+or output. The term is ambiguous and confusing to humans and downstream
+agents alike. Use **"Out of scope"** instead.
+
+When auditing target or companion content, flag any occurrence of
+"non-goals" as a Medium-severity terminology finding (Audit step 9).
+Recommend renaming the section/heading/term to "Out of scope".
 
 ## Audit (pair-audit mode)
 
@@ -86,7 +92,7 @@ conventions, and custom severity thresholds.
 Six checks only. Steps numbered to match pair-audit for cross-reference; skip steps 2–5, 10–11, and 13 (require companion).
 Apply steps 1, 6, 7, 8, 9, 12 as defined in pair-audit above.
 Additionally: Internal Consistency — no contradictions within the spec itself.
-(No Semantic Alignment, Requirement Coverage, Contradiction Detection, Change Drift Risk, Unauthorized Additions, or Compression Fidelity — all require a companion.)
+(No Semantic Alignment, Requirement Coverage, Cross-File Contradiction Detection, Change Drift Risk, Unauthorized Additions, or Compression Fidelity — all require a companion. Internal Consistency is IN scope.)
 
 ## Assumptions (unless overridden)
 
@@ -133,20 +139,40 @@ Informational: observation, maintainability note, optional improvement.
 4. Label: direct evidence, reasonable inference, or uncertainty.
 5. Never present inference as fact.
 
+**Step RW: write hash-record (when `--report-path` is provided)**
+
+After the verdict is determined, write the hash-record before emitting the return token:
+
+1. Use `<report_path>` from the `--report-path` argument supplied by the host. If `--report-path` is absent or empty, skip this step (no-cache path).
+2. Create parent directories as needed.
+3. Write the record using the schema defined in the hash-record skill's record-frontmatter contract. Spec-auditing-specific fields:
+   - `operation_kind: spec-auditing/v1`
+   - `result:` — one of `pass | pass_with_findings | fail | error` (Pass→pass; Pass with Findings→pass_with_findings; Fail→fail; error→error)
+4. Emit the return token as the final stdout line (column 0, no indent, no list marker):
+   `Pass: <cache_path>` | `Pass with Findings: <cache_path>` | `Fail: <cache_path>`
+
 ## Output
 
-1. Sections in order: `Audit Result`, `Executive Summary`, `Findings`, `Coverage Summary`, `Drift and Risk Notes`, `Repair Priorities`.
+1. Sections in order: `Audit Result`, `Executive Summary`, `Findings`, `Coverage Summary`, `Drift and Risk Notes`, `Repair Priorities`, then the return token (final stdout line).
 2. `Audit Result`: `Pass`, `Pass with Findings`, or `Fail`.
-3. `Executive Summary`: alignment state (or spec quality state in spec-only mode), mode used,
-   biggest risks, threshold if customized.
+3. `Executive Summary`:
+   - **Pair-audit mode**: alignment state between spec and companion, mode used, biggest risks, threshold if customized.
+   - **Spec-only mode**: spec structural quality and standards-conformance — sections present, language enforceability, internal consistency, material weaknesses. No alignment assessment; there is no companion.
 4. `Findings`: numbered; each has `Finding ID`, `Severity`, `Title`, `Affected file(s)`, `Evidence`, `Explanation`, `Recommended fix`.
 5. `Coverage Summary`: well-covered, missing/weak, fit for purpose.
    Spec-only mode: set to "N/A — spec-only mode, no companion present."
 6. `Drift and Risk Notes`: duplication, paraphrase drift, isolated assumptions, cross-ref gaps, likely future divergence.
    Spec-only mode: internal consistency observations only (no cross-file drift).
 7. `Repair Priorities`: highest-value fix order first.
-8. Quote evidence inline for every finding.
+8. Return token: after writing the hash-record (Step RW), emit as the final stdout line (column 0, no indent, no list marker): `Pass: <abs-path>` | `Pass with Findings: <abs-path>` | `Fail: <abs-path>` | `ERROR: <reason>`. Nothing follows this line.
+9. Quote evidence inline for every finding.
 
 When in doubt: optimize for preserving meaning, exposing mismatch, and preventing silent drift.
 
-Non-goals: not responsible for product strategy, inventing missing requirements, judging implementation quality outside documents, resolving domain disputes without textual basis, or approving vague specs on goodwill.
+## Out of scope
+
+- Product strategy
+- Inventing missing requirements
+- Judging implementation quality outside documents
+- Resolving domain disputes without textual basis
+- Approving vague specs on goodwill.

@@ -30,6 +30,14 @@ The agent must behave as an auditor, not as an author, unless explicitly asked t
 
 ---
 
+## Version
+
+1
+
+Bump this when the audit semantics, output schema, or check codes change in a way that invalidates prior records. The version is reflected in the `operation_kind` used by the result record (`spec-auditing/v1`).
+
+---
+
 ## Scope
 
 The auditor operates in one of two modes:
@@ -59,6 +67,56 @@ The auditor must treat the spec as normative unless this file explicitly declare
 
 ---
 
+## Spec-Only Mode
+
+When the target is a `spec.md` file and the caller explicitly requests
+spec-only mode, or when no companion is present (see §Companion Auto-Detect),
+the auditor operates in spec-only mode.
+
+### What is audited
+
+In spec-only mode the auditor evaluates the spec file against its own quality
+criteria:
+
+- **Completeness** — are all required sections present; are terms defined; are
+  procedures complete?
+- **Enforceability** — are requirements testable; is language precise; are
+  vague/aspirational statements flagged?
+- **Structural Integrity** — logical ordering; stable headings; no hidden
+  requirements in examples; normative language consistent.
+- **Economy** — duplicated rules, unnecessary scaffolding, or prose that can be
+  removed without changing the spec's effect.
+- **Terminology** — defined terms used consistently; undefined critical terms
+  flagged; synonym drift flagged.
+- **Internal Consistency** — no contradictions within the spec itself.
+
+### What is not audited
+
+The following checks require a companion file and are skipped:
+
+- Semantic Alignment (spec vs companion)
+- Requirement Coverage (companion coverage of spec requirements)
+- Cross-File Contradiction Detection (spec vs companion conflicts)
+- Unauthorized Additions (companion scope expansion)
+- Compression Fidelity (loss/gain/bloat)
+- Change Drift Risk (cross-file divergence)
+
+Internal Consistency (intra-spec contradiction detection) is IN scope for
+spec-only mode — it appears under §What is audited above.
+
+### Fix mode in spec-only
+
+The executor is single-pass read-only; fix iteration is caller-driven. In spec-only mode there is no companion, so there is nothing for a fix agent to act on. Fixing the spec itself is an authorial act requiring domain judgment and is never done by the auditor.
+
+If `--fix` is passed in spec-only mode, the executor ignores the flag and runs a read-only audit. The required report string and exact behavior are defined canonically in the §Error Handling table row for "`--fix` passed in any mode." Any spec defects surface as findings for the caller to act on.
+
+### Output in spec-only mode
+
+Use the standard output structure. Set Coverage Summary to:
+"N/A — spec-only mode, no companion present."
+
+---
+
 ## Definitions
 
 - **Spec file**: the normative markdown document describing rules, requirements, expectations, structure, or behavior for a system or artifact.
@@ -74,6 +132,9 @@ The auditor must treat the spec as normative unless this file explicitly declare
 - **Unauthorized addition**: content in the companion that has no basis in the spec and that the spec does not permit via extension. A defect.
 - **Valid extension**: an addition in the companion that fits within an extension point explicitly permitted by the spec.
 - **Derived but unstated**: an addition in the companion that is a reasonable inference from the spec but is not explicitly stated. Must be flagged.
+- **Meaningful** (as in "meaningful conflict" or "meaningful requirement"): any requirement, prohibition, or constraint that affects observable behavior or that an implementor or auditor would need to act on; excludes phrasing variation with identical effect.
+- **Material** (as in "materially incomplete"): a gap or weakness significant enough that a reader cannot reliably interpret or act on the document; excludes minor wording issues or incomplete examples that do not affect the normative content.
+- **Sufficient** (as in "sufficient information to audit"): enough normative content exists to evaluate the companion against the spec without guessing at intent; the auditor can formulate a testable criterion for each checked dimension.
 
 ---
 
@@ -116,7 +177,8 @@ The auditor must never silently reconcile conflicts. All meaningful conflicts mu
 The auditor expects:
 
 - one target path: either the spec file or the companion file being audited
-- optional explicit spec path override when the target path points to a companion file
+- optional explicit spec path override when the target path points to a companion file (`--spec <spec-path>`)
+- required report output path supplied by the host (`--report-path <path>`); executor writes the hash-record verdict there; skip write if absent or empty (no-cache path)
 - optional audit context, including an explicit request for spec-only mode when the caller wants to audit a spec in isolation
 - optional repository or project conventions
 - optional severity thresholds
@@ -164,11 +226,11 @@ This skill must be invoked via a dispatch agent with zero inherited context. Inl
 
 The auditor supports two audit kind values, selectable via `--kind meta|domain` or auto-detected:
 
-**Meta mode** (`--kind meta`): Applies full pair-audit with all 13 checks unchanged. Use when pairing a companion against a meta-spec (e.g., `spec-writing/spec.md`). This is the mode produced by the 13-check pair-audit procedure as defined in §Required Audit Dimensions.
+**Meta mode** (`--kind meta`): Applies the full pair-audit: 11 audit dimensions (§Required Audit Dimensions) plus 2 extraction steps (§Behavior steps 3 and 4), unchanged. Use when pairing a companion against a meta-spec (e.g., `spec-writing/spec.md`).
 
 **Domain mode** (`--kind domain`): Applies pair-audit with § Unauthorized Additions modified. Use when auditing a domain spec against a domain authority, or when no authority is declared. Domain-specific requirements in the companion must not be flagged as unauthorized simply because they do not appear in a meta-spec.
 
-**Auto-detection** (when `--kind` is not provided): if the spec path contains `spec-writing`, the auditor infers meta mode and reports the inference. Otherwise, the auditor infers domain mode and reports the inference. If neither signal is present, the auditor must stop and require an explicit `--kind` flag.
+**Auto-detection** (when `--kind` is not provided): if the spec path's directory components include `spec-writing` (path-component match, not substring; e.g. `/path/to/spec-writing/spec.md` matches; `/path/to/spec-writing-legacy/spec.md` does NOT match unless the literal directory `spec-writing` appears in its path), the auditor infers meta mode and reports the inference. Otherwise, the auditor infers domain mode and reports the inference.
 
 Audit kind applies to pair-audit mode only. Spec-only mode is unaffected.
 
@@ -457,7 +519,13 @@ A single top-level result:
 
 ### 2. Executive Summary
 
-A concise summary of the overall state of alignment between the two files.
+**Pair-audit mode:** A concise summary of the overall state of alignment
+between the two files — shared meaning preserved, key risks, biggest gaps.
+
+**Spec-only mode:** A concise summary of the spec's structural quality and
+standards-conformance — sections present, language enforceability, internal
+consistency, and any material weaknesses. No alignment assessment is included;
+there is no companion to align against.
 
 ### 3. Findings
 
@@ -490,6 +558,18 @@ Any structural observations about likely future divergence.
 ### 6. Repair Priorities
 
 A prioritized repair sequence, highest value first.
+
+### 7. Return Token
+
+After writing the report to the hash-record path, the executor must emit exactly one final line of stdout — the return token. This line must be the last line of stdout, starting at column 0 with no indentation, no quoting, and no list-marker prefix. Nothing may follow it.
+
+`PATH: <abs-path>` is emitted by the HOST on a cache hit (executor not invoked).
+The executor emits one of the following:
+
+- `Pass: <abs-path>` — audit complete, no findings
+- `Pass with Findings: <abs-path>` — audit complete, findings present, no fail condition
+- `Fail: <abs-path>` — audit failed; Critical or 2+ High findings
+- `ERROR: <reason>` — pre-write failure; no report written
 
 ---
 
@@ -527,18 +607,132 @@ Atomic, testable requirements for the auditor:
 6. The auditor must report every conflict between files; silent normalization is prohibited.
 7. The auditor must classify each companion-only addition as Valid Extension, Derived but Unstated, or Unauthorized Addition.
 8. The auditor must apply the pass/fail gate rules in §Pass / Fail Rules and state the result as Pass, Pass with Findings, or Fail.
-9. The auditor must emit output sections in the order: Audit Result, Executive Summary, Findings, Coverage Summary, Drift and Risk Notes, Repair Priorities.
-10. When `--fix` is active, the auditor must re-audit after each fix pass; maximum 3 passes.
-11. In fix mode, fixes must be applied in severity order: Critical → High → Medium → Low; within severity: semantic → terminology → structural → stylistic.
+9. The auditor must emit output sections in the order: Audit Result, Executive Summary, Findings, Coverage Summary, Drift and Risk Notes, Repair Priorities, Return Token.
+10. Fix iteration is caller-driven; the executor is single-pass read-only. The caller dispatches a fix agent on `Fail` or `Pass with Findings`, then re-invokes the executor; maximum 3 caller-driven rounds.
+11. Fix agents must apply changes in severity order: Critical → High → Medium → Low; within severity: semantic → terminology → structural → stylistic.
 12. The auditor must not propose rewrites until the full audit is complete.
 13. Evidence must be labeled: direct evidence, reasonable inference, or uncertainty. Inference must never be presented as fact.
 14. When a spec lacks sufficient information to audit the companion, the auditor must say so explicitly, state what is missing, and assess whether the result can still pass.
+
+Additional requirements covering hash-record cache behavior are defined in §Hash-Record Cache, sub-section Requirements (hash-record) (R-HR-1 through R-HR-5). Both sets are normative.
+
+---
+
+## Hash-Record Cache
+
+### Overview
+
+spec-auditing is a deterministic, read-only operation. Given the same set of
+input files and the same audit logic version, the result is identical. The
+hash-record cache exploits this: on a cache hit, the auditor returns the
+stored verdict immediately without dispatching an LLM.
+
+### Manifest Hash
+
+Compute from all input files (target spec and companion, if present):
+
+1. For each input file, compute `git hash-object <file>`.
+2. Sort file paths lexically (repo-relative).
+3. Concatenate as `<blob-hash> <repo-relative-path>\n` for each file.
+4. `sha256sum` the concatenation.
+
+Exclude dot-prefixed directories and non-input files. Include only the files
+actually audited in this invocation.
+
+### Cache Path
+
+```text
+<repo_root>/.hash-record/<manifest_hash[0:2]>/<manifest_hash>/spec-auditing/v1/report.md
+```
+
+`<manifest_hash[0:2]>` is the first two characters of the manifest hash
+(shard directory). `spec-auditing/v1` is the operation kind for this version.
+
+### Cache Check (at host surface)
+
+The host runs the inline hash check (via `hash-record-manifest/manifest.sh` or `.ps1`) with `op_kind = spec-auditing/v1` and `record_filename = report.md` before any dispatch.
+
+- **Hit** (`HIT: <abs-path>`): host emits `PATH: <abs-path>` and stops. No executor dispatched.
+- **Miss** (`MISS: <abs-path>`): host binds `<report_path>` and passes it via `--report-path` to the executor.
+- **Error** (untracked / non-git): host skips caching; executor runs without `--report-path` and omits record write.
+
+The executor must NOT re-check or re-compute the cache. It receives `--report-path` from the host and writes there on completion.
+
+### Record Write (executor, when `--report-path` is provided)
+
+After completing the audit and before returning, write the hash-record to the
+path supplied via `--report-path`. If `--report-path` is absent or empty (no-cache
+path), skip this step. The file must contain a YAML frontmatter block followed
+by the verdict:
+
+```yaml
+---
+hash: <manifest-hash>
+file_paths:
+  - <repo-relative-path>     # sorted lexically; one entry per audited file
+operation_kind: spec-auditing/v1
+result: pass | pass_with_findings | fail | error
+---
+```
+
+`result` maps: Pass → `pass`; Pass with Findings → `pass_with_findings`;
+Fail → `fail`; error → `error`.
+
+### Return Token
+
+The final line of stdout of the overall skill invocation MUST be the return
+token, at column 0, no indent, no list markers, no quoting.
+
+Host emits (cache hit, executor not invoked):
+
+```text
+PATH: <report_path>
+```
+
+Executor emits (after full audit and hash-record write):
+
+```text
+Pass: <report_path>
+Pass with Findings: <report_path>
+Fail: <report_path>
+ERROR: <reason>
+```
+
+`<report_path>` is the absolute path to the written hash-record file. All
+narrative output MUST appear before this line; nothing may follow it.
+
+### Repo-Root Computation
+
+```bash
+repo_root=$(git -C "$(dirname <spec_path>)" rev-parse --show-toplevel 2>/dev/null)
+# Fallback if not in a git repo: place .hash-record/ adjacent to spec_path
+[ -z "$repo_root" ] && repo_root="$(dirname <spec_path>)"
+```
+
+### Requirements (hash-record)
+
+R-HR-1: The HOST MUST invoke the manifest tool (`hash-record-manifest/manifest.sh`
+or `.ps1`) before dispatching the executor — before any LLM is dispatched and
+before any other side effect related to this invocation.
+
+R-HR-2: On a cache hit (`HIT:`), the host MUST emit `PATH: <abs-path>` as the
+final line of stdout and MUST stop immediately without dispatching an executor.
+
+R-HR-3: On a cache miss, the host MUST pass the computed cache path to the
+executor via `--report-path <path>`. The executor MUST write the hash-record to
+that path before returning any result.
+
+R-HR-4: The `file_paths` frontmatter field MUST list only repo-relative
+paths, sorted lexically. Absolute paths are prohibited.
+
+R-HR-5: The return token MUST be the final line of stdout with no indentation
+or prefix. No output may follow it.
 
 ---
 
 ## Constraints
 
-1. The auditor must never modify the spec file. In `--fix` mode, modifications apply to the companion/target file only; the spec remains immutable. If the audit surfaces a defect in the spec itself, the auditor reports it as a finding for the caller to act on — it does not attempt to repair the spec.
+1. The auditor must never modify the spec file. The executor is single-pass read-only; fix iteration is caller-driven. If the audit surfaces a defect in the spec itself, the auditor reports it as a finding for the caller to act on — it does not attempt to repair the spec.
 2. The auditor must not approve or stamp any file — approve mode is not supported.
 3. The auditor must not silently reconcile conflicts between files.
 4. The auditor must not choose an interpretation silently when multiple plausible interpretations exist.
@@ -546,9 +740,15 @@ Atomic, testable requirements for the auditor:
 6. The auditor must not treat examples as authoritative unless explicitly marked normative.
 7. The auditor must not assume a companion paraphrase is acceptable merely because it sounds similar.
 8. The auditor must not downgrade a finding's severity merely because the likely intent seems obvious.
-9. The auditor must not apply `--fix` in spec-only mode.
+9. The executor does not handle `--fix`; fix iteration is caller-driven. If `--fix` is passed, ignore the flag and continue with a read-only audit per the canonical handling defined in the §Error Handling table row for "`--fix` passed in any mode."
 10. The auditor must not invent product requirements or resolve domain disputes without textual basis.
 11. One spec or spec/target pair per invocation. Multi-subject audits must be chained as separate runs.
+
+## Banned Terminology
+
+The auditor must not use the term **"non-goals"** in any finding text, recommendation, or output. The term is ambiguous and confusing. Use **"Out of Scope"** instead.
+
+When auditing target or companion content, the auditor must flag any occurrence of "non-goals" as a Medium-severity Terminology finding (Audit step 9) and recommend renaming the section, heading, or term to "Out of Scope".
 
 ---
 
@@ -556,13 +756,16 @@ Atomic, testable requirements for the auditor:
 
 ### Audit flow
 
-1. Resolve input paths and detect mode (pair-audit or spec-only) per §Inputs and §Spec-Only Mode.
-2. Read all resolved files fully.
-3. Extract normative content (requirements, prohibitions, definitions, defaults, procedures, exceptions).
-4. Evaluate all applicable audit dimensions in sequence.
-5. Assign severity and evidence to each finding.
-6. Apply pass/fail gate rules.
-7. Emit output in required section order.
+0. **[Host]** Resolve input paths and detect mode (pair-audit or spec-only) per §Inputs and §Spec-Only Mode.
+1. **[Host]** Invoke manifest tool inline (per §Hash-Record Cache / Cache Check). On a hit, emit `PATH: <abs-path>` and STOP — no executor dispatched. On a miss, bind `<report_path>` and pass via `--report-path` to the executor.
+2. **[Executor]** Read all resolved files fully.
+3. **[Executor]** Extract normative content (requirements, prohibitions, definitions, defaults, procedures, exceptions).
+4. **[Executor]** Evaluate all applicable audit dimensions in sequence.
+5. **[Executor]** Assign severity and evidence to each finding.
+6. **[Executor]** Apply pass/fail gate rules.
+7. **[Executor]** MUST write hash-record to the path from `--report-path` before emitting the return token. Skip if `--report-path` is absent or empty. See §Hash-Record Cache / Record Write.
+8. **[Executor]** Emit output in required section order.
+9. **[Executor]** Emit return token as the final stdout line. See §Hash-Record Cache / Return Token.
 
 ### Pass/Fail gate
 
@@ -574,19 +777,22 @@ Atomic, testable requirements for the auditor:
 
 ### Fix mode behavior
 
-When `--fix` is active:
+The executor is single-pass read-only. Fix iteration is caller-driven: the caller dispatches a separate fix agent on `Fail` or `Pass with Findings`, then re-invokes the executor. The `--fix` flag is not handled by the executor; it is reserved for the caller to signal that a fix cycle is in progress.
 
-1. Run full audit first.
-2. Apply fixes to the target file only; spec is immutable.
-3. Re-audit after each pass. Stop at 3 passes or earlier alignment.
-4. When the spec lacks sufficient detail to guide a fix, report as a spec critique rather than guessing.
+Fix agent guidance (for callers orchestrating fix iteration):
+
+1. Fix target file only; spec is immutable. Spec defects → report as finding; do not repair spec.
+2. Apply in severity order: Critical → High → Medium → Low; within severity: semantic → terminology → structural → stylistic.
+3. Re-invoke the executor after each fix pass. Stop at 3 caller-driven rounds or earlier alignment.
+4. When the spec lacks sufficient detail to guide a fix, report as a spec critique ("section X too vague", "no rationale for rule Y") rather than guessing.
+
+§Optional Modes / §Repair Mode references this section.
 
 ---
 
 ## Iteration Safety
 
-Do not re-audit unchanged files.
-See `../iteration-safety/SKILL.md`.
+See §Hash-Record Cache above for caching behavior. See `../iteration-safety/SKILL.md` for the broader iteration safety pattern.
 
 ---
 
@@ -600,9 +806,9 @@ See `../iteration-safety/SKILL.md`.
 | Input files only partially readable | STOP: report "incomplete input — cannot audit partial content" |
 | Companion auto-detect finds no candidate | Proceed in spec-only mode; report "no companion present — auditing spec alone" |
 | Multiple companion candidates found | Use first in priority order; report ambiguity |
-| `--fix` passed in spec-only mode | Ignore the flag; report "fix mode unavailable in spec-only mode — no companion to modify"; continue with a read-only audit |
-| `--fix` passed with untracked/modified/conflicted target | STOP: report "target must be git-tracked and clean" |
+| `--fix` passed in any mode | Ignore the flag; report "fix iteration is caller-driven — executor is single-pass read-only; in spec-only mode there is also no companion to fix"; continue with a read-only audit |
 | Approve/stamp request received | STOP: report "approve mode not supported" |
+| Manifest tool returns `ERROR:` (e.g. file untracked, non-git environment) | Host skips caching; dispatches executor without `--report-path`; executor runs full audit, omits hash-record write, emits verdict without path |
 
 ---
 
@@ -709,80 +915,11 @@ Fail the audit for any High or above finding.
 
 ### Repair Mode
 
-After the audit, propose exact revisions.
+After the audit, the caller dispatches a separate fix agent to apply exact revisions to the target file, then re-invokes this executor. The executor itself is single-pass read-only.
 
-Repair mechanics:
-
-1. The target file must be tracked in git with a clean working tree (safety net: `git restore`).
-2. Fix findings in severity order: Critical → High → Medium → Low.
-3. When the spec lacks sufficient detail to guide a fix, report it as a spec
-   critique ("section X too vague", "no rationale for rule Y") rather than guessing.
-4. Re-audit after fixes. Maximum 3 passes. Stop early if aligned.
-5. Report: findings, fixes applied, remaining issues, spec critiques.
-
-The auditor never modifies the spec. Spec shortfalls are reported, not fixed.
+Fix guidance and ordering rules are defined in §Behavior / Fix mode behavior. The auditor never modifies the spec; spec shortfalls are reported as findings for the caller to act on.
 
 If no mode is specified, use the default balanced mode.
-
----
-
-## Spec-Only Mode
-
-When the target is a `spec.md` file and the caller explicitly requests
-spec-only mode, or when no companion is present (see §Companion Auto-Detect),
-the auditor operates in spec-only mode.
-
-### What is audited
-
-In spec-only mode the auditor evaluates the spec file against its own quality
-criteria:
-
-- **Completeness** — are all required sections present; are terms defined; are
-  procedures complete?
-- **Enforceability** — are requirements testable; is language precise; are
-  vague/aspirational statements flagged?
-- **Structural Integrity** — logical ordering; stable headings; no hidden
-  requirements in examples; normative language consistent.
-- **Economy** — duplicated rules, unnecessary scaffolding, or prose that can be
-  removed without changing the spec's effect.
-- **Terminology** — defined terms used consistently; undefined critical terms
-  flagged; synonym drift flagged.
-- **Internal Consistency** — no contradictions within the spec itself.
-
-### What is not audited
-
-The following checks require a companion file and are skipped:
-
-- Semantic Alignment (spec vs companion)
-- Requirement Coverage (companion coverage of spec requirements)
-- Contradiction Detection (spec vs companion)
-- Unauthorized Additions (companion scope expansion)
-- Compression Fidelity (loss/gain/bloat)
-- Change Drift Risk (cross-file divergence)
-
-### Fix mode in spec-only
-
-`--fix` modifies the companion file to align it with the spec. In spec-only
-mode there is no companion, so there is nothing for `--fix` to act on. Fixing
-the spec itself is an authorial act requiring domain judgment and is never
-done by the auditor.
-
-If `--fix` is passed in spec-only mode: ignore the flag, report that fix mode
-is unavailable in this mode, and run a read-only audit. Any spec defects
-surface as findings for the caller to act on.
-
-### Output in spec-only mode
-
-Use the standard output structure. Set Coverage Summary to:
-"N/A — spec-only mode, no companion present."
-
----
-
-## Footguns
-
-**F1: Spec file contains YAML frontmatter** — specs are governance documents for humans and auditors, not runtime artifacts. Frontmatter (`name:`, `description:`, `type:`) belongs only in `SKILL.md`, agent files, and tool scripts. A spec with frontmatter signals confused authoring intent.
-Why: tooling may classify the file as a runtime artifact; the frontmatter carries no meaning at audit time and creates noise.
-Mitigation: strip frontmatter from `spec.md` files at authoring time. Flag any `---` YAML block at the top of a spec file as a Structural Integrity finding.
 
 ---
 
@@ -795,19 +932,6 @@ The auditor is not responsible for:
 - judging implementation quality outside the documents
 - resolving domain disputes without textual basis
 - approving vague specs on goodwill
-
----
-
-## Minimal Output Template
-
-The auditor should be able to emit results in this shape:
-
-- Audit Result
-- Executive Summary
-- Findings
-- Coverage Summary
-- Drift and Risk Notes
-- Repair Priorities
 
 ---
 

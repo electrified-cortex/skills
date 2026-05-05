@@ -50,12 +50,10 @@ flowchart TD
     ANA -->|ERROR| RET
     ANA -->|clean/pass/findings - bind analysis_path| AGG[aggregate + write report.md]
     AGG --> IC{aggregate result?}
-    IC -->|clean| PRN1[prune]
-    PRN1 --> CLEAN([return CLEAN])
+    IC -->|clean| CLEAN([return CLEAN])
     IC -->|fail or pass| FIX[dispatch fix agent]
     FIX -->|ERROR| RET
-    FIX -->|clean: - only skips logged| PRN2[prune]
-    PRN2 --> PASS([return pass: report_path])
+    FIX -->|clean: - only skips logged| PASS([return pass: report_path])
     FIX -->|fixed: - changes applied| CNT{iteration count}
     CNT -->|3 or fewer - restart| LINT
     CNT -->|exceeded| STOP([return findings: report_path])
@@ -67,10 +65,11 @@ Steps:
 2. **Lint.** Follow `markdown-hygiene-lint/SKILL.md`. Sub-skill handles auto-fix, cache check, and dispatch. Bind `<lint_path>` from return.
 3. **Analysis.** Follow `markdown-hygiene-analysis/SKILL.md`. Sub-skill handles cache check and dispatch. Bind `<analysis_path>` from return.
 4. **Aggregate.** Derive combined result from `<lint_path>` and `<analysis_path>`. Write `report.md`.
-5. **Iteration check.** Clean → prune → `CLEAN`. Fail/pass → dispatch fix agent.
+5. **Iteration check.** Clean → return `CLEAN`. Fail/pass → dispatch fix agent.
    - `fixed:` — restart from step 2 (max 3 times; then return `findings:`).
-   - `clean:` — prune → `pass: <report_path>`.
-6. **Prune.** Remove orphaned hash records for this file.
+   - `clean:` — return `pass: <report_path>`.
+
+**Pruning is out of scope.** Do NOT run `hash-record-prune` from this skill or its sub-skills. Pruning during a seal chain destroys valid records produced by sibling skills before they can be committed. Operators run prune as a separate maintenance pass after seal commits land.
 
 ### Result Check Tool
 

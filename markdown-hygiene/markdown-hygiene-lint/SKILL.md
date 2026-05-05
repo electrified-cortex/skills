@@ -38,5 +38,5 @@ If that result is a `MISS: <abs-path>` then something is wrong and report it as:
 
 If `clean`, return the result to the caller and stop here.
 
-To fix, `dispatch` a sub-agent with this report as input instructing it to fix all the issues.
+To fix, `dispatch` a standard tier sub-agent with this report as input instructing it to fix all the issues.
 Then follow this skill again, keep track of the number of revision rounds. If it has been 3, stop here and surface the report.

@@ -1,8 +1,16 @@
 ---
 name: skill-writing
 description: >-
-  How to write skills — decision tree for inline vs dispatch, structure,
-  quality criteria.
+  Use when writing a skill, authoring SKILL.md, creating a new skill from a spec,
+  drafting a skill file, implementing SKILL.md against a spec, or when a skill
+  needs to be written. Decision tree for inline vs dispatch, structure, quality criteria.
+triggers:
+  - write a skill
+  - author SKILL.md
+  - create a new skill
+  - draft a skill
+  - skill needs to be written
+  - implement SKILL.md against a spec
 ---
 
 Create skills agents can discover, invoke, rely on.

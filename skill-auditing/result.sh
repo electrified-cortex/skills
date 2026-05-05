@@ -2,9 +2,10 @@
 # result.sh — skill-auditing result tool
 # Usage: result.sh <skill_dir>
 # Outputs one of:
+#   CLEAN: <abs-path>           (HIT, result: clean)        (exit 0)
 #   PASS: <abs-path>            (HIT, result: pass)         (exit 0)
 #   NEEDS_REVISION: <abs-path>  (HIT, result: findings)     (exit 0)
-#   FAIL: <abs-path>            (HIT, result: error)        (exit 0)
+#   FAIL: <abs-path>            (HIT, result: fail)         (exit 0)
 #   MISS: <abs-path>            (no cache; this is the report path) (exit 0)
 #   ERROR: <reason>             (argument or runtime error) (exit 1)
 set -e
@@ -17,16 +18,16 @@ Wraps hash-record-manifest for skill-auditing and translates a HIT into
 the cached audit verdict by reading the report's frontmatter.
 
 Arguments:
-  skill_dir  Absolute path to the skill folder being audited.
-             Tool hashes only semantic content files: SKILL.md,
-             instructions.txt, spec.md, uncompressed.md,
-             instructions.uncompressed.md (whichever exist).
-             Skill dir must be inside a git repository.
+  skill_dir        Absolute path to the skill folder being audited.
+
+Options:
+  --help / -h      Print usage, exit 0.
 
 Output (stdout, one line):
+  CLEAN: <abs-path>           Cached report says result: clean.
   PASS: <abs-path>            Cached report says result: pass.
   NEEDS_REVISION: <abs-path>  Cached report says result: findings.
-  FAIL: <abs-path>            Cached report says result: error.
+  FAIL: <abs-path>            Cached report says result: fail.
   MISS: <abs-path>            No cache entry; executor MUST write here.
   ERROR: <reason>             Argument, runtime, or malformed-record error.
 
@@ -37,12 +38,14 @@ USAGE
   exit 0
 fi
 
-if [ "$#" -lt 1 ]; then
+POSITIONAL=("$@")
+
+if [ "${#POSITIONAL[@]}" -lt 1 ]; then
   echo "ERROR: missing argument -- expected <skill_dir>"
   exit 1
 fi
 
-SKILL_DIR="$1"
+SKILL_DIR="${POSITIONAL[0]}"
 RECORD_FILE="report.md"
 
 if [ ! -d "$SKILL_DIR" ]; then
@@ -67,15 +70,12 @@ for NAME in "${SEMANTIC_NAMES[@]}"; do
 done
 
 if [ "${#FILES[@]}" -eq 0 ]; then
-  echo "ERROR: no files found in skill_dir"
+  echo "ERROR: no semantic content files found in skill_dir"
   exit 1
 fi
 
-# Verify skill_dir is inside a git repo — fail explicitly instead of silent fallback
-git -C "$SKILL_DIR" rev-parse --show-toplevel >/dev/null 2>&1 || {
-    echo "ERROR: skill_dir is not inside a git repository: $SKILL_DIR"
-    exit 1
-}
+# Single canonical op_kind
+OP_KIND="skill-auditing/v2"
 
 # Locate sibling manifest tool
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -86,11 +86,14 @@ if [ ! -f "$MANIFEST_SH" ]; then
   exit 1
 fi
 
-# Invoke manifest
-MANIFEST_OUT=$(bash "$MANIFEST_SH" "skill-auditing/v2" "$RECORD_FILE" "${FILES[@]}") || {
-  echo "ERROR: hash-record-manifest failed for: $SKILL_DIR"
-  exit 1
+# Normalize a path string to forward slashes
+normalize_path() {
+  echo "${1//\\//}"
 }
+
+# Invoke manifest
+MANIFEST_OUT=$(bash "$MANIFEST_SH" "$OP_KIND" "$RECORD_FILE" "${FILES[@]}")
+MANIFEST_OUT=$(normalize_path "$MANIFEST_OUT")
 
 case "$MANIFEST_OUT" in
   "MISS: "*)
@@ -102,13 +105,17 @@ case "$MANIFEST_OUT" in
     exit 1
     ;;
   "HIT: "*)
-    REPORT_PATH="${MANIFEST_OUT#HIT: }"
+    REPORT_PATH=$(normalize_path "${MANIFEST_OUT#HIT: }")
     if [ ! -f "$REPORT_PATH" ]; then
       echo "ERROR: cache record vanished at: $REPORT_PATH"
       exit 1
     fi
     RESULT_VALUE=$(grep -m1 '^result:' "$REPORT_PATH" 2>/dev/null | awk '{print $2}')
     case "$RESULT_VALUE" in
+      clean)
+        echo "CLEAN: $REPORT_PATH"
+        exit 0
+        ;;
       pass)
         echo "PASS: $REPORT_PATH"
         exit 0
@@ -117,7 +124,7 @@ case "$MANIFEST_OUT" in
         echo "NEEDS_REVISION: $REPORT_PATH"
         exit 0
         ;;
-      error)
+      fail)
         echo "FAIL: $REPORT_PATH"
         exit 0
         ;;

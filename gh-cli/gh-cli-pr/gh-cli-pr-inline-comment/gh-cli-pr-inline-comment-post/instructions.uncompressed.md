@@ -41,8 +41,6 @@ If FILE_PATH is not listed, stop: the file has no changes in this PR.
 
 ## Step 3: Verify the Line Is in the Diff
 
-> **GOTCHA**: `gh pr diff {PR_NUMBER} -- {FILE_PATH}` is INVALID — `gh pr diff` accepts at most one argument (the PR number). The `-- {FILE_PATH}` syntax causes a fatal error: "accepts at most 1 arg(s), received 2".
-
 Get the full patch and parse hunk headers for the target file:
 
 ```bash
@@ -58,8 +56,6 @@ Locate the `diff --git a/{FILE_PATH}` section. For each `@@ -OLD,OLD_LEN +NEW,NE
 If LINE_NUMBER falls outside all hunk ranges for FILE_PATH, stop and report:
 `Line {LINE_NUMBER} not in diff for {FILE_PATH}`
 
-Alternatively, skip this pre-check and rely on the 422 response in Step 5 — a 422 with `field=pull_request_review_thread.line` and `message="could not be resolved"` means the line is not commentable.
-
 ## Step 4: Check for Existing Comment (Deduplication)
 
 ```bash
@@ -68,7 +64,7 @@ gh api --paginate repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments \
 ```
 
 If a matching comment already exists, return:
-`{ "status": "duplicate", "comment_id": <existing_id>, "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
+`{ "status": "duplicate", "comment_id": <existing_id>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<existing_id>", "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
 
 ## Step 5: Post the Comment
 
@@ -101,13 +97,13 @@ Both `start_line` and `line` must be in the diff. Do not use the deprecated `pos
 ## Return
 
 On success:
-`{ "status": "posted", "comment_id": <id from response>, "message": "posted at {FILE_PATH}:{LINE_NUMBER}" }`
+`{ "status": "posted", "comment_id": <id from response>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<id from response>", "message": "posted at {FILE_PATH}:{LINE_NUMBER}" }`
 
 On duplicate (Step 4 match):
-`{ "status": "duplicate", "comment_id": <existing_id>, "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
+`{ "status": "duplicate", "comment_id": <existing_id>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<existing_id>", "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
 
 On 422 where `errors[0].field == "pull_request_review_thread.line"` and `message == "could not be resolved"`:
-`{ "status": "error", "comment_id": null, "message": "Line {LINE_NUMBER} is not in the diff for {FILE_PATH}" }`
+`{ "status": "error", "comment_id": null, "comment_url": null, "message": "Line {LINE_NUMBER} is not in the diff for {FILE_PATH}" }`
 
 On other 422: surface the full `errors` array to the caller:
-`{ "status": "error", "comment_id": null, "message": "<errors array as string>" }`
+`{ "status": "error", "comment_id": null, "comment_url": null, "message": "<errors array as string>" }`

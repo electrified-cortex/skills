@@ -1,13 +1,11 @@
 ---
 name: gh-cli-pr-inline-comment-post
-description: Post a single or multi-line inline review comment on a PR diff line via GitHub CLI. Handles SHA lookup, diff verification, deduplication, and POST.
+description: Post an inline PR review comment on a diff line. Triggers — post inline comment, pr review comment, inline diff comment, pr inline annotation, gh api pr comment.
 ---
 
 # GH CLI PR Inline Comment — Post
 
-Dispatch skill. Posts an inline review comment anchored to a specific line in a PR diff.
-
-This is the complex operation: before POSTing, the sub-agent must fetch the PR head commit SHA, verify the target file appears in the diff, confirm the target line is visible, and check for duplicate comments.
+Posts an inline review comment anchored to a specific line in a PR diff.
 
 ## Inputs
 
@@ -31,20 +29,11 @@ This is the complex operation: before POSTing, the sub-agent must fetch the PR h
 `<description>` = post inline PR comment on {FILE_PATH}:{LINE_NUMBER}
 `<prompt>` = Read and follow `<instructions-abspath>`. Input: `<input-args>`
 
-Follow dispatch skill: `../../../../dispatch/SKILL.md`
-Should return: `{ "status": "posted" | "duplicate" | "error", "comment_id": <id or null>, "message": "<one line>" }`
+Follow dispatch skill.
+Should return: `{ "status": "posted" | "duplicate" | "error", "comment_id": <integer or null>, "comment_url": "<https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r{ID} or null>", "message": "<one-line summary>" }`
 
 ## Return
 
 ```json
-{ "status": "posted" | "duplicate" | "error", "comment_id": <id or null>, "message": "<one line>" }
+{ "status": "posted" | "duplicate" | "error", "comment_id": <integer or null>, "comment_url": "<https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r{ID} or null>", "message": "<one-line summary>" }
 ```
-
-## Why This Is Complex
-
-GitHub requires:
-
-1. A fresh `commit_id` from the PR head — stale SHAs cause 422
-2. The target line must be visible in the diff — not all lines qualify
-3. `side` must match the line type: `RIGHT` for additions/context, `LEFT` for deletions
-4. `position` is deprecated — always use `line`

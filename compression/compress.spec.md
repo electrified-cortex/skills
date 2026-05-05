@@ -198,12 +198,12 @@ The output format is the compressed text followed by the reduction line:
 850→510 bytes | 40% reduction | ultra
 ```
 
-## Non-Goals
+## Don'ts
 
-- **Batch compression.** One file per invocation. Callers chain invocations.
-- **Content restructuring.** Compression preserves structure; it does not
+- **Don't batch compress.** one file per invocation. Callers chain invocations.
+- **Don't restructure content.** Compression preserves structure; it does not
   reorganize, rewrite, or improve the target beyond token reduction.
-- **Interactive mode.** No back-and-forth with the caller during compression.
+- **Don't use interactive mode.** No back-and-forth with the caller during compression.
   One input, one output.
 
 ## Runtime Requirements

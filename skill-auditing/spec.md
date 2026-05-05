@@ -7,30 +7,6 @@ the source of truth for skill quality. Skill writers conform to the
 auditor's rules. The auditor can verify its own skill for compliance
 (dogfooding).
 
-## Design Goal — Haiku Wins the Eval Game
-
-Sonnet-class is the baseline — table stakes. A working skill must run
-correctly under sonnet. Haiku-class is the **winning bar**: a skill that
-also runs reliably under haiku has won the eval game. Cheap, deterministic,
-predictable across runs.
-
-The audit's job is to push every skill toward the haiku bar. A
-haiku-executable skill is one a haiku-class agent can run almost like
-reading a program — small, concise, unambiguous instructions, explicit
-decision branches, minimal prose, and zero interpretive slack.
-
-When a skill needs sonnet to "make sense of" the instructions, the fix
-is rarely "use a stronger model." It's almost always tighten the
-instructions: replace prose conditionals with decision trees, replace
-ambiguous directives with explicit step lists, replace implied behavior
-with normative statements. Audit findings that close interpretive slack
-take priority — they're the moves that get a skill from "works on
-sonnet" to "wins on haiku."
-
-Token cost compounds across calls. A skill invoked 100 times saves real
-money when its haiku runs hold up. Verdicts are weighted toward findings
-that move a skill closer to reliable haiku execution.
-
 ## Finding Priority Ordering — Big Rough First
 
 When iterating toward a seal, fix in this order:
@@ -68,7 +44,7 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
 
 - **Audit**: Systematic verification of a skill against the skill-writing
   spec and this auditing spec's quality rules.
-- **Verdict**: The outcome of an audit — PASS, NEEDS_REVISION, or FAIL.
+- **Verdict**: The outcome of an audit — CLEAN, PASS, NEEDS_REVISION, or FAIL.
 - **Classification error**: A skill using the wrong execution pattern
   (inline when it should dispatch, or vice versa).
 - **Context overhead**: The cost of loading unnecessary context (system
@@ -87,6 +63,22 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
   When `SKILL.md` exceeds 60 lines and no `uncompressed.md` exists,
   the auditor should raise a LOW advisory suggesting the pair — this
   does not affect verdict severity.
+- **MISS**: return token emitted when no cache record exists for the manifest hash; the full audit must run.
+- **HIT**: return token emitted when a cache record is found; verdict not re-computed.
+
+The verdict vocabulary above (`CLEAN`, `PASS`, `NEEDS_REVISION`, `FAIL`)
+intentionally does NOT include a "skipped" verdict. Cache-hit and cache-miss
+are implementation concerns of the result tool — on a hit, the host re-emits
+the cached verdict (one of the four canonical ones); on a miss, the executor
+runs the full audit and writes a fresh verdict. The audit's verdict surface
+stays four-state — what the audit FOUND, not what the runtime decided about
+re-running it.
+
+If a 3-iteration off-ramp is needed (caller accepts a NEEDS_REVISION result
+as good-enough after 3 fix passes), the verdict on the audit record stays as
+the actual finding (e.g. `PASS` if findings are non-blocking; `NEEDS_REVISION`
+if they remain). Caller acceptance is a separate caller-side decision; it does
+not become a new auditor verdict.
 
 ## Requirements
 
@@ -99,23 +91,23 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
 7. SKILL.md **must** not introduce normative requirements absent from the spec.
 8. Every line in SKILL.md **must** affect runtime behavior; design rationale belongs in spec.
 9. `instructions.txt` **must** not direct the agent to dispatch other skills; only host agents can dispatch.
-10. The auditor **must** compute a manifest hash from the skill's source files, check the hash-record cache, and — on a cache miss — write the verdict and full report to the hash-record path before performing any other side effect. On a cache hit, the auditor **must** return the cached verdict and stop. The return token **must** appear as the final line of stdout, starting at column 0 with no indentation, no quoting, and no list-marker prefix. No output may follow it. The caller parses the last line of stdout to extract the return value. Valid return tokens: `PASS: <abs-path>` | `NEEDS_REVISION: <abs-path>` | `FAIL: <abs-path>` on verdict; `MISS: <abs-path>` on cache miss (executor must write report); `ERROR: <reason>` on failure.
+10. The auditor **must** compute a manifest hash from the skill's source files, check the hash-record cache, and — on a cache miss — write the verdict and full report to the hash-record path before performing any other side effect. On a cache hit, the auditor **must** return the cached verdict and stop. The return token **must** appear as the final line of stdout, starting at column 0 with no indentation, no quoting, and no list-marker prefix. No output may follow it. The caller parses the last line of stdout to extract the return value. Valid return tokens: `CLEAN: <abs-path>` | `PASS: <abs-path>` | `NEEDS_REVISION: <abs-path>` | `FAIL: <abs-path>` on verdict; `MISS: <abs-path>` on cache miss (triggers full audit run).
 11. The auditor **must** be read-only; the companion `spec.md` and all compiled runtime files (`SKILL.md`, `instructions.txt`) are immutable — the compiled runtime is regenerated by the caller via the `compression` skill, not by the auditor.
 12. Verdict **must** be justified with evidence from the skill files — no unsupported assertions.
 13. The auditor **must** check parity between each compiled artifact and its uncompressed counterpart (`SKILL.md` ↔ `uncompressed.md`; `instructions.txt` ↔ `instructions.uncompressed.md`). The compiled version **must** faithfully represent the uncompressed source with no loss of intent. Parity failures **must** be reported with the remediation path: fix the uncompressed source, then recompress. `uncompressed.md` is optional; its absence is not a finding — parity for that pair is N/A.
-14. Tool files (`.sh`, `.ps1`) **must** be skipped — they are out of scope for skill-auditing. Tool quality is covered by tool-auditing.
+14. Tool files (`.sh`, `.ps1`) and tool-spec files (`*.spec.md` other than the skill's own `spec.md`) **must** be skipped — they are out of scope for skill-auditing AND excluded from the manifest `file_paths`. Tool quality is covered by `tool-auditing` independently; the skill manifest and tool manifest are intentionally separate. The skill manifest covers only the skill bundle: `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` (whichever exist).
 15. If no companion spec exists and the skill is dispatch or complex
     inline, the auditor **must** record a FAIL finding for the spec alignment step and continue collecting findings from compiled artifacts and parity.
-19. After all verdict-bearing Step 3 checks, the auditor **must** perform
+16. After all verdict-bearing Step 3 checks, the auditor **must** perform
     the eval-presence check via the co-located `eval.txt` sub-instructions.
     This requirement specifies that the check exists, not its full procedure.
-    Absence of `eval.md` **must not** affect the verdict.
-20. The auditor **must** check all skill artifacts for cross-reference
+    Absence of `eval.txt` **must not** affect the verdict.
+17. The auditor **must** check all skill artifacts for cross-reference
     anti-patterns (A-XR-1): any path-based pointer from a skill artifact to
     another skill's `uncompressed.md` or `spec.md` **must** be flagged HIGH.
     Referencing a skill by name only is permitted. Subject-matter mentions
     in skill-auditing's own files are exempt.
-21. For dispatch skills, `uncompressed.md` **must** be a launch-script: frontmatter,
+18. For dispatch skills, `uncompressed.md` **must** be a launch-script: frontmatter,
     optional H1, dispatch invocation + input signature, return contract, optional
     2-line iteration-safety pointer, optional inline result check protocol (pre-dispatch
     cache check + post-execute result routing via a co-located result tool). Anything
@@ -127,13 +119,6 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
 
 - **One skill per invocation**: each invocation audits exactly one
   skill; multi-skill audits are separate runs.
-- **Single fix pass**: fix mode runs once per invocation; the auditor
-  does not loop over re-audits. Re-audit after recompression is the
-  caller's responsibility.
-- **Fix mode conditional**: fix mode only runs on a NEEDS_REVISION
-  verdict. PASS and FAIL verdicts suppress fix mode entirely.
-- **No concurrent fix passes**: only one fix pass may execute per
-  invocation.
 - **Compiled artifacts immutable**: `SKILL.md`, `instructions.txt`,
   `spec.md`, and `README.md` must never be modified by the auditor
   in any mode.
@@ -146,11 +131,13 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
   its repo-relative form — the same path that goes into `file_paths:`
   frontmatter.
 
+Fix iteration is caller-driven; the executor is single-pass read-only. Callers dispatch fix agents independently.
+
 ## Behavior
 
 The audit executes as a single sweep in three ordered steps. All findings are collected before a verdict is assigned — the sweep does not stop on the first finding.
 
-On entry, the auditor computes a manifest hash from all files in `skill_dir` (excluding dot-prefixed directories and `optimize-log.md`) using the hash-record manifest procedure, and checks the cache at `.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v2/report.md`. On a cache hit, the auditor outputs the cached path and stops. On a miss, the auditor proceeds with the full audit.
+On entry, the host (via `result.sh` / `result.ps1`) computes a manifest hash from the semantic-content whitelist in `skill_dir` (top-level only, in this exact order: `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` — files that exist are included; missing files are skipped; order is part of the hash key) using the hash-record manifest procedure, and checks the cache at `.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v2/report.md`. On a cache hit, the host re-emits the cached verdict token and stops — the executor is not dispatched. On a miss, the host dispatches the executor with `--report-path <abs-path>` and the executor runs the full audit.
 
 The auditor reads `SKILL.md`, determines skill type (inline or dispatch) by file-system evidence, collects all non-tool files referenced from `SKILL.md` within `skill_dir`, and proceeds through the three steps:
 
@@ -163,13 +150,13 @@ The auditor reads `SKILL.md`, determines skill type (inline or dispatch) by file
 After all narrative or report-related output, the auditor **must** emit exactly one final line of stdout. That line **must** be the last line of stdout — nothing may follow it. The line **must** start at column 0 with no indentation, no quoting, and no list-marker prefix.
 
 ```text
-Right:  PATH: <abs-prefix>/.hash-record/ab/abcdef.../skill-auditing/v2/report.md
+Right:  CLEAN: <abs-path> | PASS: <abs-path> | NEEDS_REVISION: <abs-path> | FAIL: <abs-path>
 Wrong:  Verdict: PASS. Wrote record to: PATH: <abs-prefix>/...
 ```
 
 The caller parses only the last line of stdout; mixed narrative breaks the parse contract.
 
-On completion, the auditor assigns one of four verdicts (PASS, NEEDS_REVISION, FAIL, or error) and writes the full structured report to `.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v2/report.md`. The record frontmatter uses a `file_paths` list (repo-relative paths for every file in the manifest, sorted lexically), `operation_kind: skill-auditing/v2`, `model` set to the executing agent's model class, and `result` mapped as: PASS → `pass`; NEEDS_REVISION / FAIL → `findings`; error → `error`. The record body opens with `# Result`, states the verdict, and lists findings. The auditor outputs `PATH: <record-path>` and exits.
+On completion, the auditor assigns one of four verdicts (CLEAN, PASS, NEEDS_REVISION, or FAIL) and writes the full structured report to `.hash-record/<manifest_hash[0:2]>/<manifest_hash>/skill-auditing/v2/report.md`. The record frontmatter uses a `file_paths` list (repo-relative paths for every file in the manifest, sorted lexically), `operation_kind: skill-auditing/v2`, `model` set to the executing agent's model class, and `result` mapped as: CLEAN → `clean`; PASS → `pass`; NEEDS_REVISION → `findings`; FAIL → `fail`. Errors are never persisted as records; runtime/argument failures of the tool emit `ERROR: <reason>` and exit 1. The record body opens with `# Result`, states the verdict, and lists findings. The auditor emits the appropriate verdict token from R10 (`CLEAN`, `PASS`, `NEEDS_REVISION`, or `FAIL` with the abs-path to the record) as the final line of stdout and exits. `ERROR: <reason>` is reserved for runtime/argument failures of the tool itself; errors are NEVER persisted as records — they are transient runtime conditions reported to the caller.
 
 ## Defaults and Assumptions
 
@@ -217,23 +204,30 @@ Quick structural verification of the SKILL.md.
      sibling lint sub-skill's output), flag as HIGH. Sub-skills must be independently
      executable from the primary input only; the parent orchestrator owns cross-sub-skill
      data flow. See `skill-writing` spec R-SS-1.
+   - **Stop gates** (dispatch only): routing cards must contain no refusal conditions, eligibility guards, git-clean checks, or path-escape rules.
 4. **Frontmatter** — `name` and `description` present and accurate.
    Additionally:
    - (A-FM-1) `name` field MUST equal the skill's folder name exactly. Check
      both `uncompressed.md` and `SKILL.md`; mismatch in either → FAIL.
-   - (A-FM-3) H1 presence: `SKILL.md` MUST NOT contain an H1 (`# ...` line).
-     If `uncompressed.md` is present, it MUST contain an H1.
-     `instructions.uncompressed.md` (if present) MUST contain an H1.
-     `instructions.txt` (if present) MUST NOT contain an H1. Violation in
-     `SKILL.md` or `instructions.txt` → HIGH. Absence of `uncompressed.md`
-     is not a finding. Missing H1 in `uncompressed.md` or
-     `instructions.uncompressed.md` is out of skill-auditing's scope;
-     markdown-hygiene runs separately and covers H1 enforcement.
+   - (A-FM-3) H1 presence — applies ONLY to `.md` files (markdown). `.txt`
+     files (e.g. `instructions.txt`) are NOT markdown and the H1 rule does
+     NOT apply to them; never flag a `.txt` file under A-FM-3 regardless of
+     content. For `.md` files: a "real H1" is a line that **starts at
+     column 0** and matches `^# ` literally. References to H1 markers
+     INSIDE fenced code blocks (```...```), inline code (`# ...`), or quoted
+     prose are TEMPLATE / EXAMPLE content — NEVER count them as H1s. To
+     detect: regex on `^# ` in the file, then verify the line is NOT inside
+     a fence by tracking ``` toggles. Rule: `SKILL.md` MUST NOT contain a
+     real H1. If `uncompressed.md` is present, it MUST contain a real H1.
+     `instructions.uncompressed.md` (if present) MUST contain a real H1.
+     Violation in `SKILL.md` → HIGH. Absence of `uncompressed.md` is not a
+     finding. Missing H1 in `uncompressed.md` or `instructions.uncompressed.md`
+     is out of skill-auditing's scope; markdown-hygiene covers H1 enforcement.
 5. **No duplication** — skill does not duplicate an existing capability.
    If similar skill exists, recommend merge or distinguish clearly.
 6. **(A-FS-1) Orphan files** — scan all files in the skill directory
    and sub-directories. Any file that is not referenced directly or
-   indirectly from `SKILL.md`, `uncompressed.md`, or
+   indirectly from `SKILL.md`, `uncompressed.md`, `spec.md`, or
    `instructions.uncompressed.md` (by filename or relative path) and
    has no well-known role (e.g. `spec.md`, `README.md`, `result.sh`,
    `result.ps1`, `verify.sh`, `verify.ps1`, `eval.txt`,
@@ -242,11 +236,27 @@ Quick structural verification of the SKILL.md.
    `instructions.txt` reference in `SKILL.md` or the
    uncompressed source) is a HIGH example of this pattern.
 7. **(A-FS-2) Missing referenced files** — scan `SKILL.md`,
-   `uncompressed.md`, and `instructions.uncompressed.md` for any
+   `uncompressed.md`, `spec.md`, and `instructions.uncompressed.md` for any
    file-path pointer (explicit `instructions.txt` reference,
    `result.sh`, `result.ps1`, `verify.sh`, `verify.ps1`, or any other
    path literal). Each referenced file MUST exist on disk. Missing file
    → HIGH.
+
+### Per-file Basic Checks
+
+Run against all `.md` and `*.spec.md` files in `skill_dir` (recursively; skip dot-prefixed directories and `optimize-log.md`). Tool files (`.sh`, `.ps1`) are out of scope. Findings accumulate into a separate Per-file section of the report; they do NOT block Steps 1–3.
+
+**`.md` files:**
+
+- **Not empty** — file must contain non-whitespace content. Empty → HIGH.
+- **Frontmatter where required** — `SKILL.md` and `agent.md` MUST have YAML frontmatter (`---` block at line 1). Missing → HIGH.
+- **No absolute-path leaks** — body must not contain Windows-style (`<letter>:\` or `<letter>:/`) or Unix root-anchored paths (`/Users/`, `/home/`, `/d/`). Any found → HIGH.
+
+**`*.spec.md` files (name ends in `.spec.md`):**
+
+- **Purpose section present** — must contain `## Purpose` or `# Purpose`. Missing → HIGH.
+- **Parameters section present** — must contain `## Parameters` or `# Parameters`. Missing → HIGH.
+- **Output section present** — must contain `## Output` or `# Output`. Missing → HIGH.
 
 ### Step 2 — Parity Check
 
@@ -314,7 +324,7 @@ Verify the companion spec is structurally sound, then verify the compiled artifa
     check by reading the co-located `eval.txt` sub-instructions. Full
     procedure (four-option suggestion, honest-state principle,
     verdict-gate rule) lives in `eval.txt` / `eval.uncompressed.md`.
-    Absence of `eval.md` MUST NOT affect the verdict.
+    Absence of `eval.txt` MUST NOT affect the verdict.
 16. **(A-FM-2) Description not restated** — search every artifact
     (`uncompressed.md`, `SKILL.md`, `instructions.uncompressed.md`,
     `instructions.txt`) for body prose that duplicates the `description`
@@ -329,9 +339,9 @@ Verify the companion spec is structurally sound, then verify the compiled artifa
     lines that carry no operational value (e.g., "inline apply directly no
     dispatch," "dispatch skill," bare type labels not used as actionable
     instructions). Any found → LOW.
-19. **(A-FM-7) No empty sections** — verify every heading in every artifact
-    has body content before the next heading or end of file. An empty
-    section → HIGH.
+19. **(A-FM-7) No empty leaves** — empty section = leaf heading with no
+    body AND no subheadings before the next heading at the same level or
+    higher (or EOF) → HIGH. Headings with subsections are never empty.
 20. **(A-FM-8) Iteration-safety placement** — verify the Iteration Safety
     blurb is absent from `instructions.uncompressed.md` and
     `instructions.txt`. Presence in either → HIGH. Additionally, if the
@@ -434,16 +444,39 @@ Applies to dispatch skills only. Auditor runs these checks against `uncompressed
    format descriptions, model-class guidance, false-positive guard lists) → HIGH.
    Content belongs in `instructions.uncompressed.md` or `spec.md`.
 
+8. **(DS-7) Tool integration alignment** — for skills that ship a co-located tool
+   trio (`<stem>.sh` + `<stem>.ps1` + `<stem>.spec.md`), the auditor MUST check
+   integration without auditing the tool itself (that is `tool-auditing`'s job):
+   - **Orphan tool** — every tool present in `skill_dir` MUST be referenced by
+     `SKILL.md` or `spec.md` (by stem name or relative path). Unreferenced tool
+     present → HIGH.
+   - **Missing tool** — every tool referenced by `SKILL.md` or `spec.md` MUST
+     exist in `skill_dir` as a complete trio. Referenced tool absent or
+     incomplete trio → FAIL.
+   - **Tool-spec alignment** — IF a referenced tool has a `*.spec.md`, its
+     declared behavior (`Purpose`, `Output`, return contract) MUST be consistent
+     with how `SKILL.md` / `spec.md` describes the tool's role. Contradiction
+     (main spec says "moves A to B"; tool spec says "deletes") → FAIL.
+   The auditor reads tool-spec text for this check; tool files (`.sh`, `.ps1`,
+   `*.spec.md`) remain excluded from the manifest hash per Step 1.
+
 These checks extend Step 3. Violations are recorded in the Step 3 findings table
 under a "Dispatch Skill Checks" group and contribute to the verdict per the normal
 severity mapping (HIGH → NEEDS_REVISION or FAIL depending on count; LOW →
 NEEDS_REVISION).
 
+## Banned Terminology
+
+The executor MUST NOT use the term **"non-goals"** in any finding text, recommendation, or output. The term is ambiguous. Use **"Out of Scope"** instead.
+
+When auditing skill content, the executor MUST flag any occurrence of "non-goals" in `SKILL.md`, `uncompressed.md`, `instructions*.md`, or `spec.md` as a HIGH terminology finding under Step 1 (Compiled Artifacts) or Step 3 (Spec Alignment) as appropriate, and recommend renaming the section or term to "Out of Scope".
+
 ## Verdict Rules
 
-- **PASS**: All steps pass with no HIGH findings.
-- **NEEDS_REVISION**: No FAIL findings, but HIGH or multiple LOW findings present. Skill works but has quality gaps. List specific fixes.
-- **FAIL**: Any FAIL finding, or 3+ HIGH findings. Skill cannot be used reliably until fixed.
+- **CLEAN**: All steps pass with zero findings (no HIGH, no LOW, no informational). Audit produced nothing to report.
+- **PASS**: All steps pass with no HIGH findings. Non-blocking findings (LOW, informational) may be present. Safe to seal.
+- **NEEDS_REVISION**: No FAIL findings, but HIGH or multiple LOW findings present. Skill works but has quality gaps. List specific fixes and do a fix pass before sealing.
+- **FAIL**: Any FAIL finding, or 3+ HIGH findings. Skill cannot be used reliably. Do not seal until fixed.
 
 ## Audit Report Format
 
@@ -451,7 +484,6 @@ Record frontmatter (written to hash-record path):
 
 ```yaml
 ---
-hash: <manifest-hash>
 file_paths:
   - skill-auditing/instructions.uncompressed.md
   - skill-auditing/SKILL.md
@@ -459,9 +491,11 @@ file_paths:
   - skill-auditing/uncompressed.md
 operation_kind: skill-auditing/v2
 model: <executing-model-class>
-result: pass | findings | error | skipped
+result: clean | pass | findings | fail
 ---
 ```
+
+**No `hash:` field in frontmatter.** The record's directory path already encodes the manifest hash (`.hash-record/<aa>/<full-hash>/...`). Putting the same hash in the body creates a duplicate source of truth that drifts on hand-edit and complicates rekeying. Path is authoritative; body MUST NOT restate it. This rule applies fleet-wide — auditing skills writing hash-record artifacts MUST NOT include a `hash:` field when the path already encodes the hash.
 
 `file_paths` MUST be a YAML list of repo-relative path strings — one entry per source
 file consumed in the manifest hash, sorted lexically. The repo root MUST be resolved
@@ -496,17 +530,20 @@ file_paths:
 file_path: skill-auditing/SKILL.md
 ```
 
+**Mandatory examples in instructions** — auditor instruction artifacts (`instructions.txt` and `instructions.uncompressed.md`) MUST embed the same Correct + WRONG `file_paths` example block alongside the report-write step. This is a common error class (agents emit `file_path: <dir>/`, absolute paths, or singular keys in multi-file contexts); explicit examples at the point of writing are protective and load-bearing. Removing the examples from instructions is a regression — flag any pass that strips them.
+
 Record body:
 
 ```markdown
 # Result
 
-PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
+CLEAN | PASS | NEEDS_REVISION | FAIL
 
 ## Skill Audit: <skill-name>
 
-**Verdict:** PASS | NEEDS_REVISION | FAIL
+**Verdict:** CLEAN | PASS | NEEDS_REVISION | FAIL
 **Type:** inline | dispatch
+**Path:** <repo-relative path>
 
 ### Step 1 — Compiled Artifacts
 
@@ -521,6 +558,8 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 | Name matches folder (A-FM-1) | PASS/FAIL | |
 | H1 per artifact (A-FM-3) | PASS/FAIL | |
 | No duplication | PASS/FAIL | |
+| Orphan files (A-FS-1) | PASS/FAIL | |
+| Missing referenced files (A-FS-2) | PASS/FAIL | |
 
 ### Step 2 — Parity
 
@@ -538,11 +577,6 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 | Normative language | PASS/FAIL/SKIP | |
 | Internal consistency | PASS/FAIL/SKIP | |
 | Spec completeness | PASS/FAIL/SKIP | |
-
-### Spec Compliance
-
-| Check | Result | Notes |
-| --- | --- | --- |
 | Coverage | PASS/FAIL | |
 | No contradictions | PASS/FAIL | |
 | No unauthorized additions | PASS/FAIL | |
@@ -560,6 +594,7 @@ PASS | PASS_WITH_FINDINGS | NEEDS_REVISION | FAIL
 | Iteration-safety placement (A-FM-8) | PASS/FAIL/N/A | |
 | Iteration-safety pointer form (A-FM-9a) | PASS/FAIL/N/A | |
 | No verbatim Rule A/B (A-FM-9b) | PASS/FAIL/N/A | |
+| Cross-reference anti-pattern (A-XR-1) | PASS/FAIL | |
 | Return shape declared (DS-1) | PASS/FAIL/N/A | |
 | Host card minimalism (DS-2) | PASS/FAIL/N/A | |
 | Description trigger phrases (DS-3) | PASS/FAIL/N/A | |
@@ -620,8 +655,6 @@ The terms fast-cheap and standard are model-agnostic. Hosts running
 Anthropic models map these to Haiku-class and Sonnet-class respectively;
 other model families should map to their own inexpensive/default tiers.
 
-## Iteration Safety
-
 Do not re-audit unchanged files.
 See `../iteration-safety/SKILL.md`.
 
@@ -635,7 +668,7 @@ See `../iteration-safety/SKILL.md`.
 ## Error Handling
 
 - **Target not found** (`skill_dir` does not resolve): return `ERROR: skill_dir not found: <path>`. Do not write a partial report.
-- **Spec not found** (no co-located `spec.md`): if skill is dispatch or complex inline, record FAIL finding for spec alignment and continue the sweep. If simple inline (<30 lines), skip spec alignment.
+- **Spec not found** (no co-located `spec.md`): if skill is dispatch or complex inline, record FAIL finding for spec alignment and continue the sweep. If simple inline (no configurable parameters, no conditional branching, no multi-step decision procedure), skip spec alignment.
 - **Inline/dispatch mismatch** (`instructions.txt` absent when SKILL.md indicates dispatch, or present when inline): record FAIL finding under compiled artifacts step.
 - **Report path not writable**: return `ERROR: <reason>` and exit without altering any skill file.
 
@@ -661,3 +694,29 @@ See `../iteration-safety/SKILL.md`.
 - Do not pass A-XR-1 if any skill artifact (other than skill-auditing's own files as subject-matter context) contains a path-based cross-reference to another skill's `uncompressed.md` or `spec.md`.
 - Do not pass A-FM-8 if the Iteration Safety blurb appears in `instructions.uncompressed.md` or `instructions.txt`, even if it is also present in `SKILL.md`.
 - Do not rate A-FM-9a/9b as N/A unless the skill contains no iteration-safety reference at all; if any reference is present, check pointer form and verbatim restatement.
+
+## Appendix — Design Goal: Haiku Wins the Eval Game
+
+(Rationale; non-normative.)
+
+Sonnet-class is the baseline — table stakes. A working skill must run
+correctly under sonnet. Haiku-class is the **winning bar**: a skill that
+also runs reliably under haiku has won the eval game. Cheap, deterministic,
+predictable across runs.
+
+The audit's job is to push every skill toward the haiku bar. A
+haiku-executable skill is one a haiku-class agent can run almost like
+reading a program — small, concise, unambiguous instructions, explicit
+decision branches, minimal prose, and zero interpretive slack.
+
+When a skill needs sonnet to "make sense of" the instructions, the fix
+is rarely "use a stronger model." It's almost always tighten the
+instructions: replace prose conditionals with decision trees, replace
+ambiguous directives with explicit step lists, replace implied behavior
+with normative statements. Audit findings that close interpretive slack
+take priority — they're the moves that get a skill from "works on
+sonnet" to "wins on haiku."
+
+Token cost compounds across calls. A skill invoked 100 times saves real
+money when its haiku runs hold up. Verdicts are weighted toward findings
+that move a skill closer to reliable haiku execution.
