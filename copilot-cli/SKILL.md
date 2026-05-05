@@ -3,6 +3,8 @@ name: copilot-cli
 description: Router — accepts any GitHub Copilot CLI task and dispatches to the correct operation sub-skill. Does not execute copilot commands itself.
 ---
 
+# copilot-cli
+
 Execution, flag assembly, prompt framing, and output parsing live inside the dispatched sub-skill — not here.
 
 ## Operation Routing Table

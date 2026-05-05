@@ -3,6 +3,8 @@ name: copilot-cli-review
 description: Code review operation via the standalone Copilot CLI binary. Runs adversarial review of a change set and returns structured findings.
 ---
 
+# copilot-cli-review
+
 ## Prerequisites
 
 ```bash
@@ -31,7 +33,7 @@ Embed all diff or file content inline in the prompt string. There is no file-inp
 
 Frame the prompt as an adversarial review request using the canonical severity vocabulary:
 
-```
+```text
 Review the following change set for correctness, security vulnerabilities, and code quality.
 Return a structured findings list. Each finding must include:
   severity: blocker | major | minor | nit
@@ -49,7 +51,7 @@ Severity vocabulary is fixed to `blocker / major / minor / nit`. The prompt enfo
 
 Parse Copilot's response (JSON or markdown) into a structured result before returning. Never return raw Copilot output to the caller.
 
-```
+```text
 Status: CLEAN | FINDINGS | UNAVAILABLE | ERROR
 Findings:
   - severity: blocker | major | minor | nit
