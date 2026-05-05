@@ -49,3 +49,17 @@ Slot: after `worktree-cleanup` skill, before changelog finalization.
 
 - **10-0951** — original merge conflict report that triggered investigation
 - **10-0962** — hash-record prune tool implementation
+
+## Operator Final Decision (2026-05-05)
+
+Operator refined Option 4 away from auto-prune in finalization. The deterministic protocol for hash-record collision at merge time is:
+
+1. **Remove the incoming record** (worktree-side orphan). Never let it pollute dev's hash-record.
+2. **Keep target as-is** (dev-side record survives).
+3. **Re-audit the affected file(s)** in target post-merge. Re-audit produces a fresh record regardless — cheap and deterministic.
+
+**Yellow-flag escalation** only if re-audit itself cannot run (skill broken, file deleted in target, etc.). Routine collisions require no operator involvement.
+
+**Integration point:** This protocol belongs in Overseer's workflow (context/memory), not the finalization-runbook. Overseer detects the collision at merge time and executes the protocol autonomously.
+
+**Supersedes:** Earlier recommendation of `hash-record-prune` in finalization checklist. No prune step. Detection + remove-incoming + re-audit is the full resolution path.
