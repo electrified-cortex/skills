@@ -62,7 +62,7 @@ Findings accumulate into the Per-file section of the report and do NOT block Ste
 
 - **Not empty** — file must contain non-whitespace content. Empty → HIGH.
 - **Frontmatter where required** — `SKILL.md` and `agent.md` MUST have YAML frontmatter (`---` block at line 1). Missing frontmatter on these files → HIGH.
-- **No absolute-path leaks** — body must not contain Windows-style (`<letter>:\` or `<letter>:/`) or Unix root-anchored paths (`/Users/`, `/home/`, `/d/`). Any found → HIGH.
+- **No absolute-path leaks** — body must not contain Windows-style (`<drive>:\path`) or Unix root-anchored paths (`/Users/`, `/home/`, `/d/`). Any found → HIGH.
 - **Canonical trigger phrase (dispatch skills only)** — For dispatch skills (frontmatter `type: dispatch`), the `description:` field MUST include the canonical action phrase: `<verb> <skill-root>` where skill-root = directory name with hyphens replaced by spaces (e.g., `spec-auditing` -> "spec audit"). Check case-insensitively. Missing phrase -> HIGH (DS-8). Applies only to `SKILL.md`, not sub-skill files.
 
 ### `*.spec.md` files (files whose name ends in `.spec.md`)
