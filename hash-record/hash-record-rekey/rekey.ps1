@@ -381,6 +381,21 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
                             continue
                         }
 
+                        # Check if destination already exists before git mv.
+                        if (Test-Path -LiteralPath $newRecordPath -PathType Leaf) {
+                            $oldBytes = [System.IO.File]::ReadAllBytes($rec.Path)
+                            $newBytes = [System.IO.File]::ReadAllBytes($newRecordPath)
+                            if ([System.Linq.Enumerable]::SequenceEqual($oldBytes, $newBytes)) {
+                                [Console]::Out.Write("CURRENT: $newRecordPath`n")
+                                $cntCurrent++
+                            } else {
+                                [Console]::Out.Write("ERROR: CONFLICT: destination exists with different content: $newRecordPath`n")
+                                $cntErrors++
+                                $hadError = $true
+                            }
+                            continue
+                        }
+
                         $oldRel = $rec.Path.Substring($repoRoot.Length).TrimStart('/')
                         $newRel = $newRecordPath.Substring($repoRoot.Length).TrimStart('/')
 
@@ -445,6 +460,21 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
                         [Console]::Out.Write("ERROR: mkdir failed for: $newRecordDir`n")
                         $cntErrors++
                         $hadError = $true
+                        continue
+                    }
+
+                    # Check if destination already exists before git mv.
+                    if (Test-Path -LiteralPath $newRecordPath -PathType Leaf) {
+                        $oldBytes = [System.IO.File]::ReadAllBytes($recPath)
+                        $newBytes = [System.IO.File]::ReadAllBytes($newRecordPath)
+                        if ([System.Linq.Enumerable]::SequenceEqual($oldBytes, $newBytes)) {
+                            [Console]::Out.Write("CURRENT: $newRecordPath`n")
+                            $cntCurrent++
+                        } else {
+                            [Console]::Out.Write("ERROR: CONFLICT: destination exists with different content: $newRecordPath`n")
+                            $cntErrors++
+                            $hadError = $true
+                        }
                         continue
                     }
 
@@ -583,6 +613,19 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
     $new_record_path = "$new_record_dir/$record_filename"
 
     New-Item -ItemType Directory -Force -Path $new_record_dir | Out-Null
+
+    # Check if destination already exists before git mv.
+    if (Test-Path -LiteralPath $new_record_path -PathType Leaf) {
+        $oldBytes = [System.IO.File]::ReadAllBytes($old_record.Path)
+        $newBytes = [System.IO.File]::ReadAllBytes($new_record_path)
+        if ([System.Linq.Enumerable]::SequenceEqual($oldBytes, $newBytes)) {
+            [Console]::Out.Write("CURRENT: $new_record_path`n")
+        } else {
+            [Console]::Out.Write("ERROR: CONFLICT: destination exists with different content: $new_record_path`n")
+            exit 1
+        }
+        exit 0
+    }
 
     $old_rel = $old_record.Path.Substring($repo_root.Length).TrimStart('/')
     $new_rel = $new_record_path.Substring($repo_root.Length).TrimStart('/')

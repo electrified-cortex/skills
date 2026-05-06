@@ -384,8 +384,21 @@ if [ -d "$FIRST_ARG" ]; then
               _rec_error=true
             fi
 
-            if ! $_rec_error; then
-              old_rel="${rec_path#${REPO_ROOT_FWD}/}"
+            if ! $_rec_error; then              # Check if destination already exists before git mv.
+              if [ -f "$new_record_path" ]; then
+                if cmp -s "$rec_path" "$new_record_path"; then
+                  printf 'CURRENT: %s\n' "$new_record_path"
+                  cnt_current=$((cnt_current + 1))
+                else
+                  printf 'ERROR: CONFLICT: destination exists with different content: %s\n' "$new_record_path"
+                  cnt_errors=$((cnt_errors + 1))
+                  had_error=true
+                fi
+                _rec_error=true
+              fi
+            fi
+
+            if ! $_rec_error; then              old_rel="${rec_path#${REPO_ROOT_FWD}/}"
               new_rel="${new_record_path#${REPO_ROOT_FWD}/}"
 
               if ! git -C "$REPO_ROOT" mv "$old_rel" "$new_rel" 2>/dev/null; then
@@ -449,6 +462,21 @@ if [ -d "$FIRST_ARG" ]; then
             cnt_errors=$((cnt_errors + 1))
             had_error=true
             _rec_error=true
+          fi
+
+          if ! $_rec_error; then
+            # Check if destination already exists before git mv.
+            if [ -f "$new_record_path" ]; then
+              if cmp -s "$rec_path" "$new_record_path"; then
+                printf 'CURRENT: %s\n' "$new_record_path"
+                cnt_current=$((cnt_current + 1))
+              else
+                printf 'ERROR: CONFLICT: destination exists with different content: %s\n' "$new_record_path"
+                cnt_errors=$((cnt_errors + 1))
+                had_error=true
+              fi
+              _rec_error=true
+            fi
           fi
 
           if ! $_rec_error; then
@@ -578,6 +606,17 @@ else
   NEW_RECORD_PATH="$NEW_RECORD_DIR/$RECORD_FILENAME"
 
   mkdir -p "$NEW_RECORD_DIR"
+
+  # Check if destination already exists before git mv.
+  if [ -f "$NEW_RECORD_PATH" ]; then
+    if cmp -s "$OLD_RECORD_PATH" "$NEW_RECORD_PATH"; then
+      printf 'CURRENT: %s\n' "$NEW_RECORD_PATH"
+    else
+      printf 'ERROR: CONFLICT: destination exists with different content: %s\n' "$NEW_RECORD_PATH"
+      exit 1
+    fi
+    exit 0
+  fi
 
   OLD_REL="${OLD_RECORD_PATH#${REPO_ROOT}/}"
   NEW_REL="${NEW_RECORD_PATH#${REPO_ROOT}/}"
