@@ -1,8 +1,6 @@
 ---
 name: skill-writing
-description: >-
-  How to write skills — decision tree for inline vs dispatch, structure,
-  quality criteria.
+description: How to write skills. Decision tree for inline vs dispatch, structure, quality criteria. Triggers — write a skill, author SKILL.md, create new skill, draft skill file, implement skill spec.
 ---
 
 # Skill Writing
