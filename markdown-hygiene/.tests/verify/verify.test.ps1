@@ -67,6 +67,8 @@ Invoke-Fixture 'tabs.md'
 Invoke-Fixture 'blanks.md'
 Invoke-Fixture 'no-frontmatter-no-h1.md'
 Invoke-Fixture 'no-trailing-newline.md'
+Invoke-Fixture 'mono-escape-bad.md'
+Invoke-Fixture 'mono-escape-good.md'
 
 Write-Host ""
 Write-Host "$pass passed, $fail failed"

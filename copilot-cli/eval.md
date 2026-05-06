@@ -15,7 +15,7 @@
 
 ### Raw output
 
-```
+```text
 I'll review the specified commit from the repository. Let me fetch the commit details first.
 [attempted GitHub API resolution of commit SHA — SHA not found via remote API]
 The commit SHA doesn't exist in this repository.
@@ -36,7 +36,7 @@ No findings.
 
 **Friction:** Initial remote API resolution attempt failed for a local-only commit. Copilot recovered by falling back to local inspection, but the extra round-trip added latency and noise.
 
-**Verdict: MEDIUM** — reasoning quality is solid (correct domain-specific checks, correct conclusion), but structured output requires caller-side parsing wrapper to be spec-compliant. Value is real but integration cost is higher than code-review.
+**Verdict:** MEDIUM — reasoning quality is solid (correct domain-specific checks, correct conclusion), but structured output requires caller-side parsing wrapper to be spec-compliant. Value is real but integration cost is higher than code-review.
 
 ### Gap list
 

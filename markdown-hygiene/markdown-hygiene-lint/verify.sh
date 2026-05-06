@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # verify.sh — deterministic markdown hygiene check
-# Covered rules: MD010, MD041
+# Covered rules: MD010, MD041, MONO-ESCAPE
 # Usage: verify.sh <file> [--ignore RULE[,RULE...]]
 # Output: CLEAN | violation pairs (rule line + Fix line per violation), LF-terminated
 # Exit: 0 on success; 1 on usage/file error (errors to stderr)
@@ -73,6 +73,17 @@ for (( i=0; i<N; i++ )); do
         "Fix: replace tab character on line $LN with spaces"
   fi
 
+  # MONO-ESCAPE — backslash-backtick inside inline code (outside fenced blocks)
+  if ! has_skip MONO-ESCAPE \
+      && [[ "$in_fence" == false ]] \
+      && [[ "$is_fence" == false ]]; then
+    case "$L" in
+      *'\`'*)
+        add "MONO-ESCAPE line $LN: [HIGH] backslash-backtick escape in inline code - breaks Markdown rendering" \
+            "Fix: use double-backtick fence: \`\` text with \`backtick\` \`\` instead of single-backtick + backslash-escape"
+        ;;
+    esac
+  fi
 
 done
 

@@ -68,6 +68,7 @@ Hard prohibition: do NOT author scripts, helper files, or any file other than `<
 - MD056 — all rows in a table have the same number of cells.
 - MD058 — tables need blanks before AND after.
 - MD060 — table cell separators need space on each side of dash run.
+- MONO-ESCAPE — backslash-backtick (`` \` ``) inside inline code spans — breaks Markdown rendering (HIGH, not FAIL). Fix: use double-backtick fence (`` `` text with `backtick` `` ``) instead of single-backtick with backslash-escape.
 
 ## Output Format
 

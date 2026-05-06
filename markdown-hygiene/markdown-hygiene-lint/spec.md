@@ -47,7 +47,7 @@ Haiku-class (`fast-cheap`). No semantic reasoning — deterministic pattern-matc
 3. **Re-run result check (`lint` mode)** — the file was modified by preparation; the hash has changed. Re-probe the cache to get the updated path. Branch on stdout:
    - `HIT: ...` → return that result verbatim to the caller, stop. The content was already scanned.
    - `MISS: <abs-path>` → bind as `<lint_path>` (replaces any previously bound value). Continue.
-4. **Run verify** — `verify.sh` / `verify.ps1` co-located in this sub-skill folder. Detects MD009, MD010, MD012, MD041, MD047. Include its output in findings; **do not** re-check covered rules unless verify was skipped or errored.
+4. **Run verify** — `verify.sh` / `verify.ps1` co-located in this sub-skill folder. Detects MD009, MD010, MD012, MD041, MD047, MONO-ESCAPE. Include its output in findings; **do not** re-check covered rules unless verify was skipped or errored.
 5. **Scan** — read `<markdown_file_path>` and apply rule-knowledge for all remaining MD rules. Cross-check every suspected finding against the actual line; drop any not pointable to a verified line. Hallucinated findings are worse than missed findings.
 6. **Adaptive MD041 suppression** — if the first non-blank line of the file is `---` (YAML frontmatter), suppress MD041 regardless of `--ignore`.
 7. **Write `<lint_path>`** — if present, overwrite.
@@ -80,10 +80,11 @@ Haiku-class (`fast-cheap`). No semantic reasoning — deterministic pattern-matc
 | MD056 | All rows in a table have the same number of cells |
 | MD058 | Tables need blank lines before AND after |
 | MD060 | Table cell separators need space on each side of dash run |
+| MONO-ESCAPE | Backslash-backtick (`` \` ``) inside inline code spans — breaks Markdown rendering (HIGH, covered by verify) |
 
 ## Verify Scripts
 
-`verify.sh` / `verify.ps1` are co-located in this sub-skill folder. They are deterministic shell scripts — no external packages required. They cover MD009, MD010, MD012, MD041, MD047. See `verify.spec.md` for full interface and output format.
+`verify.sh` / `verify.ps1` are co-located in this sub-skill folder. They are deterministic shell scripts — no external packages required. They cover MD009, MD010, MD012, MD041, MD047, MONO-ESCAPE. See `verify.spec.md` for full interface and output format.
 
 ## Output Contract
 

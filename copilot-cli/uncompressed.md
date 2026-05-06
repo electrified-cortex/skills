@@ -62,9 +62,3 @@ The host agent should never need to know which Copilot CLI flags exist, how to c
 - Do not silently fallback when an operation is ambiguous. Always ask.
 - Do not document flag mechanics, prompt structure, or `--allow-all-tools` threat model in the runtime card. Sub-skills own those.
 - Do not pass through caller-supplied free-form CLI flags.
-
-## Lessons from Prior Work
-
-- `--allow-all-tools` is dangerous. Any sub-skill that uses it must document the threat model and constrain the working directory. Do not surface this flag at the router level.
-- Markdown output from Copilot is not structured. Sub-skills must parse Copilot's response into a typed result before returning.
-- Model availability changes. Sub-skills must handle "model not available" as a normal failure mode.
