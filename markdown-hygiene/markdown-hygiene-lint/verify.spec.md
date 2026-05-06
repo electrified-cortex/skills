@@ -16,6 +16,7 @@ and are NOT re-checked here.
 | --- | --- |
 | MD010 | Hard tabs outside fenced code blocks |
 | MD041 | First non-blank line must be H1 (auto-suppressed for frontmatter) |
+| MONO-ESCAPE | Backslash-backtick (`\``) inside inline code spans — breaks Markdown rendering (HIGH) |
 
 Does NOT cover: MD001, MD003, MD004, MD009, MD012, MD022, MD023, MD024, MD025, MD026,
 MD029, MD031, MD032, MD033, MD034, MD040, MD047, MD055, MD056, MD058, MD060.
@@ -129,6 +130,8 @@ Required fixtures:
 | `blanks.md` | MD012 |
 | `no-frontmatter-no-h1.md` | MD041 |
 | `no-trailing-newline.md` | MD047 |
+| `mono-escape-bad.md` | MONO-ESCAPE |
+| `mono-escape-good.md` | none (CLEAN) |
 
 `verify.test.sh` and `verify.test.ps1` run each fixture through the
 respective script and diff stdout against `<name>.expected.txt`. Exit 0

@@ -1,0 +1,4 @@
+MONO-ESCAPE line 5: [HIGH] backslash-backtick escape in inline code - breaks Markdown rendering
+Fix: use double-backtick fence: `` text with `backtick` `` instead of single-backtick + backslash-escape
+MONO-ESCAPE line 7: [HIGH] backslash-backtick escape in inline code - breaks Markdown rendering
+Fix: use double-backtick fence: `` text with `backtick` `` instead of single-backtick + backslash-escape

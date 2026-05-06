@@ -54,6 +54,8 @@ run_fixture tabs.md
 run_fixture blanks.md
 run_fixture no-frontmatter-no-h1.md
 run_fixture no-trailing-newline.md
+run_fixture mono-escape-bad.md
+run_fixture mono-escape-good.md
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 (( FAIL == 0 ))

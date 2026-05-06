@@ -24,10 +24,16 @@ Follow `markdown-hygiene-analysis/SKILL.md` with `<markdown_file_path>`.
 
 ## Lint
 
+Run inline result check for `lint`. See `markdown-hygiene-result/SKILL.md`.
+
+- `MISS: <abs-path>` — bind `<lint_path>`. Continue to Dispatch.
+- Otherwise: stop, return result to caller.
+
 Follow `markdown-hygiene-lint/SKILL.md` with `<markdown_file_path> [--ignore <RULE>[,<RULE>...]]`.
 
 - `ERROR: <reason>` — stop, surface reason.
-- Otherwise: bind `<lint_result>`.
+- `clean` — bind `<lint_result>` as `clean`. Continue.
+- `findings: <path>` — dispatch a standard tier sub-agent to fix reported issues, then re-follow `markdown-hygiene-lint/SKILL.md`. After 3 revision rounds: stop, bind `<lint_result>` as the final findings. On success: bind `<lint_result>`.
 
 ## Rekey Analysis
 
