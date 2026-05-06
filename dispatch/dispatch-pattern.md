@@ -64,7 +64,7 @@ Skills that use dispatch follow a common three-phase pattern:
 2. **Dispatch**: the consuming skill builds a prompt (typically "read and follow `<instructions.txt>`; input: `<args>`") and calls the dispatch skill. The sub-agent reads `instructions.txt` and executes. The host **never** reads `instructions.txt` — that is the sub-agent's operative content.
 3. **Post-dispatch result check**: the consuming skill calls `result` again to verify the sub-agent wrote the report. On `MISS`, the consuming skill handles the failure (log, retry up to max iterations, or surface error).
 
-Reference consumers: `markdown-hygiene/SKILL.md`, `skill-auditing/SKILL.md`.
+Reference consumers: the `markdown-hygiene` and `skill-auditing` skills.
 
 ## Hash-Record Relationship
 

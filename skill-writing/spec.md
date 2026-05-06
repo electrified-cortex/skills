@@ -323,7 +323,7 @@ See `<relative-path>/iteration-safety/SKILL.md`.
 ```
 
 The relative path MUST match the caller's actual depth. Callers MUST NOT
-restate Rule A or Rule B verbatim. See `../iteration-safety/SKILL.md` for
+restate Rule A or Rule B verbatim. See the `iteration-safety` skill (`../iteration-safety/SKILL.md`) for
 the canonical text.
 
 R-FM-10 **Description carries trigger phrases.** The `description`
@@ -341,15 +341,15 @@ here propagates into discovery downstream.
 ### For dispatch skills specifically
 
 - Dispatch instruction file must be in the same directory or a known path
-- The canonical spawn primitive is `dispatch/SKILL.md` — all consumers
+- The canonical spawn primitive is the `dispatch` skill (`../dispatch/SKILL.md`) — all consumers
   invoke it via the Variables block pattern (prompt-only model)
 - Use the Dispatch agent for zero-context isolation (preferred over
   background agent with host context)
 - Consumer composes `<prompt>` (instructions path + input args); dispatch
   sends verbatim — no template construction inside dispatch
 - Output format specified so the caller knows what to expect
-- The exemplar is `compression/SKILL.md` — study it alongside
-  `dispatch/SKILL.md` for the full pattern
+- The exemplar is the `compression` skill (`../compression/SKILL.md`) — study it alongside
+  the `dispatch` skill (`../dispatch/SKILL.md`) for the full pattern
 
 ### Quality criteria (for auditing)
 
@@ -509,7 +509,7 @@ Use the Decision Tree section for detailed criteria.
 
 - `spec.md` is the source of truth. It governs `uncompressed.md`, which
   governs `SKILL.md`. Conflicts resolve in that order.
-- `spec-writing/spec.md` governs the form and structure of all derived
+- The `spec-writing` skill's `spec.md` governs the form and structure of all derived
   skills produced by this skill. When this spec conflicts with a skill
   it produced, this spec wins.
 - Spec-clarity precedence: if the compile step (steps 2–3) feels like

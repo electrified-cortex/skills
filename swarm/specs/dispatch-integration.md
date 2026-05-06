@@ -1,6 +1,6 @@
 # swarm — Dispatch Integration
 
-Sub-spec of `swarm/spec.md`. Covers: how the swarm skill uses the `electrified-cortex/dispatch` skill, model-class routing, parallelism requirements, and the CLI dispatch deferral. Does not cover the dispatch skill's own decision tree (see `electrified-cortex/dispatch/SKILL.md`).
+Sub-spec of `swarm/spec.md`. Covers: how the swarm skill uses the `electrified-cortex/dispatch` skill, model-class routing, parallelism requirements, and the CLI dispatch deferral. Does not cover the dispatch skill's own decision tree (see the `dispatch` skill: `dispatch/SKILL.md`).
 
 ## Normative Reference
 
