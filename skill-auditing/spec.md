@@ -64,7 +64,7 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
   the auditor should raise a LOW advisory suggesting the pair — this
   does not affect verdict severity.
 - **semantic-content whitelist**: the explicit ordered list of artifact files used for manifest hashing: `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` (whichever exist in the skill directory).
-- **Repo-relative path**: A filesystem path relative to the root of the git repository containing the audited skill, stripped of absolute prefixes (e.g., ``C:\``, `/home/`). Computed via `git rev-parse --show-toplevel` or fallback to the skill directory if no `.git/` is found.
+- **Repo-relative path**: A filesystem path relative to the root of the git repository containing the audited skill, stripped of absolute prefixes (e.g., `C:\path`, `/home/user`). Computed via `git rev-parse --show-toplevel` or fallback to the skill directory if no `.git/` is found.
 - **Iteration-safety**: Design pattern enabling an agent to safely audit a skill multiple times without re-computing unchanged work. Implemented via hash-record caching and idempotent procedure execution. See the `iteration-safety` skill (`../iteration-safety/SKILL.md`) for full pattern details.
 - MISS: return token emitted when no cache record exists for the manifest hash; the full audit must run.
 - HIT: return token emitted when a cache record is found; verdict not re-computed.
@@ -255,7 +255,7 @@ Run against all `.md` and `*.spec.md` files in `skill_dir` (recursively; skip do
 
 - **Not empty** — file must contain non-whitespace content. Empty → HIGH.
 - **Frontmatter where required** — `SKILL.md` and `agent.md` MUST have YAML frontmatter (`---` block at line 1). Missing → HIGH.
-- **No absolute-path leaks** — body must not contain Windows-style (``<letter>:\`` or `<letter>:/`) or Unix root-anchored paths (`/Users/`, `/home/`, `/d/`). Any found → HIGH.
+- **No absolute-path leaks** — body must not contain Windows-style (`<drive>:\path`) or Unix root-anchored paths (`/Users/`, `/home/`, `/d/`). Any found → HIGH.
 
 **`*.spec.md` files (name ends in `.spec.md`):**
 
