@@ -429,36 +429,6 @@ change history, credits, publication notes.
 
 ## Behavior
 
-### Skill creation workflow
-
-1. Write `spec.md` using the `spec-writing` skill. No downstream work
-   starts until the spec exists.
-2. Derive `uncompressed.md` from the spec. Every normative requirement
-   in the spec must be represented. No new requirements may be introduced
-   that are not in the spec.
-3. Compress using the `compression` skill (`--source uncompressed.md
-   --target SKILL.md`).
-4. Audit — dispatch `skill-auditing` on the skill folder following
-   the dispatch pattern in `skill-auditing/SKILL.md` (not inline).
-   Do not declare done without a returned PASS. Fix findings,
-   recompress, re-dispatch until PASS.
-
-For dispatch skills: also write the companion agent/instruction file
-(step 2) and verify it is reachable (step 4).
-
-### Behavior revision workflow
-
-1. Always update the spec first. Exception: changes limited to
-   non-normative content (README, examples, typo fixes in informational
-   sections) — in that case skip to step 2.
-2. Update `uncompressed.md` to reflect the spec change.
-3. Recompress to `SKILL.md`.
-4. Re-audit — dispatch `skill-auditing` on the skill folder (not
-   inline). PASS required before declaring the revision complete.
-
-Never modify `SKILL.md` directly — it is a compiled artifact.
-Flow: spec → uncompressed → compressed.
-
 ### Dispatch vs inline decision flow
 
 Ask: "Could someone with no context do this from just the inputs given?"
