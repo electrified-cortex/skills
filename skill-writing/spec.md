@@ -522,6 +522,13 @@ Use the Decision Tree section for detailed criteria.
 
 ## Constraints
 
+- A skill MUST NOT reference its own `spec.md` at runtime (SKILL.md is the agent-facing artifact).
+- Inline skills MUST NOT include dispatch wiring or sub-agent invocation patterns.
+- Dispatch skills MUST follow the dispatch pattern conventions documented in the `dispatch` skill.
+- Cross-skill references in runtime artifacts MUST use canonical skill names (R-FM-11), not file paths.
+- The `instructions.txt` file, if present, MUST NOT be read by the host agent — it is dispatched verbatim.
+- `SKILL.md` MUST be produced via compression of `uncompressed.md`, not authored directly.
+
 - Don't create dispatch skills for tasks that need caller context
 - Don't embed procedure in routing cards — that's what the agent file is for
 - Don't create inline skills for mechanical processing — dispatch it
