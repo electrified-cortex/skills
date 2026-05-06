@@ -10,7 +10,7 @@
 - **Selection**: filtering the combined registry against artifact problem traits to produce the active personality set.
 - **Availability gate**: probe step confirming a personality's required backend is reachable before dispatch.
 - **Swarm**: surviving personalities after selection and availability gating.
-- **Dispatch skill**: `electrified-cortex/dispatch` — authoritative agent-launching mechanism. Swarm delegates all sub-agent launches here; never reinvent the launch primitive.
+- **Dispatch skill**: the `dispatch` skill — authoritative agent-launching mechanism. Swarm delegates all sub-agent launches here; never reinvent the launch primitive.
 - **Disagree set**: subset of swarm findings where two or more personalities reached contradictory conclusions on the same point.
 - **Confidence rating**: High / Medium / Low scalar attached to synthesis output. Reflects reviewer agreement, evidence quality, and scope coverage.
 - **Model class**: abstract tier identifier — `haiku-class` (shallow/mechanical), `sonnet-class` (moderate reasoning, default), `opus-class` (heavy architectural reasoning). No bare model names anywhere.

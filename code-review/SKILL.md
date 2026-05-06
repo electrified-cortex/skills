@@ -17,7 +17,7 @@ Adversarial code review on a change set. Two first-class modes: tiered (smoke+su
 
 | Mode | When to use | Cost/time profile | Model |
 | --- | --- | --- | --- |
-| **Swarm** | Comprehensive review: multiple model passes, consensus | High cost, high quality, ~3-5x longer | All available models (see swarm/SKILL.md) |
+| **Swarm** | Comprehensive review: multiple model passes, consensus | High cost, high quality, ~3-5x longer | All available models (see `swarm` skill) |
 | **Tiered** | Standard review: smoke pass then substantive sign-off | Medium cost, medium time, two passes | Haiku (smoke) + Sonnet (substantive) |
 | **Single-adversary** | Quick targeted review: one pass, focused finding list | Low cost, fast, single model | One model (see capability-cache for selection) |
 
@@ -81,7 +81,7 @@ Output:
 - Summary: 1-3 sentences: top concern + overall verdict.
 
 #### Procedure
-1. Check capability cache (see `capability-cache/SKILL.md`) to determine available models.
+1. Check capability cache (see `capability-cache` skill) to determine available models.
 2. If `model` specified -> use it. If not -> use first available from cache (fall back to host model if cache MISS or unavailable).
 3. Read the target (file contents or PR diff).
 4. Produce ONE adversarial review pass: assume the author is wrong and look for problems.
@@ -128,7 +128,7 @@ Summary: 1-3 sentences — top concern + overall verdict.
 
 ## Dependencies
 
-- `capability-cache/SKILL.md`
-- `dispatch/SKILL.md`
-- `swarm/SKILL.md` (for swarm mode)
+- `capability-cache` skill
+- `dispatch` skill
+- `swarm` skill (for swarm mode)
 - `spec-auditing`, `skill-auditing`, `compression` (related skills)

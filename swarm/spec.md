@@ -36,7 +36,7 @@ Does NOT cover:
 
 **Swarm**: the surviving set of personalities after selection and availability gating.
 
-**Dispatch skill**: `electrified-cortex/dispatch` — the authoritative agent-launching mechanism. `swarm` delegates all sub-agent launches to this skill; it must not reinvent the launch primitive.
+**Dispatch skill**: the `dispatch` skill (folder: `dispatch/`) — the authoritative agent-launching mechanism. `swarm` delegates all sub-agent launches to this skill; it must not reinvent the launch primitive.
 
 **Disagree set**: the subset of swarm findings where two or more personalities reached contradictory conclusions on the same point.
 

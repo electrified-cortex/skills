@@ -1,10 +1,10 @@
 # swarm — Dispatch Integration
 
-Sub-spec of `swarm/spec.md`. Covers: how the swarm skill uses the `electrified-cortex/dispatch` skill, model-class routing, parallelism requirements, and the CLI dispatch deferral. Does not cover the dispatch skill's own decision tree (see the `dispatch` skill: `dispatch/SKILL.md`).
+Sub-spec of `swarm/spec.md`. Covers: how the swarm skill uses the `dispatch` skill, model-class routing, parallelism requirements, and the CLI dispatch deferral. Does not cover the dispatch skill's own decision tree (see the `dispatch` skill: `dispatch/SKILL.md`).
 
 ## Normative Reference
 
-All sub-agent launches by the swarm skill are delegated to `electrified-cortex/dispatch`. The swarm must not reinvent the launch primitive. Operators adding CLI dispatch or new backend types must extend the dispatch skill (see task 10-0845) before referencing those patterns here.
+All sub-agent launches by the swarm skill are delegated to the `dispatch` skill. The swarm must not reinvent the launch primitive. Operators adding CLI dispatch or new backend types must extend the dispatch skill (see task 10-0845) before referencing those patterns here.
 
 The dispatch skill's Well-Formed Prompt checklist applies to every personality dispatch the swarm constructs. Each dispatch must satisfy:
 
