@@ -106,10 +106,12 @@ not become a new auditor verdict.
     This requirement specifies that the check exists, not its full procedure.
     Absence of `eval.txt` **must not** affect the verdict.
 17. The auditor **must** check all skill artifacts for cross-reference
-    anti-patterns (A-XR-1): any path-based pointer from a skill artifact to
-    another skill's `uncompressed.md` or `spec.md` **must** be flagged HIGH.
-    Referencing a skill by name only is permitted. Subject-matter mentions
-    in skill-auditing's own files are exempt.
+    anti-patterns (A-XR-1): per R-FM-11, every cross-skill reference MUST
+    identify the target by canonical `name`; a relative path may follow as
+    an optional pointer. References that supply ONLY a path with no canonical
+    name **must** be flagged HIGH. Bare-name references and name-with-path
+    references are permitted. Subject-matter mentions in skill-auditing's
+    own files are exempt.
 18. For dispatch skills, `uncompressed.md` **must** be a launch-script: frontmatter,
     optional H1, dispatch invocation + input signature, return contract, optional
     2-line iteration-safety pointer, optional inline result check protocol (pre-dispatch
@@ -359,16 +361,35 @@ Verify the companion spec is structurally sound, then verify the compiled artifa
     for verbatim restatement of iteration-safety Rules A or B beyond the
     sanctioned 2-line pointer block. Any found → HIGH.
 23. **(A-XR-1) Cross-reference anti-pattern** — scan `SKILL.md`,
-    `instructions.txt`, any sub-instructions (e.g. `eval.txt`), and
-    `uncompressed.md` for any pointer to ANOTHER skill's `uncompressed.md`
-    or `spec.md` by file path or inline link. Examples of violations: "See
-    uncompressed.md for full version", "See spec.md for requirements",
-    "Reference: `<some-skill>`/uncompressed.md", any href/link containing
-    `.uncompressed.md` or `.spec.md`. Referencing a skill by SKILL NAME only
-    (e.g. "see the `compression` skill") is NOT a violation. Subject-matter
-    mentions of these file types within skill-auditing itself (which audits
-    these files as targets) are NOT violations. Any other cross-file pointer
-    → HIGH.
+    `instructions.txt`, any sub-instructions (e.g. `eval.txt`),
+    `instructions.uncompressed.md`, `uncompressed.md`, and `spec.md` for
+    cross-skill references that supply ONLY a path with no canonical skill
+    name. Per R-FM-11, every cross-skill reference MUST identify the target
+    by its `name` (the value of `name:` in that skill's SKILL.md frontmatter);
+    a relative path MAY follow the name as an optional "see this file"
+    pointer for direct (non-plugin) reading.
+
+    **Violations (any other cross-file pointer with NO canonical name → HIGH):**
+
+    - `See ../compression/uncompressed.md for details.` (path, no name)
+    - `Consult ../spec-writing/spec.md for the format.` (path, no name)
+    - Inline links to `.uncompressed.md` / `.spec.md` of another skill with no
+      name reference.
+
+    **Permitted (do NOT flag):**
+
+    - Sibling skill by name only: ``the `compression` skill``
+    - Name + folder pointer: ``the `compression` skill (`../compression`)``
+    - Name + specific-file pointer: ``the `compression` skill's tier rules
+      (`../compression/<tier>/rules.txt`)``
+    - References to OWN sub-files within the same skill folder.
+    - Subject-matter mentions of these file types within skill-auditing
+      itself (which audits these files as targets).
+
+    Note: pointers to a sibling's `uncompressed.md` or `spec.md` are still
+    load invitations even when a name is present; prefer pointing at the
+    skill folder or a more specific sub-file (e.g., `tier/rules.txt`,
+    embedded examples). This is preference, not a violation.
 
 ## Dispatch Skill Audit Criteria
 
@@ -717,7 +738,7 @@ See `../iteration-safety/SKILL.md`.
 - Do not produce a PASS verdict when evidence is ambiguous — use NEEDS_REVISION.
 - Do not include dispatch instructions (e.g., "run this skill") in instructions.txt.
 - Do not reference skills by inlining their content — use pointers only.
-- Do not pass A-XR-1 if any skill artifact (other than skill-auditing's own files as subject-matter context) contains a path-based cross-reference to another skill's `uncompressed.md` or `spec.md`.
+- Do not pass A-XR-1 if any skill artifact (other than skill-auditing's own files as subject-matter context) contains a cross-skill reference that supplies ONLY a path with no canonical name. Bare-name and name-with-path-pointer references pass.
 - Do not pass A-FM-8 if the Iteration Safety blurb appears in `instructions.uncompressed.md` or `instructions.txt`, even if it is also present in `SKILL.md`.
 - Do not rate A-FM-9a/9b as N/A unless the skill contains no iteration-safety reference at all; if any reference is present, check pointer form and verbatim restatement.
 
