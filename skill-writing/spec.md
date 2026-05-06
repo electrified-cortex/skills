@@ -539,33 +539,50 @@ Use the Decision Tree section for detailed criteria.
   `instructions.txt` (R-FM-8)
 - Never restate iteration-safety Rules A or B verbatim in a caller skill — use the
   2-line pointer block only (R-FM-9)
-- **Never cross-reference another skill's `uncompressed.md` or `spec.md` by file
-  path in any skill artifact** (R-FM-11 — see below)
+- **Never reference another skill by file path alone — name is the canonical
+  identity; a relative path is permitted only as an optional "see this file"
+  pointer alongside the name** (R-FM-11 — see below)
 - **Never embed absolute filesystem paths in any artifact body** — use
   repo-relative paths (R-FM-12 — see below)
 
-## R-FM-11 — No Cross-File-Path References to Sibling Skill Internals
+## R-FM-11 — Cross-Skill References by Name (Path Optional)
 
-Skill files (`SKILL.md`, `instructions.txt`, sub-instructions,
-`uncompressed.md`) MUST NOT reference another skill's `uncompressed.md`
-or `spec.md` by file path. Every cross-pointer to an uncompressed or
-spec file is a load invitation — even uncompressed-to-uncompressed
-references compound bloat. Honest authoring routes by skill name; the
-agent decides what to load.
+Cross-skill references in skill artifacts (`SKILL.md`, `instructions.txt`,
+sub-instructions, `instructions.uncompressed.md`, `uncompressed.md`,
+`spec.md`) MUST identify the target skill by its canonical `name` — the
+value of the `name:` field in that skill's `SKILL.md` frontmatter.
+
+The skill name is the load-time identity the agent uses: Claude Code's
+`Skill` tool resolves by name, and the skill index lookup is name-based.
+Names are stable across authoring and plugin install layouts; raw paths
+are not.
+
+A relative path pointer to the skill's folder or to a specific file within
+it MAY follow the name as a "see this file" transparency hint for direct
+(non-plugin) reading. The pointer MUST be correct relative to the source
+(authoring) layout. References that supply ONLY a path with no canonical
+name are forbidden — the agent has no portable handle to look up.
+
+Pointers to a sibling's `uncompressed.md` or `spec.md` are still load
+invitations even when the name is present; prefer pointing at the skill
+folder or the sub-file the reader actually needs (e.g. an embedded
+example, a `tier/rules.txt`).
 
 ### Allowed
 
 - References to own `instructions.txt`, sub-instructions, or
   `tooling.md` within the same skill folder
-- References to a sibling skill by name: `"see the compression skill"`
+- Sibling skill by name only: ``the `compression` skill``
+- Sibling skill by name + folder pointer: ``the `compression` skill (`../compression`)``
+- Sibling skill by name + specific-file pointer: ``the `compression` skill's tier rules (`../compression/<tier>/rules.txt`)``
 
 ### Forbidden (examples)
 
 ```text
-# FORBIDDEN — path to sibling's uncompressed
+# FORBIDDEN — path with no canonical name
 See `../compression/uncompressed.md` for details.
 
-# FORBIDDEN — path to sibling's spec
+# FORBIDDEN — path with no canonical name
 Consult `../spec-writing/spec.md` for the format.
 ```
 
@@ -575,8 +592,15 @@ Consult `../spec-writing/spec.md` for the format.
 # ALLOWED — own sub-file
 Read and follow `instructions.txt` (in this directory).
 
-# ALLOWED — sibling by skill name
+# ALLOWED — sibling by name only
 For dispatch mechanics, read the `dispatch` skill.
+
+# ALLOWED — name + folder pointer
+For dispatch mechanics, read the `dispatch` skill (`../dispatch`).
+
+# ALLOWED — name + specific-file pointer
+The `compression` skill's tier rules
+(`../compression/<tier>/rules.txt`) define the format.
 ```
 
 ## R-FM-12 — No Absolute Filesystem Paths in Artifact Bodies
