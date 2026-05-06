@@ -4,7 +4,7 @@ description: Audit a skill for quality, classification, cost, and compliance wit
 ---
 
 Input:
-`<skill_dir>` — abs path to skill folder being audited.
+`<skill_dir>` — repo-relative path to skill folder being audited.
 
 Inline result check:
 Run `result` tool (this folder) per runtime. DON'T READ script source — before, during, or after. Run it, branch on stdout, move on.
