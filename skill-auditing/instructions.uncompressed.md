@@ -254,19 +254,25 @@ Scan all artifacts for verbatim restatement of iteration-safety Rules A or B bey
 
 ### (A-XR-1) Cross-reference anti-pattern
 
-Scan `SKILL.md`, `instructions.txt`, any sub-instructions (e.g. `eval.txt`), and `uncompressed.md` for any pointer — by file path or inline link — to ANOTHER skill's `uncompressed.md` or `spec.md`. Violations:
+Per R-FM-11, every cross-skill reference MUST identify the target by canonical `name` (the value of `name:` in that skill's SKILL.md frontmatter). A relative path MAY follow the name as an optional "see this file" pointer for direct (non-plugin) reading. References that supply ONLY a path with no canonical name are violations — the agent has no portable handle to look up.
 
-- "See uncompressed.md for full version"
-- "See spec.md for requirements"
-- "Reference: `<some-skill>/uncompressed.md`"
-- Any href or inline link whose target ends in `.uncompressed.md` or `.spec.md`
+Scan `SKILL.md`, `instructions.txt`, any sub-instructions (e.g. `eval.txt`), `instructions.uncompressed.md`, `uncompressed.md`, and `spec.md`.
+
+Violations (path with no canonical name → HIGH):
+
+- "See `../compression/uncompressed.md` for details" (path, no name)
+- "Consult `../spec-writing/spec.md` for the format" (path, no name)
+- Any inline link to `.uncompressed.md` or `.spec.md` of another skill with no name reference
 
 NOT violations:
 
-- Referencing a skill by SKILL NAME only (e.g. "see the `compression` skill")
+- Bare name: "the `compression` skill"
+- Name + folder pointer: "the `compression` skill (`../compression`)"
+- Name + specific-file pointer: "the `compression` skill's tier rules (`../compression/<tier>/rules.txt`)"
+- References to OWN sub-files within the same skill folder
 - Subject-matter mentions of these file types in skill-auditing's own artifacts (this skill audits these files as targets, so it must name them)
 
-Any cross-file path pointer → HIGH.
+Any cross-file pointer with no canonical name → HIGH.
 
 ### (A-FM-10) Launch-script form on dispatch skills
 

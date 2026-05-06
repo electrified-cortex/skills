@@ -20,3 +20,6 @@ temp/
 
 # Worker scratch directories — never commit
 .audit/
+
+# Capability cache — local env probes, never commit
+.capability-cache/

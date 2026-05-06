@@ -1,8 +1,6 @@
 ---
 name: skill-writing
-description: >-
-  How to write skills — decision tree for inline vs dispatch, structure,
-  quality criteria.
+description: How to write skills. Decision tree for inline vs dispatch, structure, quality criteria. Triggers — write a skill, author SKILL.md, create new skill, draft skill file, implement skill spec.
 ---
 
 # Skill Writing
@@ -20,7 +18,9 @@ When creating a new skill, follow this order. Never skip steps.
 2. **Write uncompressed** — write `uncompressed.md` derived from the
    spec. This is the human-readable baseline.
 3. **Markdown hygiene** — run the `markdown-hygiene` skill on
-   `uncompressed.md`. Zero errors required before proceeding.
+   every uncompressed source file (`uncompressed.md`, and
+   `instructions.uncompressed.md` if present). Zero errors required
+   before proceeding.
 4. **Intermediate audit** — dispatch `skill-auditing --uncompressed` on the skill.
    FAIL → fix all findings → re-audit. **Repeat until PASS.**
 5. **Compress** — use the `compression` skill (source→target mode:
@@ -68,15 +68,13 @@ Then update `uncompressed.md` → hygiene → intermediate audit (`--uncompresse
 → compress → final audit. Never modify SKILL.md directly — it is a compiled
 artifact.
 
-## Decision: Inline or Dispatch?
+## Decision: Inline or Dispatch
 
 > "Could someone with no context do this from just the inputs?"
 > **Yes** → dispatch. **No** → inline.
 
 **Inline** = needs caller's context, judgment, creative intent. Inline skills don't need to understand dispatch mechanics.
 **Dispatch** = mechanical processing against rules. Use Dispatch agent (zero context).
-
-This skill decides *whether* a skill dispatches and *how to structure it*. For dispatch mechanics (decision tree, model tiers, prompt construction, footguns) read the `dispatch` skill.
 
 ## Skill Folder Convention
 
@@ -105,11 +103,7 @@ Parameters: types, required/optional, defaults. Output format specified.
 
 Routing card = invocation signature + output format. Stop gates (refusal
 conditions, git-clean checks, path escape guards, eligibility rules) belong in
-`instructions.txt` only — not the routing card. The dispatched agent enforces
-them; the host doesn't need to know them before dispatch.
-
-Do not rely on repo-local fallback filenames — those belong in skill-specific
-auditors, not in universal spec-auditing rules.
+`instructions.txt` only — not the routing card.
 
 Dispatch instruction file must be in the same directory or a known path.
 Compressed `instructions.txt` contains only instructions — no title
@@ -189,6 +183,7 @@ If the companion spec has a `Footguns` section, mirror it in uncompressed.md/SKI
 ## Related
 
 - `spec-writing` — write the spec first (step 1 of workflow)
-- `compression` — compress uncompressed.md to SKILL.md (step 3)
+- `markdown-hygiene` — run on uncompressed sources (step 3)
 - `skill-auditing` — intermediate + final audits
+- `compression` — compress uncompressed.md to SKILL.md (step 5)
 - `dispatch` — dispatch mechanics (decision tree, model tiers, prompt construction); read before writing any dispatch skill

@@ -16,7 +16,7 @@
 
 ### Skill-design takeaways (to encode in spec)
 
-1. **Arbitrator rule: severity-elevation on convergence.** When N≥2 reviewers raise the same finding at different severities, arbitrator picks the highest. Encode in `swarm/spec.md` arbitrator section.
+1. **Arbitrator rule: severity-elevation on convergence.** When N≥2 reviewers raise the same finding at different severities, arbitrator picks the highest. Encode in the `swarm` skill's `spec.md` arbitrator section.
 2. **Code-review minimum-set rule:** for trivial files (single-file, ≤50 lines, no side-effects, no security path) → `Code Reviewer + Devil's Advocate` is the floor. No need to escalate. Encode in `code-review/spec.md` diff-size-aware-scoping section.
 3. **DA is mandatory on substantive content.** This eval validated DA's cross-perspective role — Unicode-class trap, vacuous-truth elevation. Don't make DA optional except for pure documentation/whitespace diffs.
 4. **Arbitrator output > raw personality outputs.** Without consolidation, caller sees 10 findings (5+5 with overlap); with arbitrator, 9 unique in severity order. Codify the arbitrator pass as REQUIRED, not optional.

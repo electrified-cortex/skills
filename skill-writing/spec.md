@@ -323,7 +323,7 @@ See `<relative-path>/iteration-safety/SKILL.md`.
 ```
 
 The relative path MUST match the caller's actual depth. Callers MUST NOT
-restate Rule A or Rule B verbatim. See `../iteration-safety/SKILL.md` for
+restate Rule A or Rule B verbatim. See the `iteration-safety` skill (`../iteration-safety/SKILL.md`) for
 the canonical text.
 
 R-FM-10 **Description carries trigger phrases.** The `description`
@@ -341,15 +341,15 @@ here propagates into discovery downstream.
 ### For dispatch skills specifically
 
 - Dispatch instruction file must be in the same directory or a known path
-- The canonical spawn primitive is `dispatch/SKILL.md` — all consumers
+- The canonical spawn primitive is the `dispatch` skill (`../dispatch/SKILL.md`) — all consumers
   invoke it via the Variables block pattern (prompt-only model)
 - Use the Dispatch agent for zero-context isolation (preferred over
   background agent with host context)
 - Consumer composes `<prompt>` (instructions path + input args); dispatch
   sends verbatim — no template construction inside dispatch
 - Output format specified so the caller knows what to expect
-- The exemplar is `compression/SKILL.md` — study it alongside
-  `dispatch/SKILL.md` for the full pattern
+- The exemplar is the `compression` skill (`../compression/SKILL.md`) — study it alongside
+  the `dispatch` skill (`../dispatch/SKILL.md`) for the full pattern
 
 ### Quality criteria (for auditing)
 
@@ -429,36 +429,6 @@ change history, credits, publication notes.
 
 ## Behavior
 
-### Skill creation workflow
-
-1. Write `spec.md` using the `spec-writing` skill. No downstream work
-   starts until the spec exists.
-2. Derive `uncompressed.md` from the spec. Every normative requirement
-   in the spec must be represented. No new requirements may be introduced
-   that are not in the spec.
-3. Compress using the `compression` skill (`--source uncompressed.md
-   --target SKILL.md`).
-4. Audit — dispatch `skill-auditing` on the skill folder following
-   the dispatch pattern in `skill-auditing/SKILL.md` (not inline).
-   Do not declare done without a returned PASS. Fix findings,
-   recompress, re-dispatch until PASS.
-
-For dispatch skills: also write the companion agent/instruction file
-(step 2) and verify it is reachable (step 4).
-
-### Behavior revision workflow
-
-1. Always update the spec first. Exception: changes limited to
-   non-normative content (README, examples, typo fixes in informational
-   sections) — in that case skip to step 2.
-2. Update `uncompressed.md` to reflect the spec change.
-3. Recompress to `SKILL.md`.
-4. Re-audit — dispatch `skill-auditing` on the skill folder (not
-   inline). PASS required before declaring the revision complete.
-
-Never modify `SKILL.md` directly — it is a compiled artifact.
-Flow: spec → uncompressed → compressed.
-
 ### Dispatch vs inline decision flow
 
 Ask: "Could someone with no context do this from just the inputs given?"
@@ -509,7 +479,7 @@ Use the Decision Tree section for detailed criteria.
 
 - `spec.md` is the source of truth. It governs `uncompressed.md`, which
   governs `SKILL.md`. Conflicts resolve in that order.
-- `spec-writing/spec.md` governs the form and structure of all derived
+- The `spec-writing` skill's `spec.md` governs the form and structure of all derived
   skills produced by this skill. When this spec conflicts with a skill
   it produced, this spec wins.
 - Spec-clarity precedence: if the compile step (steps 2–3) feels like
@@ -521,6 +491,13 @@ Use the Decision Tree section for detailed criteria.
   even at the cost of increased size.
 
 ## Constraints
+
+- A skill MUST NOT reference its own `spec.md` at runtime (SKILL.md is the agent-facing artifact).
+- Inline skills MUST NOT include dispatch wiring or sub-agent invocation patterns.
+- Dispatch skills MUST follow the dispatch pattern conventions documented in the `dispatch` skill.
+- Cross-skill references in runtime artifacts MUST use canonical skill names (R-FM-11), not file paths.
+- The `instructions.txt` file, if present, MUST NOT be read by the host agent — it is dispatched verbatim.
+- `SKILL.md` MUST be produced via compression of `uncompressed.md`, not authored directly.
 
 - Don't create dispatch skills for tasks that need caller context
 - Don't embed procedure in routing cards — that's what the agent file is for
@@ -539,33 +516,50 @@ Use the Decision Tree section for detailed criteria.
   `instructions.txt` (R-FM-8)
 - Never restate iteration-safety Rules A or B verbatim in a caller skill — use the
   2-line pointer block only (R-FM-9)
-- **Never cross-reference another skill's `uncompressed.md` or `spec.md` by file
-  path in any skill artifact** (R-FM-11 — see below)
+- **Never reference another skill by file path alone — name is the canonical
+  identity; a relative path is permitted only as an optional "see this file"
+  pointer alongside the name** (R-FM-11 — see below)
 - **Never embed absolute filesystem paths in any artifact body** — use
   repo-relative paths (R-FM-12 — see below)
 
-## R-FM-11 — No Cross-File-Path References to Sibling Skill Internals
+## R-FM-11 — Cross-Skill References by Name (Path Optional)
 
-Skill files (`SKILL.md`, `instructions.txt`, sub-instructions,
-`uncompressed.md`) MUST NOT reference another skill's `uncompressed.md`
-or `spec.md` by file path. Every cross-pointer to an uncompressed or
-spec file is a load invitation — even uncompressed-to-uncompressed
-references compound bloat. Honest authoring routes by skill name; the
-agent decides what to load.
+Cross-skill references in skill artifacts (`SKILL.md`, `instructions.txt`,
+sub-instructions, `instructions.uncompressed.md`, `uncompressed.md`,
+`spec.md`) MUST identify the target skill by its canonical `name` — the
+value of the `name:` field in that skill's `SKILL.md` frontmatter.
+
+The skill name is the load-time identity the agent uses: Claude Code's
+`Skill` tool resolves by name, and the skill index lookup is name-based.
+Names are stable across authoring and plugin install layouts; raw paths
+are not.
+
+A relative path pointer to the skill's folder or to a specific file within
+it MAY follow the name as a "see this file" transparency hint for direct
+(non-plugin) reading. The pointer MUST be correct relative to the source
+(authoring) layout. References that supply ONLY a path with no canonical
+name are forbidden — the agent has no portable handle to look up.
+
+Pointers to a sibling's `uncompressed.md` or `spec.md` are still load
+invitations even when the name is present; prefer pointing at the skill
+folder or the sub-file the reader actually needs (e.g. an embedded
+example, a `tier/rules.txt`).
 
 ### Allowed
 
 - References to own `instructions.txt`, sub-instructions, or
   `tooling.md` within the same skill folder
-- References to a sibling skill by name: `"see the compression skill"`
+- Sibling skill by name only: ``the `compression` skill``
+- Sibling skill by name + folder pointer: ``the `compression` skill (`../compression`)``
+- Sibling skill by name + specific-file pointer: ``the `compression` skill's tier rules (`../compression/<tier>/rules.txt`)``
 
 ### Forbidden (examples)
 
 ```text
-# FORBIDDEN — path to sibling's uncompressed
+# FORBIDDEN — path with no canonical name
 See `../compression/uncompressed.md` for details.
 
-# FORBIDDEN — path to sibling's spec
+# FORBIDDEN — path with no canonical name
 Consult `../spec-writing/spec.md` for the format.
 ```
 
@@ -575,8 +569,15 @@ Consult `../spec-writing/spec.md` for the format.
 # ALLOWED — own sub-file
 Read and follow `instructions.txt` (in this directory).
 
-# ALLOWED — sibling by skill name
+# ALLOWED — sibling by name only
 For dispatch mechanics, read the `dispatch` skill.
+
+# ALLOWED — name + folder pointer
+For dispatch mechanics, read the `dispatch` skill (`../dispatch`).
+
+# ALLOWED — name + specific-file pointer
+The `compression` skill's tier rules
+(`../compression/<tier>/rules.txt`) define the format.
 ```
 
 ## R-FM-12 — No Absolute Filesystem Paths in Artifact Bodies
