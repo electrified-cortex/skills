@@ -38,7 +38,7 @@ Procedure:
    ```
 
    Body: open with `# Result` H1, state verdict, list findings (with step and check refs).
-8. **Verify report on disk.** Before returning a verdict, run `ls -la <report_path>` (or equivalent) and confirm the file exists with non-zero size at the EXACT path passed via `--report-path`. If missing, empty, or written elsewhere → return `ERROR: report not at <report_path>` and stop. Do NOT return CLEAN/PASS/NEEDS_REVISION/FAIL without a verified file.
+8. **Verify report on disk.** Before returning a verdict, run `ls -la <report_path>` (or equivalent) and confirm the file exists with non-zero size at the EXACT path passed via `--report-path`. If missing, empty, or written elsewhere → return `ERROR: report not at <report_path>` and stop. Then scan the written report for absolute path content (forbidden tokens: Windows drive-letter paths `<letter>:[/\]`, POSIX root-anchored paths `/Users/ /home/ /d/ /c/ /mnt/ /tmp/ /var/`). If any match is found, return `ERROR: absolute path in report at <report_path>:<line>: <matched-text>` and stop. Do NOT return CLEAN/PASS/NEEDS_REVISION/FAIL without a verified, abs-path-free file.
 9. Return verdict token as final stdout line, column 0, no indentation, no quoting, no list-marker prefix. Nothing follows.
    - `CLEAN: <report_path>`
    - `PASS: <report_path>`
