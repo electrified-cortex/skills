@@ -68,7 +68,7 @@ Then update `uncompressed.md` → hygiene → intermediate audit (`--uncompresse
 → compress → final audit. Never modify SKILL.md directly — it is a compiled
 artifact.
 
-## Decision: Inline or Dispatch?
+## Decision: Inline or Dispatch
 
 > "Could someone with no context do this from just the inputs?"
 > **Yes** → dispatch. **No** → inline.
