@@ -77,10 +77,4 @@ analysis: `<analysis_result>`
 
 Where `<lint_result>` and `<analysis_result>` are the bare return values (`clean`, `findings: lint.md`, `pass: analysis.md`) using repo-relative paths only.
 
-## 6 — Prune
-
-Run `hash-record-prune` with `repo_root=<repo_root> --target <repo-relative-path>` where `<repo-relative-path>` is `<markdown_file_path>` stripped of the repo root prefix.
-
-This removes orphaned hash directories for the target file accumulated across iterations.
-
-Return based on last `report.md` result: `clean` → `CLEAN`; `pass` → `pass: <report_path>`.
+Return: `clean` → `CLEAN`; `pass` → `PASS: <report_path>`.
