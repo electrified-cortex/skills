@@ -3,8 +3,6 @@ name: swarm
 description: Multi-personality review infrastructure — selects personalities, gates availability, dispatches in parallel, arbitrates, and synthesizes a verdict. Triggers — swarm review, multi-reviewer, parallel personalities, run all reviewers, arbitrate findings.
 ---
 
-# swarm
-
 Key Terms:
 Artifact: input content under review — conversation excerpt, file path, diff, plan, doc, or structured description. Passed as `problem`.
 Review packet: self-contained brief assembled from artifact. Fields: Goal, Approach, Key decisions, Artifacts (actual content), Files affected, Blast radius, Conventions. Omit inapplicable fields.
@@ -26,7 +24,7 @@ Arbitrator: single sonnet-class sub-agent dispatched after all swarm members com
 
 Personality Registry:
 Registry is external to skill. Built-in personality definitions live as separate files at `swarm/reviewers/<name>.md`. Registry = directory listing — every `*.md` in `reviewers/` that passes metadata-validation gate is registered. Adding personality = drop new file; no spec or SKILL.md edit needed.
-Registry loading: crawl `reviewers/` at runtime when swarm invocation begins. Compile-time enumeration not used. `reviewers/index.md` = ordered manifest — provides metadata and ordering for personalities discovered during crawl.
+Registry loading: crawl `reviewers/` at runtime when swarm invocation begins. Compile-time enumeration not used. `reviewers/index.yaml` = ordered manifest — provides metadata and ordering for personalities discovered during crawl.
 Metadata-validation gate: any file in `reviewers/` subject to automatic metadata-validation before registration. File failing validation silently skipped. No human approval required. Valid files auto-registered.
 
 Built-in personalities (informative — not normative):
@@ -85,7 +83,7 @@ Inputs:
 | `model_overrides` | optional | Map of personality name to model class. Affects model class only, not backend type. |
 
 Caller Tier:
-Host agent executing skill MUST be sonnet-class minimum. Orchestration requires judgment-intensive work: constructing self-contained review packet from arbitrary input, evaluating trigger conditions inline against inferred problem traits, synthesizing arbitrator output into host-voice with confidence rating. Haiku-class insufficient. Callers dispatching swarm via `dispatch` skill MUST use `tier: standard` or higher.
+Host agent executing skill MUST be sonnet-class minimum. Callers dispatching swarm via `dispatch` skill MUST use `tier: standard` or higher.
 
 Step Sequence:
 

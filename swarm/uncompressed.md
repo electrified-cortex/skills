@@ -29,7 +29,7 @@ description: Multi-personality review infrastructure — selects personalities, 
 
 The registry is external to the skill. Built-in personality definitions live as separate files at `swarm/reviewers/<name>.md`. The registry is the directory listing — every `*.md` file present in `reviewers/` that passes the metadata-validation gate is a registered personality. Adding a personality requires only dropping a new file; no spec or SKILL.md edit required.
 
-**Registry loading**: crawl `reviewers/` at runtime when a swarm invocation begins. Compile-time enumeration is not used. `reviewers/index.md` serves as the ordered manifest for the registry — it provides metadata and ordering for personalities discovered during the crawl.
+**Registry loading**: crawl `reviewers/` at runtime when a swarm invocation begins. Compile-time enumeration is not used. `reviewers/index.yaml` serves as the ordered manifest for the registry — it provides metadata and ordering for personalities discovered during the crawl.
 
 **Metadata-validation gate**: any file in `reviewers/` is subject to automatic metadata-validation before registration. A file failing validation is silently skipped. No human approval required. Valid files are automatically registered.
 
@@ -92,7 +92,7 @@ Callers may supply additional personalities for a single invocation. Each entry 
 
 ## Caller Tier
 
-The host agent executing this skill must be **sonnet-class minimum**. The orchestration requires judgment-intensive work: constructing a self-contained review packet from arbitrary input, evaluating trigger conditions inline against inferred problem traits, and synthesizing arbitrator output into host-voice with a confidence rating. Haiku-class is insufficient for these tasks. Callers dispatching swarm via the `dispatch` skill must use `tier: standard` or higher.
+The host agent executing this skill must be **sonnet-class minimum**. Callers dispatching swarm via the `dispatch` skill must use `tier: standard` or higher.
 
 ## Step Sequence
 
