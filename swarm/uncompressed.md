@@ -159,7 +159,11 @@ Dispatch parameters:
 
 Should return: a structured findings list. Each finding: description of the issue, evidence cite (snippet, line reference, scenario, or direct quote). Empty response or "No findings" is a valid return — treated as non-contributing (B4).
 
+Structured-evidence requirement (high/critical findings): any finding marked HIGH or CRITICAL severity must include three fields: Source (where the vulnerability or bug enters), Sink (where it causes harm), and Missing guard (what defense is absent). Findings at HIGH or CRITICAL severity that lack this structure are automatically downgraded to MEDIUM.
+
 ### Step 6 — Arbitrator consolidation
+
+File-existence filter (pre-arbitration): before forwarding member findings to the arbitrator, discard any finding that cites a file not present in the review packet's Files-affected list. Use deterministic string matching (exact path). Do not use LLM judgment for this filter — it is mechanical. If a finding does not cite a specific file, retain it.
 
 After all swarm member outputs are collected, dispatch a single arbitrator sub-agent (sonnet-class by default). The arbitrator receives all raw member outputs and the original review packet. Per B4, non-contributing member outputs (empty/timeout) are excluded from the arbitrator's input set.
 
@@ -178,6 +182,8 @@ Required arbitrator output format (two sections):
 - **Critical actions**: items that, if unaddressed, would block shipping or require architectural change, regardless of reviewer agreement count. Each entry: action description + source personality names + evidence cite + severity rationale.
 
 The arbitrator must not include speculative, low-confidence, or duplicate items. Its output is the input to Step 7; the host synthesizes from this list only, not from raw member output.
+
+Grounded-challenge requirement: before citing a member finding as incorrect, the arbitrator must quote the exact sentence from that finding it believes is wrong. Challenging an interpretation rather than an explicit claim is not permitted.
 
 If the arbitrator produces an empty list, it must state "No actionable findings" explicitly. The host must still proceed to synthesis and note the clean result.
 

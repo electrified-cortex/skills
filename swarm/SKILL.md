@@ -141,7 +141,11 @@ Dispatch parameters:
 
 Should return: structured findings list. Each finding: description + evidence cite (snippet, line reference, scenario, or direct quote). Empty response or "No findings" = valid return — treated as non-contributing (B4).
 
+Structured-evidence requirement (high/critical findings): any finding marked HIGH or CRITICAL severity MUST include three fields: Source (where the vulnerability/bug enters), Sink (where it causes harm), Missing guard (what defense is absent). Findings at HIGH/CRITICAL without this structure are automatically downgraded to MEDIUM.
+
 Step 6 — Arbitrator consolidation:
+File-existence filter (pre-arbitration): before forwarding member findings to the arbitrator, discard any finding that cites a file not present in the review packet's Files-affected list. Deterministic string match (exact path). Do not use LLM judgment for this filter — it is mechanical. If a finding does not cite a specific file, retain it.
+
 After all swarm member outputs collected, dispatch single arbitrator sub-agent (sonnet-class by default). Arbitrator receives all raw member outputs and original review packet. Per B4, non-contributing member outputs (empty/timeout) excluded from arbitrator's input set.
 
 Dispatch parameters:
@@ -157,6 +161,8 @@ Obvious actions: 2+ swarm members independently flagged same concern, or concern
 Critical actions: items that, if unaddressed, would block shipping or require architectural change, regardless of reviewer agreement count. Each entry: action description + source personality names + evidence cite + severity rationale.
 
 Arbitrator MUSTN'T include speculative, low-confidence, or duplicate items. Its output = input to Step 7; host synthesizes from this list only, not raw member output.
+
+Grounded-challenge requirement: before citing a member finding as incorrect, arbitrator MUST quote the exact sentence from that finding it believes is wrong. Challenging an interpretation rather than an explicit claim is not permitted.
 
 If arbitrator produces empty list, it MUST state "No actionable findings" explicitly. Host MUST still proceed to synthesis and note clean result.
 

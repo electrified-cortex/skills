@@ -19,7 +19,7 @@ Tier substitution is prohibited.
 - `change_set` (required): inline unified diff text, list of absolute file paths, or git ref/range (refs require shell access in the dispatched agent).
 - `tier` (required): `smoke` or `substantive`. Governs depth.
 - `prior_findings` (substantive only, required): findings from every prior pass on the same change set, forwarded unmodified. Required for substantive; smoke mustn't receive this.
-- `focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `blocker` and `major` outside focus must still surface.
+- `focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `critical` and `high` outside focus must still surface.
 - `context_pointer` (optional): path to CLAUDE.md/README/style guide for local conventions. Read for conventions only.
 
 ## Gates
@@ -34,7 +34,7 @@ Tier substitution is prohibited.
 1. If `tier=smoke`: review for surface-level findings — style, naming, obvious bugs, missing error handling on observable failures, lint-grade defects. Bound depth to a fast pass. Skip design and architecture critique. Adversarial framing: assume the author made at least one mistake. Your job is to find it, not approve the work. If `focus` includes `security`: also frame yourself as a pentester looking for exploitable paths, not a colleague doing a courtesy review.
 2. If `tier=substantive`: review for design, correctness, security, concurrency, architectural risk, test adequacy, public API surface. Read every file touched by the change set, not just the diff hunks.
 3. Substantive pass MUST re-examine each `prior_findings` entry. For each prior finding, decide: agree (carry forward, severity may change), or contradict (mark false-positive or out-of-scope). Contradictions go in your output so the calling agent can preserve them.
-4. Apply focus areas if provided: examine focus areas first and most thoroughly. Still surface every `blocker` and `major` finding outside focus. `minor`/`nit` outside focus may be deprioritized.
+4. Apply focus areas if provided: examine focus areas first and most thoroughly. Still surface every `critical` and `high` finding outside focus. `medium`/`low` outside focus may be deprioritized.
 5. Read `context_pointer` if provided, for local conventions only. It does NOT replace your judgment.
 6. Smoke pass orchestration: calling agent dispatches smoke first, reviews findings, optionally acts on them, then dispatches substantive.
 7. Substantive pass is authoritative: most recent standard pass is the sign-off. Calling agent records sign-off so downstream consumers can verify review occurred.
@@ -45,10 +45,13 @@ Empty change set: skip all passes; return empty-result aggregate.
 
 ## Severity vocabulary (use only these)
 
-- `blocker`: must fix before advancing — data loss, security hole, broken build, broken contract.
-- `major`: should fix unless caller defers — significant correctness risk, missing error handling on observable failure, regression risk.
-- `minor`: improvement worth making, not blocking.
-- `nit`: stylistic preference, naming polish, comment wording.
+- `critical`: must fix before advancing — data loss, security hole, broken build, broken contract.
+- `high`: should fix unless caller defers — significant correctness risk, missing error handling on observable failure, regression risk.
+- `medium`: improvement worth making, not blocking.
+- `low`: stylistic preference, naming polish, comment wording.
+- `info`: informational only — no action required.
+
+SARIF mapping: critical/high → error, medium → warning, low/info → note.
 
 ## Hallucination Filter
 
@@ -70,7 +73,7 @@ Findings that fail any check MUST be omitted. Do not downgrade — omit entirely
   "verdict": "clean" | "findings" | "error",
   "findings": [
     {
-      "severity": "blocker" | "major" | "minor" | "nit",
+      "severity": "critical" | "high" | "medium" | "low" | "info",
       "location": "<file:line-range>" or "general",
       "description": "<what the issue is>",
       "recommended_action": "<what should be done>"

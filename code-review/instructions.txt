@@ -16,7 +16,7 @@ Parameters:
 `change_set` (required): inline unified diff, list of absolute file paths, or git ref/range (refs require shell access in dispatched agent).
 `tier` (required): `smoke` or `substantive`. Governs depth.
 `prior_findings` (substantive only, required): findings from every prior pass on same change set, forwarded unmodified. Required for substantive; smoke mustn't receive this.
-`focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `blocker` and `major` outside focus must still surface.
+`focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `critical` and `high` outside focus must still surface.
 `context_pointer` (optional): path to CLAUDE.md/README/style guide for local conventions. Read for conventions only.
 
 Gates:
@@ -29,7 +29,7 @@ Procedure:
 1. `tier=smoke`: review for surface-level findings — style, naming, obvious bugs, missing error handling on observable failures, lint-grade defects. Bound depth to fast pass. Skip design and architecture critique. Adversarial framing: assume author made at least one mistake. Job is to find it, not approve work. If `focus` includes `security`: also frame as pentester looking for exploitable paths, not colleague doing courtesy review.
 2. `tier=substantive`: review for design, correctness, security, concurrency, architectural risk, test adequacy, public API surface. Read every file touched by change set, not just diff hunks.
 3. Substantive pass MUST re-examine each `prior_findings` entry. Decide: agree (carry forward, severity may change), or contradict (mark false-positive or out-of-scope). Contradictions go in output so calling agent can preserve them.
-4. Apply focus areas if provided: examine first and most thoroughly. Still surface every `blocker` and `major` finding outside focus. `minor`/`nit` outside focus may be deprioritized.
+4. Apply focus areas if provided: examine first and most thoroughly. Still surface every `critical` and `high` finding outside focus. `medium`/`low` outside focus may be deprioritized.
 5. Read `context_pointer` if provided, for local conventions only. Does NOT replace judgment.
 6. Smoke pass orchestration: calling agent dispatches smoke first, reviews findings, optionally acts, then dispatches substantive.
 7. Substantive pass authoritative: most recent standard pass is sign-off. Calling agent records sign-off so downstream consumers can verify review occurred.
@@ -39,10 +39,12 @@ One skill per invocation. Each pass is separate dispatch. Smoke always runs befo
 Empty change set: skip all passes; return empty-result aggregate.
 
 Severity vocabulary (use ONLY these):
-`blocker`: must fix before advancing — data loss, security hole, broken build, broken contract.
-`major`: should fix unless caller defers — significant correctness risk, missing error handling on observable failure, regression risk.
-`minor`: improvement worth making, not blocking.
-`nit`: stylistic preference, naming polish, comment wording.
+`critical`: must fix before advancing — data loss, security hole, broken build, broken contract.
+`high`: should fix unless caller defers — significant correctness risk, missing error handling on observable failure, regression risk.
+`medium`: improvement worth making, not blocking.
+`low`: stylistic preference, naming polish, comment wording.
+`info`: informational only — no action required.
+SARIF mapping: critical/high → error, medium → warning, low/info → note.
 
 Hallucination Filter:
 Before including any finding in output, verify all four checks pass:
@@ -60,7 +62,7 @@ Output (JSON-shaped, returned as final response):
   "verdict": "clean" | "findings" | "error",
   "findings": [
     {
-      "severity": "blocker" | "major" | "minor" | "nit",
+      "severity": "critical" | "high" | "medium" | "low" | "info",
       "location": "<file:line-range>" or "general",
       "description": "<what the issue is>",
       "recommended_action": "<what should be done>"

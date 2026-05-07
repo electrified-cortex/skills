@@ -23,11 +23,15 @@ VS Code / Copilot: `runSubagent(model: "Claude Sonnet 4.6 (Copilot)", prompt: "R
 
 ## Orchestration
 
+Pre-dispatch (context_pointer auto-detect): if `context_pointer` was not supplied by the caller, search the repo root for these files in order: `CLAUDE.md`, `README.md`, `.cursorrules`, `copilot-instructions.md`. Use the first file found as `context_pointer`. If none are found, omit the parameter.
+
+Optional blast-radius gate (git-range input only): if `change_set` is a git ref or range (contains `..`, `...`, or matches `HEAD~N`), run `git diff --name-only <change_set>` to enumerate affected files. Restrict the review context to those files. This can reduce context cost by up to 6.8x on large change sets. Skip this step if `change_set` is an inline diff or an explicit file list.
+
 1. Dispatch smoke pass (Haiku/fast-cheap). Receive per-pass result.
 2. Dispatch substantive pass (Sonnet/standard). Forward all smoke findings unmodified as `prior_findings`.
 3. Collect both per-pass results. Build the aggregated result.
 
-Per-pass result: `{tier, pass_index, verdict, findings[]}`. Verdict: `clean`, `findings`, `error`. Severity: `blocker`, `major`, `minor`, `nit`.
+Per-pass result: `{tier, pass_index, verdict, findings[]}`. Verdict: `clean`, `findings`, `error`. Severity: `critical`, `high`, `medium`, `low`, `info`.
 
 Aggregated result (caller builds after both passes complete):
 
@@ -35,7 +39,7 @@ Aggregated result (caller builds after both passes complete):
 | --- | --- |
 | `passes` | Array of per-pass results, ordered by `pass_index`. |
 | `sign_off_pass_index` | Index of the most recent successful standard pass (the authoritative sign-off). `null` if no successful standard pass yet. |
-| `severity_aggregate` | Count of findings by severity (`blocker`, `major`, `minor`, `nit`) from the sign-off pass only. |
+| `severity_aggregate` | Count of findings by severity (`critical`, `high`, `medium`, `low`, `info`) from the sign-off pass only. |
 | `verdict` | Sign-off pass verdict propagated (`clean`, `findings`, or `error` if no successful standard pass). |
 | `preserved_contradictions` | Findings where smoke and substantive disagree — surface as-is, do not resolve. |
 
@@ -50,7 +54,7 @@ Aggregated result (caller builds after both passes complete):
 `change_set` (required): inline unified diff, absolute file path list, or git ref/range (refs require shell access in dispatched agent).
 `tier` (required): `smoke` or `substantive`.
 `prior_findings` (substantive only, required): all prior-pass findings forwarded unmodified.
-`focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `blocker` and `major` outside focus must still surface.
+`focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `critical` and `high` outside focus must still surface.
 `context_pointer` (optional): path to CLAUDE.md, README, or style guide for local conventions.
 
 Related: `spec-auditing`, `skill-auditing`, `dispatch`, `compression`
