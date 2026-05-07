@@ -228,7 +228,7 @@ B6. Devil's Advocate MUST always be dispatched unless explicitly excluded by `pe
 
 B7. Custom menu personalities evaluated against caller-supplied trigger condition. If trigger is "always", always include (subject to availability gating if external backend).
 
-B8. Cross-vendor diversity: if all available personalities resolve to the same model family or vendor, EITHER swap Devil's Advocate to a different family via `vendor` override OR degrade to single-adversary mode (dispatch code-review skill instead of swarm). Do NOT run a homogeneous swarm. Preferred resolution order: (1) find any gated personality on a different family; (2) Devil's Advocate override to different vendor; (3) degrade to code-review single-adversary mode. Report chosen resolution in synthesis preamble.
+B8. Cross-vendor diversity: if all available personalities resolve to the same model family or vendor, EITHER swap Devil's Advocate to a different family via `vendor` override OR degrade to single-adversary mode (dispatch code-review skill instead of swarm). Do NOT run a homogeneous swarm. Preferred resolution order: (1) find any available personality on a different model family (full registry, selected and unselected); (2) Devil's Advocate override to different vendor; (3) degrade to code-review single-adversary mode. Report chosen resolution in synthesis preamble.
 
 Defaults:
 D1. Default `personality_filter`: none (all registry entries evaluated).

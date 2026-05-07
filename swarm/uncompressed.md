@@ -256,7 +256,7 @@ B7. Custom menu personalities are evaluated against their caller-supplied trigge
 
 B8. Cross-vendor diversity: if all available personalities resolve to the same model family or vendor, the swarm must NOT proceed as-is. This is a hard fallback, not best-effort. Execute the following resolution order:
 
-1. **Find any gated personality on a different model family.** If a personality is availability-gated (external backend), check whether it can be unlocked or substituted with a personality on a different vendor.
+1. **Find any available personality on a different model family.** Search the full candidate registry (selected and unselected entries) for any personality registered on a distinct model family or vendor. If found, include it in the swarm to satisfy diversity.
 2. **Override Devil's Advocate to a different vendor.** Use the `vendor` frontmatter field on the Devil's Advocate personality to force assignment to a non-Anthropic (or otherwise distinct) model family.
 3. **Degrade to single-adversary mode.** If neither step 1 nor step 2 resolves the monoculture, do not run the swarm. Dispatch the code-review skill in single-adversary mode instead.
 
