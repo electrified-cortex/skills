@@ -228,6 +228,9 @@ Quick structural verification of the SKILL.md.
      Violation in `SKILL.md` → HIGH. Absence of `uncompressed.md` is not a
      finding. Missing H1 in `uncompressed.md` or `instructions.uncompressed.md`
      is out of skill-auditing's scope; markdown-hygiene covers H1 enforcement.
+   - (A-FM-4) **Valid frontmatter fields** — `SKILL.md` frontmatter MUST contain ONLY `name` and `description`. Any additional top-level YAML key (`version`, `inputs`, `outputs`, `type`, `model`, `tools`, etc.) → FAIL.
+   - (A-FM-11) **Trigger phrases — all skills** — ALL skills (inline AND dispatch): `description` MUST contain `Triggers -` (case-insensitive). Absence → HIGH.
+   - (A-FM-12) **`uncompressed.md` frontmatter mirror** — if `uncompressed.md` exists, it MUST have YAML frontmatter. `name` and `description` MUST match `SKILL.md` exactly (case-sensitive). Missing frontmatter → FAIL. Mismatched `name` or `description` → FAIL.
 5. **No duplication** — skill does not duplicate an existing capability.
    If similar skill exists, recommend merge or distinguish clearly.
 6. **(A-FS-1) Orphan files** — scan all files in the skill directory
