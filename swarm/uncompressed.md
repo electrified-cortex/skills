@@ -5,6 +5,8 @@ description: Multi-personality review infrastructure — selects personalities, 
 
 # swarm — Uncompressed Reference
 
+**Usage**: This skill is host-executed. The host agent reads and follows these steps directly. Never dispatch this skill as a sub-agent — it cannot orchestrate further dispatches from a leaf position.
+
 ## Key Terms
 
 - **Artifact**: input content under review — conversation excerpt, file path, diff, plan, document, or structured description. Passed as `problem`.
@@ -15,7 +17,7 @@ description: Multi-personality review infrastructure — selects personalities, 
 - **Selection**: filtering the combined registry against artifact problem traits to produce the active personality set.
 - **Availability gate**: probe step confirming a personality's required backend is reachable before dispatch.
 - **Swarm**: surviving personalities after selection and availability gating.
-- **Dispatch skill**: the `dispatch` skill — authoritative agent-launching mechanism. Swarm delegates all sub-agent launches here; never reinvent the launch primitive.
+- **Dispatch skill**: the `dispatch` skill — runtime-specific how-to for launching sub-agents. Reference for the host agent executing this skill — not a delegation target. Host dispatches directly using its own runtime mechanism (runSubagent in VS Code Copilot, Task in Claude Code).
 - **Disagree set**: subset of swarm findings where two or more personalities reached contradictory conclusions on the same point.
 - **Confidence rating**: High / Medium / Low scalar attached to synthesis output. Reflects reviewer agreement, evidence quality, and scope coverage.
 - **Model class**: abstract tier identifier — `haiku-class` (shallow/mechanical), `sonnet-class` (moderate reasoning, default), `opus-class` (heavy architectural reasoning), `gpt-class` (external OpenAI-hosted model). No bare model names anywhere.
@@ -140,7 +142,7 @@ Only after the swarm is finalized (post-gating) load the prompt for each survivi
 
 ### Step 5 — Dispatch
 
-Dispatch swarm personalities using the `dispatch` skill. Maximum concurrency: rolling window of 3. Dispatch up to 3 personalities in parallel; as each completes, dispatch the next until all personalities have run. Do not dispatch more than 3 at once.
+Dispatch swarm personalities using your runtime dispatch mechanism, following the `dispatch` skill for implementation details. Maximum concurrency: rolling window of 3. Dispatch up to 3 personalities in parallel; as each completes, dispatch the next until all personalities have run. Do not dispatch more than 3 at once.
 
 Each personality dispatch receives:
 

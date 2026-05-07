@@ -3,6 +3,8 @@ name: swarm
 description: Multi-personality review infrastructure — selects personalities, gates availability, dispatches in parallel, arbitrates, and synthesizes a verdict. Triggers - swarm review, multi-reviewer, parallel personalities, run all reviewers, arbitrate findings.
 ---
 
+Usage: This skill is host-executed. The host agent reads and follows these steps directly. Never dispatch this skill as a sub-agent — it cannot orchestrate further dispatches from a leaf position.
+
 Key Terms:
 Artifact: input content under review — conversation excerpt, file path, diff, plan, doc, or structured description. Passed as `problem`.
 Review packet: self-contained brief assembled from artifact. Fields: Goal, Approach, Key decisions, Artifacts (actual content), Files affected, Blast radius, Conventions. Omit inapplicable fields.
@@ -12,7 +14,7 @@ Custom menu: caller-supplied list of additional personalities appended to regist
 Selection: filtering combined registry against artifact problem traits to produce active personality set.
 Availability gate: probe step confirming personality's required backend is reachable before dispatch.
 Swarm: surviving personalities after selection and availability gating.
-Dispatch skill: `dispatch` skill — authoritative agent-launching mechanism. Swarm delegates all sub-agent launches here; never reinvent launch primitive.
+Dispatch skill: `dispatch` skill — runtime-specific how-to for launching sub-agents. Reference for the host agent executing this skill — not a delegation target. Host dispatches directly using its own runtime mechanism (runSubagent in VS Code Copilot, Task in Claude Code).
 Disagree set: subset of swarm findings where two or more personalities reached contradictory conclusions on same point.
 Confidence rating: High / Medium / Low scalar on synthesis output. Reflects reviewer agreement, evidence quality, scope coverage.
 Model class: abstract tier — `haiku-class` (shallow/mechanical), `sonnet-class` (moderate reasoning, default), `opus-class` (heavy architectural reasoning), `gpt-class` (external OpenAI-hosted model). No bare model names anywhere.
@@ -124,7 +126,7 @@ Step 4 — Load reviewer prompts:
 Only after swarm is finalized (post-gating) load prompt for each surviving personality. Reviewer prompts stored as separate sub-skill files under `swarm/reviewers/<name>.md`. Filename = personality name lowercased with spaces and apostrophes replaced by hyphens (e.g., `devils-advocate.md`, `security-auditor.md`). Load only files for dispatched personalities. Don't load files for non-dispatched personalities.
 
 Step 5 — Dispatch:
-Dispatch swarm personalities using `dispatch` skill. Maximum concurrency: rolling window of 3. Dispatch up to 3 personalities in parallel; as each completes, dispatch the next until all personalities have run. Don't dispatch more than 3 at once.
+Dispatch swarm personalities using your runtime dispatch mechanism, following the `dispatch` skill for implementation details. Maximum concurrency: rolling window of 3. Dispatch up to 3 personalities in parallel; as each completes, dispatch the next until all personalities have run. Don't dispatch more than 3 at once.
 
 Each personality dispatch receives:
 1. Full review packet from Step 1.
