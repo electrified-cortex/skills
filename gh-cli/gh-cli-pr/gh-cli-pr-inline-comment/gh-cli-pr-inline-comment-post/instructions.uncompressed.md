@@ -1,6 +1,6 @@
 # GH CLI PR Inline Comment — Post
 
-Post an inline review comment anchored to a specific line in a pull request diff.
+Execution sequence and parameter handling for the gh-cli-pr-inline-comment-post skill.
 
 ## Inputs
 
@@ -41,26 +41,32 @@ If FILE_PATH is not listed, stop: the file has no changes in this PR.
 
 ## Step 3: Verify the Line Is in the Diff
 
-Get the full patch and parse hunk headers for the target file:
+Use the bundled tool — do not parse the diff manually.
+
+If SIDE was not provided by the caller, use `RIGHT` as the default before invoking the tool.
 
 ```bash
-gh pr diff {PR_NUMBER} --repo {OWNER}/{REPO} --patch
+bash verify-line-in-diff.sh {OWNER} {REPO} {PR_NUMBER} {FILE_PATH} {LINE_NUMBER} {SIDE}
 ```
 
-Locate the `diff --git a/{FILE_PATH}` section. For each `@@ -OLD,OLD_LEN +NEW,NEW_LEN @@` hunk header:
-- SIDE=RIGHT: valid line range is NEW to (NEW + NEW_LEN - 1)
-- SIDE=LEFT: valid line range is OLD to (OLD + OLD_LEN - 1)
+```pwsh
+pwsh verify-line-in-diff.ps1 {OWNER} {REPO} {PR_NUMBER} {FILE_PATH} {LINE_NUMBER} {SIDE}
+```
 
-> **COMPACT FORM**: when a hunk spans exactly 1 line, git omits the count — `@@ -10 +10 @@` means OLD_LEN=1, NEW_LEN=1 (equivalent to `@@ -10,1 +10,1 @@`). Always treat a missing count as 1.
+Exit code semantics:
+- **0 (IN_DIFF)** — line is in the diff; proceed.
+- **1 (NOT_IN_DIFF)** — line is outside all hunk ranges; stop and surface the listed valid ranges to the caller.
+- **2 (FILE_NOT_IN_DIFF)** — file has no changes in this PR; stop.
+- **3 (USAGE_ERROR)** — invalid arguments passed to the tool; check invocation signature.
+- **4 (API_ERROR)** — `gh pr diff` call failed; surface the error output to the caller.
 
-If LINE_NUMBER falls outside all hunk ranges for FILE_PATH, stop and report:
-`Line {LINE_NUMBER} not in diff for {FILE_PATH}`
+> **WINDOWS**: Never use a leading `/` in `gh api` paths — Git Bash rewrites `/repos/...` as a filesystem path. Use `repos/...` not `/repos/...`.
 
 ## Step 4: Check for Existing Comment (Deduplication)
 
 ```bash
 gh api --paginate repos/{OWNER}/{REPO}/pulls/{PR_NUMBER}/comments \
-  --jq '.[] | select(.path == "{FILE_PATH}" and .line == {LINE_NUMBER}) | {id, body, author: .user.login}'
+  --jq '.[] | select(.path == "{FILE_PATH}" and .line == {LINE_NUMBER} and .side == "{SIDE}") | {id, body, author: .user.login}'
 ```
 
 If a matching comment already exists, return:
@@ -107,3 +113,6 @@ On 422 where `errors[0].field == "pull_request_review_thread.line"` and `message
 
 On other 422: surface the full `errors` array to the caller:
 `{ "status": "error", "comment_id": null, "comment_url": null, "message": "<errors array as string>" }`
+
+On any other error:
+`{ "status": "error", "comment_id": null, "comment_url": null, "message": "<error description>" }`
