@@ -102,13 +102,9 @@ for FILE_PATH in "${FILES[@]}"; do
   REL_PATH="${REL_PATH#/}"
 
   # Compute blob hash
-  BLOB_HASH=$(git hash-object "$ABS_PATH" 2>/dev/null) || {
-    echo "ERROR: missing: $REL_PATH"
-    exit 1
-  }
-
+  BLOB_HASH=$(tr -d '\r' < "$ABS_PATH" | git hash-object --stdin 2>/dev/null)
   if [ -z "$BLOB_HASH" ]; then
-    echo "ERROR: git hash-object returned empty hash for: $REL_PATH"
+    echo "ERROR: git hash-object failed for: $REL_PATH"
     exit 1
   fi
 

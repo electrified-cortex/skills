@@ -19,7 +19,7 @@
 6. **Scrub absolute paths from the entire report** — frontmatter `file_paths`, Notes columns, Findings, ALL prose. Forbidden tokens: any Windows drive-letter path (`<letter>:[/\\]`), any POSIX root-anchored path (`/Users/`, `/home/`, `/d/`, `/c/`, `/mnt/`, `/tmp/`, `/var/`). When citing evidence containing such a path, describe abstractly ("hardcoded drive-letter path on line N") rather than quoting the literal path. Use repo-relative paths for any path in Findings.
 7. **Write report** at `<report_path>` (overwrite if present). Use Bash tool to create the directory first: `mkdir -p $(dirname <report_path>)`. Then use Write tool to write the report. Write report frontmatter per the `hash-record` skill contract (operation_kind: `skill-auditing/v2`, result: `clean | pass | findings | fail`). Result mapping: CLEAN → `clean`; PASS → `pass`; NEEDS_REVISION → `findings`; FAIL → `fail`. Errors are never persisted — runtime/argument failures emit `ERROR: <reason>` and exit 1 (no path).
 
-   **"Repo-relative":** resolve via `git -C <dir-containing-target-files> rev-parse --show-toplevel` and strip that prefix. The same repo root governs the cache directory layout (`<repo-root>/.hash-record/...`).
+   **"Repo-relative":** paths in `file_paths` are repo-relative as provided. If you must convert an absolute path, use `git ls-files --full-name <file>`. The same repo root governs the cache directory layout (`<repo-root>/.hash-record/...`).
 
    **Skill-auditing-specific `file_paths` guidance** (multi-file context — auditors commonly miss this):
 
@@ -43,7 +43,7 @@
 
    Body: open with `# Result` H1, state verdict, list findings (with step and check references).
 
-8. **Verify report on disk.** Before returning a verdict, run `ls -la <report_path>` (or equivalent) and confirm the file exists with non-zero size at the EXACT path supplied via `--report-path`. If missing, empty, or written to a different location → return `ERROR: report not at <report_path>` and stop. Do NOT return `CLEAN`, `PASS`, `NEEDS_REVISION`, or `FAIL` without a verified file. The host post-execute cache check is the second line of defense; this self-check is the first.
+8. **Verify report on disk.** Before returning a verdict, run `ls -la <report_path>` (or equivalent) and confirm the file exists with non-zero size at the EXACT path supplied via `--report-path`. If missing, empty, or written to a different location → return `ERROR: report not at <report_path>` and stop. Then scan the written report for absolute path content — forbidden tokens: Windows drive-letter paths (`<letter>:[/\]`), POSIX root-anchored paths (`/Users/`, `/home/`, `/d/`, `/c/`, `/mnt/`, `/tmp/`, `/var/`). If any match is found, return `ERROR: absolute path in report at <report_path>:<line>: <matched-text>` and stop. Do NOT return `CLEAN`, `PASS`, `NEEDS_REVISION`, or `FAIL` without a verified, abs-path-free file. The host post-execute cache check is the second line of defense; this self-check is the first.
 
 9. **Return** the verdict token as the final line of stdout, starting at column 0 with no indentation, no quoting, no list-marker prefix. Nothing may follow it.
    - `CLEAN: <report_path>`
@@ -62,7 +62,7 @@ Findings accumulate into the Per-file section of the report and do NOT block Ste
 
 - **Not empty** — file must contain non-whitespace content. Empty → HIGH.
 - **Frontmatter where required** — `SKILL.md` and `agent.md` MUST have YAML frontmatter (`---` block at line 1). Missing frontmatter on these files → HIGH.
-- **No absolute-path leaks** — body must not contain Windows-style (`<letter>:\` or `<letter>:/`) or Unix root-anchored paths (`/Users/`, `/home/`, `/d/`). Any found → HIGH.
+- **No absolute-path leaks** — body must not contain Windows-style (`<drive>:\path`) or Unix root-anchored paths (`/Users/`, `/home/`, `/d/`). Any found → HIGH.
 - **Canonical trigger phrase (dispatch skills only)** — For dispatch skills (frontmatter `type: dispatch`), the `description:` field MUST include the canonical action phrase: `<verb> <skill-root>` where skill-root = directory name with hyphens replaced by spaces (e.g., `spec-auditing` -> "spec audit"). Check case-insensitively. Missing phrase -> HIGH (DS-8). Applies only to `SKILL.md`, not sub-skill files.
 
 ### `*.spec.md` files (files whose name ends in `.spec.md`)
@@ -101,6 +101,12 @@ If dispatch: verify SKILL.md is a short routing card. If inline: verify SKILL.md
 `name` and `description` present and accurate.
 
 **(A-FM-1) Name matches folder** — `name` field MUST equal the skill's folder name exactly. Check both `uncompressed.md` and `SKILL.md`; mismatch in either → FAIL.
+
+**(A-FM-4) Valid frontmatter fields** — `SKILL.md` frontmatter MUST contain ONLY `name` and `description` at the top level. Any additional YAML key (e.g., `version`, `inputs`, `outputs`, `type`, `model`, `tools`) → FAIL.
+
+**(A-FM-11) Trigger phrases — all skills** — Applies to ALL skills (inline AND dispatch). `description` MUST contain `Triggers -` (case-insensitive). Absence → HIGH. Dispatch skills additionally validated by DS-3 for pattern completeness and stuffing.
+
+**(A-FM-12) `uncompressed.md` frontmatter mirror** — If `uncompressed.md` exists in `skill_dir`, it MUST have YAML frontmatter (`---` block at line 1). Frontmatter MUST contain `name` and `description`. The `name` value MUST match `SKILL.md` exactly (case-sensitive). The `description` value MUST match `SKILL.md` exactly (case-sensitive). Missing frontmatter → FAIL. Missing or mismatched `name` → FAIL. Missing or mismatched `description` → FAIL.
 
 **(A-FM-3) H1 per artifact** — applies ONLY to `.md` files (markdown). `.txt` files (e.g. `instructions.txt`) are NOT markdown; the H1 rule does NOT apply to them — never flag a `.txt` file under A-FM-3 regardless of content.
 

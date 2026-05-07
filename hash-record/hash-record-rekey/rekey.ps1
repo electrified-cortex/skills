@@ -105,6 +105,35 @@ function Test-GlobMatch ([string]$Path, [string[]]$Globs) {
 }
 
 # ---------------------------------------------------------------------------
+# Helper: compute LF-normalized blob hash (CRLF/CR -> LF before hashing).
+# Normalizes line endings before hashing so the result is identical regardless
+# of platform git config, gitattributes, or calling CWD location.
+# ---------------------------------------------------------------------------
+function Get-LfBlobHash([string]$FilePath) {
+    $bytes = [System.IO.File]::ReadAllBytes($FilePath)
+    $out = [System.Collections.Generic.List[byte]]::new($bytes.Length)
+    $i = 0
+    while ($i -lt $bytes.Length) {
+        if ($bytes[$i] -eq 13) {
+            $out.Add(10)
+            if ($i + 1 -lt $bytes.Length -and $bytes[$i + 1] -eq 10) { $i++ }
+        } else {
+            $out.Add($bytes[$i])
+        }
+        $i++
+    }
+    $tmp = [System.IO.Path]::GetTempFileName()
+    try {
+        [System.IO.File]::WriteAllBytes($tmp, $out.ToArray())
+        $h = (& git hash-object $tmp 2>$null)
+        if ($LASTEXITCODE -ne 0 -or -not $h) { return $null }
+        return $h.Trim()
+    } finally {
+        Remove-Item -LiteralPath $tmp -ErrorAction SilentlyContinue
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Helper: compute manifest hash for a multi-file record
 # git-blob hash (SHA-1, 40-char hex) of the manifest string (sorted
 # "<blob_hash> <path>`n" lines for all files in file_paths). Matches
@@ -124,9 +153,8 @@ function Get-ManifestHash ([string]$RecordFile, [string]$RepoRoot) {
     $pairs = @()
     foreach ($fpath in $paths) {
         $absPath = "$RepoRoot/$fpath"
-        $blobHash = (& git hash-object $absPath 2>$null)
-        if ($LASTEXITCODE -ne 0 -or -not $blobHash) { return $null }
-        $blobHash = $blobHash.Trim()
+        $blobHash = Get-LfBlobHash $absPath
+        if (-not $blobHash) { return $null }
         # Format MUST match manifest.ps1: `<path> <blob_hash>` (path first).
         $pairs += "$fpath $blobHash"
     }
@@ -321,15 +349,14 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
             if (Test-GlobMatch $fileFolderRel $excludes) { continue }
         }
 
-        # Compute current blob hash
-        $currentHash = (& git hash-object $fileInfo.FullName 2>$null)
-        if ($LASTEXITCODE -ne 0 -or -not $currentHash) {
+        # Compute current blob hash (LF-normalized for cross-platform determinism)
+        $currentHash = Get-LfBlobHash $fileInfo.FullName
+        if (-not $currentHash) {
             [Console]::Out.Write("ERROR: git hash-object failed for: $fileRel`n")
             $cntErrors++
             $hadError = $true
             continue
         }
-        $currentHash  = $currentHash.Trim()
         $currentShard = $currentHash.Substring(0, 2)
 
         # Find records referencing this file
@@ -378,6 +405,21 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
                             [Console]::Out.Write("ERROR: mkdir failed for: $newRecordDir`n")
                             $cntErrors++
                             $hadError = $true
+                            continue
+                        }
+
+                        # Check if destination already exists before git mv.
+                        if (Test-Path -LiteralPath $newRecordPath -PathType Leaf) {
+                            $oldBytes = [System.IO.File]::ReadAllBytes($rec.Path)
+                            $newBytes = [System.IO.File]::ReadAllBytes($newRecordPath)
+                            if ([System.Linq.Enumerable]::SequenceEqual($oldBytes, $newBytes)) {
+                                [Console]::Out.Write("CURRENT: $newRecordPath`n")
+                                $cntCurrent++
+                            } else {
+                                [Console]::Out.Write("ERROR: CONFLICT: destination exists with different content: $newRecordPath`n")
+                                $cntErrors++
+                                $hadError = $true
+                            }
                             continue
                         }
 
@@ -448,6 +490,21 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
                         continue
                     }
 
+                    # Check if destination already exists before git mv.
+                    if (Test-Path -LiteralPath $newRecordPath -PathType Leaf) {
+                        $oldBytes = [System.IO.File]::ReadAllBytes($recPath)
+                        $newBytes = [System.IO.File]::ReadAllBytes($newRecordPath)
+                        if ([System.Linq.Enumerable]::SequenceEqual($oldBytes, $newBytes)) {
+                            [Console]::Out.Write("CURRENT: $newRecordPath`n")
+                            $cntCurrent++
+                        } else {
+                            [Console]::Out.Write("ERROR: CONFLICT: destination exists with different content: $newRecordPath`n")
+                            $cntErrors++
+                            $hadError = $true
+                        }
+                        continue
+                    }
+
                     $oldRel = $recPath.Substring($repoRoot.Length).TrimStart('/')
                     $newRel = $newRecordPath.Substring($repoRoot.Length).TrimStart('/')
 
@@ -509,12 +566,11 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
     }
     $repo_root = $repo_root.TrimEnd('/', '\') -replace '\\', '/'
 
-    $new_hash = (& git hash-object $file_path 2>$null)
-    if ($LASTEXITCODE -ne 0 -or -not $new_hash) {
+    $new_hash = Get-LfBlobHash $file_path
+    if (-not $new_hash) {
         [Console]::Out.Write("ERROR: git hash-object failed for: $file_path`n")
         exit 1
     }
-    $new_hash = $new_hash.Trim()
     $new_shard = $new_hash.Substring(0, 2)
 
     $hash_record_root = "$repo_root/.hash-record"
@@ -583,6 +639,19 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
     $new_record_path = "$new_record_dir/$record_filename"
 
     New-Item -ItemType Directory -Force -Path $new_record_dir | Out-Null
+
+    # Check if destination already exists before git mv.
+    if (Test-Path -LiteralPath $new_record_path -PathType Leaf) {
+        $oldBytes = [System.IO.File]::ReadAllBytes($old_record.Path)
+        $newBytes = [System.IO.File]::ReadAllBytes($new_record_path)
+        if ([System.Linq.Enumerable]::SequenceEqual($oldBytes, $newBytes)) {
+            [Console]::Out.Write("CURRENT: $new_record_path`n")
+        } else {
+            [Console]::Out.Write("ERROR: CONFLICT: destination exists with different content: $new_record_path`n")
+            exit 1
+        }
+        exit 0
+    }
 
     $old_rel = $old_record.Path.Substring($repo_root.Length).TrimStart('/')
     $new_rel = $new_record_path.Substring($repo_root.Length).TrimStart('/')

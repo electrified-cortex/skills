@@ -60,6 +60,15 @@ case "$RECORD_FILENAME" in
 esac
 
 # ---------------------------------------------------------------------------
+# Helper: compute LF-normalized blob hash (CRLF/CR -> LF before hashing).
+# Produces identical hash regardless of platform git config or CWD location.
+# ---------------------------------------------------------------------------
+lf_blob_hash() {
+  local file="$1"
+  tr -d '\r' < "$file" | git hash-object --stdin 2>/dev/null
+}
+
+# ---------------------------------------------------------------------------
 # Resolve repo root
 # ---------------------------------------------------------------------------
 TARGET_DIR=$(dirname "$FILE_PATH")
@@ -70,15 +79,11 @@ if [ -z "$REPO_ROOT" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Compute git blob hash
+# Compute git blob hash (LF-normalized for cross-platform determinism)
 # ---------------------------------------------------------------------------
-HASH=$(git hash-object "$FILE_PATH" 2>/dev/null) || {
-  echo "ERROR: git hash-object failed for: $FILE_PATH"
-  exit 1
-}
-
+HASH=$(lf_blob_hash "$FILE_PATH")
 if [ -z "$HASH" ]; then
-  echo "ERROR: git hash-object returned empty hash for: $FILE_PATH"
+  echo "ERROR: git hash-object failed for: $FILE_PATH"
   exit 1
 fi
 
