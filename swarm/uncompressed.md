@@ -254,7 +254,7 @@ B6. Devil's Advocate must always be dispatched unless explicitly excluded by `pe
 
 B7. Custom menu personalities are evaluated against their caller-supplied trigger condition. If trigger is "always", always include (subject to availability gating if backend is external).
 
-B8. Cross-vendor diversity: if all available personalities resolve to the same model family or vendor, the swarm must NOT proceed as-is. Research has found that homogeneous-debate swarms (all personalities on the same model family) produce sycophantic conformity at rates up to 85.5%, with correct-answer retention losses of up to 32.3 percentage points (arxiv 2605.00914). The rule is therefore a hard fallback, not best-effort. Execute the following resolution order:
+B8. Cross-vendor diversity: if all available personalities resolve to the same model family or vendor, the swarm must NOT proceed as-is. This is a hard fallback, not best-effort. Execute the following resolution order:
 
 1. **Find any gated personality on a different model family.** If a personality is availability-gated (external backend), check whether it can be unlocked or substituted with a personality on a different vendor.
 2. **Override Devil's Advocate to a different vendor.** Use the `vendor` frontmatter field on the Devil's Advocate personality to force assignment to a non-Anthropic (or otherwise distinct) model family.
