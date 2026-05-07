@@ -214,7 +214,7 @@ B6. Devil's Advocate must always be dispatched unless explicitly excluded by `pe
 
 B7. Custom menu personalities are evaluated against their caller-supplied trigger condition. If the trigger is "always", they are always included (subject to availability gating if their backend is external).
 
-B8. Cross-vendor diversity is best-effort. When selecting models, prefer at least one personality on a different model family or vendor than the host agent. If unavailable, proceed and note monoculture in synthesis. Devil's Advocate is the natural diversity carrier (registered with `vendor: openai`; non-Anthropic `suggested_models` preference).
+B8. Cross-vendor diversity is a hard fallback requirement. If all available personalities resolve to the same model family or vendor, the swarm MUST NOT proceed as-is — sycophantic conformity risk (homogeneous-debate loss up to 32 pp, arxiv 2605.00914). Resolution order: (1) find any available personality on a different model family; (2) override Devil's Advocate to a different vendor via `vendor` field; (3) degrade to single-adversary mode (dispatch code-review skill instead of swarm). The chosen resolution must be reported in the synthesis preamble. Devil's Advocate is the natural diversity carrier (registered with `vendor: openai`; non-Anthropic `suggested_models` preference).
 
 ## Defaults and Assumptions
 
