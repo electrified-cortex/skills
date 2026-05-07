@@ -19,6 +19,35 @@ param(
 
 $ErrorActionPreference = 'Continue'
 
+# ---------------------------------------------------------------------------
+# Helper: compute LF-normalized blob hash (CRLF/CR -> LF before hashing).
+# Normalizes line endings before hashing so the result is identical regardless
+# of platform git config, gitattributes, or calling CWD location.
+# ---------------------------------------------------------------------------
+function Get-LfBlobHash([string]$FilePath) {
+    $bytes = [System.IO.File]::ReadAllBytes($FilePath)
+    $out = [System.Collections.Generic.List[byte]]::new($bytes.Length)
+    $i = 0
+    while ($i -lt $bytes.Length) {
+        if ($bytes[$i] -eq 13) {
+            $out.Add(10)
+            if ($i + 1 -lt $bytes.Length -and $bytes[$i + 1] -eq 10) { $i++ }
+        } else {
+            $out.Add($bytes[$i])
+        }
+        $i++
+    }
+    $tmp = [System.IO.Path]::GetTempFileName()
+    try {
+        [System.IO.File]::WriteAllBytes($tmp, $out.ToArray())
+        $h = (& git hash-object $tmp 2>$null)
+        if ($LASTEXITCODE -ne 0 -or -not $h) { return $null }
+        return $h.Trim()
+    } finally {
+        Remove-Item -LiteralPath $tmp -ErrorAction SilentlyContinue
+    }
+}
+
 if ($help -or $h) {
     $usage = "Usage: manifest <op_kind> <record_filename> <file1> [<file2> ...]`n" +
         "`n" +
@@ -88,13 +117,12 @@ foreach ($file_path in $files) {
     # Strip any leading slash just in case
     $rel_path = $rel_path.TrimStart('/')
 
-    # Compute blob hash
-    $blob_hash = (& git hash-object $abs_path 2>$null)
-    if ($LASTEXITCODE -ne 0 -or -not $blob_hash) {
+    # Compute blob hash (LF-normalized for cross-platform determinism)
+    $blob_hash = Get-LfBlobHash $abs_path
+    if (-not $blob_hash) {
         [Console]::Out.Write("ERROR: missing: $rel_path`n")
         exit 1
     }
-    $blob_hash = $blob_hash.Trim()
 
     $pairs += "$rel_path $blob_hash"
 }

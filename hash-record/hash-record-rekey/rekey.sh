@@ -168,6 +168,13 @@ if [ -d "$FIRST_ARG" ]; then
   # using SHA-1-via-git keeps rekey output and result-tool input in sync.
   # Prints 40-char hex hash to stdout. Returns 1 on error.
   # ---------------------------------------------------------------------------
+  # Helper: compute LF-normalized blob hash (CRLF/CR -> LF before hashing).
+  # Produces identical hash regardless of platform git config or CWD location.
+  _lf_blob_hash() {
+    local file="$1"
+    tr -d '\r' < "$file" | git hash-object --stdin 2>/dev/null
+  }
+
   _compute_manifest_hash() {
     local rec_path="$1"
     local repo_root="$2"
@@ -190,12 +197,9 @@ if [ -d "$FIRST_ARG" ]; then
     # in edge cases and yields an incompatible hash.
     local -a pairs=() fpath blob_hash
     for fpath in "${paths[@]}"; do
-      blob_hash=$(git hash-object "$repo_root/$fpath" 2>/dev/null) || {
-        printf 'ERROR: git hash-object failed for manifest member: %s\n' "$fpath" >&2
-        return 1
-      }
+      blob_hash=$(_lf_blob_hash "$repo_root/$fpath")
       [ -z "$blob_hash" ] && {
-        printf 'ERROR: empty hash for manifest member: %s\n' "$fpath" >&2
+        printf 'ERROR: git hash-object failed for manifest member: %s\n' "$fpath" >&2
         return 1
       }
       # Format MUST match manifest.ps1: `<path> <blob_hash>` (path first).
@@ -316,15 +320,10 @@ if [ -d "$FIRST_ARG" ]; then
       fi
     fi
 
-    # Compute current blob hash
-    current_hash=$(git hash-object "$file_abs" 2>/dev/null) || {
-      printf 'ERROR: git hash-object failed for: %s\n' "$file_rel"
-      cnt_errors=$((cnt_errors + 1))
-      had_error=true
-      continue
-    }
+    # Compute current blob hash (LF-normalized for cross-platform determinism)
+    current_hash=$(_lf_blob_hash "$file_abs")
     if [ -z "$current_hash" ]; then
-      printf 'ERROR: git hash-object returned empty hash for: %s\n' "$file_rel"
+      printf 'ERROR: git hash-object failed for: %s\n' "$file_rel"
       cnt_errors=$((cnt_errors + 1))
       had_error=true
       continue
@@ -551,11 +550,8 @@ else
     printf 'WARN: not in a git repo; falling back to file parent dir: %s\n' "$REPO_ROOT" >&2
   fi
 
-  NEW_HASH=$(git hash-object "$FILE_PATH" 2>/dev/null) || {
-    printf 'ERROR: git hash-object failed for: %s\n' "$FILE_PATH"
-    exit 1
-  }
-  [ -z "$NEW_HASH" ] && { printf 'ERROR: git hash-object returned empty hash\n'; exit 1; }
+  NEW_HASH=$(tr -d '\r' < "$FILE_PATH" | git hash-object --stdin 2>/dev/null)
+  [ -z "$NEW_HASH" ] && { printf 'ERROR: git hash-object failed for: %s\n' "$FILE_PATH"; exit 1; }
   NEW_SHARD="${NEW_HASH:0:2}"
 
   HASH_RECORD_ROOT="$REPO_ROOT/.hash-record"

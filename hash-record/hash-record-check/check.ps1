@@ -62,6 +62,35 @@ if ($record_filename -match '\.\.' -or $record_filename -match '[/\\]') {
 }
 
 # ---------------------------------------------------------------------------
+# Helper: compute LF-normalized blob hash (CRLF/CR -> LF before hashing).
+# Normalizes line endings before hashing so the result is identical regardless
+# of platform git config, gitattributes, or calling CWD location.
+# ---------------------------------------------------------------------------
+function Get-LfBlobHash([string]$FilePath) {
+    $bytes = [System.IO.File]::ReadAllBytes($FilePath)
+    $out = [System.Collections.Generic.List[byte]]::new($bytes.Length)
+    $i = 0
+    while ($i -lt $bytes.Length) {
+        if ($bytes[$i] -eq 13) {
+            $out.Add(10)
+            if ($i + 1 -lt $bytes.Length -and $bytes[$i + 1] -eq 10) { $i++ }
+        } else {
+            $out.Add($bytes[$i])
+        }
+        $i++
+    }
+    $tmp = [System.IO.Path]::GetTempFileName()
+    try {
+        [System.IO.File]::WriteAllBytes($tmp, $out.ToArray())
+        $h = (& git hash-object $tmp 2>$null)
+        if ($LASTEXITCODE -ne 0 -or -not $h) { return $null }
+        return $h.Trim()
+    } finally {
+        Remove-Item -LiteralPath $tmp -ErrorAction SilentlyContinue
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Resolve repo root
 # ---------------------------------------------------------------------------
 $target_dir = Split-Path -Parent $file_path
@@ -74,14 +103,13 @@ if (-not $repo_root) {
 $repo_root = $repo_root.TrimEnd('/', '\')
 
 # ---------------------------------------------------------------------------
-# Compute git blob hash
+# Compute git blob hash (LF-normalized for cross-platform determinism)
 # ---------------------------------------------------------------------------
-$hash = (& git hash-object $file_path 2>$null)
-if ($LASTEXITCODE -ne 0 -or -not $hash) {
+$hash = Get-LfBlobHash $file_path
+if (-not $hash) {
     [Console]::Out.Write("ERROR: git hash-object failed for: $file_path`n")
     exit 1
 }
-$hash = $hash.Trim()
 
 # ---------------------------------------------------------------------------
 # Construct paths

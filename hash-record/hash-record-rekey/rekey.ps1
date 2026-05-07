@@ -105,6 +105,35 @@ function Test-GlobMatch ([string]$Path, [string[]]$Globs) {
 }
 
 # ---------------------------------------------------------------------------
+# Helper: compute LF-normalized blob hash (CRLF/CR -> LF before hashing).
+# Normalizes line endings before hashing so the result is identical regardless
+# of platform git config, gitattributes, or calling CWD location.
+# ---------------------------------------------------------------------------
+function Get-LfBlobHash([string]$FilePath) {
+    $bytes = [System.IO.File]::ReadAllBytes($FilePath)
+    $out = [System.Collections.Generic.List[byte]]::new($bytes.Length)
+    $i = 0
+    while ($i -lt $bytes.Length) {
+        if ($bytes[$i] -eq 13) {
+            $out.Add(10)
+            if ($i + 1 -lt $bytes.Length -and $bytes[$i + 1] -eq 10) { $i++ }
+        } else {
+            $out.Add($bytes[$i])
+        }
+        $i++
+    }
+    $tmp = [System.IO.Path]::GetTempFileName()
+    try {
+        [System.IO.File]::WriteAllBytes($tmp, $out.ToArray())
+        $h = (& git hash-object $tmp 2>$null)
+        if ($LASTEXITCODE -ne 0 -or -not $h) { return $null }
+        return $h.Trim()
+    } finally {
+        Remove-Item -LiteralPath $tmp -ErrorAction SilentlyContinue
+    }
+}
+
+# ---------------------------------------------------------------------------
 # Helper: compute manifest hash for a multi-file record
 # git-blob hash (SHA-1, 40-char hex) of the manifest string (sorted
 # "<blob_hash> <path>`n" lines for all files in file_paths). Matches
@@ -124,9 +153,8 @@ function Get-ManifestHash ([string]$RecordFile, [string]$RepoRoot) {
     $pairs = @()
     foreach ($fpath in $paths) {
         $absPath = "$RepoRoot/$fpath"
-        $blobHash = (& git hash-object $absPath 2>$null)
-        if ($LASTEXITCODE -ne 0 -or -not $blobHash) { return $null }
-        $blobHash = $blobHash.Trim()
+        $blobHash = Get-LfBlobHash $absPath
+        if (-not $blobHash) { return $null }
         # Format MUST match manifest.ps1: `<path> <blob_hash>` (path first).
         $pairs += "$fpath $blobHash"
     }
@@ -321,15 +349,14 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
             if (Test-GlobMatch $fileFolderRel $excludes) { continue }
         }
 
-        # Compute current blob hash
-        $currentHash = (& git hash-object $fileInfo.FullName 2>$null)
-        if ($LASTEXITCODE -ne 0 -or -not $currentHash) {
+        # Compute current blob hash (LF-normalized for cross-platform determinism)
+        $currentHash = Get-LfBlobHash $fileInfo.FullName
+        if (-not $currentHash) {
             [Console]::Out.Write("ERROR: git hash-object failed for: $fileRel`n")
             $cntErrors++
             $hadError = $true
             continue
         }
-        $currentHash  = $currentHash.Trim()
         $currentShard = $currentHash.Substring(0, 2)
 
         # Find records referencing this file
@@ -539,12 +566,11 @@ if (Test-Path -LiteralPath $firstArg -PathType Container) {
     }
     $repo_root = $repo_root.TrimEnd('/', '\') -replace '\\', '/'
 
-    $new_hash = (& git hash-object $file_path 2>$null)
-    if ($LASTEXITCODE -ne 0 -or -not $new_hash) {
+    $new_hash = Get-LfBlobHash $file_path
+    if (-not $new_hash) {
         [Console]::Out.Write("ERROR: git hash-object failed for: $file_path`n")
         exit 1
     }
-    $new_hash = $new_hash.Trim()
     $new_shard = $new_hash.Substring(0, 2)
 
     $hash_record_root = "$repo_root/.hash-record"
