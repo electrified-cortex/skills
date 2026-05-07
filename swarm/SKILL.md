@@ -15,7 +15,7 @@ Swarm: surviving personalities after selection and availability gating.
 Dispatch skill: `dispatch` skill — authoritative agent-launching mechanism. Swarm delegates all sub-agent launches here; never reinvent launch primitive.
 Disagree set: subset of swarm findings where two or more personalities reached contradictory conclusions on same point.
 Confidence rating: High / Medium / Low scalar on synthesis output. Reflects reviewer agreement, evidence quality, scope coverage.
-Model class: abstract tier — `haiku-class` (shallow/mechanical), `sonnet-class` (moderate reasoning, default), `opus-class` (heavy architectural reasoning). No bare model names anywhere.
+Model class: abstract tier — `haiku-class` (shallow/mechanical), `sonnet-class` (moderate reasoning, default), `opus-class` (heavy architectural reasoning), `gpt-class` (external OpenAI-hosted model). No bare model names anywhere.
 Caller override: caller-supplied `model_overrides` map pinning one or more personalities to specific model class for current invocation.
 High-severity point: finding that would block shipping or require architectural change. Used in confidence rating.
 Availability probe: lightweight shell command (e.g., `copilot --version`) or tool call confirming backend is live before including personality.
@@ -118,7 +118,7 @@ Run availability probe before including.
 Probe succeeds: include.
 Probe fails: drop from swarm for this invocation. Note drop in synthesis output. Don't fail-stop or surface error to caller.
 
-For `dispatch-*` backends, no probe required; dispatch skill handles errors internally.
+For `dispatch-*` backends, no probe required; dispatch skill handles errors internally. If all personalities are dropped (swarm empty), return error per B2.
 
 Step 4 — Load reviewer prompts:
 Only after swarm is finalized (post-gating) load prompt for each surviving personality. Reviewer prompts stored as separate sub-skill files under `swarm/reviewers/<name>.md`. Filename = personality name lowercased with spaces and apostrophes replaced by hyphens (e.g., `devils-advocate.md`, `security-auditor.md`). Load only files for dispatched personalities. Don't load files for non-dispatched personalities.
@@ -131,7 +131,7 @@ Each personality dispatch receives:
 2. Personality's prompt loaded in Step 4.
 3. Explicit read-only constraint (see C1–C3).
 
-Apply `model_overrides` at dispatch time: if caller override exists, use it; otherwise use first available entry from `suggested_models`; otherwise fall back to `sonnet-class`. Apply diversity preference rule (B8) after model selection.
+Apply `model_overrides` at dispatch time: if caller override exists, use it; otherwise use first available entry from `suggested_models`; otherwise fall back to `sonnet-class`. Apply diversity preference rule (B8): prefer at least one personality on a different vendor/model family when multiple personalities are dispatched. Apply after model selection.
 
 Dispatch parameters:
 `<tier>` = `standard`
@@ -143,7 +143,7 @@ Step 6 — Arbitrator consolidation:
 After all swarm member outputs collected, dispatch single arbitrator sub-agent (sonnet-class by default). Arbitrator receives all raw member outputs and original review packet. Per B4, non-contributing member outputs (empty/timeout) excluded from arbitrator's input set.
 
 Dispatch parameters:
-`<tier>` = `standard` — arbitration requires comparing N member outputs and applying judgment; fast-cheap insufficient.
+`<tier>` = `standard`
 `<description>` = `swarm-arbitrator`
 
 Should return: structured two-section action list — Obvious actions and Critical actions — as specified in required arbitrator output format below. If no actionable findings: "No actionable findings" stated explicitly.
@@ -151,8 +151,8 @@ Should return: structured two-section action list — Obvious actions and Critic
 Arbitrator's sole job: produce structured action list — not narrative synthesis.
 
 Required arbitrator output format (two sections):
-Obvious actions: 2+ swarm members independently flagged same concern, or concern is self-evident from artifact. Each entry: action description + source personality indices + evidence cite.
-Critical actions: items that, if unaddressed, would block shipping or require architectural change, regardless of reviewer agreement count. Each entry: action description + source personality indices + evidence cite + severity rationale.
+Obvious actions: 2+ swarm members independently flagged same concern, or concern is self-evident from artifact. Each entry: action description + source personality names + evidence cite.
+Critical actions: items that, if unaddressed, would block shipping or require architectural change, regardless of reviewer agreement count. Each entry: action description + source personality names + evidence cite + severity rationale.
 
 Arbitrator MUSTN'T include speculative, low-confidence, or duplicate items. Its output = input to Step 7; host synthesizes from this list only, not raw member output.
 
@@ -161,9 +161,9 @@ If arbitrator produces empty list, it MUST state "No actionable findings" explic
 Arbitrator is structurally separate from registry. MUSTN'T appear in registry, MUSTN'T be subject to personality selection, availability gating, or `personality_filter`.
 
 Step 7 — Aggregate findings and track disagreements:
-Collect findings from arbitrator's structured action list. For each item, record: personality indices cited, finding summary, cited evidence.
+Collect findings from arbitrator's structured action list. For each item, record: personality names cited, finding summary, cited evidence.
 
-Identify disagree set: items where arbitrator flagged conflicting conclusions (source indices from different members with contradictory claims on same point). Each disagree entry records personalities involved and conflicting claims.
+Identify disagree set: items where arbitrator flagged conflicting conclusions (source personality names from different members with contradictory claims on same point). Each disagree entry records personalities involved and conflicting claims.
 
 Step 8 — Synthesize and return:
 Synthesize from arbitrator's structured action list into single host-voice output. Don't dump raw sub-agent output or raw arbitrator output to caller. Speak as host, presenting refined takeaways.
@@ -199,7 +199,7 @@ C4. Every finding MUST cite specific evidence: snippet, line reference, scenario
 
 C5. MUSTN'T merge or replace `code-review` skill. `swarm` is infrastructure; `code-review` is consumer. Maintain defined consumer-service boundary.
 
-C6. No bare model names in skill, reviewer files, or synthesis output. Use model class terms only: `haiku-class`, `sonnet-class`, `opus-class`.
+C6. No bare model names in skill, reviewer files, or synthesis output. Use model class terms only: `haiku-class`, `sonnet-class`, `opus-class`, `gpt-class`.
 
 C7. CLI-as-dispatch (e.g., `claude -p`, copilot CLI) out of scope until task 10-0845 reaches PASS. Once 10-0845 lands, Copilot Reviewer and CLI-backed personalities may use CLI dispatch pattern defined there.
 

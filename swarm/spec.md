@@ -194,7 +194,7 @@ C4. Every finding in the aggregated output must cite specific evidence: a snippe
 
 C5. The skill must not merge or replace the `code-review` skill. `swarm` is infrastructure; `code-review` is a consumer. The two must remain separate with a defined consumer-service boundary.
 
-C6. No bare model names (e.g., specific version strings) may appear in the skill, its reviewer files, or its synthesis output. Use model class terms only: `haiku-class`, `sonnet-class`, `opus-class`.
+C6. No bare model names (e.g., specific version strings) may appear in the skill, its reviewer files, or its synthesis output. Use model class terms only: `haiku-class`, `sonnet-class`, `opus-class`, `gpt-class`.
 
 C7. CLI-as-dispatch (e.g., `claude -p`, generic CLI invocations) is out of scope for this skill until task 10-0845 (dispatch skill CLI-extension) reaches PASS. Once 10-0845 lands, the Copilot Reviewer entry and any new CLI-backed personalities may use the CLI dispatch pattern defined there.
 

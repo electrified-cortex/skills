@@ -18,7 +18,7 @@ description: Multi-personality review infrastructure — selects personalities, 
 - **Dispatch skill**: the `dispatch` skill — authoritative agent-launching mechanism. Swarm delegates all sub-agent launches here; never reinvent the launch primitive.
 - **Disagree set**: subset of swarm findings where two or more personalities reached contradictory conclusions on the same point.
 - **Confidence rating**: High / Medium / Low scalar attached to synthesis output. Reflects reviewer agreement, evidence quality, and scope coverage.
-- **Model class**: abstract tier identifier — `haiku-class` (shallow/mechanical), `sonnet-class` (moderate reasoning, default), `opus-class` (heavy architectural reasoning). No bare model names anywhere.
+- **Model class**: abstract tier identifier — `haiku-class` (shallow/mechanical), `sonnet-class` (moderate reasoning, default), `opus-class` (heavy architectural reasoning), `gpt-class` (external OpenAI-hosted model). No bare model names anywhere.
 - **Caller override**: caller-supplied `model_overrides` map pinning one or more personalities to a specific model class for the current invocation.
 - **High-severity point**: finding that would block shipping or require architectural change. Used in confidence rating determination.
 - **Availability probe**: lightweight shell command (e.g., `copilot --version`) or tool call confirming backend is live before including the personality.
@@ -172,8 +172,8 @@ The arbitrator's sole job: produce a structured action list — not a narrative 
 
 Required arbitrator output format (two sections):
 
-- **Obvious actions**: items where two or more swarm members independently flagged the same concern, or where the concern is self-evident from the artifact. Each entry: action description + source personality indices + evidence cite.
-- **Critical actions**: items that, if unaddressed, would block shipping or require architectural change, regardless of reviewer agreement count. Each entry: action description + source personality indices + evidence cite + severity rationale.
+- **Obvious actions**: items where two or more swarm members independently flagged the same concern, or where the concern is self-evident from the artifact. Each entry: action description + source personality names + evidence cite.
+- **Critical actions**: items that, if unaddressed, would block shipping or require architectural change, regardless of reviewer agreement count. Each entry: action description + source personality names + evidence cite + severity rationale.
 
 The arbitrator must not include speculative, low-confidence, or duplicate items. Its output is the input to Step 7; the host synthesizes from this list only, not from raw member output.
 
@@ -183,9 +183,9 @@ The arbitrator is structurally separate from the registry. It must not appear in
 
 ### Step 7 — Aggregate findings and track disagreements
 
-Collect findings from the arbitrator's structured action list. For each item, record: personality indices cited, finding summary, cited evidence.
+Collect findings from the arbitrator's structured action list. For each item, record: personality names cited, finding summary, cited evidence.
 
-Identify the disagree set: items where the arbitrator flagged conflicting conclusions (source indices from different members with contradictory claims on the same point). Each disagree entry records the personalities involved and the conflicting claims.
+Identify the disagree set: items where the arbitrator flagged conflicting conclusions (source personality names from different members with contradictory claims on the same point). Each disagree entry records the personalities involved and the conflicting claims.
 
 ### Step 8 — Synthesize and return
 
@@ -224,7 +224,7 @@ C4. Every finding must cite specific evidence: a snippet, line reference, scenar
 
 C5. Must not merge or replace the `code-review` skill. `swarm` is infrastructure; `code-review` is a consumer. Maintain a defined consumer-service boundary.
 
-C6. No bare model names may appear in the skill, reviewer files, or synthesis output. Use model class terms only: `haiku-class`, `sonnet-class`, `opus-class`.
+C6. No bare model names may appear in the skill, reviewer files, or synthesis output. Use model class terms only: `haiku-class`, `sonnet-class`, `opus-class`, `gpt-class`.
 
 C7. CLI-as-dispatch (e.g., `claude -p`, copilot CLI) is out of scope until task 10-0845 reaches PASS. Once 10-0845 lands, the Copilot Reviewer and any CLI-backed personalities may use the CLI dispatch pattern defined there.
 

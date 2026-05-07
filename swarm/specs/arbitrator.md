@@ -26,7 +26,7 @@ The arbitrator returns a structured action list only — not a narrative synthes
 Each entry includes:
 
 - Action description
-- Source personality indices (from the runtime index in `reviewers/index.md`)
+- Source personality names (from the runtime index in `reviewers/index.yaml`)
 - Evidence cite (snippet, line reference, scenario, or direct quote)
 
 **Critical actions** — items that, if unaddressed, would block shipping or require an architectural change, regardless of reviewer agreement count.
@@ -34,7 +34,7 @@ Each entry includes:
 Each entry includes:
 
 - Action description
-- Source personality indices
+- Source personality names
 - Evidence cite
 - Severity rationale (why this would block shipping or require architectural change)
 
