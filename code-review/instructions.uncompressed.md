@@ -75,6 +75,7 @@ Findings that fail any check MUST be omitted. Do not downgrade — omit entirely
     {
       "severity": "critical" | "high" | "medium" | "low" | "info",
       "location": "<file:line-range>" or "general",
+      "snippet": "<verbatim code excerpt from diff — exact match; omit if location is \"general\">",
       "description": "<what the issue is>",
       "recommended_action": "<what should be done>"
     }
