@@ -150,7 +150,7 @@ Each personality dispatch receives:
 2. The personality's prompt loaded in Step 4.
 3. An explicit read-only constraint (see Constraints C1–C3).
 
-Apply `model_overrides` at dispatch time: if a caller override exists, use it; otherwise use first available entry from `suggested_models`; otherwise fall back to `sonnet-class`. Apply the diversity preference rule (B8) after model selection to attempt cross-vendor coverage.
+Apply `model_overrides` at dispatch time: if a caller override exists, use it; otherwise use first available entry from `suggested_models`; otherwise fall back to `sonnet-class`. Apply diversity rule B8 after model selection: if all selected personalities resolve to the same model family, execute the resolution order defined in B8 before dispatching.
 
 Dispatch parameters:
 
@@ -248,7 +248,13 @@ B6. Devil's Advocate must always be dispatched unless explicitly excluded by `pe
 
 B7. Custom menu personalities are evaluated against their caller-supplied trigger condition. If trigger is "always", always include (subject to availability gating if backend is external).
 
-B8. Cross-vendor diversity: prefer at least one personality on a different model family or vendor than the host. Best-effort: if no diverse option is available after availability gating, proceed and note monoculture in synthesis output. Devil's Advocate is the natural carrier for diversity (always required, `vendor` frontmatter field expresses preference for non-Anthropic model).
+B8. Cross-vendor diversity: if all available personalities resolve to the same model family or vendor, the swarm must NOT proceed as-is. Research has found that homogeneous-debate swarms (all personalities on the same model family) produce sycophantic conformity at rates up to 85.5%, with correct-answer retention losses of up to 32.3 percentage points (arxiv 2605.00914). The rule is therefore a hard fallback, not best-effort. Execute the following resolution order:
+
+1. **Find any gated personality on a different model family.** If a personality is availability-gated (external backend), check whether it can be unlocked or substituted with a personality on a different vendor.
+2. **Override Devil's Advocate to a different vendor.** Use the `vendor` frontmatter field on the Devil's Advocate personality to force assignment to a non-Anthropic (or otherwise distinct) model family.
+3. **Degrade to single-adversary mode.** If neither step 1 nor step 2 resolves the monoculture, do not run the swarm. Dispatch the code-review skill in single-adversary mode instead.
+
+The chosen resolution must be reported in the synthesis preamble so the caller understands how diversity was achieved (or why the swarm was degraded).
 
 ## Defaults
 

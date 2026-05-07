@@ -133,7 +133,7 @@ Each personality dispatch receives:
 2. Personality's prompt loaded in Step 4.
 3. Explicit read-only constraint (see C1–C3).
 
-Apply `model_overrides` at dispatch time: if caller override exists, use it; otherwise use first available entry from `suggested_models`; otherwise fall back to `sonnet-class`. Apply diversity preference rule (B8): prefer at least one personality on a different vendor/model family when multiple personalities are dispatched. Apply after model selection.
+Apply `model_overrides` at dispatch time: if caller override exists, use it; otherwise use first available entry from `suggested_models`; otherwise fall back to `sonnet-class`. Apply diversity rule B8 after model selection: if all selected personalities resolve to the same model family, execute the resolution order defined in B8 before dispatching.
 
 Dispatch parameters:
 `<tier>` = `standard`
@@ -222,7 +222,7 @@ B6. Devil's Advocate MUST always be dispatched unless explicitly excluded by `pe
 
 B7. Custom menu personalities evaluated against caller-supplied trigger condition. If trigger is "always", always include (subject to availability gating if external backend).
 
-B8. Cross-vendor diversity: prefer at least one personality on different model family or vendor than host. Best-effort: if no diverse option available after gating, proceed and note monoculture in synthesis output. Devil's Advocate = natural diversity carrier (always required, `vendor` frontmatter expresses preference for non-Anthropic model).
+B8. Cross-vendor diversity: if all available personalities resolve to the same model family or vendor, EITHER swap Devil's Advocate to a different family via `vendor` override OR degrade to single-adversary mode (dispatch code-review skill instead of swarm). Do NOT run a homogeneous swarm — sycophantic conformity risk (homogeneous-debate loss up to 32 pp, arxiv 2605.00914). Preferred resolution order: (1) find any gated personality on a different family; (2) Devil's Advocate override to different vendor; (3) degrade to code-review single-adversary mode. Report chosen resolution in synthesis preamble.
 
 Defaults:
 D1. Default `personality_filter`: none (all registry entries evaluated).
