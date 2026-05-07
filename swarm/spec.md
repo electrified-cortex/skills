@@ -88,12 +88,12 @@ Callers may supply additional personalities that extend the registry for a singl
 4. The literal read-only phrase "read-only review — analyze and report only, no file edits, no commits, no shell commands" must appear in every personality's dispatch prompt.
 5. Member reviewer dispatches include a 4-check hallucination filter instruction: file existence, line proximity, code-quote accuracy, and direction consistency checks. Findings failing any check must be omitted by the reviewer.
 6. Reviewer prompts must be loaded lazily: only after the swarm is finalized (post-availability-gating), and only for personalities that will be dispatched.
-7. All swarm personalities must be dispatched in a single parallel batch; sequential dispatch is not permitted.
+7. All swarm personalities must be dispatched using a rolling window of 3 maximum: dispatch up to 3 personalities in parallel; as each completes, dispatch the next until all personalities have run. No more than 3 personalities may be in-flight simultaneously. Sequential one-at-a-time dispatch is not permitted.
 8. External-backend personalities (any backend other than `dispatch-sonnet`, `dispatch-haiku`, or `dispatch-opus`) must be availability-gated before inclusion in the swarm.
 9. A personality that fails its availability probe must be dropped from the swarm for the current invocation; the skill must not fail-stop or surface the probe failure as an error to the caller.
 10. Synthesis output must be delivered in host voice only; raw sub-agent output must not be dumped to the caller, and reviewer attribution must be stripped.
 11. Synthesis output must not exceed 2000 words; if findings exceed the budget the skill must truncate by priority (disagreements first, then high-severity, then medium, then low).
-12. No bare model names (e.g., specific version strings) may appear anywhere in the skill, its reviewer files, or its synthesis output; only model class terms (`haiku-class`, `sonnet-class`, `opus-class`) may be used.
+12. No bare model names (e.g., specific version strings) may appear anywhere in the skill, its reviewer files, or its synthesis output; only model class terms (`haiku-class`, `sonnet-class`, `opus-class`, `gpt-class`) may be used.
 13. Each finding in aggregated output must cite specific evidence (snippet, line reference, scenario, or direct quote); unsupported assertions are not findings and must be retracted or excluded.
 14. The skill must not merge with or replace the `code-review` consumer skill; the consumer-service boundary must be maintained.
 15. Caller-supplied `model_overrides` must affect model class only; they must not change backend type for any personality.
@@ -141,7 +141,7 @@ Rationale for sub-skill files over inline data: inline prompts bloat the context
 
 ### Step 5 — Dispatch
 
-The skill dispatches all swarm personalities in parallel using the `dispatch` skill. All dispatches in a single swarm invocation must be issued as a single batch; the skill must not issue them sequentially.
+The skill dispatches all swarm personalities using the `dispatch` skill with a rolling window of 3. The skill dispatches up to 3 personalities in parallel; as each completes, the next is dispatched until all personalities have run. No more than 3 personalities may be in-flight simultaneously. The skill must not dispatch them sequentially one at a time.
 
 Each personality dispatch receives: (1) the full review packet from Step 1, (2) the personality's prompt loaded in Step 4, (3) an explicit read-only constraint (see Constraints section C1–C3).
 
@@ -222,7 +222,7 @@ D1. Default `personality_filter`: none (all registry entries evaluated).
 
 D2. Default model class for each personality: as listed in the Personality Registry table.
 
-D3. Default for parallel vs sequential dispatch: parallel (all at once, single batch).
+D3. Default dispatch concurrency: rolling window of 3 — dispatch up to 3 personalities in parallel, starting the next as each completes.
 
 D4. Default `model_overrides`: none.
 
@@ -266,7 +266,7 @@ DN4. Must not dump raw sub-agent output to the caller; synthesize and speak as t
 
 DN5. Must not merge with or replace the `code-review` skill.
 
-DN6. Must not dispatch personalities sequentially when parallel dispatch is available.
+DN6. Must not dispatch personalities sequentially one at a time. Must not dispatch all personalities simultaneously with no concurrency cap. Rolling window of 3 is the required pattern.
 
 DN7. Must not include bare model names; use model class terminology only.
 
@@ -296,7 +296,7 @@ Mitigation: include the literal read-only phrase (C2) in every personality dispa
 
 **F4: Swarm dispatch issued sequentially** — personalities are dispatched one by one, multiplying total latency by personality count.
 Why: default coding pattern loops and awaits each dispatch.
-Mitigation: issue all dispatches as a single parallel batch per Step 5.
+Mitigation: use rolling window of 3 per Step 5 — dispatch up to 3 in parallel, start next as each completes.
 
 **F5: Synthesis dumps reviewer names** — output exposes the internal review machinery ("Devil's Advocate said...") breaking the host-voice requirement.
 Why: synthesizing from structured output naturally includes provenance.

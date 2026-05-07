@@ -1,6 +1,6 @@
 ---
 name: swarm
-description: Multi-personality review infrastructure — selects personalities, gates availability, dispatches in parallel, arbitrates, and synthesizes a verdict. Triggers — swarm review, multi-reviewer, parallel personalities, run all reviewers, arbitrate findings.
+description: Multi-personality review infrastructure — selects personalities, gates availability, dispatches in parallel, arbitrates, and synthesizes a verdict. Triggers - swarm review, multi-reviewer, parallel personalities, run all reviewers, arbitrate findings.
 ---
 
 # swarm — Uncompressed Reference
@@ -120,7 +120,7 @@ If `personality_filter` is supplied: restrict candidate set to named personaliti
 
 For each personality in the active set, read `suggested_models` from frontmatter and select the first available model. Caller `model_overrides` take precedence. If no `suggested_models` entry is available and no override applies, default to `sonnet-class`.
 
-Selection logic must be inline within the skill. A separate dispatch for personality selection is not used.
+Selection logic must be inline within the skill.
 
 Personalities with `required: true` must always be included regardless of trigger evaluation. `personality_filter` may exclude a required personality only when the caller explicitly names a subset that omits it. Devil's Advocate carries `required: true`.
 
@@ -152,7 +152,7 @@ Apply `model_overrides` at dispatch time: if a caller override exists, use it; o
 
 Dispatch parameters:
 
-- `<tier>` = `standard` — personality reviews require moderate reasoning over a supplied artifact; fast-cheap is insufficient for evidence-cited findings.
+- `<tier>` = `standard`
 - `<description>` = `swarm-personality:<personality-name>`
 
 Should return: a structured findings list. Each finding: description of the issue, evidence cite (snippet, line reference, scenario, or direct quote). Empty response or "No findings" is a valid return — treated as non-contributing (B4).
@@ -163,7 +163,7 @@ After all swarm member outputs are collected, dispatch a single arbitrator sub-a
 
 Dispatch parameters:
 
-- `<tier>` = `standard` — arbitration requires comparing N member outputs and applying judgment to produce an action list; fast-cheap is insufficient.
+- `<tier>` = `standard`
 - `<description>` = `swarm-arbitrator`
 
 Should return: a structured two-section action list — Obvious actions and Critical actions — as specified in the Required arbitrator output format below. If no actionable findings: "No actionable findings" stated explicitly.
@@ -217,6 +217,8 @@ Synthesis output must not exceed 2000 words. If findings exceed this budget, pri
 C1. All dispatched sub-agents operate in read-only mode. Sub-agents must not edit files, run side-effecting commands, commit, or call any mutating tool. State this constraint explicitly in every personality's dispatch prompt.
 
 C2. Include the literal phrase "read-only review — analyze and report only, no file edits, no commits, no shell commands" in each personality's dispatch prompt. For each finding, verify before including: (1) cited file path appears in the provided diff/artifact; (2) cited line is within a changed/relevant section or within 10 lines of one; (3) any verbatim code quotes appear in the artifact; (4) directional claims (added/removed/changed) match the artifact. Findings that fail any check must be omitted, not downgraded.
+
+C3. The skill does not technically prevent a sub-agent from calling mutating tools; the constraint is behavioral, enforced by prompt instruction. If a sub-agent violates it, the violation is a prompt-design defect, not a dispatch-skill defect.
 
 C4. Every finding must cite specific evidence: a snippet, line reference, scenario, or direct quote. Instruct each reviewer to either cite or retract.
 

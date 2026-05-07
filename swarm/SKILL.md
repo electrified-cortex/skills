@@ -1,6 +1,6 @@
 ﻿---
 name: swarm
-description: Multi-personality review infrastructure — selects personalities, gates availability, dispatches in parallel, arbitrates, and synthesizes a verdict. Triggers — swarm review, multi-reviewer, parallel personalities, run all reviewers, arbitrate findings.
+description: Multi-personality review infrastructure — selects personalities, gates availability, dispatches in parallel, arbitrates, and synthesizes a verdict. Triggers - swarm review, multi-reviewer, parallel personalities, run all reviewers, arbitrate findings.
 ---
 
 Key Terms:
@@ -108,7 +108,7 @@ If `personality_filter` supplied: restrict candidate set to named personalities;
 
 For each personality in active set, read `suggested_models` from frontmatter and select first available. Caller `model_overrides` take precedence. If no `suggested_models` available and no override, default to `sonnet-class`.
 
-Selection logic MUST be inline within skill. Separate dispatch for personality selection is not used.
+Selection logic MUST be inline within skill.
 
 Personalities with `required: true` MUST always be included regardless of trigger evaluation. `personality_filter` may exclude required personality only when caller explicitly names subset omitting it. Devil's Advocate carries `required: true`.
 
@@ -134,7 +134,7 @@ Each personality dispatch receives:
 Apply `model_overrides` at dispatch time: if caller override exists, use it; otherwise use first available entry from `suggested_models`; otherwise fall back to `sonnet-class`. Apply diversity preference rule (B8) after model selection.
 
 Dispatch parameters:
-`<tier>` = `standard` — personality reviews require moderate reasoning; fast-cheap insufficient for evidence-cited findings.
+`<tier>` = `standard`
 `<description>` = `swarm-personality:<personality-name>`
 
 Should return: structured findings list. Each finding: description + evidence cite (snippet, line reference, scenario, or direct quote). Empty response or "No findings" = valid return — treated as non-contributing (B4).
@@ -192,6 +192,8 @@ Constraints:
 C1. All dispatched sub-agents operate in read-only mode. Sub-agents MUSTN'T edit files, run side-effecting commands, commit, or call mutating tool. State constraint explicitly in every personality's dispatch prompt.
 
 C2. Include literal phrase "read-only review — analyze and report only, no file edits, no commits, no shell commands" in each personality's dispatch prompt. For each finding, verify before including: (1) cited file path appears in provided diff/artifact; (2) cited line is within changed/relevant section or within 10 lines of one; (3) verbatim code quotes appear in artifact; (4) directional claims (added/removed/changed) match artifact. Findings failing any check MUST be omitted, not downgraded.
+
+C3. Skill doesn't technically prevent sub-agents from calling mutating tools — constraint is behavioral, enforced by prompt instruction. Violations are prompt-design defects, not dispatch-skill defects.
 
 C4. Every finding MUST cite specific evidence: snippet, line reference, scenario, or direct quote. Instruct each reviewer to either cite or retract.
 
