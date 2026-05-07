@@ -19,7 +19,9 @@ Hard prohibition: do NOT author scripts, helper files, or any file other than `<
 2. **Run installed linter** — if the runtime already has a markdown linter available, run its auto-fix pass on `<markdown_file_path>`. Do not install one if absent. Ignore MD041 warnings if the target is a `SKILL.md`. Best-effort.
 
 3. **Run result check (`lint` filename)** — the file was modified; get the updated hash location.
-   - Dispatch `markdown-hygiene-result` with `<markdown_file_path> lint`.
+   - **Invoke the result tool from sibling `markdown-hygiene-result/` directly.** Sub-agents do NOT dispatch other skills; this is a direct sibling-tool invocation per the skill-writing prohibition on sub-agent dispatch.
+   - Bash: `bash <skill-dir>/../markdown-hygiene-result/result.sh <markdown_file_path> lint`
+   - PS7: `pwsh <skill-dir>/../markdown-hygiene-result/result.ps1 <markdown_file_path> lint`
    - `MISS: <abs-path>` → rebind `<lint_path>` = `<abs-path>`, continue.
    - Anything else → return that output verbatim, stop.
 
