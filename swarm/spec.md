@@ -147,11 +147,15 @@ Each personality dispatch receives: (1) the full review packet from Step 1, (2) 
 
 The skill applies `model_overrides` at dispatch time: if a caller override exists for a personality, the override model class is used; otherwise the registry default applies.
 
+Structured-evidence requirement: any finding marked HIGH or CRITICAL severity must include three fields — Source (where the vulnerability or bug enters), Sink (where it causes harm), and Missing guard (what defense is absent). Findings at HIGH or CRITICAL severity that lack this structure are automatically downgraded to MEDIUM.
+
 ### Step 6 — Arbitrator
 
 After all member outputs are collected, the skill dispatches a single sonnet-class arbitrator agent. The arbitrator is not in the personality registry; it is not subject to `personality_filter` or availability gating. It is always dispatched as part of the standard step sequence and cannot be disabled.
 
 The arbitrator receives: (1) all non-empty, non-timeout member outputs from the swarm, and (2) the original review packet. Member outputs that are empty or timed out are excluded from the arbitrator's input set.
+
+File-existence filter (pre-arbitration): before forwarding member findings to the arbitrator, the skill must discard any finding that cites a file not present in the review packet's Files-affected list. This filter uses deterministic string matching (exact path) only — no LLM judgment. Findings that do not cite a specific file are retained.
 
 The arbitrator's output is a structured action list only, with two sections:
 
