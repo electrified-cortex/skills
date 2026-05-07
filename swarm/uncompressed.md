@@ -5,7 +5,7 @@ description: Multi-personality review infrastructure — selects personalities, 
 
 # swarm — Uncompressed Reference
 
-**Usage**: This skill is host-executed. The host agent reads and follows these steps directly. Never dispatch this skill as a sub-agent — it cannot orchestrate further dispatches from a leaf position.
+**Usage**: Never dispatch this skill as a sub-agent — it cannot orchestrate further dispatches from a leaf position.
 
 ## Key Terms
 

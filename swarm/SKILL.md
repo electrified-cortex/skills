@@ -3,7 +3,7 @@ name: swarm
 description: Multi-personality review infrastructure — selects personalities, gates availability, dispatches in parallel, arbitrates, and synthesizes a verdict. Triggers - swarm review, multi-reviewer, parallel personalities, run all reviewers, arbitrate findings.
 ---
 
-Usage: This skill is host-executed. The host agent reads and follows these steps directly. Never dispatch this skill as a sub-agent — it cannot orchestrate further dispatches from a leaf position.
+Usage: Never dispatch this skill as a sub-agent — it cannot orchestrate further dispatches from a leaf position.
 
 Key Terms:
 Artifact: input content under review — conversation excerpt, file path, diff, plan, doc, or structured description. Passed as `problem`.
