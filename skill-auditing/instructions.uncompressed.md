@@ -102,6 +102,12 @@ If dispatch: verify SKILL.md is a short routing card. If inline: verify SKILL.md
 
 **(A-FM-1) Name matches folder** — `name` field MUST equal the skill's folder name exactly. Check both `uncompressed.md` and `SKILL.md`; mismatch in either → FAIL.
 
+**(A-FM-4) Valid frontmatter fields** — `SKILL.md` frontmatter MUST contain ONLY `name` and `description` at the top level. Any additional YAML key (e.g., `version`, `inputs`, `outputs`, `type`, `model`, `tools`) → FAIL.
+
+**(A-FM-11) Trigger phrases — all skills** — Applies to ALL skills (inline AND dispatch). `description` MUST contain `Triggers -` (case-insensitive). Absence → HIGH. Dispatch skills additionally validated by DS-3 for pattern completeness and stuffing.
+
+**(A-FM-12) `uncompressed.md` frontmatter mirror** — If `uncompressed.md` exists in `skill_dir`, it MUST have YAML frontmatter (`---` block at line 1). Frontmatter MUST contain `name` and `description`. The `name` value MUST match `SKILL.md` exactly (case-sensitive). The `description` value MUST match `SKILL.md` exactly (case-sensitive). Missing frontmatter → FAIL. Missing or mismatched `name` → FAIL. Missing or mismatched `description` → FAIL.
+
 **(A-FM-3) H1 per artifact** — applies ONLY to `.md` files (markdown). `.txt` files (e.g. `instructions.txt`) are NOT markdown; the H1 rule does NOT apply to them — never flag a `.txt` file under A-FM-3 regardless of content.
 
 For `.md` files, a "real H1" is a line that:
