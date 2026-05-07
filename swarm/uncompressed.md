@@ -140,7 +140,7 @@ Only after the swarm is finalized (post-gating) load the prompt for each survivi
 
 ### Step 5 — Dispatch
 
-Dispatch all swarm personalities in parallel using the `dispatch` skill. All dispatches in a single swarm invocation must be issued as a single batch; do not issue them sequentially.
+Dispatch swarm personalities using the `dispatch` skill. Maximum concurrency: 3 personalities dispatched at a time. If swarm size exceeds 3, batch into groups of 3; wait for each batch to complete before dispatching the next. Within each batch, dispatches run in parallel. Do not issue all personalities in a single unbounded batch.
 
 Each personality dispatch receives:
 
@@ -250,7 +250,7 @@ B8. Cross-vendor diversity: prefer at least one personality on a different model
 
 D1. Default `personality_filter`: none (all registry entries evaluated).
 D2. Default model class: first available from `suggested_models` frontmatter; fallback `sonnet-class`.
-D3. Default dispatch: parallel (all at once, single batch).
+D3. Default dispatch: parallel within batches of 3 max. Never dispatch more than 3 personalities concurrently.
 D4. Default `model_overrides`: none.
 D5. Custom menu entry with no model class and no caller override: default `sonnet-class`.
 D6. Confidence rating default: Medium. Raised to High when all personalities agree and all findings cite evidence. Lowered to Low when disagree set is non-empty on a high-severity point, or when any personality returns no findings.
