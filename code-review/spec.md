@@ -319,6 +319,14 @@ without acting on it, the substantive pass will independently reach
 case 1 or case 2 on its own judgment, since Constraints item 9
 prohibits passing the caller's dispute to the substantive pass.
 
+### Smoke pass framing
+
+Smoke pass uses adversarial framing: "Assume the author made at least one mistake." Security-focused smoke passes add pentester framing. Substantive pass uses neutral framing.
+
+### Hallucination filter
+
+Hallucination filter: before including a finding, reviewer must verify file path exists in change set, cited line is in or near a changed hunk (within 10 lines), any verbatim code quotes appear in diff, and directional claims match diff direction. Findings that fail any check must be omitted.
+
 ## Defaults and Assumptions
 
 - Smoke pass tier defaults to fast-cheap. No override permitted.

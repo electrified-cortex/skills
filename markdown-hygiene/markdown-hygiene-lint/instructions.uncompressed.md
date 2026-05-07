@@ -68,7 +68,8 @@ Hard prohibition: do NOT author scripts, helper files, or any file other than `<
 - MD055 — table pipe style consistent across rows.
 - MD056 — all rows in a table have the same number of cells.
 - MD058 — tables need blanks before AND after.
-- MD060 — table cell separators need space on each side of dash run.
+- MD060 — table cell separators need space on each side of dash run (`| --- |` not `|---|`).
+- MD060-PAD — table cell alignment padding: data row cells must not contain extra spaces for visual column alignment (e.g. `| error   |` must be `| error |`). Each cell must have exactly one space between each pipe and its content. LLMs produce this habitually when generating tables. Scan every data row; strip padding to single-space on each side.
 - MONO-ESCAPE — backslash-backtick (`` \` ``) inside inline code spans — breaks Markdown rendering (HIGH, not FAIL). Fix: use double-backtick fence (`` `` text with `backtick` `` ``) instead of single-backtick with backslash-escape.
 
 ## Output Format

@@ -86,17 +86,18 @@ Callers may supply additional personalities that extend the registry for a singl
 2. Devil's Advocate (registry entry 1) must always be included in the swarm unless the caller's `personality_filter` explicitly names a subset that omits it.
 3. All dispatched personalities must operate in read-only mode; sub-agents must not edit files, commit, run side-effecting commands, or call any mutating tool.
 4. The literal read-only phrase "read-only review — analyze and report only, no file edits, no commits, no shell commands" must appear in every personality's dispatch prompt.
-5. Reviewer prompts must be loaded lazily: only after the swarm is finalized (post-availability-gating), and only for personalities that will be dispatched.
-6. All swarm personalities must be dispatched in a single parallel batch; sequential dispatch is not permitted.
-7. External-backend personalities (any backend other than `dispatch-sonnet`, `dispatch-haiku`, or `dispatch-opus`) must be availability-gated before inclusion in the swarm.
-8. A personality that fails its availability probe must be dropped from the swarm for the current invocation; the skill must not fail-stop or surface the probe failure as an error to the caller.
-9. Synthesis output must be delivered in host voice only; raw sub-agent output must not be dumped to the caller, and reviewer attribution must be stripped.
-10. Synthesis output must not exceed 2000 words; if findings exceed the budget the skill must truncate by priority (disagreements first, then high-severity, then medium, then low).
-11. No bare model names (e.g., specific version strings) may appear anywhere in the skill, its reviewer files, or its synthesis output; only model class terms (`haiku-class`, `sonnet-class`, `opus-class`) may be used.
-12. Each finding in aggregated output must cite specific evidence (snippet, line reference, scenario, or direct quote); unsupported assertions are not findings and must be retracted or excluded.
-13. The skill must not merge with or replace the `code-review` consumer skill; the consumer-service boundary must be maintained.
-14. Caller-supplied `model_overrides` must affect model class only; they must not change backend type for any personality.
-15. Custom menu personalities must be additive only; they must not override or replace built-in registry entries.
+5. Member reviewer dispatches include a 4-check hallucination filter instruction: file existence, line proximity, code-quote accuracy, and direction consistency checks. Findings failing any check must be omitted by the reviewer.
+6. Reviewer prompts must be loaded lazily: only after the swarm is finalized (post-availability-gating), and only for personalities that will be dispatched.
+7. All swarm personalities must be dispatched in a single parallel batch; sequential dispatch is not permitted.
+8. External-backend personalities (any backend other than `dispatch-sonnet`, `dispatch-haiku`, or `dispatch-opus`) must be availability-gated before inclusion in the swarm.
+9. A personality that fails its availability probe must be dropped from the swarm for the current invocation; the skill must not fail-stop or surface the probe failure as an error to the caller.
+10. Synthesis output must be delivered in host voice only; raw sub-agent output must not be dumped to the caller, and reviewer attribution must be stripped.
+11. Synthesis output must not exceed 2000 words; if findings exceed the budget the skill must truncate by priority (disagreements first, then high-severity, then medium, then low).
+12. No bare model names (e.g., specific version strings) may appear anywhere in the skill, its reviewer files, or its synthesis output; only model class terms (`haiku-class`, `sonnet-class`, `opus-class`) may be used.
+13. Each finding in aggregated output must cite specific evidence (snippet, line reference, scenario, or direct quote); unsupported assertions are not findings and must be retracted or excluded.
+14. The skill must not merge with or replace the `code-review` consumer skill; the consumer-service boundary must be maintained.
+15. Caller-supplied `model_overrides` must affect model class only; they must not change backend type for any personality.
+16. Custom menu personalities must be additive only; they must not override or replace built-in registry entries.
 
 ## Step Sequence
 

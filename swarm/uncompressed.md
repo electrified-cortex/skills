@@ -216,7 +216,7 @@ Synthesis output must not exceed 2000 words. If findings exceed this budget, pri
 
 C1. All dispatched sub-agents operate in read-only mode. Sub-agents must not edit files, run side-effecting commands, commit, or call any mutating tool. State this constraint explicitly in every personality's dispatch prompt.
 
-C2. Include the literal phrase "read-only review — analyze and report only, no file edits, no commits, no shell commands" in each personality's dispatch prompt.
+C2. Include the literal phrase "read-only review — analyze and report only, no file edits, no commits, no shell commands" in each personality's dispatch prompt. For each finding, verify before including: (1) cited file path appears in the provided diff/artifact; (2) cited line is within a changed/relevant section or within 10 lines of one; (3) any verbatim code quotes appear in the artifact; (4) directional claims (added/removed/changed) match the artifact. Findings that fail any check must be omitted, not downgraded.
 
 C4. Every finding must cite specific evidence: a snippet, line reference, scenario, or direct quote. Instruct each reviewer to either cite or retract.
 

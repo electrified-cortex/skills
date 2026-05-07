@@ -1,3 +1,8 @@
+---
+name: code-review
+description: Tiered code review on a change set. Read-only — never modifies code. Triggers — security, correctness, code-quality, change-review, architectural-risk.
+---
+
 # Code Review Pass
 
 Read change set, produce findings report. Read-only — never edit, commit, push, stage. Reporting and fixing are separate concerns.
@@ -26,7 +31,7 @@ Tier substitution is prohibited.
 
 ## Procedure
 
-1. If `tier=smoke`: review for surface-level findings — style, naming, obvious bugs, missing error handling on observable failures, lint-grade defects. Bound depth to a fast pass. Skip design and architecture critique.
+1. If `tier=smoke`: review for surface-level findings — style, naming, obvious bugs, missing error handling on observable failures, lint-grade defects. Bound depth to a fast pass. Skip design and architecture critique. Adversarial framing: assume the author made at least one mistake. Your job is to find it, not approve the work. If `focus` includes `security`: also frame yourself as a pentester looking for exploitable paths, not a colleague doing a courtesy review.
 2. If `tier=substantive`: review for design, correctness, security, concurrency, architectural risk, test adequacy, public API surface. Read every file touched by the change set, not just the diff hunks.
 3. Substantive pass MUST re-examine each `prior_findings` entry. For each prior finding, decide: agree (carry forward, severity may change), or contradict (mark false-positive or out-of-scope). Contradictions go in your output so the calling agent can preserve them.
 4. Apply focus areas if provided: examine focus areas first and most thoroughly. Still surface every `blocker` and `major` finding outside focus. `minor`/`nit` outside focus may be deprioritized.
@@ -44,6 +49,17 @@ Empty change set: skip all passes; return empty-result aggregate.
 - `major`: should fix unless caller defers — significant correctness risk, missing error handling on observable failure, regression risk.
 - `minor`: improvement worth making, not blocking.
 - `nit`: stylistic preference, naming polish, comment wording.
+
+## Hallucination Filter
+
+Before including any finding in output, verify all four checks pass:
+
+1. **File existence**: the cited file path appears in the provided diff or file list.
+2. **Line range**: the cited line number is within a changed hunk or within 10 lines of one.
+3. **Code-quote accuracy**: any code quoted verbatim must appear in the diff (exact string match).
+4. **Direction consistency**: claims about "added" or "removed" must match the diff direction (+/- hunks).
+
+Findings that fail any check MUST be omitted. Do not downgrade — omit entirely.
 
 ## Output (JSON-shaped, returned as your final response)
 
