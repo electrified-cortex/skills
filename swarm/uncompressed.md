@@ -289,7 +289,7 @@ B8. Cross-vendor diversity: if all finalized swarm personalities resolve to the 
 1. Find any personality in the full candidate registry on a different model family — include it in the swarm.
 2. Re-assign Devil's Advocate to a different vendor using the `vendor` frontmatter field.
 
-If neither step resolves the monoculture, proceed with the homogeneous swarm and include a `homogeneity_warning` in the synthesis output. Do NOT degrade to `code-review`. Rationale: arxiv 2605.00914 documents 85.5% sycophantic conformity and 32.3 pp correct-answer loss in same-family debate.
+If neither step resolves the monoculture, proceed with the homogeneous swarm and include a `homogeneity_warning` in the synthesis output. Do NOT degrade to `code-review`.
 
 B9. Generated persona dispatch: generated personas are dispatched in Step 5 the same way as built-in personalities. Each receives: the review packet, an inline system prompt synthesized from its name, critique lens, and scope limiter, and the explicit read-only constraint. Generated personas are not added to the registry and are never cached. They are always re-dispatched on any re-run.
 
@@ -298,7 +298,7 @@ B10. Hash record partial recovery: if a previous swarm run on the same manifest 
 ## Defaults
 
 D1. Default `personality_filter`: none (all registry entries evaluated).
-D2. Default model class: first available from `suggested_models` frontmatter; fallback `sonnet-class`. All built-in personalities default to sonnet-class — the hallucination filter (C2) requires evidence-cite self-checking that haiku-class handles unreliably. Callers may override individual personalities via `model_overrides` if they accept the tradeoff.
+D2. Default model class: first available from `suggested_models` frontmatter; fallback `sonnet-class`. Callers may override individual personalities via `model_overrides`.
 D3. Default dispatch: rolling window of 3. Never more than 3 personalities in flight at once.
 D4. Default `model_overrides`: none.
 D4b. Default `arbitrator_model`: `sonnet-class`.

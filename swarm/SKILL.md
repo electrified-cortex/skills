@@ -190,7 +190,7 @@ Collect findings from arbitrator's structured action list. For each item, record
 Identify disagree set: items where arbitrator flagged conflicting conclusions (source personality names from different members with contradictory claims on same point). Each disagree entry records personalities involved and conflicting claims.
 
 Step 8 — Synthesize and return:
-Synthesize from arbitrator's structured action list into single host-voice output. Don't dump raw sub-agent output or raw arbitrator output to caller. Speak as host, presenting refined takeaways.
+Synthesize from arbitrator's structured action list into single host-voice output. Don't dump raw sub-agent output or raw arbitrator output to caller. Speak as host, presenting refined takeaways. Strip reviewer attribution — don't name personalities in output.
 
 Required synthesis output fields:
 Active personalities: name (model-class) for each; tag generated personas with "(generated)".
@@ -257,7 +257,7 @@ B6. Devil's Advocate MUST always be dispatched unless explicitly excluded by `pe
 
 B7. Custom menu personalities evaluated against caller-supplied trigger condition. If trigger is "always", always include (subject to availability gating if external backend).
 
-B8. Cross-vendor diversity: if all finalized swarm personalities resolve to the same model family or vendor, attempt resolution before dispatching. Preferred resolution order: (1) find any personality in the full candidate registry on a different model family — include it; (2) re-assign Devil's Advocate to a different vendor via `vendor` override. If neither resolves the monoculture, proceed with the homogeneous swarm and include `homogeneity_warning` in synthesis output. Do NOT degrade to code-review. Rationale: arxiv 2605.00914 — 85.5% sycophantic conformity and 32.3 pp correct-answer loss in same-family debate.
+B8. Cross-vendor diversity: if all finalized swarm personalities resolve to the same model family or vendor, attempt resolution before dispatching. Preferred resolution order: (1) find any personality in the full candidate registry on a different model family — include it; (2) re-assign Devil's Advocate to a different vendor via `vendor` override. If neither resolves the monoculture, proceed with the homogeneous swarm and include `homogeneity_warning` in synthesis output. Do NOT degrade to code-review.
 
 B9. Generated persona dispatch: generated personas dispatched in Step 5 same as built-in. Receive: review packet, inline system prompt synthesized from name + lens + scope, explicit read-only constraint. Not in registry; not cached (always re-dispatched).
 
@@ -265,7 +265,7 @@ B10. Hash record partial recovery: if a previous swarm run on the same manifest 
 
 Defaults:
 D1. Default `personality_filter`: none (all registry entries evaluated).
-D2. Default model class: first available from `suggested_models` frontmatter; fallback `sonnet-class`. All built-in personalities default to sonnet-class — the hallucination filter (C2) requires evidence-cite self-checking that haiku-class handles unreliably. Callers may override individual personalities via `model_overrides` if they accept the tradeoff.
+D2. Default model class: first available from `suggested_models` frontmatter; fallback `sonnet-class`. Callers may override individual personalities via `model_overrides`.
 D3. Default dispatch: rolling window of 3. Never more than 3 personalities in flight at once.
 D4. Default `model_overrides`: none.
 D4b. Default `arbitrator_model`: `sonnet-class`.
@@ -294,3 +294,5 @@ P2. `model_overrides` override registry defaults.
 P3. Availability gate overrides selection: personality passing selection but failing probe is dropped.
 P4. Read-only constraint (C1) overrides any personality-specific instruction. No personality prompt may authorize editing, committing, or side-effecting commands.
 P5. Synthesis word budget (2000-word cap) overrides completeness. Truncation required over exceeding cap.
+
+Related: `../dispatch/SKILL.md` — agent-launching skill. `specs/arbitrator.md` — arbitrator format.

@@ -199,10 +199,14 @@ The skill synthesizes findings into a single host-voice output, drawing from the
 
 Required synthesis output fields:
 
-- Summary: consolidated findings in host voice.
+- Active personalities: name and model class for each personality that completed successfully; generated personas tagged as "(generated)".
+- Critical actions: each item from the arbitrator's Critical actions section — findings that would block shipping or require architectural change.
+- Findings: remaining consensus findings from the arbitrator's Obvious actions section.
 - Disagreements: explicit statement of each disagree-set item; the skill states the tension and applies judgment.
-- Dropped personalities: list of any personalities dropped by availability gate with reason.
+- Unavailable personalities: personalities dropped by the availability gate with reason.
+- Non-contributing personalities: personalities dispatched but that returned empty output, timed out, or returned incoherent output.
 - Confidence rating: High, Medium, or Low. Rationale for the rating must be included. If Low, the output must state specifically what would raise it.
+- Homogeneity warning (optional, omit if N/A): emitted when all personalities resolved to the same model family.
 
 Synthesis output must not exceed 2000 words. If findings exceed this budget, the skill must prioritize high-severity and disagreement items.
 
@@ -295,6 +299,10 @@ E3. Dispatch failure for an individual personality (sub-agent crashes or returns
 E4. Review packet assembly fails (no artifact resolvable): return error to caller (see B1). Must not dispatch.
 
 E5. Synthesis exceeds word budget: truncate at priority order — disagreements first, then high-severity findings, then medium, then low. Note the truncation in output.
+
+E6. Arbitrator dispatch fails or returns no structured output: return error to caller with any per-personality summary collected from Step 7. Must not attempt synthesis from raw member outputs.
+
+E7. Hash record write failure (Steps 5 or 8): non-fatal. Log the failure and continue execution. Per-persona write failure does not abort the swarm; B10 re-dispatches the missing persona on the next run. Synthesis write failure does not affect the result already returned to the caller.
 
 ## Precedence Rules
 
