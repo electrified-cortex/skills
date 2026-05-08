@@ -26,6 +26,8 @@ description: Multi-personality review infrastructure — selects personalities, 
 - **Availability probe**: lightweight shell command (e.g., `copilot --version`) or tool call confirming backend is live before including the personality.
 - **Backend**: execution target for a personality. Values: `dispatch-sonnet`, `dispatch-haiku`, `dispatch-opus`, `copilot-cli`, `local-llm` (reserved, v1 out of scope).
 - **Arbitrator**: single sonnet-class sub-agent dispatched after all swarm members complete. Receives full member outputs and review packet. Returns structured action list only. Not a reviewer. Not in the registry. Not subject to personality selection, availability gating, or `personality_filter`.
+- **Generated persona**: reviewer personality manifested inline at runtime when the registry yields fewer than 3 suitable personalities for the artifact. Has a name, critique lens, and scope limiter — all specific to the artifact's domain. Exists for the current invocation only. Not persisted, no `reviewers/` file, not cached in the hash record.
+- **Manifest hash**: SHA-256 of the canonical input manifest — sorted file paths concatenated with their content hashes. For non-file artifacts (text, conversation excerpts), the SHA-256 of the artifact content. Used as the cache key for all hash-record entries.
 
 ## Personality Registry
 
@@ -40,14 +42,16 @@ The registry is external to the skill. Built-in personality definitions live as 
 | # | Personality | Trigger | Suggested model class | Backend | Scope |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Devil's Advocate | always | sonnet-class | dispatch-sonnet | Challenge assumptions; no constructive suggestions |
-| 2 | Security Auditor | auth, user input, API endpoints, data access, secrets, network calls | sonnet-class | dispatch-sonnet | Find vulnerabilities only; no design advice |
-| 3 | Code Quality Critic | code (new or modified) | sonnet-class | dispatch-sonnet | Code conventions, readability, duplication; no security or arch |
-| 4 | Test Reviewer | new or modified logic requiring test coverage | sonnet-class | dispatch-sonnet | Test coverage and quality only |
-| 5 | Architect | system structure, new abstractions, service boundaries, shared infrastructure | sonnet-class | dispatch-sonnet | Structural and interface concerns only |
-| 6 | Operational Readiness | new failure modes, external dependencies, error handling, production-facing behavior | sonnet-class | dispatch-sonnet | Observability, recovery, degraded-mode behavior |
-| 7 | Performance Reviewer | data access, loops, serialization, caching, computationally significant logic | sonnet-class | dispatch-sonnet | Throughput, latency, resource use only |
-| 8 | Copilot Reviewer | code + copilot-cli available | external | copilot-cli | Full code review via Copilot; availability-gated |
-| 9 | Custom Specialist | caller supplies via custom menu | varies | varies | Defined by caller in custom menu entry |
+| 2 | Accessibility Officer | UI, web rendering, forms, interactive elements, color, user-facing text | sonnet-class | dispatch-sonnet | WCAG 2.2 AA only; no logic, security, or performance |
+| 3 | Architect | system structure, new abstractions, service boundaries, shared infrastructure | sonnet-class | dispatch-sonnet | Structural concerns only; no implementation details |
+| 4 | Designer | public interfaces, APIs, library surfaces, shared types, config contracts | sonnet-class | dispatch-sonnet | Public surface and caller experience only; no internals |
+| 5 | Engineer | new logic, integrations, state mutation, error handling, partial failure | sonnet-class | dispatch-sonnet | Practical correctness only; no style or architecture |
+| 6 | Linguist | code, docs, error messages, log strings, user-visible text, named abstractions | sonnet-class | dispatch-sonnet | Naming, clarity, communication only |
+| 7 | Penny Pincher | API calls, DB queries, loops, caching, storage, cloud resource usage | sonnet-class | dispatch-sonnet | Cost and resource efficiency only |
+| 8 | Privacy Advocate | user data, PII, analytics, logging, storage, data transmission, identity, consent | sonnet-class | dispatch-sonnet | Privacy and data handling only; no unrelated security |
+| 9 | Security Auditor | auth, user input, API endpoints, data access, secrets, network calls, file system writes, process execution | sonnet-class | dispatch-sonnet | Find vulnerabilities only; no design advice |
+| 10 | Copilot Reviewer | code + copilot-cli available | external | copilot-cli | Full code review via Copilot; availability-gated |
+| 11 | Custom Specialist | caller supplies via custom menu | varies | varies | Defined by caller in custom menu entry |
 
 The integer index is informative only. The stable runtime index is assigned by alphabetical crawl (1-based). Personality renames change the index; callers using `personality_filter` by name are not affected.
 
@@ -114,6 +118,8 @@ Packet fields (omit if not applicable to artifact type):
 
 Verify the packet before proceeding: Goal must be specific enough to evaluate; Artifacts must include actual content, not just references. If either condition fails, attempt to resolve the gap from available context. Do not ask the caller to fill gaps.
 
+**Hash record check**: after packet assembly, compute the manifest hash from the files-affected list (sorted paths + content hashes, SHA-256; or SHA-256 of artifact text for non-file inputs). Check `.hash-record/XX/HASH/swarm/vN/report.md` (where XX = first two hex chars of HASH). Cache hit: return the cached result and skip Steps 2-8. Cache miss: continue.
+
 ### Step 2 — Select personalities
 
 Build the combined registry by crawling `reviewers/` (applying the metadata-validation gate) and appending any caller-supplied custom menu entries.
@@ -125,6 +131,10 @@ For each personality in the active set, read `suggested_models` from frontmatter
 Selection logic must be inline within the skill.
 
 Personalities with `required: true` must always be included regardless of trigger evaluation. `personality_filter` may exclude a required personality only when the caller explicitly names a subset that omits it. Devil's Advocate carries `required: true`.
+
+**5-cap**: if more than 5 personalities pass trigger evaluation and availability gating, apply priority order: (1) Devil's Advocate always; (2) personalities with the most-specific trigger match (narrower/more-specific trigger = higher priority); (3) drop lowest-priority remaining until the count reaches 5.
+
+**Manifest gap fill**: if selection yields fewer than 3 suitable personalities after filter and trigger evaluation, manifest one or more generated personas inline to reach at least 3. For each generated persona: invent a name relevant to the artifact's domain, a critique lens covering problem traits not already represented by selected personalities, and a scope limiter avoiding overlap. Dispatch the same as built-in; do not add to the registry; do not cache in the hash record.
 
 ### Step 3 — Availability gating
 
@@ -216,9 +226,13 @@ Synthesis output template (use this structure exactly):
 **Dropped personalities**: <name — reason for each dropped personality; "None" if none dropped>
 
 **Confidence rating**: <High | Medium | Low> — <rationale; if Low, state what would raise it>
+
+**Homogeneity warning** (omit if N/A): All personalities resolved to the same model family — result may exhibit sycophantic conformity. Re-run with cross-vendor overrides for higher confidence.
 ```
 
 Synthesis output must not exceed 2000 words. If findings exceed this budget, prioritize high-severity and disagreement items. Note any truncation in output.
+
+**Hash record write**: after synthesis completes, write the full result to `.hash-record/XX/HASH/swarm/vN/report.md`. Write each built-in persona's raw output to `.hash-record/XX/HASH/swarm/vN/<persona-name>/report.md`. Generated personas are not written. If the caller specified a model override, append it as a subfolder: `.../vN/<persona-name>/<caller-model>/report.md`.
 
 ## Constraints
 
@@ -230,7 +244,7 @@ C3. The skill does not technically prevent a sub-agent from calling mutating too
 
 C4. Every finding must cite specific evidence: a snippet, line reference, scenario, or direct quote. Instruct each reviewer to either cite or retract.
 
-C5. Must not merge or replace the `code-review` skill. `swarm` is infrastructure; `code-review` is a consumer. Maintain a defined consumer-service boundary.
+C5. Must not invoke the `code-review` skill internally. The two are siblings with separate intent; neither is a dependency of the other.
 
 C6. No bare model names may appear in the skill, reviewer files, or synthesis output. Use model class terms only: `haiku-class`, `sonnet-class`, `opus-class`, `gpt-class`.
 
@@ -254,13 +268,16 @@ B6. Devil's Advocate must always be dispatched unless explicitly excluded by `pe
 
 B7. Custom menu personalities are evaluated against their caller-supplied trigger condition. If trigger is "always", always include (subject to availability gating if backend is external).
 
-B8. Cross-vendor diversity: if all available personalities resolve to the same model family or vendor, the swarm must NOT proceed as-is. This is a hard fallback, not best-effort. Execute the following resolution order:
+B8. Cross-vendor diversity: if all finalized swarm personalities resolve to the same model family or vendor, attempt resolution before dispatching. Preferred resolution order:
 
-1. **Find any available personality on a different model family.** Search the full candidate registry (selected and unselected entries) for any personality registered on a distinct model family or vendor. If found, include it in the swarm to satisfy diversity.
-2. **Override Devil's Advocate to a different vendor.** Use the `vendor` frontmatter field on the Devil's Advocate personality to force assignment to a non-Anthropic (or otherwise distinct) model family.
-3. **Degrade to single-adversary mode.** If neither step 1 nor step 2 resolves the monoculture, do not run the swarm. Dispatch the code-review skill in single-adversary mode instead.
+1. Find any personality in the full candidate registry on a different model family — include it in the swarm.
+2. Re-assign Devil's Advocate to a different vendor using the `vendor` frontmatter field.
 
-The chosen resolution must be reported in the synthesis preamble so the caller understands how diversity was achieved (or why the swarm was degraded).
+If neither step resolves the monoculture, proceed with the homogeneous swarm and include a `homogeneity_warning` in the synthesis output. Do NOT degrade to `code-review`. Rationale: arxiv 2605.00914 documents 85.5% sycophantic conformity and 32.3 pp correct-answer loss in same-family debate.
+
+B9. Generated persona dispatch: generated personas are dispatched in Step 5 the same way as built-in personalities. Each receives: the review packet, an inline system prompt synthesized from its name, critique lens, and scope limiter, and the explicit read-only constraint. Generated personas are not added to the registry and are never cached. They are always re-dispatched on any re-run.
+
+B10. Hash record partial recovery: if a previous swarm run on the same manifest hash was interrupted before completion, check `.hash-record/XX/HASH/swarm/vN/` for existing per-persona results. Treat any cached built-in persona result as complete. Re-dispatch only missing built-in personas and all generated personas (which are never cached).
 
 ## Defaults
 

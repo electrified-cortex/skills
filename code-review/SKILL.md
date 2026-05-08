@@ -23,7 +23,7 @@ Follow dispatch skill. See `../dispatch/SKILL.md`
 ## Inputs
 
 `change_set` (required): inline unified diff, absolute file path list, or git ref/range.
-`tier` (required): `smoke` or `substantive`.
+`tier` (required): `smoke`, `substantive`, or `single-adversary`.
 `prior_findings` (substantive only, required): all prior-pass findings forwarded unmodified.
 `focus` (optional): comma-separated focus areas. Reorders priority; doesn't reduce depth.
 `context_pointer` (optional): path to CLAUDE.md, README, or style guide.
@@ -35,7 +35,7 @@ ERROR: <reason>
 
 ## Single-Adversary Mode
 
-`<input-args>` = `change_set=<file_path|pr_number> tier=single-adversary [focus=<csv>] [context_pointer=<path>]`
+`<input-args>` = `change_set=<file_path|pr_number> tier=single-adversary [model=<model>] [focus=<csv>] [context_pointer=<path>]`
 `<tier>` = `fast-cheap`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 Follow dispatch skill. See `../dispatch/SKILL.md`

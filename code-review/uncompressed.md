@@ -22,7 +22,7 @@ Follow dispatch skill. See `../dispatch/SKILL.md`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 Follow dispatch skill. See `../dispatch/SKILL.md`
 
-## Parameters
+## Inputs
 
 `change_set` (required): inline unified diff, absolute file path list, or git ref/range (refs require shell access in dispatched agent).
 `tier` (required): `smoke` or `substantive`.
@@ -37,7 +37,7 @@ ERROR: <reason>
 
 ## Single-Adversary Mode
 
-`<input-args>` = `change_set=<file_path|pr_number> tier=single-adversary [focus=<csv>] [context_pointer=<path>]`
+`<input-args>` = `change_set=<file_path|pr_number> tier=single-adversary [model=<model>] [focus=<csv>] [context_pointer=<path>]`
 `<tier>` = `fast-cheap`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 Follow dispatch skill. See `../dispatch/SKILL.md`
