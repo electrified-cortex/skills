@@ -282,21 +282,3 @@ P2. `model_overrides` override registry defaults.
 P3. Availability gate overrides selection: personality passing selection but failing probe is dropped.
 P4. Read-only constraint (C1) overrides any personality-specific instruction. No personality prompt may authorize editing, committing, or side-effecting commands.
 P5. Synthesis word budget (2000-word cap) overrides completeness. Truncation required over exceeding cap.
-
-Related:
-`dispatch` — agent-launching skill; swarm delegates all sub-agent launches here.
-`compression` — compression skill used to produce compressed form of this skill.
-`specs/arbitrator.md` — sub-specification for arbitrator consolidation role.
-`specs/dispatch-integration.md` — sub-specification for dispatch integration patterns.
-`specs/glossary.md` — canonical term definitions for swarm skill family.
-`specs/personality-file.md` — sub-specification for reviewer personality file format.
-`specs/registry-format.md` — sub-specification for personality registry format and crawl behavior.
-
-Scope Boundaries:
-Does NOT cover:
-`code-review` consumer skill or any other consumer skill's internal logic.
-How to write reviewer prompts.
-Non-review dispatch use cases (search, generation, transformation).
-Any side-effecting operation by dispatched personality; all personalities strictly read-only.
-CLI-as-dispatch patterns until task 10-0845 is complete.
-`local-llm` backend routing in v1.

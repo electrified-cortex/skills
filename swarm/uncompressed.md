@@ -329,13 +329,3 @@ P5. Synthesis word budget (2000-word cap) overrides completeness. Truncation req
 - `specs/personality-file.md` — sub-specification for the reviewer personality file format.
 - `specs/registry-format.md` — sub-specification for the personality registry format and crawl behavior.
 
-## Scope Boundaries
-
-Does NOT cover:
-
-- The `code-review` consumer skill or any other consumer skill's internal logic.
-- How to write reviewer prompts (data concern, not a behavioral requirement of this skill).
-- Non-review dispatch use cases (search, generation, transformation).
-- Any side-effecting operation by a dispatched personality; all personalities are strictly read-only.
-- CLI-as-dispatch patterns until task 10-0845 is complete.
-- `local-llm` backend routing in v1.
