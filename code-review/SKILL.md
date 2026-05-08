@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Tiered code review on a change set. Read-only — never modifies code. Triggers - security, correctness, code-quality, change-review, architectural-risk.
+description: Tiered code review on a change set. Read-only. Never modifies code. Triggers - security, correctness, code-quality, change-review, architectural-risk.
 ---
 
 ## Dispatch

@@ -1,13 +1,13 @@
 ---
 name: code-review
-description: Tiered code review on a change set. Read-only — never modifies code. Triggers - security, correctness, code-quality, change-review, architectural-risk.
+description: Tiered code review on a change set. Read-only. Never modifies code. Triggers - security, correctness, code-quality, change-review, architectural-risk.
 ---
 
 # Code Review
 
 ## Dispatch
 
-`<instructions>` = `<path>/code-review/instructions.txt` (NEVER READ)
+`<instructions>` = `<absolute-path>/code-review/instructions.txt` (NEVER READ)
 `<instructions-abspath>` = absolute path to `<instructions>`
 
 **Smoke pass:**

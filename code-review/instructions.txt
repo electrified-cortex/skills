@@ -1,11 +1,11 @@
----
+﻿---
 name: code-review
-description: Tiered code review on a change set. Read-only — never modifies code. Triggers — security, correctness, code-quality, change-review, architectural-risk.
+description: Tiered code review on a change set. Read-only. Never modifies code. Triggers - security, correctness, code-quality, change-review, architectural-risk.
 ---
 
 # Code Review Pass
 
-Read change set, produce findings report. Read-only — never edit, commit, push, stage. 
+Read change set, produce findings report. Read-only: never edit, commit, push, stage. 
 Tier Vocabulary:
 fast-cheap — cost-optimized model (e.g. Haiku-class). Use for `tier=smoke`.
 standard — capable model (e.g. Sonnet-class). Use for `tier=substantive`.
@@ -90,7 +90,7 @@ Single pass per dispatch. Don't chain or self-iterate.
 Don't consult agent memories, working-tree state, or repo history beyond what `change_set` and `context_pointer` give.
 Caller disputes about prior findings won't be passed to you. Form own judgment.
 Single-Adversary Mode:
-Quick targeted review: one pass, focused finding list. Low cost, fast.
+Quick targeted review: one pass, focused finding list. 
 Inputs:
 - `file_path` OR `pr_number` — target of review.
 - `model` — which model to use. If omitted, read capability-cache for available models; use first listed, or fall back to host model.

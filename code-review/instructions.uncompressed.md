@@ -22,6 +22,11 @@ Tier substitution is prohibited.
 - `focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `critical` and `high` outside focus must still surface.
 - `context_pointer` (optional): path to CLAUDE.md/README/style guide for local conventions. Read for conventions only.
 
+## Pre-dispatch
+
+1. If `context_pointer` not supplied by caller, check repo root for these files in order: `CLAUDE.md`, `README.md`, `.cursorrules`, `copilot-instructions.md`. Use the first file found as `context_pointer`. If none are found, omit the parameter.
+2. **Blast-radius gate (git-range input only):** If `change_set` is a git ref or range (contains `..`, `...`, or matches `HEAD~N`), run `git diff --name-only <change_set>` to enumerate affected files. Restrict the review context to those files. Skip this step if `change_set` is an inline diff or an explicit file list.
+
 ## Gates
 
 1. Resolve `change_set`. Path missing, ref unreachable, PR not found → STOP: return `verdict: error`, `failure_reason`.
@@ -90,14 +95,9 @@ Findings that fail any check MUST be omitted. Do not downgrade — omit entirely
 - `verdict`: `clean`, `findings`, or `error`.
 - `preserved_contradictions`: smoke findings the sign-off contradicted, each paired with contradicting commentary.
 
-## Pre-dispatch
-
-1. If `context_pointer` not supplied by caller, check repo root for these files in order: `CLAUDE.md`, `README.md`, `.cursorrules`, `copilot-instructions.md`. Use the first file found as `context_pointer`. If none are found, omit the parameter.
-2. **Blast-radius gate (git-range input only):** If `change_set` is a git ref or range (contains `..`, `...`, or matches `HEAD~N`), run `git diff --name-only <change_set>` to enumerate affected files. Restrict the review context to those files. Skip this step if `change_set` is an inline diff or an explicit file list.
-
 ## Single-Adversary Mode
 
-Quick targeted review: one pass, focused finding list. Low cost, fast.
+Quick targeted review: one pass, focused finding list.
 
 Inputs:
 - `file_path` OR `pr_number` — target of the review.
