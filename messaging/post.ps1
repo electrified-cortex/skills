@@ -36,10 +36,9 @@ if ($Help) {
 
 # Validate required args
 $missing = @()
-if (-not $From)    { $missing += '--from' }
-if (-not $To)      { $missing += '--to' }
-if (-not $Subject) { $missing += '--subject' }
-if (-not $Body)    { $missing += '--body' }
+if (-not $From) { $missing += '--from' }
+if (-not $To)   { $missing += '--to' }
+if (-not $Body) { $missing += '--body' }
 if ($missing.Count -gt 0) {
     [Console]::Error.WriteLine("Missing required argument(s): $($missing -join ', ')")
     exit 1
@@ -88,13 +87,9 @@ if (-not $msgPath) {
 }
 
 # Assemble JSON message
-$msg = [ordered]@{
-    from    = $From
-    to      = $To
-    sent    = $tsFull
-    subject = $Subject
-    body    = $Body
-}
+$msg = [ordered]@{ from = $From; sent = $tsFull }
+if ($Subject) { $msg['subject'] = $Subject }
+$msg['body'] = $Body
 $content = $msg | ConvertTo-Json -Compress
 
 # Atomic write: temp file outside inbox, then rename into inbox

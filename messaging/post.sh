@@ -36,10 +36,9 @@ done
 
 # Validate required args
 missing=()
-[[ -z "$FROM" ]]    && missing+=(--from)
-[[ -z "$TO" ]]      && missing+=(--to)
-[[ -z "$SUBJECT" ]] && missing+=(--subject)
-[[ -z "$BODY" ]]    && missing+=(--body)
+[[ -z "$FROM" ]] && missing+=(--from)
+[[ -z "$TO" ]]   && missing+=(--to)
+[[ -z "$BODY" ]] && missing+=(--body)
 if [[ ${#missing[@]} -gt 0 ]]; then
     echo "Missing required argument(s): ${missing[*]}" >&2
     exit 1
@@ -80,12 +79,15 @@ if [[ -z "$msg_path" ]]; then
 fi
 
 # Assemble JSON message
-# Use printf to safely escape the body (replace " with \")
+# Use printf to safely escape values (replace \ and ")
 body_escaped=$(printf '%s' "$BODY" | sed 's/\\/\\\\/g; s/"/\\"/g; s/\t/\\t/g')
 from_escaped=$(printf '%s' "$FROM" | sed 's/\\/\\\\/g; s/"/\\"/g')
-to_escaped=$(printf '%s' "$TO" | sed 's/\\/\\\\/g; s/"/\\"/g')
-subject_escaped=$(printf '%s' "$SUBJECT" | sed 's/\\/\\\\/g; s/"/\\"/g')
-content="{\"from\":\"${from_escaped}\",\"to\":\"${to_escaped}\",\"sent\":\"${ts_full}\",\"subject\":\"${subject_escaped}\",\"body\":\"${body_escaped}\"}"
+if [[ -n "$SUBJECT" ]]; then
+    subject_escaped=$(printf '%s' "$SUBJECT" | sed 's/\\/\\\\/g; s/"/\\"/g')
+    content="{\"from\":\"${from_escaped}\",\"sent\":\"${ts_full}\",\"subject\":\"${subject_escaped}\",\"body\":\"${body_escaped}\"}"
+else
+    content="{\"from\":\"${from_escaped}\",\"sent\":\"${ts_full}\",\"body\":\"${body_escaped}\"}"
+fi
 
 # Atomic write: temp file, then rename into inbox
 tmp=$(mktemp)

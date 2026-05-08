@@ -9,7 +9,7 @@ in a single invocation.
 ## Parameters
 
 | Flag | Required | Description |
-|---|---|---|
+| --- | --- | --- |
 | `--inbox` | Yes | Agent name whose inbox to drain (kebab-case) |
 | `--workspace` | No | Workspace root path. Defaults to `$PWD`. |
 | `--help` | No | Print usage and exit zero. |
@@ -46,7 +46,7 @@ An empty inbox outputs `[]`.
 ## Exit Codes
 
 | Code | Meaning |
-|---|---|
+| --- | --- |
 | 0 | Sweep complete (including empty inbox or partial skips) |
 | 1 | Missing required argument |
 | 2 | Tool-level failure (inbox inaccessible, archive dir not creatable) |
@@ -56,6 +56,5 @@ An empty inbox outputs `[]`.
 - MUST drain own inbox only — but this is a caller convention, not enforced by the tool.
 - MUST NOT delete files — archive is the only terminal state.
 - MUST NOT halt on a single bad file — log to stderr, archive, continue.
-- Claimed files (`.json.claimed`) left over from a crashed prior run are treated as
-  unarchived messages: drain picks them up by listing `*.json.claimed` after the `*.json`
-  pass and archives them without re-outputting.
+- MUST treat `.json.claimed` files left over from a crashed prior run as unarchived
+  messages: list them after the `*.json` pass, archive them, and skip re-outputting.

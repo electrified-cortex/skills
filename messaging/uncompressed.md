@@ -42,12 +42,11 @@ any files.
 **Message file** — a `.json` file in the inbox. Filename format:
 `YYYYMMDDTHHmmssZ-<nonce>.json`. Example: `20260508T143022Z-a3f91b.json`.
 
-Every message file is a JSON object with fields `from`, `to`, `sent`, `subject`, `body`:
+Every message file is a JSON object with fields `from`, `sent`, `body`, and optional `subject`:
 
 ```json
 {
   "from": "curator",
-  "to": "overseer",
   "sent": "2026-05-08T14:30:22Z",
   "subject": "Task complete \u2014 review requested",
   "body": "The batch run finished. Results are in .work/batch-42/. Ready for your review."
@@ -77,16 +76,16 @@ Invoke the `post` tool. The tool generates the filename, timestamp, nonce, and w
 atomically. Do not write inbox files directly.
 
 ```text
-post --from <your-name> --to <recipient> --subject "<subject>" --body "<body>"
+post --from <your-name> --to <recipient> --body "<body>" [--subject "<subject>"]
 ```
 
-All four flags are required. `post` exits zero on success, non-zero on failure with an
+`--from`, `--to`, and `--body` are required. `--subject` is optional. `post` exits zero on success, non-zero on failure with an
 error on stderr. Check the exit code.
 
 **Example:**
 
 ```text
-post --from curator --to overseer --subject "Batch complete" --body "Results in .work/batch-42/."
+post --from curator --to overseer --body "Results in .work/batch-42/." --subject "Batch complete"
 ```
 
 Do not post to your own inbox.
@@ -153,7 +152,7 @@ the failure is reported on stderr.
 
 For each message object in the JSON array returned by drain:
 
-1. Read fields: `from`, `to`, `sent`, `subject`, `body`.
+1. Read fields: `from`, `sent`, `body`. Check for optional `subject`.
 2. Process the body.
 3. If a field is missing or the body is unhandled, log the failure and continue.
 

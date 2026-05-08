@@ -11,7 +11,7 @@ Must be called once on agent startup, before entering the monitoring loop or dra
 ## Parameters
 
 | Flag | Required | Description |
-|---|---|---|
+| --- | --- | --- |
 | `--name` | Yes | Agent's canonical name to register (kebab-case) |
 | `--workspace` | No | Workspace root path. Defaults to `$PWD`. |
 | `--force` | No | Reclaim an existing inbox (for agent restart). See Behavior. |
@@ -47,7 +47,7 @@ No output on success (stdout empty). Errors written to stderr.
 ## Exit Codes
 
 | Code | Meaning |
-|---|---|
+| --- | --- |
 | 0 | Inbox registered (or reclaimed with --force) |
 | 1 | Missing required argument |
 | 2 | Name already taken (inbox exists, --force not set) |

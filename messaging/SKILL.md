@@ -21,12 +21,11 @@ Concepts:
 `Status` — lightweight read-only probe. Wire to Monitor as signal-change callback; counts unclaimed msgs, outputs pending count. Doesn't claim or modify files.
 `Msg file` — `.json` file in inbox. Filename: `YYYYMMDDTHHmmssZ-<nonce>.json`. Example: `20260508T143022Z-a3f91b.json`.
 
-Each msg file: JSON object with fields `from`, `to`, `sent`, `subject`, `body`:
+Each msg file: JSON object with fields `from`, `sent`, `body`, and optional `subject`:
 
 ```json
 {
   "from": "curator",
-  "to": "overseer",
   "sent": "2026-05-08T14:30:22Z",
   "subject": "Task complete — review requested",
   "body": "The batch run finished. Results are in .work/batch-42/. Ready for your review."
@@ -116,7 +115,7 @@ Don't drain another agent's inbox. Archives files even if unparsable; failure on
 
 Processing:
 For each msg object in JSON array from `drain`:
-1. Read fields: `from`, `to`, `sent`, `subject`, `body`.
+1. Read fields: `from`, `sent`, `body`. Check for optional `subject`.
 2. Process body.
 3. If field missing or body unhandled, log failure and continue.
 

@@ -20,6 +20,7 @@ appears in the inbox fully formed or not at all. A crash between step 1 and step
 an orphaned temp file, not a partial inbox entry.
 
 **PowerShell:**
+
 ```powershell
 $tmp = [System.IO.Path]::GetTempFileName()
 Set-Content -Path $tmp -Value $content -Encoding UTF8 -NoNewline
@@ -27,6 +28,7 @@ Move-Item -Path $tmp -Destination $inboxPath -Force
 ```
 
 **bash:**
+
 ```bash
 tmp=$(mktemp)
 printf '%s' "$content" > "$tmp"
@@ -44,6 +46,7 @@ The spec requires the nonce be from a cryptographically random source (R6). Sequ
 counters, PIDs, and `$RANDOM` are all forbidden.
 
 **PowerShell:**
+
 ```powershell
 $bytes = [byte[]]::new(4)
 [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
@@ -52,6 +55,7 @@ $nonce = ($bytes | ForEach-Object { $_.ToString('x2') }) -join ''
 ```
 
 **bash (Linux/macOS):**
+
 ```bash
 nonce=$(head -c 4 /dev/urandom | xxd -p)
 # yields 8 lowercase hex characters
@@ -66,11 +70,13 @@ Truncate to 6 characters if a shorter nonce is preferred. Either length satisfie
 The filename timestamp must be in compact ISO 8601 UTC (`YYYYMMDDTHHmmssZ`).
 
 **PowerShell:**
+
 ```powershell
 $ts = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')
 ```
 
 **bash:**
+
 ```bash
 ts=$(date -u '+%Y%m%dT%H%M%SZ')
 ```
@@ -85,11 +91,13 @@ safe: the signal file exists to trigger drain, not to carry information. The con
 written (e.g., the timestamp) is irrelevant; only the file modification event matters.
 
 **PowerShell:**
+
 ```powershell
 Set-Content -Path $signalPath -Value $ts -Encoding UTF8 -Force
 ```
 
 **bash:**
+
 ```bash
 printf '%s\n' "$ts" > "$signal_path"
 ```
@@ -112,6 +120,7 @@ An `os.rename` / `Move-Item` call on an already-absent file will throw. Catch th
 exception and treat it as a skipped file — do not re-enumerate or retry.
 
 **PowerShell:**
+
 ```powershell
 try {
     Move-Item -Path $msgPath -Destination "$msgPath.claimed" -ErrorAction Stop
@@ -122,6 +131,7 @@ try {
 ```
 
 **bash:**
+
 ```bash
 if mv "$msg_path" "${msg_path}.claimed" 2>/dev/null; then
     : # this drain owns the file
@@ -143,7 +153,7 @@ may miss messages that arrived during processing (the signal fires, the agent is
 signal does not fire again). The solution is to drain again after processing, and repeat
 until drain returns empty (R17b).
 
-```
+```text
 on_signal():
     loop:
         messages = drain()
@@ -164,7 +174,7 @@ watch is platform-defined, but the behaviour must be edge-triggered on file modi
 **Options by platform:**
 
 | Platform | Mechanism |
-|---|---|
+| --- | --- |
 | PowerShell / Windows | `System.IO.FileSystemWatcher` on the signal file |
 | bash / Linux | `inotifywait -e close_write .signal` |
 | bash / macOS | `fswatch -1 .signal` |
@@ -181,7 +191,7 @@ events for every message write and every archive move — far more noise than ne
 Atomic rename is guaranteed only for same-filesystem, same-volume moves on local storage.
 
 | Scenario | Safe? |
-|---|---|
+| --- | --- |
 | Local NTFS (Windows) | Yes |
 | Local ext4 / APFS (Linux / macOS) | Yes |
 | NFS mount | No — rename may not be atomic |

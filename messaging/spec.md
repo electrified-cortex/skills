@@ -11,7 +11,7 @@ workspace. Four tools implement the protocol:
 
 - **`post`** — an agent invokes this to post a message to another agent's inbox. The tool
   owns all mechanics: timestamp generation, nonce, atomic write. The agent supplies only
-  intent: recipient, subject, and body.
+  intent: recipient, body, and optionally a subject.
 
 - **`drain`** — an agent invokes this to collect and consume messages from its own inbox.
   The tool claims, reads, and archives each message, returning the message content to the
@@ -166,13 +166,12 @@ R7. If the intended filename already exists in the target inbox, the post tool M
 
 ### Message File Format
 
-R8. Every message file MUST be a valid JSON object with exactly these fields:
+R8. Every message file MUST be a valid JSON object with these fields:
 
-    - `from`: the posting agent's canonical name (string)
-    - `to`: the receiving agent's canonical name (string)
-    - `sent`: the UTC post timestamp in ISO 8601 format (string)
-    - `subject`: a short, human-readable description of the message intent (string)
-    - `body`: the message content (string)
+    - `from`: the posting agent's canonical name (string, required)
+    - `sent`: the UTC post timestamp in ISO 8601 format (string, required)
+    - `body`: the message content (string, required)
+    - `subject`: a short, human-readable description of the message intent (string, optional — omit key when not provided)
 
 R9. The JSON object MUST be compact (no pretty-printing required) and UTF-8 encoded.
     String values MUST be properly JSON-escaped.
@@ -185,8 +184,8 @@ R11. The post tool MUST accept the following inputs:
 
     - `--from` (required): the posting agent's canonical name
     - `--to` (required): the recipient agent's canonical name
-    - `--subject` (required): a short description of the message intent
     - `--body` (required): the message body text
+    - `--subject` (optional): a short description of the message intent
 
 R12. The post tool MUST write message files atomically. A partially written file MUST
      never be visible in the inbox. Agents MUST NOT write inbox files directly; they MUST
@@ -319,8 +318,8 @@ C5. v1 defines no security model. Any agent or process with filesystem access ca
 
 Agent flow:
 
-1. Agent decides to post a message (has recipient, subject, and body ready).
-2. Agent invokes: `post --from <self> --to <recipient> --subject <subject> --body <body>`
+1. Agent decides to post a message (has recipient and body ready).
+2. Agent invokes: `post --from <self> --to <recipient> --body <body> [--subject <subject>]`
 3. Post tool generates timestamp and nonce, assembles envelope, writes atomically.
 4. Post tool exits zero on success; agent checks exit code and treats non-zero as failure.
 
