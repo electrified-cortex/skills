@@ -218,19 +218,28 @@ Synthesize from the arbitrator's structured action list into a single host-voice
 
 Required synthesis output fields:
 
-- **Summary**: consolidated findings in host voice.
+- **Active personalities**: name (model-class) for each personality that completed successfully; tag generated personas with "(generated)".
+- **Critical actions**: each item from the arbitrator's Critical actions section — items that would block shipping or require architectural change.
+- **Findings**: remaining consensus findings from the arbitrator's Obvious actions section.
 - **Disagreements**: explicit statement of each disagree-set item; state the tension and apply judgment.
-- **Dropped personalities**: list of any personalities dropped by availability gate with reason.
+- **Unavailable personalities**: personalities dropped by the availability gate with reason.
+- **Non-contributing personalities**: personalities dispatched but that returned empty output or timed out.
 - **Confidence rating**: High, Medium, or Low. Include rationale. If Low, state specifically what would raise it.
 
 Synthesis output template (use this structure exactly):
 
 ```md
-**Summary**: <consolidated findings in host voice>
+**Active personalities**: <name (model-class) for each; tag generated personas with "(generated)">
+
+**Critical actions**: <list — for each: action description + source personalities + severity rationale; "None" if none>
+
+**Findings**: <list — for each: action description + source personalities + evidence cite; "None" if none>
 
 **Disagreements**: <each disagree-set item with tension stated and judgment applied; "None" if disagree set is empty>
 
-**Dropped personalities**: <name — reason for each dropped personality; "None" if none dropped>
+**Unavailable personalities**: <name — probe-failed reason; "None" if none>
+
+**Non-contributing personalities**: <name — empty/timeout reason; "None" if none>
 
 **Confidence rating**: <High | Medium | Low> — <rationale; if Low, state what would raise it>
 
@@ -267,7 +276,7 @@ B2. If the swarm is empty after availability gating, return error: "Swarm empty 
 
 B3. If the swarm contains only Devil's Advocate, proceed with a single-personality swarm and note in synthesis that the review is adversarial only.
 
-B4. If a dispatched personality returns no findings or times out, record it as non-contributing and exclude from synthesis. Note the dropped personality in synthesis output.
+B4. If a dispatched personality returns no findings or times out, record it as non-contributing and exclude from synthesis. Note it in the `Non-contributing personalities` synthesis field.
 
 B5. If all dispatched personalities return no findings, synthesis must state "No findings from any reviewer" and assign confidence rating Low.
 

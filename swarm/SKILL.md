@@ -193,19 +193,28 @@ Step 8 — Synthesize and return:
 Synthesize from arbitrator's structured action list into single host-voice output. Don't dump raw sub-agent output or raw arbitrator output to caller. Speak as host, presenting refined takeaways.
 
 Required synthesis output fields:
-Summary: consolidated findings in host voice.
+Active personalities: name (model-class) for each; tag generated personas with "(generated)".
+Critical actions: each item that would block shipping or require architectural change.
+Findings: remaining consensus findings.
 Disagreements: explicit statement of each disagree-set item; state tension and apply judgment.
-Dropped personalities: list of personalities dropped by availability gate with reason.
+Unavailable personalities: personalities dropped by availability gate with reason.
+Non-contributing personalities: personalities dispatched but returned empty output or timed out.
 Confidence rating: High, Medium, or Low. Include rationale. If Low, state what would raise it.
 
 Synthesis output template (use this structure exactly):
 
 ```md
-**Summary**: <consolidated findings in host voice>
+**Active personalities**: <name (model-class) for each; tag generated personas with "(generated)">
+
+**Critical actions**: <list — for each: action description + source personalities + severity rationale; "None" if none>
+
+**Findings**: <list — for each: action description + source personalities + evidence cite; "None" if none>
 
 **Disagreements**: <each disagree-set item with tension stated and judgment applied; "None" if disagree set is empty>
 
-**Dropped personalities**: <name — reason for each dropped personality; "None" if none dropped>
+**Unavailable personalities**: <name — probe-failed reason; "None" if none>
+
+**Non-contributing personalities**: <name — empty/timeout reason; "None" if none>
 
 **Confidence rating**: <High | Medium | Low> — <rationale; if Low, state what would raise it>
 
@@ -240,7 +249,7 @@ B2. If swarm is empty after availability gating, return error: "Swarm empty afte
 
 B3. If swarm contains only Devil's Advocate, proceed with single-personality swarm and note in synthesis that review is adversarial only.
 
-B4. If dispatched personality returns no findings or times out, record as non-contributing and exclude from synthesis. Note in synthesis output.
+B4. If dispatched personality returns no findings or times out, record as non-contributing and exclude from synthesis. Note in `Non-contributing personalities` synthesis field.
 
 B5. If all dispatched personalities return no findings, synthesis MUST state "No findings from any reviewer" and assign confidence rating Low.
 

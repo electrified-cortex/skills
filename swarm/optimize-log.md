@@ -11,4 +11,6 @@
 | MODEL-SELECTION | 2026-05-08 | Sonnet | 2 | acted | yes — MEDIUM (arbitrator_model input missing); LOW (uniform sonnet rationale undocumented) |
 | COMPRESSABILITY | 2026-05-08 | Sonnet | 3 | acted | yes — MEDIUM (model-selection triplicated); 2x LOW (rolling-window triple-stated, B9 redundant clauses) |
 | LESS-IS-MORE | 2026-05-08 | Sonnet | 2 | acted | yes — MEDIUM (Scope Boundaries all covered by named constraints); LOW (Related in SKILL.md — kept in uncompressed.md) |
+| REUSE | 2026-05-08 | Haiku | 0 | qualified | no — all multi-step procedures are swarm-specific; dispatch + arbitrator already reference external specs |
+| OUTPUT-FORMAT | 2026-05-08 | Sonnet | 3 | acted | yes — HIGH (Summary collapses arbitrator criticality; split to Critical actions + Findings); 2x MEDIUM (Dropped personalities conflated; Active personalities missing) |
 | WORDING | 2026-05-08 | Sonnet | 5 | acted | yes — 2x HIGH (guard clause halt, must-return contracts); 2x MEDIUM (C2 inline, B8 inline); 1x LOW (verify criterion) |
