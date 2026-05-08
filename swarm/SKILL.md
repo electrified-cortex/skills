@@ -87,6 +87,7 @@ Inputs:
 | `problem` | required | Content under review. |
 | `personality_filter` | optional | List of personality names or indices. Named personalities dispatched regardless of trigger evaluation; triggers bypassed for named entries. Inclusion list only — not exclusion gate. |
 | `model_overrides` | optional | Map of personality name to model class. Affects model class only, not backend type. |
+| `arbitrator_model` | optional | Model class for the arbitrator dispatch. Defaults to `sonnet-class`. Use `opus-class` for high-stakes reviews where arbitrator judgment quality is critical. |
 
 Caller Tier:
 Host agent executing skill MUST be sonnet-class minimum. Callers dispatching swarm via `dispatch` skill MUST use `tier: standard` or higher. If no dispatch mechanism is available in the host runtime, return error: "Swarm requires dispatch capability; no dispatch mechanism available."
@@ -159,7 +160,7 @@ Structured-evidence requirement (high/critical findings): any finding marked HIG
 Step 6 — Arbitrator consolidation:
 File-existence filter (pre-arbitration): before forwarding member findings to the arbitrator, discard any finding that cites a file not present in the review packet's Files-affected list. Deterministic string match (exact path). Do not use LLM judgment for this filter — it is mechanical. If a finding does not cite a specific file, retain it.
 
-After all swarm member outputs collected, dispatch single arbitrator sub-agent (sonnet-class by default). Arbitrator receives all raw member outputs and original review packet. Per B4, non-contributing member outputs (empty/timeout) excluded from arbitrator's input set.
+After all swarm member outputs collected, dispatch single arbitrator sub-agent using `arbitrator_model` (default: `sonnet-class`). Arbitrator receives all raw member outputs and original review packet. Per B4, non-contributing member outputs (empty/timeout) excluded from arbitrator's input set.
 
 Dispatch parameters:
 `<tier>` = `standard`
@@ -255,7 +256,7 @@ B10. Hash record partial recovery: if a previous swarm run on the same manifest 
 
 Defaults:
 D1. Default `personality_filter`: none (all registry entries evaluated).
-D2. Default model class: first available from `suggested_models` frontmatter; fallback `sonnet-class`.
+D2. Default model class: first available from `suggested_models` frontmatter; fallback `sonnet-class`. All built-in personalities default to sonnet-class — the hallucination filter (C2) requires evidence-cite self-checking that haiku-class handles unreliably. Callers may override individual personalities via `model_overrides` if they accept the tradeoff.
 D3. Default dispatch: rolling window of 3. Never more than 3 personalities in flight at once.
 D4. Default `model_overrides`: none.
 D5. Custom menu entry with no model class and no caller override: default `sonnet-class`.

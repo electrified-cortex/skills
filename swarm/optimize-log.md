@@ -8,3 +8,4 @@
 | DETERMINISM | 2026-05-08 | Haiku | 0 | qualified | no — core value is adversarial LLM review; no semantic step is replaceable with a deterministic tool |
 | CACHING | 2026-05-08 | Sonnet | 6 | acted | yes — 3x HIGH (early gate, filter_hash scope, B10 write ordering); 2x MEDIUM (vN undefined, B10 not wired into step sequence); 1x LOW (concurrent write guard) |
 | COMPOSITION | 2026-05-08 | Sonnet | 1 | acted | yes — LOW (arbitrator inline format: add specs/arbitrator.md reference note); rest CLEAN |
+| MODEL-SELECTION | 2026-05-08 | Sonnet | 2 | acted | yes — MEDIUM (arbitrator_model input missing); LOW (uniform sonnet rationale undocumented) |

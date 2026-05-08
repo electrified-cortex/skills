@@ -89,6 +89,7 @@ Callers may supply additional personalities that extend the registry for a singl
 | `problem` | required | artifact | The content under review. |
 | `personality_filter` | optional | list of personality names or indices | If supplied, restricts the candidate set to the named personalities (from built-in registry + custom menu). Personalities not in the filter are not evaluated against trigger conditions and are not dispatched. |
 | `model_overrides` | optional | map of personality name → model class | Pins the given personalities to the specified model class for this invocation. Overrides the default model class in the registry. |
+| `arbitrator_model` | optional | model class | Model class for the arbitrator dispatch. Defaults to `sonnet-class`. Use `opus-class` for high-stakes reviews where arbitrator judgment quality is critical. |
 
 ## Requirements
 
@@ -273,7 +274,7 @@ B8. Cross-vendor diversity is a hard fallback requirement. If all available pers
 
 D1. Default `personality_filter`: none (all registry entries evaluated).
 
-D2. Default model class for each personality: as listed in the Personality Registry table.
+D2. Default model class for each personality: as listed in the Personality Registry table. All built-in personalities default to sonnet-class — the hallucination filter (C2) requires evidence-cite self-checking that haiku-class handles unreliably. Callers may override individual personalities via `model_overrides`.
 
 D3. Default dispatch concurrency: rolling window of 3 — dispatch up to 3 personalities in parallel, starting the next as each completes.
 
