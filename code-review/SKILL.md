@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Tiered code review on a change set. Read-only. Never modifies code. Triggers - security, correctness, code-quality, change-review, architectural-risk.
+description: Tiered code review on a change set. Read-only. Never modifies code. Triggers - security, correctness, code-quality, change-review, architectural-risk. Not for: specs, docs, config-only changes, lockfiles (use spec-auditing or markdown-hygiene).
 ---
 
 ## Cache Probe
@@ -36,7 +36,7 @@ Should return: JSON findings report `{tier, pass_index, verdict, findings[], fai
 
 `change_set` (required): inline unified diff, absolute file path list, or git ref/range.
 `tier` (required): `smoke`, `substantive`, or `single-adversary`.
-`prior_findings` (substantive only, required): all prior-pass findings forwarded unmodified.
+`prior_findings` (substantive only, required): the `findings[]` array from all prior passes, forwarded unmodified.
 `focus` (optional): comma-separated focus areas. Reorders priority; doesn't reduce depth.
 `context_pointer` (optional): path to CLAUDE.md, README, or style guide.
 `model` (optional): model override. Affects cache path subfolder (`.../vN/<model>/report.md`). Applies to all tiers.
@@ -48,6 +48,15 @@ ERROR: <reason>
 
 Calling agent assembles aggregated result from per-pass reports. Aggregation rules in `instructions.txt`.
 SARIF severity map: `critical`/`high` → error, `medium` → warning, `low`/`info` → note.
+
+## Examples
+
+**change_set forms:**
+- Inline diff: `change_set="""--- a/src/foo.ts\n+++ b/src/foo.ts ..."""`
+- File list: `change_set="/abs/src/foo.ts /abs/src/bar.ts"`
+- Git ref: `change_set="HEAD~3..HEAD"` (requires shell in dispatched agent)
+
+**focus values:** `security`, `correctness`, `concurrency`, `performance`, `architecture`, `testing` (comma-separated; e.g. `focus="security,correctness"`)
 
 ## Orchestration
 
@@ -64,6 +73,13 @@ Should return: JSON findings report `{tier, pass_index, verdict, findings[], fai
 
 Inputs: `file_path` OR `pr_number` as `change_set`, optional `focus`.
 Output: same JSON schema as tiered passes — `{tier: "single-adversary", pass_index, verdict, findings[{severity, location, snippet, description, recommended_action}], failure_reason?}`
+
+## Anti-patterns
+
+- **Smoke as sign-off:** smoke `verdict: clean` does NOT approve. Only substantive with `verdict: clean` signs off. Check `sign_off_pass_index` — must be non-null.
+- **prior_findings to smoke:** silently ignored. Only forward to substantive.
+- **Single-adversary on security-critical code:** fast-cheap may miss subtle flaws. Add `model=standard` for auth, crypto, data access, payment paths.
+- **Same inputs twice expecting new results:** cache is deterministic. Change a dimension (model, focus, content) to force fresh analysis.
 
 ## Related
 

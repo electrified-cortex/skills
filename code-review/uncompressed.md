@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Tiered code review on a change set. Read-only. Never modifies code. Triggers - security, correctness, code-quality, change-review, architectural-risk.
+description: Tiered code review on a change set. Read-only. Never modifies code. Triggers - security, correctness, code-quality, change-review, architectural-risk. Not for: specs, docs, config-only changes, lockfiles (use spec-auditing or markdown-hygiene).
 ---
 
 # Code Review
@@ -38,7 +38,7 @@ Should return: JSON findings report `{tier, pass_index, verdict, findings[], fai
 
 `change_set` (required): inline unified diff, absolute file path list, or git ref/range (refs require shell access in dispatched agent).
 `tier` (required): `smoke` or `substantive`.
-`prior_findings` (substantive only, required): all prior-pass findings forwarded unmodified.
+`prior_findings` (substantive only, required): the `findings[]` array from all prior passes, forwarded unmodified.
 `focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `critical` and `high` outside focus must still surface.
 `context_pointer` (optional): path to CLAUDE.md, README, or style guide for local conventions.
 `model` (optional): model override. Affects cache path subfolder (`.../vN/<model>/report.md`). Applies to all tiers.
@@ -66,6 +66,22 @@ Should return: JSON findings report `{tier, pass_index, verdict, findings[], fai
 
 Inputs: `file_path` OR `pr_number` as `change_set`, optional `focus`.
 Output: same JSON schema as tiered passes — `{tier: "single-adversary", pass_index, verdict, findings[{severity, location, snippet, description, recommended_action}], failure_reason?}`
+
+## Examples
+
+**change_set forms:**
+- Inline diff: `change_set="""--- a/src/foo.ts\n+++ b/src/foo.ts ..."""`
+- File list: `change_set="/abs/src/foo.ts /abs/src/bar.ts"`
+- Git ref: `change_set="HEAD~3..HEAD"` (requires shell in dispatched agent)
+
+**focus values:** `security`, `correctness`, `concurrency`, `performance`, `architecture`, `testing` (comma-separated)
+
+## Anti-patterns
+
+- **Smoke as sign-off:** smoke `verdict: clean` does NOT approve. Only substantive with `verdict: clean` signs off. Check `sign_off_pass_index` — must be non-null.
+- **prior_findings to smoke:** silently ignored. Only forward to substantive.
+- **Single-adversary on security-critical code:** fast-cheap may miss subtle flaws. Add `model=standard` for auth, crypto, data access, payment paths.
+- **Same inputs twice:** cache is deterministic. Change a dimension to force fresh analysis.
 
 ## Related
 

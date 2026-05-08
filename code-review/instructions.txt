@@ -15,22 +15,24 @@ Tier substitution prohibited.
 Parameters:
 `change_set` (required): inline unified diff, list of absolute file paths, or git ref/range (refs require shell access in dispatched agent).
 `tier` (required): `smoke`, `substantive`, or `single-adversary`. Governs depth.
-`prior_findings` (substantive only, required): findings from every prior pass on same change set, forwarded unmodified. Required for substantive; smoke and single-adversary must not receive this.
+`prior_findings` (substantive only, required): the `findings[]` array from all prior passes, forwarded unmodified. Required for substantive; smoke and single-adversary must not receive this.
 `focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `critical` and `high` outside focus must still surface.
 `model` (optional): model override. If provided, use it; else use tier default.
 `context_pointer` (optional): path to CLAUDE.md/README/style guide for local conventions. Read for conventions only.
 
 Pre-dispatch:
 1. If `context_pointer` not supplied by caller, check repo root for these files in order: `CLAUDE.md`, `README.md`, `.cursorrules`, `copilot-instructions.md`. Use first found as `context_pointer`. If none found, omit.
+   If `context_pointer` supplied but file not found: continue without it; add `info` finding: `"context_pointer not found: <path>; proceeding without conventions"`.
 2. Blast-radius gate (git-range input only): if `change_set` is a git ref/range (contains `..`, `...`, or matches `HEAD~N`), run `git diff --name-only <change_set>` to enumerate affected files. Restrict review context to those files. Skip if `change_set` is inline diff or explicit file list.
 
 Gates:
-1. Resolve `change_set`. Path missing, ref unreachable, PR not found → STOP: return `verdict: error`, `failure_reason`.
-2. `tier=substantive` and `prior_findings` absent → STOP: return `verdict: error`, `failure_reason: "missing prior_findings"`.
+1. Resolve `change_set`. If ANY file path is missing, ref unreachable, or PR not found — STOP (all-or-nothing): return `verdict: error`, `failure_reason: "change_set incomplete: <detail>"`.
+2. `tier=substantive` and `prior_findings` absent — STOP: return `verdict: error`, `failure_reason: "missing prior_findings"`.
 3. `change_set` empty (no files, no diff content, no refs resolving to changes) → return empty result: `verdict: clean`, `findings: []`, no `prior_findings_disposition`.
 4. Read all files in change set fully before judging. Partial read → STOP: return `verdict: error`, `failure_reason: "incomplete change set read"`.
 
 Procedure:
+Before analysis: (1) map affected code paths — which modules, functions, data flows does the change set touch; (2) identify scope: new code, modified logic, API surface, security-sensitive areas; (3) set review frame for tier (adversarial for smoke/single-adversary, systematic for substantive).
 1. `tier=smoke`: review for surface-level findings — style, naming, obvious bugs, missing error handling on observable failures, lint-grade defects. Bound depth to fast pass. Skip design and architecture critique. Adversarial framing: assume ≥1 bug exists; find it, don't rubber-stamp. If `focus` includes `security`: also frame as pentester looking for exploitable paths, not colleague doing courtesy review.
 2. `tier=substantive`: review for design, correctness, security, concurrency, architectural risk, test adequacy, public API surface. Read every affected file, not just diff hunks.
 3. `tier=single-adversary`: adversarial single-pass review. No prior_findings. Frame as attacker looking for exploitable paths, logic errors, and correctness failures. Bound depth to a focused pass — narrower than substantive, deeper than smoke. If `model` provided, use it; else use tier default.

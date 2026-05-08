@@ -14,3 +14,19 @@
 | LESS-IS-MORE | 2026-05-08 | Sonnet | 5 | acted | yes — HIGH (two-pass policy → SKILL.md); 4x MEDIUM (empty change set, SARIF, Rule 4, opening line) |
 | REUSE | 2026-05-08 | Sonnet | 0 | clean | no — LOW deferred (context-pointer auto-detect; not extractable yet) |
 | OUTPUT-FORMAT | 2026-05-08 | Sonnet | 3 | acted | yes — 2x HIGH (single-adversary schema mismatch, preserved_contradictions undefined); MEDIUM (severity_aggregate null case) |
+| EXAMPLES | 2026-05-08 | Sonnet | 1 | acted | yes — HIGH (input form examples, focus values enumerated; added ## Examples section) |
+| CHAIN-OF-THOUGHT | 2026-05-08 | Sonnet | 1 | acted | yes — MEDIUM (pre-analysis reasoning step added to instructions.txt Procedure) |
+| TOOL-SIGNATURES | 2026-05-08 | Sonnet | 1 | acted | yes — MEDIUM (prior_findings shape explicit) |
+| SELF-CRITIQUE | 2026-05-08 | Sonnet | 0 | deferred | MEDIUM deferred — post-gen review adds token cost; revisit if quality issues observed |
+| CONVERGENCE | 2026-05-08 | Haiku | 0 | clean | no |
+| ITERATION-SAFETY | 2026-05-08 | Haiku | 0 | clean | no |
+| PROGRESSIVE-OPTIMIZATION | 2026-05-08 | Haiku | 0 | clean | no |
+| ANTIPATTERNS | 2026-05-08 | Sonnet | 1 | acted | yes — HIGH (4 silent-failure patterns; added ## Anti-patterns section) |
+| ERROR-HANDLING | 2026-05-08 | Sonnet | 2 | acted | yes — HIGH (partial change_set ambiguity); MEDIUM (context_pointer soft-fail) |
+| INTERFACE-CLARITY | 2026-05-08 | Haiku | 0 | clean | no — post Tier 2 fixes |
+| OBSERVABILITY | 2026-05-08 | Haiku | 0 | clean | LOW — structured JSON output sufficient |
+| TEMPORAL-DECAY | 2026-05-08 | Haiku | 0 | clean | no |
+| CONTEXT-SENSITIVITY | 2026-05-08 | Haiku | 0 | clean | LOW — intentionally flexible |
+| AUTONOMY-LEVEL | 2026-05-08 | Haiku | 0 | clean | no — post Tier 2 fixes |
+| ACTIVATION-DISCIPLINE | 2026-05-08 | Sonnet | 1 | acted | yes — HIGH (not-for guardrails added to frontmatter description) |
+| CONTEXT-BUDGET | 2026-05-08 | Sonnet | 0 | deferred | MEDIUM deferred — all-or-nothing gate sufficient; threshold guidance = Tier 4 |
