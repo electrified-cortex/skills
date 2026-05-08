@@ -5,7 +5,7 @@ description: Tiered code review on a change set. Read-only — never modifies co
 
 # Code Review Pass
 
-Read change set, produce findings report. Read-only — never edit, commit, push, stage.
+Produce structured findings report. Never edit, commit, push, or stage.
 
 ## Tier Vocabulary
 
@@ -36,8 +36,6 @@ Tier substitution is prohibited.
 3. Substantive pass MUST re-examine each `prior_findings` entry. For each prior finding, decide: agree (carry forward, severity may change), or contradict (mark false-positive or out-of-scope). Contradictions go in your output so the calling agent can preserve them.
 4. Apply focus areas if provided: examine focus areas first and most thoroughly. Still surface every `critical` and `high` finding outside focus. `medium`/`low` outside focus may be deprioritized.
 5. Read `context_pointer` if provided, for local conventions only. It does NOT replace your judgment.
-6. Smoke pass orchestration: calling agent dispatches smoke first, reviews findings, optionally acts on them, then dispatches substantive.
-7. Substantive pass is authoritative: most recent standard pass is the sign-off. Calling agent records sign-off so downstream consumers can verify review occurred.
 
 One skill per invocation. Each pass is separate dispatch. Smoke always runs before substantive. Two-pass policy applies regardless of change-set size — there is no size threshold permitting single-pass review.
 
