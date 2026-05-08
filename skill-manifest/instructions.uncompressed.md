@@ -68,7 +68,7 @@ do not stop — still return result.
 
 ## Step 3 — Output
 
-Print the JSON to stdout. Nothing else.
+Print the JSON to `stdout`. Nothing else.
 
 ## Rules
 
@@ -79,6 +79,6 @@ Print the JSON to stdout. Nothing else.
 - Never include files outside `repo_root`.
 - Never cache an error or partial result (Step 2 runs only on full success).
 - Never recurse into subdirectories of `skill_dir` during Step 4a enumeration.
-- Cached results may have stale `files` and `broken_refs` if transitive dependencies
-  outside `skill_dir` changed since the last scan. The cache key covers `skill_dir`
-  direct files only — external dep changes are not detected.
+- Note: Cached results may have stale `files` and `broken_refs` if transitive dependencies
+  outside `skill_dir` changed since the last scan.
+  The cache key covers `skill_dir` direct files only — external dep changes are not detected.
