@@ -301,8 +301,10 @@ D1. Default `personality_filter`: none (all registry entries evaluated).
 D2. Default model class: first available from `suggested_models` frontmatter; fallback `sonnet-class`. All built-in personalities default to sonnet-class — the hallucination filter (C2) requires evidence-cite self-checking that haiku-class handles unreliably. Callers may override individual personalities via `model_overrides` if they accept the tradeoff.
 D3. Default dispatch: rolling window of 3. Never more than 3 personalities in flight at once.
 D4. Default `model_overrides`: none.
+D4b. Default `arbitrator_model`: `sonnet-class`.
 D5. Custom menu entry with no model class and no caller override: default `sonnet-class`.
 D6. Confidence rating default: Medium. Raised to High when (1) disagree set is empty AND (2) every dispatched personality returned at least one finding AND all findings cite evidence. Lowered to Low when disagree set is non-empty on a high-severity point, or when any personality returns no findings.
+D7. `.hash-record/` base path: workspace root (root of the repository or project containing the reviewed artifact). Relative path `.hash-record/` resolves against workspace root. If workspace root is ambiguous, use the directory containing the `problem` artifact's nearest root marker (e.g., `.git`).
 
 Calibration examples:
 
