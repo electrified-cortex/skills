@@ -112,6 +112,11 @@ Unacceptable at this level:
 **Conversational contexts** — source may be omitted if it would be awkward, but hedging
 rules apply regardless.
 
+## Mid-Conversation Model Changes
+
+Re-detect on every ask — never reuse a prior result. If the current result differs from
+a model stated earlier in this conversation, disclose the change explicitly.
+
 ## Alias Handling
 
 Some runtimes specify aliases rather than pinned version IDs: `sonnet`, `opus`,
@@ -132,3 +137,5 @@ Some runtimes specify aliases rather than pinned version IDs: `sonnet`, `opus`,
 - Never fabricate or guess a version number not supported by a signal.
 - Low confidence always means hedged response. No exceptions.
 - Aliases are reported as aliases. No expansion without a confirming signal.
+- Re-detect on every ask. Never reuse a result from earlier in the same conversation.
+- If the model changed since a prior answer in this conversation, disclose the change explicitly.

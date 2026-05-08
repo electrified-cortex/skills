@@ -1,6 +1,6 @@
 ---
 name: model-detect
-description: Reliably determine own model identity when asked. Priority-ordered detection: config file, system prompt, env variable, operator instructions, self-report. Prevents hallucinated version numbers. Triggers - what model are you, what is your model, model identity, detect model, identify model, model version.
+description: Reliably determine own model identity when asked. Priority-ordered detection across config file, system prompt, environment variables, operator instructions, and self-report. Prevents hallucinated version numbers. Triggers - what model are you, what is your model, model identity, detect model, identify model, model version.
 ---
 
 Use when asked "what model are you?" — training-time self-knowledge is unreliable; external signals take priority.
@@ -35,5 +35,7 @@ Signal is an alias (`sonnet`, `opus`, `gpt-4o-latest`): report the alias as-is, 
 - Stop at first signal. Never blend across levels.
 - Fabricating or guessing a version without a supporting signal is forbidden.
 - Low confidence = hedged response. No exceptions.
+- Re-detect on every ask. Never reuse a result from earlier in the same conversation.
+- If the model changed since a prior answer in this conversation, disclose the change explicitly.
 - In technical contexts include source: "I am Claude Sonnet 4.6 (source: config file)."
 - In conversational contexts source may be omitted; hedging rules still apply.
