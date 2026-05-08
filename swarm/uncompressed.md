@@ -104,6 +104,10 @@ The host agent executing this skill must be **sonnet-class minimum**. Callers di
 
 ### Step 1 — Build the review packet
 
+**Hash record check (early gate)**: before building the packet, extract the file list directly from `problem` (deterministic parse — no LLM required). Read file contents and compute the manifest hash (sorted paths + content hashes, SHA-256; or SHA-256 of artifact text for non-file inputs). Compute `filter_hash` = SHA-256 of the sorted `personality_filter` list (empty list if no filter supplied). Check `.hash-record/XX/HASH/swarm/v1/<filter_hash>/report.md` (where XX = first two hex chars of HASH, `v1` is the current skill version). Cache hit: return the cached result and skip Steps 2–8. Cache miss: before proceeding to Step 2, check `.hash-record/XX/HASH/swarm/v1/` for any existing per-persona results (B10 partial recovery). Treat any found result as complete; proceed with only the remaining personalities.
+
+Continue to packet assembly on cache miss:
+
 Construct a review packet from `problem`. The packet must be self-contained: a reader with zero prior context must understand what is being reviewed, why, and what the key decisions were.
 
 Packet fields (omit if not applicable to artifact type):
@@ -117,8 +121,6 @@ Packet fields (omit if not applicable to artifact type):
 - Conventions: applicable project conventions.
 
 Verify the packet before proceeding: Goal must be specific enough to evaluate; Artifacts must include actual content, not just references. If either condition fails, attempt to resolve the gap from available context. Do not ask the caller to fill gaps.
-
-**Hash record check**: after packet assembly, compute the manifest hash from the files-affected list (sorted paths + content hashes, SHA-256; or SHA-256 of artifact text for non-file inputs). Check `.hash-record/XX/HASH/swarm/vN/report.md` (where XX = first two hex chars of HASH). Cache hit: return the cached result and skip Steps 2-8. Cache miss: continue.
 
 ### Step 2 — Select personalities
 
@@ -153,6 +155,8 @@ Only after the swarm is finalized (post-gating) load the prompt for each survivi
 ### Step 5 — Dispatch
 
 Dispatch swarm personalities using your runtime dispatch mechanism, following the `dispatch` skill for implementation details. Maximum concurrency: rolling window of 3. Dispatch up to 3 personalities in parallel; as each completes, dispatch the next until all personalities have run. Do not dispatch more than 3 at once. Treat any personality that has not returned within a host-defined threshold (recommended: typical sonnet-class response time + 20%) as timed out per B4.
+
+As each personality dispatch completes, immediately write its raw output to `.hash-record/XX/HASH/swarm/v1/<persona-name>/report.md` (built-in personas only — generated personas are never written). Do not wait for all dispatches to complete before writing per-persona results.
 
 Each personality dispatch receives:
 
@@ -232,7 +236,7 @@ Synthesis output template (use this structure exactly):
 
 Synthesis output must not exceed 2000 words. If findings exceed this budget, prioritize high-severity and disagreement items. Note any truncation in output.
 
-**Hash record write**: after synthesis completes, write the full result to `.hash-record/XX/HASH/swarm/vN/report.md`. Write each built-in persona's raw output to `.hash-record/XX/HASH/swarm/vN/<persona-name>/report.md`. Generated personas are not written. If the caller specified a model override, append it as a subfolder: `.../vN/<persona-name>/<caller-model>/report.md`.
+**Hash record write**: after synthesis completes, write the full result to `.hash-record/XX/HASH/swarm/v1/<filter_hash>/report.md`. Per-persona results were already written during Step 5. Generated personas are not written. If `v1/<filter_hash>/report.md` already exists, skip the write (idempotency guard — assumes a concurrent run completed first). Current skill version: `v1`. Bump to `v2` when persona prompts, selection criteria, arbitrator procedure, or hash algorithm changes in a way that could affect review quality. Wording and formatting changes do not require a bump.
 
 ## Constraints
 

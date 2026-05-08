@@ -225,33 +225,33 @@ C7. CLI-as-dispatch (e.g., `claude -p`, generic CLI invocations) is out of scope
 
 Swarm uses content-addressed caching to avoid re-running reviews of unchanged artifacts.
 
-**Cache key**: manifest hash (see Definitions). For single-file input: SHA-256 of file contents. For multi-file: SHA-256 of sorted file paths concatenated with their content hashes.
+**Cache key**: manifest hash (see Definitions) + filter hash. For single-file input: SHA-256 of file contents. For multi-file: SHA-256 of sorted file paths concatenated with their content hashes. Filter hash: SHA-256 of the sorted `personality_filter` list (empty list if no filter).
 
-**Built-in persona cache path**: `.hash-record/XX/HASH/swarm/vN/<persona-name>/report.md`
+**Built-in persona cache path**: `.hash-record/XX/HASH/swarm/v1/<persona-name>/report.md`
 
-**Full swarm result path**: `.hash-record/XX/HASH/swarm/vN/report.md`
+**Full swarm result path**: `.hash-record/XX/HASH/swarm/v1/<filter_hash>/report.md`
 
-**Caller model override**: if the caller specifies a model, append it as a subfolder: `.hash-record/XX/HASH/swarm/vN/<persona-name>/<caller-model>/report.md`. Default (no model specified): no model subfolder.
+**Built-in personas only**: each built-in registry personality has its own cache entry per manifest hash. Generated personas are never cached — they are always re-run. Per-persona results are written immediately as each dispatch completes (not deferred to synthesis).
 
-**Built-in personas only**: each built-in registry personality has its own cache entry per manifest hash. Generated personas are never cached — they are always re-run.
+**Cache gate placement**: the cache check occurs at the top of Step 1, before any packet assembly. File list extraction and hash computation are deterministic (no LLM). This ensures no LLM work is done on a cache hit.
 
-**Cache hit (full)**: `.../vN/report.md` exists. Return cached result directly. No dispatch.
+**Cache hit (full)**: `v1/<filter_hash>/report.md` exists. Return cached result directly. No dispatch.
 
 **Cache hit (partial)**: individual built-in persona results may be cached; re-run only what is missing.
 
-**Cache miss (full)**: run the full swarm, write each built-in persona result to its individual cache path, write the final aggregated result to the full swarm result path.
+**Cache miss (full)**: run the full swarm, write each built-in persona result to its individual cache path as it completes, write the final aggregated result to the full swarm result path. If the full result path already exists at write time, skip the write (idempotency guard).
 
 **Recovery logic**: on a partial failure (swarm run incomplete), check the hash record for existing built-in persona results under the current manifest hash. Cached persona results are treated as already complete; only missing built-in results and all generated personas are re-dispatched. The final result is assembled from recovered and re-run results.
 
-**Version increment**: bump `vN` when persona logic, selection criteria, or arbitrator procedure changes in a way that could affect review quality. Old cache entries are automatically bypassed.
+**Version increment**: current version is `v1`. Bump to `v2` when persona prompts, selection criteria, arbitrator procedure, or hash algorithm changes in a way that could affect review quality. Wording and formatting changes do not require a bump. Old cache entries are automatically bypassed when the version changes.
 
 ## Behavior
 
-B1. **Persona manifestation**: when the registry yields fewer than 3 suitable personalities after trigger evaluation, the skill manifests generated personas inline. Each generated persona must have a name, a critique lens specific to the artifact's domain, and a scope limiter that avoids overlap with already-selected personalities. Generated personas are listed in the synthesis output's Dropped personalities field only if the manifest hash has no cached result for them (they are always re-run and never have a hash-record entry).
+BP1. **Persona manifestation**: when the registry yields fewer than 3 suitable personalities after trigger evaluation, the skill manifests generated personas inline. Each generated persona must have a name, a critique lens specific to the artifact's domain, and a scope limiter that avoids overlap with already-selected personalities. Generated personas are listed in the synthesis output's Dropped personalities field only if the manifest hash has no cached result for them (they are always re-run and never have a hash-record entry).
 
-B2. **Homogeneous swarm degradation**: if all finalized swarm personalities resolve to the same model family and re-assignment of Devil's Advocate to a different family is not possible, the synthesis output must include a `homogeneity_warning` field noting the condition and explaining the risk (sycophantic conformity, accuracy loss per arxiv 2605.00914). The caller is responsible for deciding whether to accept the degraded result.
+BP2. **Homogeneous swarm degradation**: if all finalized swarm personalities resolve to the same model family and re-assignment of Devil's Advocate to a different family is not possible, the synthesis output must include a `homogeneity_warning` field noting the condition and explaining the risk (sycophantic conformity, accuracy loss per arxiv 2605.00914). The caller is responsible for deciding whether to accept the degraded result.
 
-B3. **Partial recovery**: if a previous swarm run on the same manifest hash failed before completion, the skill checks the hash record for cached built-in persona results. Any result found in the cache is treated as complete and is not re-dispatched. Missing built-in personas and all generated personas are re-dispatched. The final swarm result is assembled from cached and freshly dispatched results, then written to the full swarm result path.
+BP3. **Partial recovery**: if a previous swarm run on the same manifest hash failed before completion, the skill checks the hash record for cached built-in persona results. Any result found in the cache is treated as complete and is not re-dispatched. Missing built-in personas and all generated personas are re-dispatched. The final swarm result is assembled from cached and freshly dispatched results, then written to the full swarm result path.
 
 B1. If `problem` is empty or cannot be resolved into a review packet with a non-empty Artifacts field, the skill must return an error to the caller: "No reviewable artifact found." It must not dispatch any personalities.
 
@@ -267,7 +267,7 @@ B6. Devil's Advocate must always be dispatched unless explicitly excluded by `pe
 
 B7. Custom menu personalities are evaluated against their caller-supplied trigger condition. If the trigger is "always", they are always included (subject to availability gating if their backend is external).
 
-B8. Cross-vendor diversity is a hard fallback requirement. If all available personalities resolve to the same model family or vendor, the swarm MUST NOT proceed as-is — sycophantic conformity risk (homogeneous-debate loss up to 32 pp, arxiv 2605.00914). Resolution order: (1) find any available personality on a different model family; (2) override Devil's Advocate to a different vendor via `vendor` field; (3) degrade to single-adversary mode (dispatch code-review skill instead of swarm). The chosen resolution must be reported in the synthesis preamble. Devil's Advocate is the natural diversity carrier (registered with `vendor: openai`; non-Anthropic `suggested_models` preference).
+B8. Cross-vendor diversity is a hard fallback requirement. If all available personalities resolve to the same model family or vendor, the swarm MUST attempt resolution before dispatching. Resolution order: (1) find any available personality on a different model family; (2) override Devil's Advocate to a different vendor via `vendor` field. If neither resolves the monoculture, proceed with the homogeneous swarm and include a `homogeneity_warning` in the synthesis output — a homogeneous swarm is a degraded state, not a fail-stop error. Do NOT degrade to code-review. The chosen resolution must be reported in the synthesis preamble. Devil's Advocate is the natural diversity carrier (registered with `vendor: openai`; non-Anthropic `suggested_models` preference).
 
 ## Defaults and Assumptions
 

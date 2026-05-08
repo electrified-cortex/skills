@@ -94,6 +94,9 @@ Host agent executing skill MUST be sonnet-class minimum. Callers dispatching swa
 Step Sequence:
 
 Step 1 — Build review packet:
+Hash record check (early gate): before building the packet, extract the file list directly from `problem` (deterministic parse — no LLM). Read file contents and compute manifest hash (sorted paths + content hashes, SHA-256; or SHA-256 of artifact text for non-file inputs). Compute `filter_hash` = SHA-256 of sorted `personality_filter` list (empty list if no filter). Check `.hash-record/XX/HASH/swarm/v1/<filter_hash>/report.md` (where XX = first two hex chars of HASH, v1 is the current skill version). Hit: return cached result, skip Steps 2-8. Miss: apply B10 partial recovery check before proceeding — check `.hash-record/XX/HASH/swarm/v1/` for any existing per-persona results; treat found results as complete, proceed with remaining personalities only.
+
+Continue to packet assembly only on miss:
 Construct review packet from `problem`. Packet MUST be self-contained: reader with zero prior context must understand what is reviewed, why, and what key decisions were.
 
 Packet fields (omit if not applicable):
@@ -106,8 +109,6 @@ Blast radius: downstream consumers, imports, integrations affected.
 Conventions: applicable project conventions.
 
 Verify packet before proceeding: Goal must be specific enough to evaluate; Artifacts must include actual content, not just references. If either fails, attempt to resolve gap from available context. Don't ask caller to fill gaps.
-
-Hash record check: after packet assembly, compute manifest hash from files-affected list (sorted paths + content hashes, SHA-256; or SHA-256 of artifact text for non-file inputs). Check `.hash-record/XX/HASH/swarm/vN/report.md` (where XX = first two hex chars of HASH). Hit: return cached result, skip Steps 2-8. Miss: continue.
 
 Step 2 — Select personalities:
 Build combined registry by crawling `reviewers/` (applying metadata-validation gate) and appending caller-supplied custom menu entries.
@@ -137,6 +138,8 @@ Only after swarm is finalized (post-gating) load prompt for each surviving perso
 
 Step 5 — Dispatch:
 Dispatch swarm personalities using your runtime dispatch mechanism, following the `dispatch` skill for implementation details. Maximum concurrency: rolling window of 3. Dispatch up to 3 personalities in parallel; as each completes, dispatch the next until all personalities have run. Don't dispatch more than 3 at once. Treat any personality that has not returned within a host-defined threshold (recommended: typical sonnet-class response time + 20%) as timed out per B4.
+
+As each personality completes, immediately write its raw output to `.hash-record/XX/HASH/swarm/v1/<persona-name>/report.md` (built-in personas only — not generated). Do not wait for all dispatches to complete before writing.
 
 Each personality dispatch receives:
 1. Full review packet from Step 1.
@@ -208,7 +211,7 @@ Synthesis output template (use this structure exactly):
 
 Synthesis output MUSTN'T exceed 2000 words. If findings exceed budget, prioritize high-severity and disagreement items. Note truncation in output.
 
-Hash record write: after synthesis completes, write full result to `.hash-record/XX/HASH/swarm/vN/report.md`. Write each built-in persona's raw output to `.hash-record/XX/HASH/swarm/vN/<persona-name>/report.md`. Generated personas are not written. If caller specified a model, append it as a subfolder: `.../vN/<persona-name>/<caller-model>/report.md`.
+Hash record write: after synthesis completes, write full result to `.hash-record/XX/HASH/swarm/v1/<filter_hash>/report.md`. Per-persona results were already written during Step 5. Generated personas are not written. If `v1/<filter_hash>/report.md` already exists, skip the write (idempotency guard). Current skill version: `v1`. Bump to `v2` when persona prompts, selection criteria, arbitrator procedure, or hash algorithm changes in a way that could affect review quality. Wording and formatting changes do not require a bump.
 
 Constraints:
 C1. All dispatched sub-agents operate in read-only mode. Sub-agents MUSTN'T edit files, run side-effecting commands, commit, or call mutating tool. State constraint explicitly in every personality's dispatch prompt.
