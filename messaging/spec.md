@@ -365,7 +365,7 @@ regardless. The agent logs the failure and continues; it MUST NOT halt.
 ## Error Handling
 
 | Situation | Tool | Required Behavior |
-|---|---|---|
+| --- | --- | --- |
 | Init tool creates inbox dir | `init` | Atomic mkdir; exit 2 if already taken (without --force) |
 | Init tool signal write fails | `init` | Exit 3; fatal on init |
 | Inbox directory absent on post | `post` | Create directory, then proceed |
@@ -406,17 +406,18 @@ P4. All drained messages move to `archive/` regardless of parse outcome. There i
 
 ## Section Classification
 
-| Section                   | Type          | Required |
-|---------------------------|---------------|----------|
-| Purpose                   | Informational | Yes      |
-| Scope                     | Normative     | Yes      |
-| Definitions               | Informational | Yes      |
-| Content Modes             | Normative     | Yes      |
-| Requirements              | Normative     | Yes      |
-| Constraints               | Normative     | Yes      |
-| Behavior                  | Normative     | Yes      |
-| Defaults and Assumptions  | Normative     | Yes      |
-| Error Handling            | Normative     | Yes      |
-| Precedence Rules          | Normative     | Yes      |
-| Don'ts                    | Normative     | Yes      |
-| Section Classification    | Structural    | Yes      |
+| Section | Type | Required |
+| --- | --- | --- |
+| Purpose | Informational | Yes |
+| Scope | Normative | Yes |
+| Definitions | Informational | Yes |
+| Content Modes | Normative | Yes |
+| Requirements | Normative | Yes |
+| Constraints | Normative | Yes |
+| Behavior | Normative | Yes |
+| Defaults and Assumptions | Normative | Yes |
+| Error Handling | Normative | Yes |
+| Precedence Rules | Normative | Yes |
+| Don'ts | Normative | Yes |
+| Section Classification | Structural | Yes |
+
