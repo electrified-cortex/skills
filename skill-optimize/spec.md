@@ -155,7 +155,7 @@ change in a way that invalidates prior records.
    meaningful improvement applies — empty categories are valid and
    preferred over low-confidence suggestions.
 5. The optimizer **must** track progress using an optimize log at
-   `<skill-path>/optimize-log.md`. On entry, read the log and exclude
+   `<skill-path>/.optimization/.log.md`. On entry, read the log and exclude
    topics with status `clean`, `rejected`, or `acted` from the active
    candidate set. Append a row on completion of each topic pass.
    Optionally, a content-addressed hash record (`.hash-record/`) may be
@@ -177,7 +177,7 @@ change in a way that invalidates prior records.
    gains.
 10. The optimizer **must** operate within the scope of the provided
     skill path — it must not traverse sibling skills or other worktrees.
-    The optimize log at `<skill-path>/optimize-log.md` is local to the
+    The optimize log at `<skill-path>/.optimization/.log.md` is local to the
     target skill.
 11. The record body **must not** contain absolute filesystem paths.
     All paths in the body **must** be repo-relative.
@@ -210,7 +210,7 @@ change in a way that invalidates prior records.
 - **One skill per invocation**: each invocation optimizes exactly one
   skill; multi-skill runs are separate invocations.
 - **Read-only**: the optimizer never writes to skill source files. Write
-  targets are: `<skill-path>/optimize-log.md` (log rows) and
+  targets are: `<skill-path>/.optimization/.log.md` (log rows) and
   `<skill-path>/.optimization/<topic-slug>.md` (per-topic reports). Hash-record
   writes (`.hash-record/`) are caller-controlled, not optimizer-internal.
 - **Convergence-based multi-pass**: the optimizer may run in multiple
@@ -239,7 +239,7 @@ On entry, identify the skill source files (`spec.md`, `uncompressed.md`,
 `SKILL.md`, `instructions.txt`, `instructions.uncompressed.md`) and read
 all that exist.
 
-Check for an optimize log at `<skill-path>/optimize-log.md`. If present,
+Check for an optimize log at `<skill-path>/.optimization/.log.md`. If present,
 read it. Topics with status `clean`, `rejected`, or `acted` can be
 excluded from the active candidate set — they have already been handled.
 
@@ -395,7 +395,7 @@ The optimizer produces two outputs per invocation:
 **1. Primary return line** — emitted as the final stdout line:
 
 ```
-TOPIC: <TOPIC-SLUG> | FINDINGS: <N> | LOG: <repo-relative path to optimize-log.md>
+TOPIC: <TOPIC-SLUG> | FINDINGS: <N> | LOG: <repo-relative path to .optimization/.log.md>
 ```
 
 `N` is the count of findings (0 if clean). This line must be last, at
@@ -404,7 +404,7 @@ column 0, with no indentation, quoting, or list-marker prefix.
 On failure: `ERROR: <reason>` as the final line instead.
 
 **2. Optimize log entry** — the optimizer appends one row to
-`<skill-path>/optimize-log.md`:
+`<skill-path>/.optimization/.log.md`:
 
 ```
 | TOPIC | date | model | N findings | status | one-line action summary |

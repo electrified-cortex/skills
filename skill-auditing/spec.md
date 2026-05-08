@@ -252,7 +252,7 @@ Quick structural verification of the SKILL.md.
 
 ### Per-file Basic Checks
 
-Run against all `.md` and `*.spec.md` files in `skill_dir` (recursively; skip dot-prefixed directories and `optimize-log.md`). Tool files (`.sh`, `.ps1`) are out of scope. Findings accumulate into a separate Per-file section of the report; they do NOT block Steps 1–3.
+Run against all `.md` and `*.spec.md` files in `skill_dir` (recursively; skip dot-prefixed directories). Tool files (`.sh`, `.ps1`) are out of scope. Findings accumulate into a separate Per-file section of the report; they do NOT block Steps 1–3.
 
 **`.md` files:**
 
