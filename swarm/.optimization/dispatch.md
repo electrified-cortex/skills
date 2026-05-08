@@ -1,15 +1,27 @@
-# DISPATCH — 2026-05-01
+# DISPATCH — 2026-05-07
 
 ## Findings
 
-### Finding 1: Missing `<tier>` with justification for S5 and S6 dispatch calls
+### BEHAVIORAL DIVERGENCE (B8) — HIGH
+
+**Severity:** HIGH
+**Finding:** Auditor reported uncompressed.md B8 contained stale "degrade to code-review" third resolution step and "MUST NOT proceed as-is" framing, contradicting spec.md and SKILL.md. On inspection, both files already had the correct two-step B8 with `homogeneity_warning` (updated earlier this session). Finding was a false positive due to auditor reading stale context.
+**Action taken:** No change required — already resolved.
+
+### ROLLING WINDOW TIMEOUT CONTRACT — MEDIUM
 
 **Severity:** MEDIUM
-**Finding:** Neither the S5 personality-batch dispatch nor the S6 arbitrator dispatch declares a `<tier>` field (`fast-cheap` | `standard` | `deep`) with justification. The skill describes in prose what each dispatch receives but omits the canonical tier selection. For S5, personality reviews involve moderate reasoning over a supplied review packet — `standard` tier is the defensible choice but is never stated. For S6, the arbitrator consolidates N outputs and applies judgment — again `standard` is appropriate but absent. Missing tier means the dispatch skill cannot route invocations correctly and the operator cannot audit the cost/latency intent.
-**Action taken:** Added explicit `<tier> = standard` with one-line justifications to both S5 and S6 in `uncompressed.md`.
+**Finding:** Step 5 specifies "as each completes, dispatch the next" but defines no timeout duration. B4 acknowledges timeout as a termination condition without specifying when it triggers. Rolling window can stall indefinitely on a hung dispatch.
+**Action taken:** Added timeout language to Step 5 in SKILL.md and uncompressed.md: "Treat any personality that has not returned within a host-defined threshold (recommended: typical sonnet-class response time + 20%) as timed out per B4."
 
-### Finding 2: Missing `Should return:` output contract for S5 and S6 dispatch calls
+### ARBITRATOR FAILURE PATH — LOW
 
-**Severity:** MEDIUM
-**Finding:** Neither S5 nor S6 states a `Should return:` output contract after the dispatch call. S5 personalities should return findings in a structured format (evidence-cited findings list or "No findings"). S6 arbitrator should return a structured two-section action list (Obvious actions / Critical actions). Without `Should return:`, the host step (S7 aggregate / S8 synthesize) must guess what format to expect from each sub-agent, making the interface ambiguous and harder to validate.
-**Action taken:** Added `Should return:` contracts to both S5 and S6 in `uncompressed.md`.
+**Severity:** LOW
+**Finding:** E3 covers individual personality dispatch failures but explicitly scopes to personalities. Arbitrator is not a personality — no error case covers arbitrator dispatch failure. Steps 7-8 have no defined behavior if arbitrator returns nothing.
+**Action taken:** Added E6 to both SKILL.md and uncompressed.md: arbitrator dispatch failure returns error to caller with per-personality summary; no synthesis from raw member outputs.
+
+### DISPATCH UNAVAILABLE — LOW
+
+**Severity:** LOW
+**Finding:** Error table (E1-E5) covers all per-dispatch failures but has no entry for the primary dispatch mechanism being entirely unavailable (no Agent tool, no runSubagent).
+**Action taken:** Added note to Caller Tier in both SKILL.md and uncompressed.md: "If no dispatch mechanism is available in the host runtime, return error: 'Swarm requires dispatch capability; no dispatch mechanism available.'"

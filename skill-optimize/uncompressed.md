@@ -1,7 +1,5 @@
 # Skill Optimize — Execution Instructions
 
-Prerequisite: audit the target skill using `../skill-auditing/SKILL.md`
-
 ## Inputs
 
 Required:
@@ -35,7 +33,7 @@ If none of these exist, stop: `ERROR: no skill source files found at <skill-path
 
 ## Step 2 — Check the Optimize Log
 
-The optimize log is at `<skill-path>/optimize-log.md` — written into the target skill's own directory.
+The optimize log is at `<skill-path>/.optimization/.log.md` — written into the target skill's `.optimization/` directory.
 
 If it exists, read it. Topics are excluded from candidate selection in Step 3a
 when their log entry is any of: `qualified` (no verdict), `clean`, `acted`,
@@ -71,10 +69,11 @@ Action values: free-text one-line summary of what was done (or `—` if none). F
 
 ---
 
-## Step 2a — Pre-flight Audit Check
+## Step 2a — Audit Probe (informational, non-blocking)
 
 Run `pwsh result.ps1 <skill-path>` from the `skill-auditing/` directory.
-Note the verdict. Proceed regardless — this is informational only.
+Note the verdict. Always proceed. Optimization does not require a clean
+audit — audit is a sealing step, not an entry gate.
 
 ---
 
@@ -231,7 +230,7 @@ in the log and stop. Do not attempt to parse or use a malformed response.
 
 ## Step 5 — Record Results
 
-**5a — Append rows** to `<skill-path>/optimize-log.md`:
+**5a — Append rows** to `<skill-path>/.optimization/.log.md`:
 
 | `<TOPIC>` | `<today's date>` | `<model>` | `<N findings>` | `<status>` | `<one-line action summary>` |
 
@@ -292,7 +291,7 @@ For each finding in the just-written `.optimization/<slug>.md` report:
 Emit a one-line summary as the final output:
 
 ```text
-TOPIC: <TOPIC-SLUG> | FINDINGS: <N> | LOG: <repo-relative path to optimize-log.md>
+TOPIC: <TOPIC-SLUG> | FINDINGS: <N> | LOG: <repo-relative path to .optimization/.log.md>
 ```
 
 If all tier-1 and tier-2 topics in the log show `clean`, `acted`, or
@@ -303,4 +302,11 @@ CONVERGENCE: tier-1+2 topics complete — <N acted>, <M clean>, <K deferred>
 Next: re-run with higher model tier to verify.
 ```
 
-Then stop. The caller decides whether to run again.
+If all tiers are complete (no topics remaining across all tiers), emit:
+
+```text
+CONVERGED: all topics complete — ready to seal.
+Seal sequence: skill-audit → compress (if uncompressed.md exists) → markdown-hygiene.
+```
+
+Then stop. The caller decides whether to run again or begin sealing.

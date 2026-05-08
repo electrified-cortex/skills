@@ -30,6 +30,31 @@ the full story.
 | [dispatch](dispatch/agents/) | `.github/agents/dispatch.agent.md` | Minimal executor for VS Code (GitHub Copilot) — same behavior, VS Code tool names |
 | [orchestrator](dispatch/agents/) | `.github/agents/orchestrator.agent.md` | Dispatch-first orchestrator for VS Code — delegates everything to the Dispatch agent |
 
+## Set me up in Claude Code
+
+If you've been told "set me up in Claude Code" with this repo URL, install the plugin from the [skills-plugin](https://github.com/electrified-cortex/skills-plugin) distribution repo:
+
+```bash
+claude plugin marketplace add https://github.com/electrified-cortex/skills-plugin
+claude plugin install electrified-cortex-skills@electrified-cortex
+```
+
+## Set me up in VS Code (GitHub Copilot)
+
+Skills use the [Agent Skills open standard](https://agentskills.io), natively compatible with GitHub Copilot Chat in VS Code.
+
+Drop any `skills/<name>/` directory into `.github/skills/` in your project, or into `~/.copilot/skills/` for personal cross-project use:
+
+```bash
+# Linux / macOS
+cp -r skills/<skill-name> ~/.copilot/skills/
+
+# Windows (PowerShell)
+Copy-Item -Recurse skills\<skill-name> $HOME\.copilot\skills\
+```
+
+After copying, type `/skills` in Copilot Chat to confirm the skill appears.
+
 ## Quick Start
 
 Unzip or clone as `electrified-cortex` in your agent's skills folder. Each

@@ -14,7 +14,7 @@ Every indexed directory receives exactly two files from the builder:
 | File | Description |
 | --- | --- |
 | `skill.index` | Plain-text raw index. One entry per line. No header, no footer, no blank lines. Deterministic for the mechanical portion. |
-| `skill.index.md` | Markdown metadata overlay. H1 + one `## name` section per entry. One-sentence paragraphs. Requires compression pass before write. |
+| `skill.index.md` | Markdown metadata overlay. H1 + one `## name` section per entry. One-sentence paragraphs. |
 
 The integrity stamp (`skill.index.sha256`) is written by the auditor after a PASS verdict, not by the builder. Absence of a stamp after a build means "unaudited since last build," not "needs rebuild."
 
@@ -38,7 +38,7 @@ Parameters:
 - `--dot-allow` (optional): comma-separated list of dot-folder bare names to traverse (no globs, no paths). Default: empty.
 - `--rebuild` (optional): full-rebuild mode — regenerates all nodes regardless of stored raw index content.
 
-Returns: a change manifest listing which nodes were created, updated, unchanged, blocked (overlay failed compression), broken-shortcut targets, and any unreadable directory skips.
+Returns: a change manifest listing which nodes were created, updated, unchanged, broken-shortcut targets, and any unreadable directory skips.
 
 ## Raw Index Format (`skill.index`)
 
@@ -62,7 +62,6 @@ key: keyword, keyword, keyword
 - One `## name` section per entry key in the same order as the raw index. The self entry's section uses the directory's own name, not `.`.
 - Each section: a single paragraph. One sentence preferred.
 - Must not describe trailing slashes, dot entries, navigation mechanics, or any index artifact internals.
-- Must pass a full compression pass before the builder writes it. If compression fails, the builder aborts the node (records as blocked), leaves all prior artifacts unchanged, and continues with siblings.
 
 ### Overlay as Trigger Surface
 
@@ -87,11 +86,11 @@ For each node:
 5. Compute SHA-256 of that serialized content.
 6. Compare against the SHA-256 of the currently stored `skill.index` bytes. The stored `skill.index.sha256` stamp is not consulted — it is the auditor's sign-off artifact, not a builder freshness marker.
 7. If hashes match: no writes for this node. Record as unchanged. Move on.
-8. If hashes differ (or no stored `skill.index` exists): generate overlay in memory → run compression check → on success, write in strict order: `skill.index` first, then `skill.index.md`. Do not terminate normally between the two writes of a single node.
+8. If hashes differ (or no stored `skill.index` exists): generate overlay in memory → write in strict order: `skill.index` first, then `skill.index.md`. Do not terminate normally between the two writes of a single node.
 
 ### Full-Rebuild Mode (`--rebuild`)
 
-Regenerates all nodes regardless of stored raw index content. Same write order and compression gate as incremental.
+Regenerates all nodes regardless of stored raw index content. Same write order as incremental.
 
 ### Write Order (strict)
 
@@ -133,7 +132,6 @@ When the existing `skill.index` at a node already contains shortcut entries:
 ## Error Handling
 
 - Unreadable directory: skip, record in change manifest as skipped, continue with siblings.
-- Overlay compression failure: record node as `blocked`, leave all prior artifacts unchanged, continue.
 - Partial-write protection: do not terminate normally between the two writes of a single node.
 - Change manifest not producible: emit a non-zero exit signal; do not silently succeed.
 
@@ -170,4 +168,3 @@ Mitigation: Preserve shortcut entries verbatim across all runs.
 - `skill-index` — root spec and toolkit overview
 - `skill-index-auditing` — validates the cascade and writes the stamp; run after building
 - `skill-index-crawling` — consumes the artifacts produced here
-- `compression` — compression pass required for overlay before write

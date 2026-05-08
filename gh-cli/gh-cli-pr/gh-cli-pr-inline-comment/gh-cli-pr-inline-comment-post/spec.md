@@ -37,7 +37,7 @@ fetch SHA → verify file in diff → verify line in diff → dedup check → PO
 
 1. Always fetch `commit_id` fresh from `gh pr view --json headRefOid`.
 2. Verify the target file appears in `gh pr diff --name-only` before posting.
-3. Confirm the target line is in a hunk for the target file by parsing `gh pr diff --patch` output. **`gh pr diff {PR} -- {file}` is invalid** — `gh pr diff` accepts only one argument; the file-filter syntax fails with "accepts at most 1 arg". Get the full patch and locate `@@ -OLD,LEN +NEW,LEN @@` hunk headers for the file to determine valid line ranges. Alternatively, rely on the 422 response at POST time.
+3. Confirm the target line is in the diff using the bundled `verify-line-in-diff` tool (`.sh` for bash, `.ps1` for PowerShell). Pass OWNER, REPO, PR_NUMBER, FILE_PATH, LINE_NUMBER, SIDE; the tool exits 0 (line is in diff), 1 (not in diff — surfaces valid ranges), 2 (file not in diff), or 3 (USAGE_ERROR — check invocation signature) or ≥ 4 (API_ERROR — surface gh pr diff output). **`gh pr diff {PR} -- {file}` is invalid** — `gh pr diff` accepts only one argument; the file-filter syntax fails with "accepts at most 1 arg". The bundled tool handles full-patch retrieval and hunk-header parsing internally.
 4. Check for existing comments at the same file+line before posting (deduplication).
 5. Post with `body`, `commit_id`, `path`, `line`, `side`. Never use deprecated `position`.
 6. On 422: re-inspect diff, diagnose cause, surface to caller — do not silently retry.
@@ -53,11 +53,17 @@ fetch SHA → verify file in diff → verify line in diff → dedup check → PO
 
 ## Verified Gotchas
 
-- `gh pr diff {PR_NUMBER} -- {FILE_PATH}` fails: "accepts at most 1 arg(s), received 2". File-scoped diffs are not supported by `gh pr diff`. Use `--patch` and parse.
+- `gh pr diff {PR_NUMBER} -- {FILE_PATH}` fails: "accepts at most 1 arg(s), received 2". File-scoped diffs are not supported by `gh pr diff`. Use the bundled `verify-line-in-diff` tool instead.
 - `gh auth status` output goes to stderr. Capture with `2>&1`.
 - Always pass `--repo {OWNER}/{REPO}` to `gh pr view` and `gh pr diff` when not running inside a local clone.
-- Windows Git Bash rewrites leading `/` in `gh api` paths as a filesystem path (e.g. `/repos/...` → `C:/Program Files/Git/repos/...`). Always omit the leading `/`: `repos/{OWNER}/...` not `/repos/{OWNER}/...`.
-- Compact hunk format: when a hunk spans exactly 1 line, git omits the count — `@@ -10 +10 @@` means length=1 (same as `@@ -10,1 +10,1 @@`). Treat a missing count as 1 or the range check will wrongly exclude single-line hunks.
+- Windows Git Bash rewrites leading `/` in `gh api` paths as a filesystem path (e.g. `/repos/...` → `C:\...\repos\...`). Always omit the leading `/`: `repos/{OWNER}/...` not `/repos/{OWNER}/...`.
+- Handled internally by `verify-line-in-diff` — Compact hunk format: when a hunk spans exactly 1 line, git omits the count — `@@ -10 +10 @@` means length=1 (same as `@@ -10,1 +10,1 @@`). Treat a missing count as 1 or the range check will wrongly exclude single-line hunks.
+
+## Tools
+
+| Tool | Description |
+| ---- | ----------- |
+| `verify-line-in-diff` (`.sh` / `.ps1`) | Confirms a given line number is in the diff for a specific file in a PR. Encapsulates hunk-header parsing. Defined in `verify-line-in-diff.spec.md`. |
 
 ## Constraints
 

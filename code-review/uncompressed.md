@@ -1,56 +1,89 @@
 ---
 name: code-review
-description: Tiered code review on a change set. Read-only — never modifies code. Triggers — security, correctness, code-quality, change-review, architectural-risk.
+description: Tiered code review on a change set. Read-only. Never modifies code. Triggers - security, correctness, code-quality, change-review, architectural-risk. Not for: specs, docs, config-only changes, lockfiles (use spec-auditing or markdown-hygiene).
 ---
 
 # Code Review
 
-Dispatch zero-context sub-agents per tier. NEVER read or interpret `instructions.txt` yourself — let the sub-agent do the work.
+## Cache Probe
+
+Before dispatching any pass:
+1. Compute canonical manifest hash: SHA-256 of sorted `change_set` file paths + their content hashes + `tier` + `focus` (if set) + `context_pointer` hash (if set) + `prior_findings` hash (substantive, if set).
+2. Check `.hash-record/XX/HASH/code-review/vN[/<model>]/report.md` (caller: SKILL.md owns probe + write; dispatched agents don't cache).
+3. Cache hit → return cached report, skip dispatch.
+4. Cache miss → proceed to dispatch. After receiving result, write to cache path.
 
 ## Dispatch
 
-**Smoke pass** (`tier=smoke`) — Haiku-class / fast-cheap:
+`<instructions>` = `<absolute-path>/code-review/instructions.txt` (NEVER READ)
+`<instructions-abspath>` = absolute path to `<instructions>`
 
-Claude Code: `Agent` tool. Pass: "Read and follow `instructions.txt` here. Input: `change_set=<form> tier=smoke [focus=<csv>] [context_pointer=<path>]`"
+**Smoke pass:**
+`<description>` = `code-review smoke — fast surface scan`
+`<input-args>` = `change_set=<form> tier=smoke [focus=<csv>] [context_pointer=<path>]`
+`<tier>` = `fast-cheap` (shallow scan; surface-level findings only)
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+Follow dispatch skill. See `../dispatch/SKILL.md`
+Should return: JSON findings report `{tier, pass_index, verdict, findings[], failure_reason?}`
 
-VS Code / Copilot: `runSubagent(model: "Claude Haiku 4.5 (Copilot)", prompt: "Read and follow \`instructions.txt\` in this directory. Input: \`change_set=<form> tier=smoke [focus=<csv>] [context_pointer=<path>]\`")`
+**Substantive pass:**
+`<description>` = `code-review substantive — full depth pass`
+`<input-args>` = `change_set=<form> tier=substantive prior_findings=<json> [focus=<csv>] [context_pointer=<path>]`
+`<tier>` = `standard` (full depth; design, correctness, security, architectural risk)
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+Follow dispatch skill. See `../dispatch/SKILL.md`
+Should return: JSON findings report `{tier, pass_index, verdict, findings[], failure_reason?}`
 
-**Substantive pass** (`tier=substantive`) — Sonnet-class / standard:
-
-Claude Code: `Agent` tool. Pass: "Read and follow `instructions.txt` here. Input: `change_set=<form> tier=substantive prior_findings=<json> [focus=<csv>] [context_pointer=<path>]`"
-
-VS Code / Copilot: `runSubagent(model: "Claude Sonnet 4.6 (Copilot)", prompt: "Read and follow \`instructions.txt\` in this directory. Input: \`change_set=<form> tier=substantive prior_findings=<json> [focus=<csv>] [context_pointer=<path>]\`")`
-
-## Orchestration
-
-1. Dispatch smoke pass (Haiku/fast-cheap). Receive per-pass result.
-2. Dispatch substantive pass (Sonnet/standard). Forward all smoke findings unmodified as `prior_findings`.
-3. Collect both per-pass results. Build the aggregated result.
-
-Per-pass result: `{tier, pass_index, verdict, findings[]}`. Verdict: `clean`, `findings`, `error`. Severity: `blocker`, `major`, `minor`, `nit`.
-
-Aggregated result (caller builds after both passes complete):
-
-| Field | Description |
-| --- | --- |
-| `passes` | Array of per-pass results, ordered by `pass_index`. |
-| `sign_off_pass_index` | Index of the most recent successful standard pass (the authoritative sign-off). `null` if no successful standard pass yet. |
-| `severity_aggregate` | Count of findings by severity (`blocker`, `major`, `minor`, `nit`) from the sign-off pass only. |
-| `verdict` | Sign-off pass verdict propagated (`clean`, `findings`, or `error` if no successful standard pass). |
-| `preserved_contradictions` | Findings where smoke and substantive disagree — surface as-is, do not resolve. |
-
-## Caller obligations
-
-- Smoke is not sign-off. Always dispatch substantive before acting on results.
-- Forward `prior_findings` to substantive unmodified — no filtering, no summarizing.
-- Tier substitution is prohibited: smoke must use fast-cheap, substantive must use standard.
-
-## Parameters
+## Inputs
 
 `change_set` (required): inline unified diff, absolute file path list, or git ref/range (refs require shell access in dispatched agent).
 `tier` (required): `smoke` or `substantive`.
-`prior_findings` (substantive only, required): all prior-pass findings forwarded unmodified.
-`focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `blocker` and `major` outside focus must still surface.
+`prior_findings` (substantive only, required): the `findings[]` array from all prior passes, forwarded unmodified.
+`focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `critical` and `high` outside focus must still surface.
 `context_pointer` (optional): path to CLAUDE.md, README, or style guide for local conventions.
+`model` (optional): model override. Affects cache path subfolder (`.../vN/<model>/report.md`). Applies to all tiers.
 
-Related: `spec-auditing`, `skill-auditing`, `dispatch`, `compression`
+## Returns
+
+RESULT: aggregated review result `{passes[], sign_off_pass_index, severity_aggregate, verdict, preserved_contradictions[]}`
+ERROR: <reason>
+
+Calling agent assembles aggregated result from per-pass reports. Aggregation rules in `instructions.txt`.
+SARIF severity map: `critical`/`high` → error, `medium` → warning, `low`/`info` → note.
+
+## Orchestration
+
+Smoke always runs before substantive. Two-pass policy applies regardless of change-set size — no single-pass shortcut. Single-Adversary Mode is explicitly exempt: one pass only, no `prior_findings`.
+
+## Single-Adversary Mode
+
+`<description>` = `code-review single-adversary — focused adversarial pass`
+`<input-args>` = `change_set=<file_path|pr_number> tier=single-adversary [model=<model>] [focus=<csv>] [context_pointer=<path>]`
+`<tier>` = `fast-cheap` (focused adversarial pass; catches obvious logic errors; may miss subtle security flaws — use `model=standard` for security-critical code)
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+Follow dispatch skill. See `../dispatch/SKILL.md`
+Should return: JSON findings report `{tier, pass_index, verdict, findings[], failure_reason?}`
+
+Inputs: `file_path` OR `pr_number` as `change_set`, optional `focus`.
+Output: same JSON schema as tiered passes — `{tier: "single-adversary", pass_index, verdict, findings[{severity, location, snippet, description, recommended_action}], failure_reason?}`
+
+## Examples
+
+**change_set forms:**
+- Inline diff: `change_set="""--- a/src/foo.ts\n+++ b/src/foo.ts ..."""`
+- File list: `change_set="/abs/src/foo.ts /abs/src/bar.ts"`
+- Git ref: `change_set="HEAD~3..HEAD"` (requires shell in dispatched agent)
+
+**focus values:** `security`, `correctness`, `concurrency`, `performance`, `architecture`, `testing` (comma-separated)
+
+## Anti-patterns
+
+- **Smoke as sign-off:** smoke `verdict: clean` does NOT approve. Only substantive with `verdict: clean` signs off. Check `sign_off_pass_index` — must be non-null.
+- **prior_findings to smoke:** silently ignored. Only forward to substantive.
+- **Single-adversary on security-critical code:** fast-cheap may miss subtle flaws. Add `model=standard` for auth, crypto, data access, payment paths.
+- **Same inputs twice:** cache is deterministic. Change a dimension to force fresh analysis.
+
+## Related
+
+`dispatch` (`../dispatch/SKILL.md`), `swarm` (`../swarm/SKILL.md`), `code-review-setup` (`./code-review-setup/SKILL.md`)
+

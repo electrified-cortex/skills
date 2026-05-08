@@ -12,7 +12,7 @@ whether the chosen iteration-tracking approach is sound.
 Read `uncompressed.md` and `SKILL.md`. Look for:
 
 - Any reference to `.hash-record/` or hash manifest procedure
-- Any reference to `optimize-log.md` or similar iteration log
+- Any reference to `.optimization/.log.md` or similar iteration log
 - Any "already done" check at entry (cache probe, log read, status check)
 - Any output write to a cache path
 

@@ -17,14 +17,14 @@ they do not generate findings on their own.
 Before running, confirm available context:
 
 - Topic set being applied to this skill ✓
-- Prior findings / changelog ✓ (optimize-log.md)
+- Prior findings / changelog ✓ (`.optimization/.log.md`)
 - Any prior optimize log ✓
 
 Without all three, this topic cannot meaningfully run.
 
 ### Step 2 — Review the cross-topic tension set for systemic patterns
 
-Read the prior findings in optimize-log.md. Look for:
+Read the prior findings in `.optimization/.log.md`. Look for:
 
 1. **LESS IS MORE vs. EXAMPLES oscillation** — Did the log show LESS IS
    MORE removing content that EXAMPLES would require?

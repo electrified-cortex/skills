@@ -64,10 +64,10 @@ Bump this when the audit semantics, output schema, or check codes change in a wa
   the auditor should raise a LOW advisory suggesting the pair — this
   does not affect verdict severity.
 - **semantic-content whitelist**: the explicit ordered list of artifact files used for manifest hashing: `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` (whichever exist in the skill directory).
-- **Repo-relative path**: A filesystem path relative to the root of the git repository containing the audited skill, stripped of absolute prefixes (e.g., `C:\path`, `/home/user`). Paths in `file_paths` are repo-relative as provided. If converting an absolute path, use `git ls-files --full-name <file>` or fallback to stripping `<repo-root>/` if no `.git/` is found.
-- **Iteration-safety**: Design pattern enabling an agent to safely audit a skill multiple times without re-computing unchanged work. Implemented via hash-record caching and idempotent procedure execution. See the `iteration-safety` skill (`../iteration-safety/SKILL.md`) for full pattern details.
-- MISS: return token emitted when no cache record exists for the manifest hash; the full audit must run.
-- HIT: return token emitted when a cache record is found; verdict not re-computed.
+- **Repo-relative path**: A filesystem path relative to the root of the git repository containing the audited skill, stripped of absolute prefixes (e.g., `C:\`, `/home/`). Computed via `git rev-parse --show-toplevel` or fallback to the skill directory if no `.git/` is found.
+- **Iteration-safety**: Design pattern enabling an agent to safely audit a skill multiple times without re-computing unchanged work. Implemented via hash-record caching and idempotent procedure execution. See `../iteration-safety/SKILL.md` for full pattern details.
+- **MISS**: return token emitted when no cache record exists for the manifest hash; the full audit must run.
+- **HIT**: return token emitted when a cache record is found; verdict not re-computed.
 
 The verdict vocabulary above (`CLEAN`, `PASS`, `NEEDS_REVISION`, `FAIL`)
 intentionally does NOT include a "skipped" verdict. Cache-hit and cache-miss
@@ -228,6 +228,9 @@ Quick structural verification of the SKILL.md.
      Violation in `SKILL.md` → HIGH. Absence of `uncompressed.md` is not a
      finding. Missing H1 in `uncompressed.md` or `instructions.uncompressed.md`
      is out of skill-auditing's scope; markdown-hygiene covers H1 enforcement.
+   - (A-FM-4) **Valid frontmatter fields** — `SKILL.md` frontmatter MUST contain ONLY `name` and `description`. Any additional top-level YAML key (`version`, `inputs`, `outputs`, `type`, `model`, `tools`, etc.) → FAIL.
+   - (A-FM-11) **Trigger phrases — all skills** — ALL skills (inline AND dispatch): `description` MUST contain `Triggers -` (case-insensitive). Absence → HIGH.
+   - (A-FM-12) **`uncompressed.md` frontmatter mirror** — if `uncompressed.md` exists, it MUST have YAML frontmatter. `name` and `description` MUST match `SKILL.md` exactly (case-sensitive). Missing frontmatter → FAIL. Mismatched `name` or `description` → FAIL.
 5. **No duplication** — skill does not duplicate an existing capability.
    If similar skill exists, recommend merge or distinguish clearly.
 6. **(A-FS-1) Orphan files** — scan all files in the skill directory
@@ -249,7 +252,7 @@ Quick structural verification of the SKILL.md.
 
 ### Per-file Basic Checks
 
-Run against all `.md` and `*.spec.md` files in `skill_dir` (recursively; skip dot-prefixed directories and `optimize-log.md`). Tool files (`.sh`, `.ps1`) are out of scope. Findings accumulate into a separate Per-file section of the report; they do NOT block Steps 1–3.
+Run against all `.md` and `*.spec.md` files in `skill_dir` (recursively; skip dot-prefixed directories). Tool files (`.sh`, `.ps1`) are out of scope. Findings accumulate into a separate Per-file section of the report; they do NOT block Steps 1–3.
 
 **`.md` files:**
 
@@ -515,10 +518,10 @@ When auditing skill content, the executor MUST flag any occurrence of "non-goals
 
 ## Verdict Rules
 
-- CLEAN: All steps pass with zero findings (no HIGH, no LOW, no informational). Audit produced nothing to report.
-- PASS: All steps pass with no HIGH findings. Non-blocking findings (LOW, informational) may be present. Safe to seal.
-- NEEDS_REVISION: No FAIL findings, but (1) any HIGH finding, or (2) two or more LOW findings. Skill works but has quality gaps. List specific fixes and do a fix pass before sealing.
-- FAIL: Any FAIL finding, or 3+ HIGH findings. Skill cannot be used reliably. Do not seal until fixed.
+- **CLEAN**: All steps pass with zero findings (no HIGH, no LOW, no informational). Audit produced nothing to report.
+- **PASS**: All steps pass with no HIGH findings. Non-blocking findings (LOW, informational) may be present. Safe to seal.
+- **NEEDS_REVISION**: No FAIL findings, but (1) any HIGH finding, or (2) two or more LOW findings. Skill works but has quality gaps. List specific fixes and do a fix pass before sealing.
+- **FAIL**: Any FAIL finding, or 3+ HIGH findings. Skill cannot be used reliably. Do not seal until fixed.
 
 ## Audit Report Format
 

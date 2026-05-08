@@ -36,7 +36,7 @@ For each step using LLM:
 
 - Log file parsing (read a table, extract rows by status field)
 - Topic list construction (filter out log entries, sort by tier)
-- File existence checks (does `optimize-log.md` exist?)
+- File existence checks (does `.optimization/.log.md` exist?)
 - Manifest hash computation (file hash = deterministic)
 - Status field classification (`acted` / `clean` / `pending`)
 

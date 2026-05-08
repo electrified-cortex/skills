@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Define the procedure and output contract for tiered code review on a change
-set. Code review surfaces issues, risks, and improvement opportunities in
-executable/compilable code so the calling agent can act on them. This spec
-governs procedure, tier policy, inputs, outputs, and the boundary between
-reviewing and fixing.
+Define the procedure and output contract for adversarial code review. Code review assumes the change set has flaws and goes looking for them — scrutinizing implementation for correctness, security, design soundness, and operational risk. This spec governs procedure, tier policy, inputs, outputs, and the boundary between reviewing and fixing.
+
+`code-review` is focused on implementation. Its operating principle: "Assume this has flaws. Find them." It is skeptical by default, adversarial in framing, and disciplined in scope — it reviews only what is supplied.
+
+`code-review` and `swarm` are sibling skills with distinct intent. Code review scrutinizes implementation; swarm challenges design and architecture. Neither depends on the other.
 
 ## Scope
 
@@ -17,6 +17,8 @@ infrastructure-as-code manifests.
 This is a **dispatch skill** — each review pass runs in an isolated, zero-context
 agent. Inline execution is prohibited; it produces shallow, inconsistent results
 and allows caller context to bleed into the review judgment.
+
+**Scope discipline**: the file list supplied by the caller is the complete review scope. Code review does not follow imports, expand to callers, or pull in dependencies outside the supplied list. If wider scope is needed, the caller supplies it.
 
 Does not cover non-code artifacts (specs, skills, documents). Those are
 governed by `spec-auditing` and `skill-auditing`, which use a different
@@ -40,7 +42,7 @@ tier policy. The difference is normative.
 - **Finding**: a single reported issue with severity, location (file +
   line range when applicable), description, and recommended action.
 - **Severity**: classification of a finding's importance. The vocabulary
-  is fixed: `blocker`, `major`, `minor`, `nit`.
+  is fixed: `critical`, `high`, `medium`, `low`, `info`.
 - **Audit**: structured review of non-code artifacts (specifications,
   skill definitions, documentation, configuration policy). Audits are
   governed by the spec-auditing and skill-auditing skills and use a
@@ -170,8 +172,8 @@ exactly these fields:
    successful standard pass produces a valid index.
 3. `severity_aggregate`: a count of findings by severity across the
    sign-off pass only (not summed across all passes), with a key for
-   each severity value in the fixed vocabulary (`blocker`, `major`,
-   `minor`, `nit`). When a value has no findings, its count is zero.
+   each severity value in the fixed vocabulary (`critical`, `high`,
+   `medium`, `low`, `info`). When a value has no findings, its count is zero.
 4. `verdict`: the overall review verdict. When `sign_off_pass_index` is
    non-null, this is the sign-off pass's verdict (`clean` or
    `findings`), propagated. When `sign_off_pass_index` is `null` because
@@ -181,9 +183,9 @@ exactly these fields:
    `error`. The aggregated `verdict` vocabulary is therefore `clean`,
    `findings`, or `error`.
 5. `preserved_contradictions`: the list of smoke-pass findings the
-   sign-off pass contradicted, each paired with the contradicting
-   commentary from the substantive pass that produced the contradiction.
-   Empty list when no contradictions occurred.
+   sign-off pass contradicted. Empty list when no contradictions
+   occurred. Each entry shape:
+   `{smoke_finding: <finding object>, contradiction: {verdict: "false_positive"|"out_of_scope", commentary: "<string>"}}`
 
 When the change set is empty and no passes are dispatched, the
 aggregated result must be exactly: `passes` empty, `sign_off_pass_index`
@@ -210,16 +212,17 @@ walking the full pass list.
 The severity values are fixed. Dispatched agents must use only these
 values. The vocabulary is:
 
-- `blocker`: must be addressed before the change set advances. Examples:
+- `critical`: must be addressed before the change set advances. Examples:
   data loss risk, security hole, broken build, broken contract.
-- `major`: should be addressed before the change set advances unless the
+- `high`: should be addressed before the change set advances unless the
   calling agent explicitly defers. Examples: significant correctness risk,
   missing error handling on an externally observable failure, regression
   risk in unrelated code.
-- `minor`: improvement worth making but not blocking. Examples: clarity,
+- `medium`: improvement worth making but not blocking. Examples: clarity,
   small refactor opportunity, redundant code.
-- `nit`: stylistic preference, naming polish, comment wording. Never
+- `low`: stylistic preference, naming polish, comment wording. Rarely
   blocking.
+- `info`: informational note only; no action required.
 
 ### Calling agent obligations
 
@@ -279,9 +282,11 @@ values. The vocabulary is:
     the per-pass duration.)
 11. Focus areas (Inputs item 4) reorder the dispatched agent's search
     priority but must not reduce review depth on non-focus areas. The
-    dispatched agent must still surface every `blocker` and `major`
-    finding that exists outside the focus areas. `minor` and `nit`
+    dispatched agent must still surface every `critical` and `high`
+    finding that exists outside the focus areas. `medium` and `low`
     findings outside the focus may be deprioritized.
+12. Calibrated severity — findings are graded proportional to signal strength. Speculative or uncertain issues must be `medium` or lower, never `critical` or `high`, unless the evidence path (source, sink, missing guard) is fully established. Surface smoke signals without declaring fire; raising an alert without catastrophizing is the correct behavior.
+13. Structured evidence for `critical` and `high` findings — each must include: Source (where the problem enters the system), Sink (where it causes harm or manifests), and Missing guard (what defense is absent). Findings at `critical` or `high` severity that lack all three fields must be downgraded to `medium` by the dispatched agent before returning results.
 
 ## Behavior
 
@@ -319,16 +324,48 @@ without acting on it, the substantive pass will independently reach
 case 1 or case 2 on its own judgment, since Constraints item 9
 prohibits passing the caller's dispute to the substantive pass.
 
+### Smoke pass framing
+
+Smoke pass uses adversarial framing: "Assume the author made at least one mistake. Your job is to find it." For security-focused passes, add pentester framing: "Frame yourself as a pentester looking for exploitable paths, not a colleague doing a courtesy review." Substantive pass uses neutral framing.
+
+The adversarial frame is a documented force multiplier: MOSAIC-Bench (arxiv 2605.03952) measured neutral-framed reviewers approving 25.8% of confirmed-vulnerable diffs; adversarial-framed reviewers reached 88.4% detection with 4.6% FP on 608 real PRs. Framing change only; no model upgrade needed.
+
+### Hallucination filter
+
+Hallucination filter: before including a finding, reviewer must verify file path exists in change set, cited line is in or near a changed hunk (within 10 lines), any verbatim code quotes appear in diff, and directional claims match diff direction. Findings that fail any check must be omitted.
+
 ## Defaults and Assumptions
 
 - Smoke pass tier defaults to fast-cheap. No override permitted.
 - Substantive pass tier defaults to standard. No override permitted.
+- Single-adversary pass tier defaults to fast-cheap. Override permitted via `model` input. **Tradeoff note:** fast-cheap is appropriate for cost-speed optimization and catches obvious logic errors, but may miss subtle security vulnerabilities requiring deeper reasoning. For security-critical code, callers should dispatch a full substantive pass instead or override with `model=standard`.
 - Focus areas: default none (full review). Behavior constraints defined
   under Requirements > Inputs item 4.
 - See Calling agent obligations item 4 — no maximum pass count, no
   normative convergence criterion.
 - Severity vocabulary defaults to the fixed four-value set defined under
   Definitions. No project-local extension permitted.
+- Context pointer auto-detect: if the caller does not supply a context pointer (Inputs item 5) and the reviewed repo contains a `CLAUDE.md`, `README.md`, `.cursorrules`, or `copilot-instructions.md`, the skill must detect and inject the first match as the context pointer before dispatching. Reduces caller friction and improves reviewer calibration.
+
+## Hash Record
+
+Code review uses content-addressed caching to avoid re-reviewing unchanged inputs.
+
+**Ownership**: the calling agent (via SKILL.md) is responsible for the cache probe before dispatch and the cache write after result received. Dispatched review agents have no cache awareness — they execute the review procedure and return findings only.
+
+**Cache key**: SHA-256 hash of the canonical manifest — sorted `change_set` file paths concatenated with their individual content hashes, plus `tier`, `focus` (if set), SHA-256 of `context_pointer` file contents (if set), and SHA-256 of `prior_findings` JSON (substantive only, if set). All key components must be included; omitting any component risks a stale cache hit when inputs differ only in that dimension.
+
+**Cache path**: `.hash-record/XX/HASH/code-review/vN/report.md` where `XX` is the first two hex chars of HASH and `vN` is the skill version.
+
+**Caller model override**: if the caller specifies a model, the cache path gains a subfolder: `.hash-record/XX/HASH/code-review/vN/<caller-model>/report.md`. Default (no model specified): no model subfolder. The `model` parameter applies to all tiers (smoke, substantive, single-adversary).
+
+**Cache hit**: report exists at the cache path. Return the cached report without dispatching any agents.
+
+**Cache miss**: run the full review, write the report to the cache path, return the result.
+
+**Invalidation**: any change to any component of the cache key changes the manifest hash. No manual invalidation is needed.
+
+**Version increment**: bump `vN` when the skill logic changes in a way that could affect review quality — prompt changes, tier policy changes, output schema changes. Old cache entries are automatically bypassed.
 
 ## Error Handling
 
@@ -383,6 +420,36 @@ prohibits passing the caller's dispute to the substantive pass.
 - Don't dispatch review agents with caller context. Zero-context
   isolation is a normative requirement, not an optimization.
 - Don't introduce additional severity values or rename the existing four.
+
+## Extension Modes
+
+The following modes extend the base tiered procedure. They are first-class and
+authorized for use with this skill.
+
+### Single-Adversary Mode
+
+A single-pass adversarial review for time- or token-constrained scenarios.
+Dispatches to a subagent. Context isolation is mandatory — same rules as all other modes.
+
+Requirements:
+1. Exactly one pass is dispatched (no smoke + substantive split).
+2. The dispatched agent reads the target (file contents or PR diff) and
+   produces one adversarial finding list.
+3. Single-adversary output must not be treated as tiered sign-off.
+
+Inputs: `file_path` OR `pr_number`, optional `model`, optional `focus`.
+Output: finding list (`{file, line_or_range, severity, description}`) + 1-3 sentence summary.
+
+### Swarm Mode
+
+Routes code-review through the `swarm` skill for multi-model consensus review.
+All swarm dispatch conventions are governed by the `swarm` skill (`swarm/SKILL.md`). The code-review
+skill supplies the instructions payload; the swarm skill governs model selection
+and result aggregation.
+
+## Evaluation
+
+Evaluation criteria for this skill are documented in `eval.txt`.
 
 ## Relationship to Other Skills
 

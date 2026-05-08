@@ -17,7 +17,7 @@ what it will do autonomously vs. what requires confirmation?
 **Write operations inventory:**
 
 - Step 4: dispatches sub-agent (no writes)
-- Step 5a: appends row to `<skill-path>/optimize-log.md` (existing file, append)
+- Step 5a: appends row to `<skill-path>/.optimization/.log.md` (existing file, append)
 - Step 5b: writes `<skill-path>/.optimization/<slug>.md` (new file, create)
 
 **Constructive vs. destructive:**

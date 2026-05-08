@@ -11,7 +11,7 @@
 
 ## Procedure
 
-1. **Enumerate files.** Collect all files in `skill_dir` recursively, skipping dot-prefixed directories and `optimize-log.md`. Tool files (`.sh`, `.ps1`) and tool-spec files (`*.spec.md` other than the skill's own `spec.md` co-located with `SKILL.md`) are out of scope for Steps 1–3 AND excluded from the manifest `file_paths` — they belong to the tool manifest, audited independently by `tool-auditing`. The skill manifest covers only the skill bundle: `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` (whichever exist). Tool files and tool-spec files are included in A-FS-1 enumeration only.
+1. **Enumerate files.** Collect all files in `skill_dir` recursively, skipping dot-prefixed directories. Tool files (`.sh`, `.ps1`) and tool-spec files (`*.spec.md` other than the skill's own `spec.md` co-located with `SKILL.md`) are out of scope for Steps 1–3 AND excluded from the manifest `file_paths` — they belong to the tool manifest, audited independently by `tool-auditing`. The skill manifest covers only the skill bundle: `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md` (whichever exist). Tool files and tool-spec files are included in A-FS-1 enumeration only.
 2. **Read `SKILL.md`.** Determine skill type (inline or dispatch) by file-system evidence: any allowed dispatch instruction file present (`instructions.txt`, `<name>.md`, or the file explicitly referenced by `SKILL.md`) → dispatch; no such file → inline. Locate companion spec `spec.md` co-located with `skill_dir`.
 3. **Run Per-file basic checks** (always run; findings accumulate into a separate Per-file section; do NOT block Steps 1–3).
 4. **Run Step 1 → Step 2 → Step 3.** Collect ALL findings before assigning a verdict. Do not stop on the first finding.
@@ -54,7 +54,7 @@
 
 ## Per-file Basic Checks
 
-Run against all `.md` and `*.spec.md` files in `skill_dir` (recursively; skip dot-prefixed directories and `optimize-log.md`). Tool files (`.sh`, `.ps1`) are out of scope — do not run per-file checks on them.
+Run against all `.md` and `*.spec.md` files in `skill_dir` (recursively; skip dot-prefixed directories). Tool files (`.sh`, `.ps1`) are out of scope — do not run per-file checks on them.
 
 Findings accumulate into the Per-file section of the report and do NOT block Steps 1–3.
 
@@ -127,7 +127,7 @@ Not duplicating existing capability. If similar exists, recommend merge or disti
 ### (A-FS-1) Orphan files
 
 Scan all files in `<skill_dir>` recursively. Skip dot-prefixed directories.
-For each file that is NOT a well-known role file (`spec.md`, `*.sh`, `*.ps1`, `*.spec.md`, `eval.txt`, `*.uncompressed.md`, `SKILL.md`, `uncompressed.md`, `instructions.txt`, `optimize-log.md`):
+For each file that is NOT a well-known role file (`spec.md`, `*.sh`, `*.ps1`, `*.spec.md`, `eval.txt`, `*.uncompressed.md`, `SKILL.md`, `uncompressed.md`, `instructions.txt`):
 
 - Check whether the file is referenced by name or relative path in any of: `SKILL.md`, `uncompressed.md`, `spec.md`, `instructions.uncompressed.md`.
 - If not referenced → flag LOW.

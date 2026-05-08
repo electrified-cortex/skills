@@ -16,9 +16,24 @@ The host agent should never need to know which Copilot CLI flags exist, how to c
 
 1. Accept a Copilot CLI task in natural language from the caller.
 2. Identify the target operation by matching to the routing table.
-3. Load and dispatch to the correct operation sub-skill, passing the full task and any context the caller provided.
-4. If the task spans multiple operations: execute the primary operation; report remaining operations to the caller without dispatching them.
-5. If the operation cannot be determined: ask the caller for clarification. Never guess or default to any operation.
+3. Before dispatching, check the capability cache (see `capability-cache/SKILL.md`):
+   - Cache HIT with `result: unavailable` — skip all CLI invocations; return `Status: UNAVAILABLE` immediately.
+   - Cache HIT with `result: available` — use cached model list; skip re-probe.
+   - Cache MISS — proceed to dispatch; probe happens inside the sub-skill; cache is populated on first run.
+   - `capability-cache` not installed — treat as MISS; proceed normally.
+4. Load and dispatch to the correct operation sub-skill, passing the full task and any context the caller provided.
+5. If the task spans multiple operations: execute the primary operation; report remaining operations to the caller without dispatching them.
+6. If the operation cannot be determined: ask the caller for clarification. In non-interactive flows, return `Status: NEEDS_CLARIFICATION`.
+
+## Result Envelope
+
+```text
+Status: CLEAN | FINDINGS | OK | ERROR | UNAVAILABLE | NEEDS_CLARIFICATION
+<sub-skill result fields>
+Source: <sub-skill name>
+```
+
+`UNAVAILABLE` and `NEEDS_CLARIFICATION` originate from the router. All other statuses pass through from sub-skills unchanged.
 
 ## Requirements
 

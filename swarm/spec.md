@@ -2,18 +2,22 @@
 
 ## Purpose
 
-Define the `swarm` skill: a generic multi-personality review and analysis infrastructure skill. Given any input artifact, the skill selects applicable reviewer personalities from a registry, gates each on availability, dispatches the surviving set in parallel, aggregates their findings, tracks disagreements, and returns a synthesized verdict with a confidence rating.
+Define the `swarm` skill: an arena for adversarial debate and deliberation on any artifact. Used primarily to challenge design and architecture — to ask "is this the right approach?" and have multiple perspectives fight it out.
 
-`swarm` is infrastructure. It does not perform reviews itself. Consumer skills (e.g., `code-review`) call into it with a problem and an optional personality filter. The skill is not a code-review skill; the two have a strict consumer-service relationship.
+Given any input artifact (code, document, plan, design, argument, or concept), swarm selects up to 5 reviewer personalities, manifesting custom ones where the registry has no suitable fit, dispatches them in parallel, arbitrates their findings, and synthesizes a verdict from the debate.
+
+Swarm is deliberate and adversarial by nature. It is not a checklist tool. It is a debate arena. Devil's Advocate is always present — the one constant across all invocations.
+
+`swarm` and `code-review` are sibling skills with separate intent. Swarm challenges design and architecture; code-review scrutinizes implementation. Neither depends on the other.
 
 ## Scope
 
-Applies to any calling agent or skill that needs multi-perspective review of a problem artifact (conversation context, file, diff, plan, document, or other structured input).
+Applies to any calling agent or skill that needs multi-perspective challenge of a problem artifact: design documents, architecture proposals, code, plans, arguments, conversation context, or any other structured or unstructured input.
 
 Does NOT cover:
 
-- The `code-review` consumer skill or any other consumer skill's internal logic.
-- How to write reviewer prompts (that is a data concern, not a behavioral requirement of this skill).
+- The `code-review` skill's internal logic. The two are siblings, not parent/child.
+- How to write reviewer prompts (data concern, not behavioral requirement of this skill).
 - Non-review dispatch use cases (search, generation, transformation).
 - Any side-effecting operation by a dispatched personality; all personalities are strictly read-only.
 - CLI-as-dispatch patterns for environments where the `dispatch` skill's Agent tool is unavailable. That extension is tracked in task 10-0845 and must be specified there before CLI dispatch is added here.
@@ -50,6 +54,10 @@ Does NOT cover:
 
 **Backend**: the execution target for a personality. One of: `dispatch-sonnet` (Agent tool dispatch at sonnet-class), `dispatch-haiku` (Agent tool dispatch at haiku-class), `dispatch-opus` (Agent tool dispatch at opus-class), or `copilot-cli` (external `copilot` CLI process).
 
+**Generated persona**: a reviewer personality manifested by the skill at runtime when no registered personality adequately matches the artifact's problem traits. A generated persona exists only for the current invocation: no persistent registry entry, no `reviewers/` file, no hash-record cache entry. The skill gives it a name, a specific critique lens, and a scope limiter appropriate to the artifact. Generated personas are always re-run; they never benefit from caching.
+
+**Manifest hash**: the SHA-256 hash of the canonical input manifest — sorted file paths concatenated with their individual content hashes. Used as the cache key for all hash-record entries. For non-file artifacts (text, conversation excerpts), the manifest hash is the SHA-256 hash of the artifact content.
+
 ## Personality Registry
 
 The following table is informative — it documents the built-in personalities and their default properties for reference. The authoritative runtime registry is the `reviewers/` directory, crawled at invocation time. The integer index in this table is informative only; runtime index is assigned by alphabetical crawl (1-based). Trigger conditions are evaluated against problem traits. Multiple triggers may be satisfied; all matching personalities are included unless filtered by `personality_filter`.
@@ -57,14 +65,16 @@ The following table is informative — it documents the built-in personalities a
 | # | Personality | Trigger condition | Default model class | Backend | Scope limiter |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Devil's Advocate | always | sonnet-class | dispatch-sonnet | Challenge assumptions; no constructive suggestions |
-| 2 | Security Auditor | problem touches auth, user input, API endpoints, data access, secrets, or network calls | sonnet-class | dispatch-sonnet | Find vulnerabilities only; no design advice |
-| 3 | Code Quality Critic | problem includes code (new or modified) | sonnet-class | dispatch-sonnet | Code conventions, readability, duplication; no security or arch |
-| 4 | Test Reviewer | problem includes new or modified logic requiring test coverage | sonnet-class | dispatch-sonnet | Test coverage and quality only |
-| 5 | Architect | problem affects system structure, introduces new abstractions, crosses service boundaries, or modifies shared infrastructure | sonnet-class | dispatch-sonnet | Structural and interface concerns only |
-| 6 | Operational Readiness | problem introduces new failure modes, external dependencies, error handling paths, or production-facing behavior | sonnet-class | dispatch-sonnet | Observability, recovery, degraded-mode behavior |
-| 7 | Performance Reviewer | problem involves data access, loops, serialization, caching, or computationally significant logic | sonnet-class | dispatch-sonnet | Throughput, latency, resource use only |
-| 8 | Copilot Reviewer | problem includes code and copilot-cli is available | external | copilot-cli | Full code review via Copilot; availability-gated |
-| 9 | Custom Specialist | caller explicitly supplies via custom menu | varies | varies | Defined by caller in custom menu entry |
+| 2 | Accessibility Officer | problem includes UI components, web rendering, forms, interactive elements, visual design, color usage, or user-facing text rendered in a browser or native UI | sonnet-class | dispatch-sonnet | WCAG 2.2 AA only; no logic, no security, no performance |
+| 3 | Architect | problem affects system structure, introduces new abstractions, crosses service boundaries, modifies shared infrastructure, or changes how components communicate | sonnet-class | dispatch-sonnet | Structural concerns only; no implementation details |
+| 4 | Designer | problem introduces or modifies public interfaces, APIs, library surfaces, shared types, configuration contracts, or caller-facing behavior | sonnet-class | dispatch-sonnet | Public surface and caller experience only; no internals |
+| 5 | Engineer | problem includes new logic, integration points, external calls, state mutation, error handling paths, or behavior under partial failure | sonnet-class | dispatch-sonnet | Practical correctness only; no style or architecture |
+| 6 | Linguist | problem includes code, documentation, error messages, log strings, user-visible text, or any named abstractions | sonnet-class | dispatch-sonnet | Naming, clarity, and communication only |
+| 7 | Penny Pincher | problem involves API calls, database queries, loops over large sets, caching decisions, storage allocation, cloud resource usage, or per-request compute cost | sonnet-class | dispatch-sonnet | Cost and resource efficiency only |
+| 8 | Privacy Advocate | problem touches user data, PII, analytics, logging, storage, external data transmission, identity, consent, or data retention | sonnet-class | dispatch-sonnet | Privacy and data handling only; no unrelated security |
+| 9 | Security Auditor | problem touches authentication, user input, API endpoints, data access, secrets, network calls, file system writes, or process execution | sonnet-class | dispatch-sonnet | Find vulnerabilities only; no design advice |
+| 10 | Copilot Reviewer | problem includes code and copilot-cli is available | external | copilot-cli | Full code review via Copilot; availability-gated |
+| 11 | Custom Specialist | caller explicitly supplies via custom menu | varies | varies | Defined by caller in custom menu entry |
 
 The integer index in this table is informative only. At runtime, index assignment follows alphabetical crawl order (1-based) from the `reviewers/` directory. Personality renames or additions change the runtime index; disagreement tracking uses personality names, not indices.
 
@@ -79,6 +89,7 @@ Callers may supply additional personalities that extend the registry for a singl
 | `problem` | required | artifact | The content under review. |
 | `personality_filter` | optional | list of personality names or indices | If supplied, restricts the candidate set to the named personalities (from built-in registry + custom menu). Personalities not in the filter are not evaluated against trigger conditions and are not dispatched. |
 | `model_overrides` | optional | map of personality name → model class | Pins the given personalities to the specified model class for this invocation. Overrides the default model class in the registry. |
+| `arbitrator_model` | optional | model class | Model class for the arbitrator dispatch. Defaults to `sonnet-class`. Use `opus-class` for high-stakes reviews where arbitrator judgment quality is critical. |
 
 ## Requirements
 
@@ -86,17 +97,21 @@ Callers may supply additional personalities that extend the registry for a singl
 2. Devil's Advocate (registry entry 1) must always be included in the swarm unless the caller's `personality_filter` explicitly names a subset that omits it.
 3. All dispatched personalities must operate in read-only mode; sub-agents must not edit files, commit, run side-effecting commands, or call any mutating tool.
 4. The literal read-only phrase "read-only review — analyze and report only, no file edits, no commits, no shell commands" must appear in every personality's dispatch prompt.
-5. Reviewer prompts must be loaded lazily: only after the swarm is finalized (post-availability-gating), and only for personalities that will be dispatched.
-6. All swarm personalities must be dispatched in a single parallel batch; sequential dispatch is not permitted.
-7. External-backend personalities (any backend other than `dispatch-sonnet`, `dispatch-haiku`, or `dispatch-opus`) must be availability-gated before inclusion in the swarm.
-8. A personality that fails its availability probe must be dropped from the swarm for the current invocation; the skill must not fail-stop or surface the probe failure as an error to the caller.
-9. Synthesis output must be delivered in host voice only; raw sub-agent output must not be dumped to the caller, and reviewer attribution must be stripped.
-10. Synthesis output must not exceed 2000 words; if findings exceed the budget the skill must truncate by priority (disagreements first, then high-severity, then medium, then low).
-11. No bare model names (e.g., specific version strings) may appear anywhere in the skill, its reviewer files, or its synthesis output; only model class terms (`haiku-class`, `sonnet-class`, `opus-class`) may be used.
-12. Each finding in aggregated output must cite specific evidence (snippet, line reference, scenario, or direct quote); unsupported assertions are not findings and must be retracted or excluded.
-13. The skill must not merge with or replace the `code-review` consumer skill; the consumer-service boundary must be maintained.
-14. Caller-supplied `model_overrides` must affect model class only; they must not change backend type for any personality.
-15. Custom menu personalities must be additive only; they must not override or replace built-in registry entries.
+5. Member reviewer dispatches include a 4-check hallucination filter instruction: file existence, line proximity, code-quote accuracy, and direction consistency checks. Findings failing any check must be omitted by the reviewer.
+6. Reviewer prompts must be loaded lazily: only after the swarm is finalized (post-availability-gating), and only for personalities that will be dispatched.
+7. All swarm personalities must be dispatched using a rolling window of 3 maximum: dispatch up to 3 personalities in parallel; as each completes, dispatch the next until all personalities have run. No more than 3 personalities may be in-flight simultaneously. Sequential one-at-a-time dispatch is not permitted.
+8. External-backend personalities (any backend other than `dispatch-sonnet`, `dispatch-haiku`, or `dispatch-opus`) must be availability-gated before inclusion in the swarm.
+9. A personality that fails its availability probe must be dropped from the swarm for the current invocation; the skill must not fail-stop or surface the probe failure as an error to the caller.
+10. Synthesis output must be delivered in host voice only; raw sub-agent output must not be dumped to the caller, and reviewer attribution must be stripped.
+11. Synthesis output must not exceed 2000 words; if findings exceed the budget the skill must truncate by priority (disagreements first, then high-severity, then medium, then low).
+12. No bare model names (e.g., specific version strings) may appear anywhere in the skill, its reviewer files, or its synthesis output; only model class terms (`haiku-class`, `sonnet-class`, `opus-class`, `gpt-class`) may be used.
+13. Each finding in aggregated output must cite specific evidence (snippet, line reference, scenario, or direct quote); unsupported assertions are not findings and must be retracted or excluded.
+14. The `swarm` skill must not invoke the `code-review` skill internally. The two are siblings with separate intent; neither is a dependency of the other.
+15. Caller-supplied `model_overrides` must affect model class only; they must not change backend type for any personality.
+16. Custom menu personalities must be additive only; they must not override or replace built-in registry entries.
+17. Maximum 5 personalities total per invocation. If trigger evaluation produces more than 5 candidates, the skill must prioritize: Devil's Advocate first (always), then personalities by trigger-match specificity (most-specific triggers first), then drop lowest-priority remaining until the count reaches 5.
+18. If trigger evaluation and registry filtering produce fewer than 3 suitable personalities, the skill must manifest one or more generated personas to reach at least 3 participants. A generated persona is created inline: the skill reasons about the artifact and invents a critic role (name, critique lens, scope limiter) that adds perspective not already covered by the selected registry personalities. Generated personas are not added to the registry and have no persistent state.
+19. Heterogeneity enforcement: if all personalities in the finalized swarm resolve to the same model family, the skill must attempt to re-assign Devil's Advocate to a different model family via caller override. If no alternative model family is available, the skill must note the homogeneity condition in the synthesis output and proceed. A homogeneous swarm is a degraded state, not a fail-stop error. Rationale: arxiv 2605.00914 documents 85.5% sycophantic conformity and 32.3 pp correct-answer loss in same-family debate.
 
 ## Step Sequence
 
@@ -124,6 +139,10 @@ Selection logic must be inline within the skill. A separate dispatch for persona
 
 Devil's Advocate (entry 1) must always be included regardless of trigger evaluation. The `personality_filter` may exclude Devil's Advocate only when the caller explicitly names an explicit subset that omits it.
 
+If, after registry filtering and trigger evaluation, fewer than 3 suitable personalities are identified, the skill must manifest one or more generated personas to supplement the swarm. The skill reasons about the artifact traits and invents appropriate critic roles — name, specific critique lens, and scope limiter — that add perspective not already covered. Example: if reviewing a PowerShell operational script and no "PowerShell reliability expert" exists in the registry, one is manifested. Generated personas are not added to the registry and produce no persistent state.
+
+If selection produces more than 5 candidates after generated personas are considered, apply the priority order from Requirement 17.
+
 ### Step 3 — Availability gating
 
 For each selected personality whose backend is not `dispatch-sonnet` or `dispatch-haiku` or `dispatch-opus` (i.e., for any external backend such as `copilot-cli`), the skill must run the availability probe before including that personality in the swarm.
@@ -140,17 +159,23 @@ Rationale for sub-skill files over inline data: inline prompts bloat the context
 
 ### Step 5 — Dispatch
 
-The skill dispatches all swarm personalities in parallel using the `dispatch` skill. All dispatches in a single swarm invocation must be issued as a single batch; the skill must not issue them sequentially.
+The skill dispatches all swarm personalities using the `dispatch` skill with a rolling window of 3. The skill dispatches up to 3 personalities in parallel; as each completes, the next is dispatched until all personalities have run. No more than 3 personalities may be in-flight simultaneously. The skill must not dispatch them sequentially one at a time.
 
 Each personality dispatch receives: (1) the full review packet from Step 1, (2) the personality's prompt loaded in Step 4, (3) an explicit read-only constraint (see Constraints section C1–C3).
 
 The skill applies `model_overrides` at dispatch time: if a caller override exists for a personality, the override model class is used; otherwise the registry default applies.
+
+Structured-evidence requirement: any finding marked HIGH or CRITICAL severity must include three fields — Source (where the vulnerability or bug enters), Sink (where it causes harm), and Missing guard (what defense is absent). Findings at HIGH or CRITICAL severity that lack this structure are automatically downgraded to MEDIUM.
 
 ### Step 6 — Arbitrator
 
 After all member outputs are collected, the skill dispatches a single sonnet-class arbitrator agent. The arbitrator is not in the personality registry; it is not subject to `personality_filter` or availability gating. It is always dispatched as part of the standard step sequence and cannot be disabled.
 
 The arbitrator receives: (1) all non-empty, non-timeout member outputs from the swarm, and (2) the original review packet. Member outputs that are empty or timed out are excluded from the arbitrator's input set.
+
+File-existence filter (pre-arbitration): before forwarding member findings to the arbitrator, the skill must discard any finding that cites a file not present in the review packet's Files-affected list. This filter uses deterministic string matching (exact path) only — no LLM judgment. Findings that do not cite a specific file are retained.
+
+Grounded-challenge requirement: the arbitrator prompt must instruct: "Before marking a member finding as incorrect or contradicting it, quote the exact sentence from that finding you are challenging. Do not challenge your interpretation of the finding — only challenge what the finding explicitly states. A challenge without a verbatim quote is not a valid challenge."
 
 The arbitrator's output is a structured action list only, with two sections:
 
@@ -174,10 +199,14 @@ The skill synthesizes findings into a single host-voice output, drawing from the
 
 Required synthesis output fields:
 
-- Summary: consolidated findings in host voice.
+- Active personalities: name and model class for each personality that completed successfully; generated personas tagged as "(generated)".
+- Critical actions: each item from the arbitrator's Critical actions section — findings that would block shipping or require architectural change.
+- Findings: remaining consensus findings from the arbitrator's Obvious actions section.
 - Disagreements: explicit statement of each disagree-set item; the skill states the tension and applies judgment.
-- Dropped personalities: list of any personalities dropped by availability gate with reason.
+- Unavailable personalities: personalities dropped by the availability gate with reason.
+- Non-contributing personalities: personalities dispatched but that returned empty output, timed out, or returned incoherent output.
 - Confidence rating: High, Medium, or Low. Rationale for the rating must be included. If Low, the output must state specifically what would raise it.
+- Homogeneity warning (optional, omit if N/A): emitted when all personalities resolved to the same model family.
 
 Synthesis output must not exceed 2000 words. If findings exceed this budget, the skill must prioritize high-severity and disagreement items.
 
@@ -191,13 +220,43 @@ C3. The skill does not technically prevent a sub-agent from calling mutating too
 
 C4. Every finding in the aggregated output must cite specific evidence: a snippet, line reference, scenario, or direct quote. Unsupported assertions are not findings. The skill must instruct each reviewer to either cite or retract.
 
-C5. The skill must not merge or replace the `code-review` skill. `swarm` is infrastructure; `code-review` is a consumer. The two must remain separate with a defined consumer-service boundary.
+C5. The `swarm` skill must not invoke the `code-review` skill internally. The two are siblings with separate intent; neither is a dependency of the other.
 
-C6. No bare model names (e.g., specific version strings) may appear in the skill, its reviewer files, or its synthesis output. Use model class terms only: `haiku-class`, `sonnet-class`, `opus-class`.
+C6. No bare model names (e.g., specific version strings) may appear in the skill, its reviewer files, or its synthesis output. Use model class terms only: `haiku-class`, `sonnet-class`, `opus-class`, `gpt-class`.
 
 C7. CLI-as-dispatch (e.g., `claude -p`, generic CLI invocations) is out of scope for this skill until task 10-0845 (dispatch skill CLI-extension) reaches PASS. Once 10-0845 lands, the Copilot Reviewer entry and any new CLI-backed personalities may use the CLI dispatch pattern defined there.
 
+## Hash Record
+
+Swarm uses content-addressed caching to avoid re-running reviews of unchanged artifacts.
+
+**Cache key**: manifest hash (see Definitions) + filter hash. For single-file input: SHA-256 of file contents. For multi-file: SHA-256 of sorted file paths concatenated with their content hashes. Filter hash: SHA-256 of the sorted `personality_filter` list (empty list if no filter).
+
+**Built-in persona cache path**: `.hash-record/XX/HASH/swarm/v1/<persona-name>/report.md`
+
+**Full swarm result path**: `.hash-record/XX/HASH/swarm/v1/<filter_hash>/report.md`
+
+**Built-in personas only**: each built-in registry personality has its own cache entry per manifest hash. Generated personas are never cached — they are always re-run. Per-persona results are written immediately as each dispatch completes (not deferred to synthesis).
+
+**Cache gate placement**: the cache check occurs at the top of Step 1, before any packet assembly. File list extraction and hash computation are deterministic (no LLM). This ensures no LLM work is done on a cache hit.
+
+**Cache hit (full)**: `v1/<filter_hash>/report.md` exists. Return cached result directly. No dispatch.
+
+**Cache hit (partial)**: individual built-in persona results may be cached; re-run only what is missing.
+
+**Cache miss (full)**: run the full swarm, write each built-in persona result to its individual cache path as it completes, write the final aggregated result to the full swarm result path. If the full result path already exists at write time, skip the write (idempotency guard).
+
+**Recovery logic**: on a partial failure (swarm run incomplete), check the hash record for existing built-in persona results under the current manifest hash. Cached persona results are treated as already complete; only missing built-in results and all generated personas are re-dispatched. The final result is assembled from recovered and re-run results.
+
+**Version increment**: current version is `v1`. Bump to `v2` when persona prompts, selection criteria, arbitrator procedure, or hash algorithm changes in a way that could affect review quality. Wording and formatting changes do not require a bump. Old cache entries are automatically bypassed when the version changes.
+
 ## Behavior
+
+BP1. **Persona manifestation**: when the registry yields fewer than 3 suitable personalities after trigger evaluation, the skill manifests generated personas inline. Each generated persona must have a name, a critique lens specific to the artifact's domain, and a scope limiter that avoids overlap with already-selected personalities. Generated personas are listed in the synthesis output's Dropped personalities field only if the manifest hash has no cached result for them (they are always re-run and never have a hash-record entry).
+
+BP2. **Homogeneous swarm degradation**: if all finalized swarm personalities resolve to the same model family and re-assignment of Devil's Advocate to a different family is not possible, the synthesis output must include a `homogeneity_warning` field noting the condition and explaining the risk (sycophantic conformity, accuracy loss per arxiv 2605.00914). The caller is responsible for deciding whether to accept the degraded result.
+
+BP3. **Partial recovery**: if a previous swarm run on the same manifest hash failed before completion, the skill checks the hash record for cached built-in persona results. Any result found in the cache is treated as complete and is not re-dispatched. Missing built-in personas and all generated personas are re-dispatched. The final swarm result is assembled from cached and freshly dispatched results, then written to the full swarm result path.
 
 B1. If `problem` is empty or cannot be resolved into a review packet with a non-empty Artifacts field, the skill must return an error to the caller: "No reviewable artifact found." It must not dispatch any personalities.
 
@@ -213,15 +272,15 @@ B6. Devil's Advocate must always be dispatched unless explicitly excluded by `pe
 
 B7. Custom menu personalities are evaluated against their caller-supplied trigger condition. If the trigger is "always", they are always included (subject to availability gating if their backend is external).
 
-B8. Cross-vendor diversity is best-effort. When selecting models, prefer at least one personality on a different model family or vendor than the host agent. If unavailable, proceed and note monoculture in synthesis. Devil's Advocate is the natural diversity carrier (registered with `vendor: openai`; non-Anthropic `suggested_models` preference).
+B8. Cross-vendor diversity is a hard fallback requirement. If all available personalities resolve to the same model family or vendor, the swarm MUST attempt resolution before dispatching. Resolution order: (1) find any available personality on a different model family; (2) override Devil's Advocate to a different vendor via `vendor` field. If neither resolves the monoculture, proceed with the homogeneous swarm and include a `homogeneity_warning` in the synthesis output — a homogeneous swarm is a degraded state, not a fail-stop error. Do NOT degrade to code-review. The chosen resolution must be reported in the synthesis preamble. Devil's Advocate is the natural diversity carrier (registered with `vendor: openai`; non-Anthropic `suggested_models` preference).
 
 ## Defaults and Assumptions
 
 D1. Default `personality_filter`: none (all registry entries evaluated).
 
-D2. Default model class for each personality: as listed in the Personality Registry table.
+D2. Default model class for each personality: as listed in the Personality Registry table. All built-in personalities default to sonnet-class — the hallucination filter (C2) requires evidence-cite self-checking that haiku-class handles unreliably. Callers may override individual personalities via `model_overrides`.
 
-D3. Default for parallel vs sequential dispatch: parallel (all at once, single batch).
+D3. Default dispatch concurrency: rolling window of 3 — dispatch up to 3 personalities in parallel, starting the next as each completes.
 
 D4. Default `model_overrides`: none.
 
@@ -240,6 +299,10 @@ E3. Dispatch failure for an individual personality (sub-agent crashes or returns
 E4. Review packet assembly fails (no artifact resolvable): return error to caller (see B1). Must not dispatch.
 
 E5. Synthesis exceeds word budget: truncate at priority order — disagreements first, then high-severity findings, then medium, then low. Note the truncation in output.
+
+E6. Arbitrator dispatch fails or returns no structured output: return error to caller with any per-personality summary collected from Step 7. Must not attempt synthesis from raw member outputs.
+
+E7. Hash record write failure (Steps 5 or 8): non-fatal. Log the failure and continue execution. Per-persona write failure does not abort the swarm; B10 re-dispatches the missing persona on the next run. Synthesis write failure does not affect the result already returned to the caller.
 
 ## Precedence Rules
 
@@ -265,7 +328,7 @@ DN4. Must not dump raw sub-agent output to the caller; synthesize and speak as t
 
 DN5. Must not merge with or replace the `code-review` skill.
 
-DN6. Must not dispatch personalities sequentially when parallel dispatch is available.
+DN6. Must not dispatch personalities sequentially one at a time. Must not dispatch all personalities simultaneously with no concurrency cap. Rolling window of 3 is the required pattern.
 
 DN7. Must not include bare model names; use model class terminology only.
 
@@ -295,7 +358,7 @@ Mitigation: include the literal read-only phrase (C2) in every personality dispa
 
 **F4: Swarm dispatch issued sequentially** — personalities are dispatched one by one, multiplying total latency by personality count.
 Why: default coding pattern loops and awaits each dispatch.
-Mitigation: issue all dispatches as a single parallel batch per Step 5.
+Mitigation: use rolling window of 3 per Step 5 — dispatch up to 3 in parallel, start next as each completes.
 
 **F5: Synthesis dumps reviewer names** — output exposes the internal review machinery ("Devil's Advocate said...") breaking the host-voice requirement.
 Why: synthesizing from structured output naturally includes provenance.
