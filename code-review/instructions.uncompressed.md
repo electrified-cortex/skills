@@ -100,12 +100,6 @@ Findings that fail any check MUST be omitted. Do not downgrade — omit entirely
 - Do not modify the change set during a pass. Edits happen between passes only.
 - Record the sign-off so downstream consumers can verify the review occurred.
 
-## When to Use
-
-Reviewing a change set of executable or compilable code: source files, build scripts, CI configuration, infrastructure-as-code manifests.
-
-For non-code artifacts (specs, skills, docs), use `spec-auditing` or `skill-auditing` instead — they use a different tier policy.
-
 ## Iteration Safety
 
 Do not re-audit unchanged files.

@@ -5,7 +5,7 @@ description: Tiered code review on a change set. Read-only — never modifies co
 
 # Code Review
 
-Dispatch zero-context sub-agents per tier. NEVER read or interpret `instructions.txt` yourself — let the sub-agent do the work.
+Dispatch zero-context sub-agents per tier.
 
 ## Dispatch
 

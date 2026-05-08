@@ -40,7 +40,7 @@ tier policy. The difference is normative.
 - **Finding**: a single reported issue with severity, location (file +
   line range when applicable), description, and recommended action.
 - **Severity**: classification of a finding's importance. The vocabulary
-  is fixed: `blocker`, `major`, `minor`, `nit`.
+  is fixed: `critical`, `high`, `medium`, `low`, `info`.
 - **Audit**: structured review of non-code artifacts (specifications,
   skill definitions, documentation, configuration policy). Audits are
   governed by the spec-auditing and skill-auditing skills and use a
@@ -170,8 +170,8 @@ exactly these fields:
    successful standard pass produces a valid index.
 3. `severity_aggregate`: a count of findings by severity across the
    sign-off pass only (not summed across all passes), with a key for
-   each severity value in the fixed vocabulary (`blocker`, `major`,
-   `minor`, `nit`). When a value has no findings, its count is zero.
+   each severity value in the fixed vocabulary (`critical`, `high`,
+   `medium`, `low`, `info`). When a value has no findings, its count is zero.
 4. `verdict`: the overall review verdict. When `sign_off_pass_index` is
    non-null, this is the sign-off pass's verdict (`clean` or
    `findings`), propagated. When `sign_off_pass_index` is `null` because
@@ -210,16 +210,17 @@ walking the full pass list.
 The severity values are fixed. Dispatched agents must use only these
 values. The vocabulary is:
 
-- `blocker`: must be addressed before the change set advances. Examples:
+- `critical`: must be addressed before the change set advances. Examples:
   data loss risk, security hole, broken build, broken contract.
-- `major`: should be addressed before the change set advances unless the
+- `high`: should be addressed before the change set advances unless the
   calling agent explicitly defers. Examples: significant correctness risk,
   missing error handling on an externally observable failure, regression
   risk in unrelated code.
-- `minor`: improvement worth making but not blocking. Examples: clarity,
+- `medium`: improvement worth making but not blocking. Examples: clarity,
   small refactor opportunity, redundant code.
-- `nit`: stylistic preference, naming polish, comment wording. Never
+- `low`: stylistic preference, naming polish, comment wording. Rarely
   blocking.
+- `info`: informational note only; no action required.
 
 ### Calling agent obligations
 

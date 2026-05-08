@@ -87,10 +87,6 @@ Don't communicate caller disputes about smoke findings to substantive pass.
 Don't modify change set during pass. Edits happen between passes only.
 Record sign-off so downstream consumers can verify review occurred.
 
-When to Use:
-Reviewing change set of executable or compilable code: source files, build scripts, CI config, infrastructure-as-code manifests.
-For non-code artifacts (specs, skills, docs), use `spec-auditing` or `skill-auditing` instead — different tier policy.
-
 Iteration Safety:
 Don't re-audit unchanged files.
 See `../iteration-safety/SKILL.md`.

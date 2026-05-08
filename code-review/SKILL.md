@@ -133,6 +133,7 @@ Summary: 1-3 sentences — top concern + overall verdict.
 ## Dependencies
 
 - `capability-cache` skill
+- `code-review-setup/` (sub-skill): preflight readiness check — verify host environment can run code-review. Run once per environment before first claim.
 - `dispatch` skill
 - `swarm` skill (for swarm mode)
 - `spec-auditing`, `skill-auditing`, `compression` (related skills)
