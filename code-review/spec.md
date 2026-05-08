@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Define the procedure and output contract for tiered code review on a change
-set. Code review surfaces issues, risks, and improvement opportunities in
-executable/compilable code so the calling agent can act on them. This spec
-governs procedure, tier policy, inputs, outputs, and the boundary between
-reviewing and fixing.
+Define the procedure and output contract for adversarial code review. Code review assumes the change set has flaws and goes looking for them — scrutinizing implementation for correctness, security, design soundness, and operational risk. This spec governs procedure, tier policy, inputs, outputs, and the boundary between reviewing and fixing.
+
+`code-review` is focused on implementation. Its operating principle: "Assume this has flaws. Find them." It is skeptical by default, adversarial in framing, and disciplined in scope — it reviews only what is supplied.
+
+`code-review` and `swarm` are sibling skills with distinct intent. Code review scrutinizes implementation; swarm challenges design and architecture. Neither depends on the other.
 
 ## Scope
 
@@ -17,6 +17,8 @@ infrastructure-as-code manifests.
 This is a **dispatch skill** — each review pass runs in an isolated, zero-context
 agent. Inline execution is prohibited; it produces shallow, inconsistent results
 and allows caller context to bleed into the review judgment.
+
+**Scope discipline**: the file list supplied by the caller is the complete review scope. Code review does not follow imports, expand to callers, or pull in dependencies outside the supplied list. If wider scope is needed, the caller supplies it.
 
 Does not cover non-code artifacts (specs, skills, documents). Those are
 governed by `spec-auditing` and `skill-auditing`, which use a different
@@ -283,6 +285,8 @@ values. The vocabulary is:
     dispatched agent must still surface every `critical` and `high`
     finding that exists outside the focus areas. `medium` and `low`
     findings outside the focus may be deprioritized.
+12. Calibrated severity — findings are graded proportional to signal strength. Speculative or uncertain issues must be `medium` or lower, never `critical` or `high`, unless the evidence path (source, sink, missing guard) is fully established. Surface smoke signals without declaring fire; raising an alert without catastrophizing is the correct behavior.
+13. Structured evidence for `critical` and `high` findings — each must include: Source (where the problem enters the system), Sink (where it causes harm or manifests), and Missing guard (what defense is absent). Findings at `critical` or `high` severity that lack all three fields must be downgraded to `medium` by the dispatched agent before returning results.
 
 ## Behavior
 
@@ -322,7 +326,9 @@ prohibits passing the caller's dispute to the substantive pass.
 
 ### Smoke pass framing
 
-Smoke pass uses adversarial framing: "Assume the author made at least one mistake." Security-focused smoke passes add pentester framing. Substantive pass uses neutral framing.
+Smoke pass uses adversarial framing: "Assume the author made at least one mistake. Your job is to find it." For security-focused passes, add pentester framing: "Frame yourself as a pentester looking for exploitable paths, not a colleague doing a courtesy review." Substantive pass uses neutral framing.
+
+The adversarial frame is a documented force multiplier: MOSAIC-Bench (arxiv 2605.03952) measured neutral-framed reviewers approving 25.8% of confirmed-vulnerable diffs; adversarial-framed reviewers reached 88.4% detection with 4.6% FP on 608 real PRs. Framing change only; no model upgrade needed.
 
 ### Hallucination filter
 
@@ -338,6 +344,25 @@ Hallucination filter: before including a finding, reviewer must verify file path
   normative convergence criterion.
 - Severity vocabulary defaults to the fixed four-value set defined under
   Definitions. No project-local extension permitted.
+- Context pointer auto-detect: if the caller does not supply a context pointer (Inputs item 5) and the reviewed repo contains a `CLAUDE.md`, `README.md`, `.cursorrules`, or `copilot-instructions.md`, the skill must detect and inject the first match as the context pointer before dispatching. Reduces caller friction and improves reviewer calibration.
+
+## Hash Record
+
+Code review uses content-addressed caching to avoid re-reviewing unchanged inputs.
+
+**Cache key**: SHA-256 hash of the canonical manifest — sorted file paths concatenated with their individual content hashes. For a single-file review: SHA-256 of that file's contents.
+
+**Cache path**: `.hash-record/XX/HASH/code-review/vN/report.md` where `XX` is the first two hex chars of HASH and `vN` is the skill version.
+
+**Caller model override**: if the caller specifies a model, the cache path gains a subfolder: `.hash-record/XX/HASH/code-review/vN/<caller-model>/report.md`. Default (no model specified): no model subfolder.
+
+**Cache hit**: report exists at the cache path. Return the cached report without dispatching any agents.
+
+**Cache miss**: run the full review, write the report to the cache path, return the result.
+
+**Invalidation**: any change to any file in the manifest changes the manifest hash. No manual invalidation is needed.
+
+**Version increment**: bump `vN` when the skill logic changes in a way that could affect review quality — prompt changes, tier policy changes, output schema changes. Old cache entries are automatically bypassed.
 
 ## Error Handling
 
