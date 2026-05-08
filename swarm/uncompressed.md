@@ -98,7 +98,7 @@ Callers may supply additional personalities for a single invocation. Each entry 
 
 ## Caller Tier
 
-The host agent executing this skill must be **sonnet-class minimum**. Callers dispatching swarm via the `dispatch` skill must use `tier: standard` or higher.
+The host agent executing this skill must be **sonnet-class minimum**. Callers dispatching swarm via the `dispatch` skill must use `tier: standard` or higher. If no dispatch mechanism is available in the host runtime, return error: "Swarm requires dispatch capability; no dispatch mechanism available."
 
 ## Step Sequence
 
@@ -152,7 +152,7 @@ Only after the swarm is finalized (post-gating) load the prompt for each survivi
 
 ### Step 5 — Dispatch
 
-Dispatch swarm personalities using your runtime dispatch mechanism, following the `dispatch` skill for implementation details. Maximum concurrency: rolling window of 3. Dispatch up to 3 personalities in parallel; as each completes, dispatch the next until all personalities have run. Do not dispatch more than 3 at once.
+Dispatch swarm personalities using your runtime dispatch mechanism, following the `dispatch` skill for implementation details. Maximum concurrency: rolling window of 3. Dispatch up to 3 personalities in parallel; as each completes, dispatch the next until all personalities have run. Do not dispatch more than 3 at once. Treat any personality that has not returned within a host-defined threshold (recommended: typical sonnet-class response time + 20%) as timed out per B4.
 
 Each personality dispatch receives:
 
@@ -302,6 +302,7 @@ E2. Empty swarm after gating: return error (B2). Do not synthesize.
 E3. Dispatch failure for individual personality (crash or incoherent output): treat as non-contributing (B4). Do not block synthesis.
 E4. Review packet assembly fails (no artifact resolvable): return error (B1). Do not dispatch.
 E5. Synthesis exceeds word budget: truncate at priority order — disagreements first, then high-severity, then medium, then low. Note truncation in output.
+E6. Arbitrator dispatch fails or returns no structured output: return error to the caller with the per-personality summary from Step 7 (if any). Do not attempt synthesis from raw member outputs.
 
 ## Precedence
 

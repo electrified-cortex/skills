@@ -89,7 +89,7 @@ Inputs:
 | `model_overrides` | optional | Map of personality name to model class. Affects model class only, not backend type. |
 
 Caller Tier:
-Host agent executing skill MUST be sonnet-class minimum. Callers dispatching swarm via `dispatch` skill MUST use `tier: standard` or higher.
+Host agent executing skill MUST be sonnet-class minimum. Callers dispatching swarm via `dispatch` skill MUST use `tier: standard` or higher. If no dispatch mechanism is available in the host runtime, return error: "Swarm requires dispatch capability; no dispatch mechanism available."
 
 Step Sequence:
 
@@ -136,7 +136,7 @@ Step 4 — Load reviewer prompts:
 Only after swarm is finalized (post-gating) load prompt for each surviving personality. Reviewer prompts stored as separate sub-skill files under `swarm/reviewers/<name>.md`. Filename = personality name lowercased with spaces and apostrophes replaced by hyphens (e.g., `devils-advocate.md`, `security-auditor.md`). Load only files for dispatched personalities. Don't load files for non-dispatched personalities.
 
 Step 5 — Dispatch:
-Dispatch swarm personalities using your runtime dispatch mechanism, following the `dispatch` skill for implementation details. Maximum concurrency: rolling window of 3. Dispatch up to 3 personalities in parallel; as each completes, dispatch the next until all personalities have run. Don't dispatch more than 3 at once.
+Dispatch swarm personalities using your runtime dispatch mechanism, following the `dispatch` skill for implementation details. Maximum concurrency: rolling window of 3. Dispatch up to 3 personalities in parallel; as each completes, dispatch the next until all personalities have run. Don't dispatch more than 3 at once. Treat any personality that has not returned within a host-defined threshold (recommended: typical sonnet-class response time + 20%) as timed out per B4.
 
 Each personality dispatch receives:
 1. Full review packet from Step 1.
@@ -268,6 +268,7 @@ E2. Empty swarm after gating: return error (B2). Don't synthesize.
 E3. Dispatch failure for individual personality (crash or incoherent output): treat as non-contributing (B4). Don't block synthesis.
 E4. Review packet assembly fails (no artifact resolvable): return error (B1). Don't dispatch.
 E5. Synthesis exceeds word budget: truncate at priority order — disagreements first, then high-severity, then medium, then low. Note truncation in output.
+E6. Arbitrator dispatch fails or returns no structured output: return error to caller with per-personality summary from Step 7 (if any). Don't attempt synthesis from raw member outputs.
 
 Precedence:
 P1. `personality_filter` overrides trigger-condition evaluation; only named personalities dispatched; triggers bypassed for named entries.
