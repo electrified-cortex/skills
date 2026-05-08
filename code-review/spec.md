@@ -417,7 +417,7 @@ Output: finding list (`{file, line_or_range, severity, description}`) + 1-3 sent
 ### Swarm Mode
 
 Routes code-review through the `swarm` skill for multi-model consensus review.
-All swarm dispatch conventions are governed by `swarm/SKILL.md`. The code-review
+All swarm dispatch conventions are governed by the `swarm` skill (`swarm/SKILL.md`). The code-review
 skill supplies the instructions payload; the swarm skill governs model selection
 and result aggregation.
 

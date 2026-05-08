@@ -38,9 +38,8 @@ ERROR: <reason>
 One-pass adversarial review. Runs inline (no tiered dispatch). Caller accepts reduced isolation.
 
 Inputs: `file_path` OR `pr_number`, optional `model`, optional `focus`.
+Output: finding list (`{file, line_or_range, severity, description}`) + 1-3 sentence summary.
 
-Procedure:
-1. Check capability-cache for available models. Use `model` if specified; else first available from cache; else host model.
-2. Read target (file contents or PR diff) fully.
-3. Dispatch ONE adversarial pass: `<input-args>` = `change_set=<target> tier=smoke [focus=<focus>]`; `<tier>` = `fast-cheap`; `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
-4. Return finding list + 1-3 sentence summary. Do NOT treat output as tiered sign-off.
+## Related
+
+`dispatch` (`../dispatch/SKILL.md`), `swarm` (`../swarm/SKILL.md`), `code-review-setup` (`./code-review-setup/SKILL.md`)
