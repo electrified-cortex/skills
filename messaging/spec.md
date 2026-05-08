@@ -227,9 +227,7 @@ R18. On startup, the recipient MUST invoke the drain tool before entering its no
 
 ### Drain Tool Interface
 
-R19. The drain tool MUST accept the following inputs:
-
-    - `--inbox` (required): the agent name whose inbox to drain
+R19. The drain tool MUST accept `--inbox` (required): the agent name whose inbox to drain.
 
 R20. The drain tool MUST enumerate all unclaimed message files (files matching `*.json`
      directly inside the inbox, excluding any files in subdirectories such as `archive/`).
@@ -260,9 +258,7 @@ R25. The drain tool MUST provide a `--help` flag that documents all inputs and b
 
 ### Status Tool Interface
 
-R_N1. The status tool MUST accept the following inputs:
-
-    - `--inbox` (required): the agent name whose inbox to check
+R_N1. The status tool MUST accept `--inbox` (required): the agent name whose inbox to check.
 
 R_N2. The status tool MUST count unclaimed message files — files matching `*.json` directly
       inside the inbox directory, excluding any files in subdirectories such as `archive/`.
@@ -366,7 +362,7 @@ regardless. The agent logs the failure and continues; it MUST NOT halt.
 
 | Situation | Tool | Required Behavior |
 | --- | --- | --- |
-| Init tool creates inbox dir | `init` | Atomic mkdir; exit 2 if already taken (without --force) |
+| Init tool creates inbox dir | `init` | Atomic mkdir; exit 2 if already taken (without `--force`) |
 | Init tool signal write fails | `init` | Exit 3; fatal on init |
 | Inbox directory absent on post | `post` | Create directory, then proceed |
 | Filename collision detected | `post` | Regenerate nonce and retry |
@@ -396,7 +392,7 @@ P4. All drained messages move to `archive/` regardless of parse outcome. There i
 
 - Do NOT skip `init` on startup; register your inbox before draining or watching.
 - Do NOT call `init` without `--force` on restart; use `--force` to reclaim.
-- Do NOT write inbox files directly; always invoke the `post` tool.
+- Do NOT write inbox files directly; **always** invoke the `post` tool.
 - Do NOT invoke `drain` against another agent's inbox; drain your own inbox only.
 - Do NOT delete message files from the inbox or archive manually during normal operation.
 - Do NOT share one inbox between multiple draining agents in v1.

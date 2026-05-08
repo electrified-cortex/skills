@@ -73,7 +73,7 @@ init --name <your-name> --force
 ## Posting a Message
 
 Invoke the `post` tool. The tool generates the filename, timestamp, nonce, and writes
-atomically. Do not write inbox files directly.
+atomically. **Do not** write inbox files directly.
 
 ```text
 post --from <your-name> --to <recipient> --body "<body>" [--subject "<subject>"]
@@ -88,7 +88,7 @@ error on stderr. Check the exit code.
 post --from curator --to overseer --body "Results in .work/batch-42/." --subject "Batch complete"
 ```
 
-Do not post to your own inbox.
+**Do not** post to your own inbox.
 
 ## Receiving Messages — Monitoring
 
@@ -145,7 +145,7 @@ drain --inbox <your-name>
 `drain` **always** does a full sweep — one invocation collects all pending messages, not
 just one. Drain exits zero even if some files were skipped. An empty inbox returns `[]`.
 
-Do not drain another agent's inbox. Drain archives files even if they cannot be parsed;
+**Do not** drain another agent's inbox. Drain archives files even if they cannot be parsed;
 the failure is reported on stderr.
 
 ## Processing Messages
