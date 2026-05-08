@@ -423,7 +423,7 @@ and result aggregation.
 
 ## Evaluation
 
-Evaluation criteria for this skill are documented in `eval.md`.
+Evaluation criteria for this skill are documented in `eval.txt`.
 
 ## Relationship to Other Skills
 

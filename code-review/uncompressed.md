@@ -12,10 +12,6 @@ Dispatch zero-context sub-agents per tier.
 `<instructions>` = `<path>/code-review/instructions.txt` (NEVER READ)
 `<instructions-abspath>` = absolute path to `<instructions>`
 
-Pre-dispatch: if `context_pointer` not supplied by caller, check repo root for these files in order: `CLAUDE.md`, `README.md`, `.cursorrules`, `copilot-instructions.md`. Use the first file found as `context_pointer`. If none are found, omit the parameter.
-
-Optional blast-radius gate (git-range input only): if `change_set` is a git ref or range (contains `..`, `...`, or matches `HEAD~N`), run `git diff --name-only <change_set>` to enumerate affected files. Restrict the review context to those files. Skip this step if `change_set` is an inline diff or an explicit file list.
-
 **Smoke pass:**
 `<input-args>` = `change_set=<form> tier=smoke [focus=<csv>] [context_pointer=<path>]`
 `<tier>` = `fast-cheap`
