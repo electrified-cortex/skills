@@ -26,7 +26,7 @@ description: Multi-personality review infrastructure — selects personalities, 
 - **Availability probe**: lightweight shell command (e.g., `copilot --version`) or tool call confirming backend is live before including the personality.
 - **Backend**: execution target for a personality. Values: `dispatch-sonnet`, `dispatch-haiku`, `dispatch-opus`, `copilot-cli`, `local-llm` (reserved, v1 out of scope).
 - **Arbitrator**: single sonnet-class sub-agent dispatched after all swarm members complete. Receives full member outputs and review packet. Returns structured action list only. Not a reviewer. Not in the registry. Not subject to personality selection, availability gating, or `personality_filter`.
-- **Generated persona**: reviewer personality manifested inline at runtime when the registry yields fewer than 3 suitable personalities for the artifact. Has a name, critique lens, and scope limiter — all specific to the artifact's domain. Exists for the current invocation only. Not persisted, no `reviewers/` file, not cached in the hash record.
+- **Generated persona**: reviewer personality manifested inline at runtime when the registry yields fewer than 3 suitable personalities for the artifact. Has a name, critique lens, and scope limiter — all specific to the artifact's domain. Exists for current invocation only; not cached; no `reviewers/` file.
 - **Manifest hash**: SHA-256 of the canonical input manifest — sorted file paths concatenated with their content hashes. For non-file artifacts (text, conversation excerpts), the SHA-256 of the artifact content. Used as the cache key for all hash-record entries.
 
 ## Personality Registry
@@ -82,7 +82,7 @@ Optional fields:
 vendor: <string>        # model vendor hint (e.g. anthropic, openai); used by diversity rule B8
 ```
 
-**Model selection at dispatch**: read `suggested_models` from frontmatter, pick first available. Caller `model_overrides` take precedence. If no `suggested_models` entry is available and no override applies, fall back to `sonnet-class`.
+**Model selection at dispatch**: see Step 2.
 
 ## Custom Personality Menu
 
@@ -155,7 +155,7 @@ Only after the swarm is finalized (post-gating) load the prompt for each survivi
 
 ### Step 5 — Dispatch
 
-Dispatch swarm personalities using your runtime dispatch mechanism, following the `dispatch` skill for implementation details. Maximum concurrency: rolling window of 3. Dispatch up to 3 personalities in parallel; as each completes, dispatch the next until all personalities have run. Do not dispatch more than 3 at once. Treat any personality that has not returned within a host-defined threshold (recommended: typical sonnet-class response time + 20%) as timed out per B4.
+Dispatch swarm personalities using your runtime dispatch mechanism, following the `dispatch` skill for implementation details. Maximum concurrency — dispatch up to 3 in parallel; as each completes, dispatch the next until all have run. Treat any personality that has not returned within a host-defined threshold (recommended: typical sonnet-class response time + 20%) as timed out per B4.
 
 As each personality dispatch completes, immediately write its raw output to `.hash-record/XX/HASH/swarm/v1/<persona-name>/report.md` (built-in personas only — generated personas are never written). Do not wait for all dispatches to complete before writing per-persona results.
 

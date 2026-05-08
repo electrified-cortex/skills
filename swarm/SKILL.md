@@ -75,7 +75,7 @@ Optional fields:
 vendor: <string>        # model vendor hint (e.g. anthropic, openai); used by diversity rule B8
 ```
 
-Model selection at dispatch: read `suggested_models` from frontmatter, pick first available. Caller `model_overrides` take precedence. If no `suggested_models` available and no override, fall back to `sonnet-class`.
+Model selection at dispatch: see Step 2.
 
 Custom Personality Menu:
 Callers may supply additional personalities for single invocation. Each entry MUST specify: name, trigger condition, model class (or inherit from caller override), backend, scope limiter. Custom entries appended after entry 9 in evaluation order. Don't mutate built-in registry.
@@ -138,7 +138,7 @@ Step 4 — Load reviewer prompts:
 Only after swarm is finalized (post-gating) load prompt for each surviving personality. Reviewer prompts stored as separate sub-skill files under `swarm/reviewers/<name>.md`. Filename = personality name lowercased with spaces and apostrophes replaced by hyphens (e.g., `devils-advocate.md`, `security-auditor.md`). Load only files for dispatched personalities. Don't load files for non-dispatched personalities.
 
 Step 5 — Dispatch:
-Dispatch swarm personalities using your runtime dispatch mechanism, following the `dispatch` skill for implementation details. Maximum concurrency: rolling window of 3. Dispatch up to 3 personalities in parallel; as each completes, dispatch the next until all personalities have run. Don't dispatch more than 3 at once. Treat any personality that has not returned within a host-defined threshold (recommended: typical sonnet-class response time + 20%) as timed out per B4.
+Dispatch swarm personalities using your runtime dispatch mechanism, following the `dispatch` skill for implementation details. Maximum concurrency — dispatch up to 3 in parallel; as each completes, dispatch the next until all have run. Treat any personality that has not returned within a host-defined threshold (recommended: typical sonnet-class response time + 20%) as timed out per B4.
 
 As each personality completes, immediately write its raw output to `.hash-record/XX/HASH/swarm/v1/<persona-name>/report.md` (built-in personas only — not generated). Do not wait for all dispatches to complete before writing.
 
@@ -250,7 +250,7 @@ B7. Custom menu personalities evaluated against caller-supplied trigger conditio
 
 B8. Cross-vendor diversity: if all finalized swarm personalities resolve to the same model family or vendor, attempt resolution before dispatching. Preferred resolution order: (1) find any personality in the full candidate registry on a different model family — include it; (2) re-assign Devil's Advocate to a different vendor via `vendor` override. If neither resolves the monoculture, proceed with the homogeneous swarm and include `homogeneity_warning` in synthesis output. Do NOT degrade to code-review. Rationale: arxiv 2605.00914 — 85.5% sycophantic conformity and 32.3 pp correct-answer loss in same-family debate.
 
-B9. Generated persona dispatch: generated personas dispatched in Step 5 same as built-in. Receive: review packet, inline system prompt synthesized from name + lens + scope, explicit read-only constraint. Not added to registry. Not cached. Always re-dispatched on any re-run.
+B9. Generated persona dispatch: generated personas dispatched in Step 5 same as built-in. Receive: review packet, inline system prompt synthesized from name + lens + scope, explicit read-only constraint. Not in registry; not cached (always re-dispatched).
 
 B10. Hash record partial recovery: if a previous swarm run on the same manifest hash was interrupted before completion, check `.hash-record/XX/HASH/swarm/vN/` for existing per-persona results. Treat cached built-in persona results as complete; re-dispatch only missing built-in personas and all generated personas.
 
