@@ -37,9 +37,12 @@ ERROR: <reason>
 
 ## Single-Adversary Mode
 
-One-pass adversarial review. Runs inline (no tiered dispatch). Caller accepts reduced isolation.
+`<input-args>` = `change_set=<file_path|pr_number> tier=single-adversary [focus=<csv>] [context_pointer=<path>]`
+`<tier>` = `fast-cheap`
+`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+Follow dispatch skill. See `../dispatch/SKILL.md`
 
-Inputs: `file_path` OR `pr_number`, optional `model`, optional `focus`.
+Inputs: `file_path` OR `pr_number` as `change_set`, optional `focus`.
 Output: finding list (`{file, line_or_range, severity, description}`) + 1-3 sentence summary.
 
 ## Related

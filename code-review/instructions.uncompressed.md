@@ -9,7 +9,7 @@ Produce structured findings report. Never edit, commit, push, or stage.
 
 ## Tier Vocabulary
 
-- **fast-cheap** — cost-optimized model (e.g. Haiku-class). Use for `tier=smoke`.
+- **fast-cheap** — cost-optimized model (e.g. Haiku-class). Use for `tier=smoke` and `tier=single-adversary`.
 - **standard** — capable model (e.g. Sonnet-class). Use for `tier=substantive`.
 
 Tier substitution is prohibited.
@@ -17,8 +17,8 @@ Tier substitution is prohibited.
 ## Parameters
 
 - `change_set` (required): inline unified diff text, list of absolute file paths, or git ref/range (refs require shell access in the dispatched agent).
-- `tier` (required): `smoke` or `substantive`. Governs depth.
-- `prior_findings` (substantive only, required): findings from every prior pass on the same change set, forwarded unmodified. Required for substantive; smoke mustn't receive this.
+- `tier` (required): `smoke`, `substantive`, or `single-adversary`. Governs depth.
+- `prior_findings` (substantive only, required): findings from every prior pass on the same change set, forwarded unmodified. Required for substantive; smoke and single-adversary must not receive this.
 - `focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `critical` and `high` outside focus must still surface.
 - `context_pointer` (optional): path to CLAUDE.md/README/style guide for local conventions. Read for conventions only.
 
@@ -38,9 +38,10 @@ Tier substitution is prohibited.
 
 1. If `tier=smoke`: review for surface-level findings — style, naming, obvious bugs, missing error handling on observable failures, lint-grade defects. Bound depth to a fast pass. Skip design and architecture critique. Adversarial framing: assume the author made at least one mistake. Your job is to find it, not approve the work. If `focus` includes `security`: also frame yourself as a pentester looking for exploitable paths, not a colleague doing a courtesy review.
 2. If `tier=substantive`: review for design, correctness, security, concurrency, architectural risk, test adequacy, public API surface. Read every file touched by the change set, not just the diff hunks.
-3. Substantive pass MUST re-examine each `prior_findings` entry. For each prior finding, decide: agree (carry forward, severity may change), or contradict (mark false-positive or out-of-scope). Contradictions go in your output so the calling agent can preserve them.
-4. Apply focus areas if provided: examine focus areas first and most thoroughly. Still surface every `critical` and `high` finding outside focus. `medium`/`low` outside focus may be deprioritized.
-5. Read `context_pointer` if provided, for local conventions only. It does NOT replace your judgment.
+3. If `tier=single-adversary`: adversarial single-pass review. No prior_findings. Frame as attacker looking for exploitable paths, logic errors, and correctness failures. Bound depth to a focused pass — narrower than substantive, deeper than smoke.
+4. Substantive pass MUST re-examine each `prior_findings` entry. For each prior finding, decide: agree (carry forward, severity may change), or contradict (mark false-positive or out-of-scope). Contradictions go in your output so the calling agent can preserve them.
+5. Apply focus areas if provided: examine focus areas first and most thoroughly. Still surface every `critical` and `high` finding outside focus. `medium`/`low` outside focus may be deprioritized.
+6. Read `context_pointer` if provided, for local conventions only. It does NOT replace your judgment.
 
 One skill per invocation. Each pass is separate dispatch. Smoke always runs before substantive. Two-pass policy applies regardless of change-set size — there is no size threshold permitting single-pass review.
 

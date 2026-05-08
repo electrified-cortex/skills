@@ -401,15 +401,13 @@ authorized for use with this skill.
 ### Single-Adversary Mode
 
 A single-pass adversarial review for time- or token-constrained scenarios.
-
-Exception: Single-Adversary Mode runs inline in the host agent context; this is explicitly permitted as a lightweight alternative to the full tiered dispatch model. Caller accepts reduced isolation.
+Dispatches to a subagent. Context isolation is mandatory — same rules as all other modes.
 
 Requirements:
 1. Exactly one pass is dispatched (no smoke + substantive split).
 2. The dispatched agent reads the target (file contents or PR diff) and
    produces one adversarial finding list.
-3. Must check capability-cache before dispatching to any non-host model.
-4. Single-adversary output must not be treated as tiered sign-off.
+3. Single-adversary output must not be treated as tiered sign-off.
 
 Inputs: `file_path` OR `pr_number`, optional `model`, optional `focus`.
 Output: finding list (`{file, line_or_range, severity, description}`) + 1-3 sentence summary.
