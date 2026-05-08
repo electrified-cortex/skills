@@ -1,16 +1,17 @@
 ---
 name: messaging
-description: File-based agent-to-agent messaging via shared inbox. Use when posting a message to another agent, reading inbox messages, monitoring for incoming messages, draining an inbox, setting up inter-agent communication, or leaving a message for another agent.
+description: File-based agent-to-agent messaging via shared inbox. Triggers - registering an inbox, posting a message to another agent, reading inbox messages, monitoring for incoming messages, draining an inbox, checking inbox status, setting up inter-agent communication, leaving a message for another agent.
 ---
 
 # Messaging
 
-Agents communicate by posting message files into one another's inbox. Three tools handle
+Agents communicate by posting message files into one another's inbox. Four tools handle
 all mechanics — the agent supplies intent only.
 
+- **`init`** — register your inbox on startup; claims your name atomically
 - **`post`** — post a message to another agent's inbox
 - **`drain`** — collect all pending messages from your own inbox
-- **`notify`** — optional Monitor callback; runs drain-to-quiescence and outputs results
+- **`status`** — Monitor callback; counts unclaimed messages and reports the pending count
 
 The inbox is a directory in the shared workspace. Any agent with filesystem access can
 post to any inbox. There is no security model; isolation is conventional.
@@ -29,27 +30,46 @@ being read. Archive has no protocol role; it may be purged freely.
 **Claim** — an exclusive reservation the `drain` tool takes on a message file before
 reading it. Prevents a concurrent drain from reading the same message.
 
-**Notify** — an optional convenience wrapper around the drain-to-quiescence loop. Wire
-it directly to your Monitor as the signal-change callback. When the signal fires, the
-Monitor calls `notify`, which drains to empty and outputs all messages. Agents that use
-`notify` do not implement the loop themselves.
+**Name claim** — the atomic directory creation `init` performs. Only one caller can
+create `.inbox/<name>/`; all others get "already registered." Establishes the agent's
+identity in the shared inbox space.
 
-**Message file** — a `.md` file in the inbox. Filename format:
-`YYYYMMDDTHHmmssZ-<nonce>.md`. Example: `20260508T143022Z-a3f91b.md`.
+**Status** — a lightweight, read-only probe. Wire it directly to your Monitor as the
+signal-change callback. When the signal fires, the Monitor calls `status`, which counts
+unclaimed messages in the inbox and outputs the pending count. Does not claim or modify
+any files.
 
-Every message file begins with a YAML frontmatter block followed by a Markdown body:
+**Message file** — a `.json` file in the inbox. Filename format:
+`YYYYMMDDTHHmmssZ-<nonce>.json`. Example: `20260508T143022Z-a3f91b.json`.
 
-```yaml
----
-from: curator
-to: overseer
-sent: 2026-05-08T14:30:22Z
-subject: Task complete — review requested
----
+Every message file is a JSON object with fields `from`, `to`, `sent`, `subject`, `body`:
 
-The batch run finished. Results are in `.work/batch-42/`. Ready for your review.
+```json
+{
+  "from": "curator",
+  "to": "overseer",
+  "sent": "2026-05-08T14:30:22Z",
+  "subject": "Task complete \u2014 review requested",
+  "body": "The batch run finished. Results are in .work/batch-42/. Ready for your review."
+}
 ```
 
+## Registering Your Inbox
+
+Call `init` once on first startup. It creates your inbox, archive, and signal file, and
+claims your name atomically. If the name is taken, `init` exits non-zero.
+
+```text
+init --name <your-name>
+```
+
+On restart, use `--force` to reclaim your inbox without failing:
+
+```text
+init --name <your-name> --force
+```
+
+`--force` never modifies existing messages.
 
 ## Posting a Message
 
@@ -77,16 +97,17 @@ Watch the signal file for changes. When the signal changes, drain your inbox.
 
 Signal file path: `.inbox/<own-name>/.signal`
 
-### Option A — Wire notify to your Monitor
+### Option A — Wire status to your Monitor
 
-The simplest integration. Configure your Monitor to call `notify` when the signal file
-changes. `notify` runs the drain-to-quiescence loop and outputs all messages to stdout.
+The simplest integration. Configure your Monitor to call `status` when the signal file
+changes. `status` counts unclaimed messages and outputs a single line.
 
 ```text
-notify --inbox <your-name>
+status --inbox <your-name>
+# outputs: [2026-05-08T14:30:22Z]: 5 messages waiting
 ```
 
-Capture stdout and process each message. The Monitor handles the rest.
+Read the count. Then drain if messages are waiting.
 
 ### Option B — Implement the loop yourself
 
@@ -103,14 +124,14 @@ watch .inbox/<own-name>/.signal for changes:
         resume watching
 ```
 
-The drain-to-quiescence loop (inner `loop`) is required. A message may arrive while you
-are processing a previous batch. The signal will not fire again for that message. Draining
-to empty ensures nothing is stranded.
+The drain-to-quiescence loop (inner `loop`) is required. Draining to empty ensures
+nothing is stranded.
 
 ### On Startup
 
-Before entering the monitoring loop, drain your inbox once — or call `notify` once if
-using Option A. Messages posted while you were offline are waiting.
+1. Call `init --name <own-name>` (or `--force` on restart).
+2. Drain your inbox once — messages posted while you were offline are waiting.
+3. Enter the monitoring loop.
 
 ## Draining an Inbox
 
@@ -118,23 +139,23 @@ using Option A. Messages posted while you were offline are waiting.
 drain --inbox <your-name>
 ```
 
-`drain` returns all pending messages in ascending timestamp order (oldest first). For each
-message it: claims the file, reads the content, moves it to `archive/`, outputs the
-content. On claim failure (another drain got there first) it skips silently.
+`drain` returns a JSON array of all pending messages in ascending timestamp order
+(oldest first). For each message it: claims the file, reads the content, moves it to
+`archive/`. On claim failure (another drain got there first) it skips silently.
 
 `drain` **always** does a full sweep — one invocation collects all pending messages, not
-just one. Drain exits zero even if some files were skipped.
+just one. Drain exits zero even if some files were skipped. An empty inbox returns `[]`.
 
-Do not drain another agent's inbox. Drain returns messages even if their frontmatter is
-malformed; the failure is reported on stderr and the file is archived regardless.
+Do not drain another agent's inbox. Drain archives files even if they cannot be parsed;
+the failure is reported on stderr.
 
 ## Processing Messages
 
-For each message returned by drain:
+For each message object in the JSON array returned by drain:
 
-1. Parse frontmatter — verify `from`, `to`, `sent`, `subject` are present.
+1. Read fields: `from`, `to`, `sent`, `subject`, `body`.
 2. Process the body.
-3. If the frontmatter is invalid or the body unhandled, log the failure and continue.
+3. If a field is missing or the body is unhandled, log the failure and continue.
 
 A single bad message **must not** halt inbox processing.
 
@@ -153,6 +174,8 @@ Messages from different senders interleave by timestamp.
 
 ## Don'ts
 
+- Do NOT skip `init` on startup — register before draining or watching.
+- Do NOT call `init` without `--force` on restart.
 - Do NOT write inbox files directly — always use `post`.
 - Do NOT drain another agent's inbox.
 - Do NOT delete message files — archive is the only terminal state.

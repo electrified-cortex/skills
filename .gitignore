@@ -23,3 +23,6 @@ temp/
 
 # Capability cache — local env probes, never commit
 .capability-cache/
+
+# Agent inboxes — runtime state, never commit
+.inbox/
