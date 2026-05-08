@@ -393,6 +393,32 @@ Hallucination filter: before including a finding, reviewer must verify file path
   isolation is a normative requirement, not an optimization.
 - Don't introduce additional severity values or rename the existing four.
 
+## Extension Modes
+
+The following modes extend the base tiered procedure. They are first-class and
+authorized for use with this skill.
+
+### Single-Adversary Mode
+
+A single-pass adversarial review for time- or token-constrained scenarios.
+
+Requirements:
+1. Exactly one pass is dispatched (no smoke + substantive split).
+2. The dispatched agent reads the target (file contents or PR diff) and
+   produces one adversarial finding list.
+3. Must check capability-cache before dispatching to any non-host model.
+4. Single-adversary output must not be treated as tiered sign-off.
+
+Inputs: `file_path` OR `pr_number`, optional `model`, optional `focus`.
+Output: finding list (`{file, line_or_range, severity, description}`) + 1-3 sentence summary.
+
+### Swarm Mode
+
+Routes code-review through the `swarm` skill for multi-model consensus review.
+All swarm dispatch conventions are governed by `swarm/SKILL.md`. The code-review
+skill supplies the instructions payload; the swarm skill governs model selection
+and result aggregation.
+
 ## Relationship to Other Skills
 
 - **spec-writing**: defines the meta-rules this specification document

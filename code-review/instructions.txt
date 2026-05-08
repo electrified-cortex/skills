@@ -87,10 +87,6 @@ Don't communicate caller disputes about smoke findings to substantive pass.
 Don't modify change set during pass. Edits happen between passes only.
 Record sign-off so downstream consumers can verify review occurred.
 
-Iteration Safety:
-Don't re-audit unchanged files.
-See `../iteration-safety/SKILL.md`.
-
 Rules:
 Read-only. Don't edit, stage, commit, push, or run scripts that mutate state.
 Don't fix findings, even when fix is one line. Report only.
