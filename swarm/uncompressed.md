@@ -195,6 +195,8 @@ Required arbitrator output format (two sections):
 - **Obvious actions**: items where two or more swarm members independently flagged the same concern, or where the concern is self-evident from the artifact. Each entry: action description + source personality names + evidence cite.
 - **Critical actions**: items that, if unaddressed, would block shipping or require architectural change, regardless of reviewer agreement count. Each entry: action description + source personality names + evidence cite + severity rationale.
 
+Authoritative format: `specs/arbitrator.md` — inline above is a summary only. On any amendment to the output structure, update both in the same commit.
+
 The arbitrator must not include speculative, low-confidence, or duplicate items. Its output is the input to Step 7; the host synthesizes from this list only, not from raw member output.
 
 Grounded-challenge requirement: before citing a member finding as incorrect, the arbitrator must quote the exact sentence from that finding it believes is wrong. Challenging an interpretation rather than an explicit claim is not permitted.
