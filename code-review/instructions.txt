@@ -34,8 +34,6 @@ Procedure:
 3. Substantive pass MUST re-examine each `prior_findings` entry. Decide: agree (carry forward, severity may change), or contradict (mark false-positive or out-of-scope). Contradictions go in output so calling agent can preserve them.
 4. Apply focus areas if provided: examine first and most thoroughly. Still surface every `critical` and `high` finding outside focus. `medium`/`low` outside focus may be deprioritized.
 5. Read `context_pointer` if provided, for local conventions only. Does NOT replace judgment.
-6. Smoke pass orchestration: calling agent dispatches smoke first, reviews findings, optionally acts, then dispatches substantive.
-7. Substantive pass authoritative: most recent standard pass is sign-off. Calling agent records sign-off so downstream consumers can verify review occurred.
 
 One skill per invocation. Each pass is separate dispatch. Smoke always runs before substantive. Two-pass policy applies regardless of change-set size — no size threshold permitting single-pass review.
 
@@ -82,13 +80,6 @@ Aggregated Result (calling agent assembles after all passes):
 `severity_aggregate`: finding counts by severity in sign-off pass only (zero per bucket when null or clean).
 `verdict`: `clean`, `findings`, or `error`.
 `preserved_contradictions`: smoke findings sign-off contradicted, each paired with contradicting commentary.
-
-Calling Agent Rules:
-Never treat smoke-only as authoritative. Skipping substantive pass prohibited.
-Forward prior-pass findings unmodified — no annotations, dispute flags, or reordering.
-Don't communicate caller disputes about smoke findings to substantive pass.
-Don't modify change set during pass. Edits happen between passes only.
-Record sign-off so downstream consumers can verify review occurred.
 
 Rules:
 Read-only. Don't edit, stage, commit, push, or run scripts that mutate state.
