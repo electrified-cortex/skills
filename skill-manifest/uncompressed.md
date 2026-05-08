@@ -50,5 +50,3 @@ Returns:
 ```
 
 `broken_refs` empty = all refs resolved. `cached: true` = LLM not invoked.
-
-Related: `hash-record`, `hash-record-manifest`, `dispatch`
