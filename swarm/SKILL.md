@@ -295,4 +295,4 @@ P3. Availability gate overrides selection: personality passing selection but fai
 P4. Read-only constraint (C1) overrides any personality-specific instruction. No personality prompt may authorize editing, committing, or side-effecting commands.
 P5. Synthesis word budget (2000-word cap) overrides completeness. Truncation required over exceeding cap.
 
-Related: `../dispatch/SKILL.md` — agent-launching skill. `specs/arbitrator.md` — arbitrator format.
+Related: the `dispatch` skill (`../dispatch/SKILL.md`) — agent-launching skill. `specs/arbitrator.md` — arbitrator format.
