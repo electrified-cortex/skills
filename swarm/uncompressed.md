@@ -129,13 +129,13 @@ Build the combined registry by crawling `reviewers/` (applying the metadata-vali
 
 If `personality_filter` is supplied: restrict candidate set to named personalities; dispatch those regardless of trigger evaluation (triggers bypassed for named entries). If no filter: evaluate trigger conditions against problem traits inferred from the review packet; exclude personalities whose trigger is not satisfied.
 
-For each personality in the active set, read `suggested_models` from frontmatter and select the first available model. Caller `model_overrides` take precedence. If no `suggested_models` entry is available and no override applies, default to `sonnet-class`.
+For each personality in the active set, read `suggested_models` from frontmatter and select the first available model. For `dispatch-*` backends, no model-class probe is run — treat all listed entries as available and select the first. Caller `model_overrides` take precedence. If no `suggested_models` entry is available and no override applies, default to `sonnet-class`.
 
 Selection logic must be inline within the skill.
 
 Personalities with `required: true` must always be included regardless of trigger evaluation. `personality_filter` may exclude a required personality only when the caller explicitly names a subset that omits it. Devil's Advocate carries `required: true`.
 
-**5-cap**: if more than 5 personalities pass trigger evaluation and availability gating, apply priority order: (1) Devil's Advocate always; (2) personalities with the most-specific trigger match (narrower/more-specific trigger = higher priority); (3) drop lowest-priority remaining until the count reaches 5.
+**5-cap**: if more than 5 personalities pass trigger evaluation and availability gating, apply priority order: (1) Devil's Advocate always; (2) personalities with the most-specific trigger match (specificity score = count of distinct comma-delimited terms in the `trigger` field; `"always"` scores 0; tie-break by alphabetical personality name); (3) drop lowest-priority remaining until the count reaches 5.
 
 **Manifest gap fill**: if selection yields fewer than 3 suitable personalities after filter and trigger evaluation, manifest one or more generated personas inline to reach at least 3. For each generated persona: invent a name relevant to the artifact's domain, a critique lens covering problem traits not already represented by selected personalities, and a scope limiter avoiding overlap. Dispatch the same as built-in; do not add to the registry; do not cache in the hash record.
 
@@ -302,7 +302,7 @@ D2. Default model class: first available from `suggested_models` frontmatter; fa
 D3. Default dispatch: rolling window of 3. Never more than 3 personalities in flight at once.
 D4. Default `model_overrides`: none.
 D5. Custom menu entry with no model class and no caller override: default `sonnet-class`.
-D6. Confidence rating default: Medium. Raised to High when all personalities agree and all findings cite evidence. Lowered to Low when disagree set is non-empty on a high-severity point, or when any personality returns no findings.
+D6. Confidence rating default: Medium. Raised to High when (1) disagree set is empty AND (2) every dispatched personality returned at least one finding AND all findings cite evidence. Lowered to Low when disagree set is non-empty on a high-severity point, or when any personality returns no findings.
 
 Calibration examples:
 

@@ -14,4 +14,5 @@
 | REUSE | 2026-05-08 | Haiku | 0 | qualified | no — all multi-step procedures are swarm-specific; dispatch + arbitrator already reference external specs |
 | OUTPUT-FORMAT | 2026-05-08 | Sonnet | 3 | acted | yes — HIGH (Summary collapses arbitrator criticality; split to Critical actions + Findings); 2x MEDIUM (Dropped personalities conflated; Active personalities missing) |
 | ERROR-HANDLING | 2026-05-08 | Sonnet | 3 | acted | yes — 3x MEDIUM (hash write failure no E entry; E3 prompt load gap; incoherent output undefined) |
+| TESTABILITY | 2026-05-08 | Sonnet | 3 | acted | yes — HIGH (dispatch-* model selection undefined); 2x MEDIUM (5-cap tie-break missing; D6 agreement under-specified) |
 | WORDING | 2026-05-08 | Sonnet | 5 | acted | yes — 2x HIGH (guard clause halt, must-return contracts); 2x MEDIUM (C2 inline, B8 inline); 1x LOW (verify criterion) |
