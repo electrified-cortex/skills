@@ -19,7 +19,7 @@ Every indexed directory receives exactly two files from you. No other filenames 
 | File | Description |
 | --- | --- |
 | `skill.index` | Plain-text raw index. One entry per line. No header, no footer, no blank lines. |
-| `skill.index.md` | Markdown metadata overlay. H1 + one `## name` section per entry. Requires compression pass before write. |
+| `skill.index.md` | Markdown metadata overlay. H1 + one `## name` section per entry. |
 
 You do not write `skill.index.sha256`. That stamp is written by the auditor after a PASS verdict. Absence of a stamp after your build means "unaudited since last build," not "needs rebuild."
 
@@ -52,7 +52,6 @@ Rules:
 - One `## name` section per entry key, in the same order as the raw index. The self entry's section uses the directory's own name, not `.`.
 - Each section body: a single paragraph. One sentence preferred.
 - Must not describe trailing slashes, dot entries, navigation mechanics, shortcut entries, or any index artifact structure.
-- Must pass a full compression pass before the builder writes it. If compression fails: abort the node, record it as blocked in the change manifest, leave all three prior artifacts unchanged, and continue with siblings.
 
 ---
 
@@ -69,11 +68,11 @@ For each node:
 5. Compute SHA-256 of that serialized content.
 6. Compare against the SHA-256 of the currently stored `skill.index` bytes. Never consult `skill.index.sha256` for change detection — it is the auditor's sign-off artifact, not a builder freshness marker.
 7. If hashes match: no writes for this node. Record as unchanged. Move on.
-8. If hashes differ (or no stored `skill.index` exists): generate overlay in memory → run compression check → on success, write in strict order: `skill.index` first, then `skill.index.md`. Do not terminate normally between the two writes.
+8. If hashes differ (or no stored `skill.index` exists): generate overlay in memory → write in strict order: `skill.index` first, then `skill.index.md`. Do not terminate normally between the two writes.
 
 ### Full-Rebuild Mode (`--rebuild`)
 
-Regenerates all nodes regardless of stored raw index content. Same write order and compression gate as incremental.
+Regenerates all nodes regardless of stored raw index content. Same write order as incremental.
 
 ### Write Order (strict)
 
@@ -121,7 +120,6 @@ When the existing `skill.index` at a node already contains shortcut entries:
 ## Error Handling
 
 - Unreadable directory: skip, record in change manifest as skipped, continue with siblings.
-- Overlay compression failure: record node as `blocked`, leave all prior artifacts unchanged, continue.
 - Partial-write protection: do not terminate normally between the two writes of a single node.
 - Change manifest not producible: emit a non-zero exit signal; do not silently succeed.
 
@@ -130,7 +128,6 @@ When the existing `skill.index` at a node already contains shortcut entries:
 ## Fail-Fast Rules
 
 - If `root` is missing or unreadable: stop immediately, return a non-zero exit signal.
-- If a node's overlay fails compression: do not write any artifact for that node; record as blocked and continue.
 - Never write `skill.index` with a `.md` extension.
 - Never embed navigation or mechanical explanation in overlay sections.
 - Never emit overlay before the raw index.
@@ -144,7 +141,7 @@ The builder's output is a change manifest. Return it as structured text with one
 Fields per node:
 
 - `path`: directory path
-- `status`: one of `created` | `updated` | `unchanged` | `blocked` | `drifted` | `skipped`
+- `status`: one of `created` | `updated` | `unchanged` | `drifted` | `skipped`
 - `notes`: free text for broken-shortcut, orphan, or phantom findings
 
 Include an `ok` summary line at the end if the run completed without a non-zero exit condition.
@@ -163,12 +160,12 @@ mode: incremental | rebuild
 
 | Path | Status | Notes |
 | --- | --- | --- |
-| <path> | created/updated/unchanged/blocked/drifted/skipped | <notes or blank> |
+| <path> | created/updated/unchanged/drifted/skipped | <notes or blank> |
 
 ### Summary
 
 Nodes processed: N
-Created: N  Updated: N  Unchanged: N  Blocked: N  Drifted: N  Skipped: N
+Created: N  Updated: N  Unchanged: N  Drifted: N  Skipped: N
 Broken shortcuts: N  Orphans: N
 ```
 
