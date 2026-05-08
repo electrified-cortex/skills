@@ -5,8 +5,6 @@ description: Tiered code review on a change set. Read-only — never modifies co
 
 # Code Review
 
-Dispatch zero-context sub-agents per tier.
-
 ## Dispatch
 
 `<instructions>` = `<path>/code-review/instructions.txt` (NEVER READ)
@@ -37,12 +35,3 @@ Follow dispatch skill. See `../dispatch/SKILL.md`
 RESULT: aggregated review result
 ERROR: <reason>
 
-## Extension Modes
-
-### Single-Adversary Mode
-
-Single-adversary: one-pass targeted review — see `instructions.uncompressed.md` for procedure.
-
-### Swarm Integration
-
-Dispatch code-review via `swarm` skill. See `swarm/SKILL.md`.

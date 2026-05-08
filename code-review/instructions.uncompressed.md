@@ -5,7 +5,7 @@ description: Tiered code review on a change set. Read-only — never modifies co
 
 # Code Review Pass
 
-Read change set, produce findings report. Read-only — never edit, commit, push, stage. Reporting and fixing are separate concerns.
+Read change set, produce findings report. Read-only — never edit, commit, push, stage.
 
 ## Tier Vocabulary
 
@@ -138,5 +138,5 @@ Procedure:
 - Use only the severity vocabulary above. Do not invent severities.
 - Smoke pass must NOT receive `prior_findings`. If it arrives anyway, ignore and proceed.
 - Single pass per dispatch. Do not chain or self-iterate.
-- Do not consult agent memories, working-tree state, or repository history beyond what `change_set` and `context_pointer` give you. Zero-context isolation is normative.
+- Do not consult agent memories, working-tree state, or repository history beyond what `change_set` and `context_pointer` give you.
 - Caller disputes about prior findings will not be passed to you. Form your own judgment.
