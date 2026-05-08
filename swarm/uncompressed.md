@@ -151,7 +151,7 @@ For `dispatch-*` backends, no probe is required; the dispatch skill handles erro
 
 ### Step 4 — Load reviewer prompts
 
-Only after the swarm is finalized (post-gating) load the prompt for each surviving personality. Reviewer prompts are stored as separate sub-skill files under `swarm/reviewers/<name>.md`. The filename is the personality name lowercased with spaces and apostrophes replaced by hyphens (e.g., `devils-advocate.md`, `security-auditor.md`). Load only files for dispatched personalities. Do not load files for non-dispatched personalities.
+Only after the swarm is finalized (post-gating) load the prompt for each surviving personality. Reviewer prompts are stored as separate sub-skill files under `swarm/reviewers/<name>.md`. The filename is the personality name lowercased with spaces and apostrophes replaced by hyphens (e.g., `devils-advocate.md`, `security-auditor.md`). Load only files for dispatched personalities. Do not load files for non-dispatched personalities. If a prompt file cannot be loaded, treat the personality as non-contributing per E3 and continue.
 
 ### Step 5 — Dispatch
 
@@ -223,7 +223,7 @@ Required synthesis output fields:
 - **Findings**: remaining consensus findings from the arbitrator's Obvious actions section.
 - **Disagreements**: explicit statement of each disagree-set item; state the tension and apply judgment.
 - **Unavailable personalities**: personalities dropped by the availability gate with reason.
-- **Non-contributing personalities**: personalities dispatched but that returned empty output or timed out.
+- **Non-contributing personalities**: personalities dispatched but that returned empty output, timed out, or returned incoherent output.
 - **Confidence rating**: High, Medium, or Low. Include rationale. If Low, state specifically what would raise it.
 
 Synthesis output template (use this structure exactly):
@@ -239,7 +239,7 @@ Synthesis output template (use this structure exactly):
 
 **Unavailable personalities**: <name — probe-failed reason; "None" if none>
 
-**Non-contributing personalities**: <name — empty/timeout reason; "None" if none>
+**Non-contributing personalities**: <name — empty/timeout/incoherent reason; "None" if none>
 
 **Confidence rating**: <High | Medium | Low> — <rationale; if Low, state what would raise it>
 
@@ -315,10 +315,11 @@ Calibration examples:
 
 E1. Unavailable external backend (probe fails): drop personality, note in synthesis, continue. Do not fail-stop.
 E2. Empty swarm after gating: return error (B2). Do not synthesize.
-E3. Dispatch failure for individual personality (crash or incoherent output): treat as non-contributing (B4). Do not block synthesis.
+E3. Dispatch failure for individual personality (crash, incoherent output, or prompt load failure at Step 4): treat as non-contributing (B4). Do not block synthesis. Incoherent output: a response that cannot be parsed into a structured findings list and is not a recognizable "No findings" statement. A response of "No findings" with or without brief rationale is valid (B4, non-contributing). A structurally garbled, off-topic, or unparseable response is incoherent (E3).
 E4. Review packet assembly fails (no artifact resolvable): return error (B1). Do not dispatch.
 E5. Synthesis exceeds word budget: truncate at priority order — disagreements first, then high-severity, then medium, then low. Note truncation in output.
 E6. Arbitrator dispatch fails or returns no structured output: return error to the caller with the per-personality summary from Step 7 (if any). Do not attempt synthesis from raw member outputs.
+E7. Hash record write failure (Steps 5 or 8): non-fatal. Log the failure and continue. Per-persona write failure (Step 5): continue dispatching remaining personalities; B10 will re-dispatch the missing persona on the next run. Synthesis write failure (Step 8): the result was already returned to the caller — log and return normally. Do not abort the swarm or surface a write error to the caller.
 
 ## Precedence
 

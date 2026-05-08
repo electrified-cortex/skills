@@ -135,7 +135,7 @@ Probe fails: drop from swarm for this invocation. Note drop in synthesis output.
 For `dispatch-*` backends, no probe required; dispatch skill handles errors internally. If all personalities are dropped (swarm empty), return error per B2.
 
 Step 4 — Load reviewer prompts:
-Only after swarm is finalized (post-gating) load prompt for each surviving personality. Reviewer prompts stored as separate sub-skill files under `swarm/reviewers/<name>.md`. Filename = personality name lowercased with spaces and apostrophes replaced by hyphens (e.g., `devils-advocate.md`, `security-auditor.md`). Load only files for dispatched personalities. Don't load files for non-dispatched personalities.
+Only after swarm is finalized (post-gating) load prompt for each surviving personality. Reviewer prompts stored as separate sub-skill files under `swarm/reviewers/<name>.md`. Filename = personality name lowercased with spaces and apostrophes replaced by hyphens (e.g., `devils-advocate.md`, `security-auditor.md`). Load only files for dispatched personalities. Don't load files for non-dispatched personalities. If a prompt file cannot be loaded, treat the personality as non-contributing per E3 and continue.
 
 Step 5 — Dispatch:
 Dispatch swarm personalities using your runtime dispatch mechanism, following the `dispatch` skill for implementation details. Maximum concurrency — dispatch up to 3 in parallel; as each completes, dispatch the next until all have run. Treat any personality that has not returned within a host-defined threshold (recommended: typical sonnet-class response time + 20%) as timed out per B4.
@@ -198,7 +198,7 @@ Critical actions: each item that would block shipping or require architectural c
 Findings: remaining consensus findings.
 Disagreements: explicit statement of each disagree-set item; state tension and apply judgment.
 Unavailable personalities: personalities dropped by availability gate with reason.
-Non-contributing personalities: personalities dispatched but returned empty output or timed out.
+Non-contributing personalities: personalities dispatched but returned empty output, timed out, or returned incoherent output.
 Confidence rating: High, Medium, or Low. Include rationale. If Low, state what would raise it.
 
 Synthesis output template (use this structure exactly):
@@ -214,7 +214,7 @@ Synthesis output template (use this structure exactly):
 
 **Unavailable personalities**: <name — probe-failed reason; "None" if none>
 
-**Non-contributing personalities**: <name — empty/timeout reason; "None" if none>
+**Non-contributing personalities**: <name — empty/timeout/incoherent reason; "None" if none>
 
 **Confidence rating**: <High | Medium | Low> — <rationale; if Low, state what would raise it>
 
@@ -280,10 +280,11 @@ Low: Devil's Advocate returns "No findings"; or Security Auditor and Architect r
 Error Handling:
 E1. Unavailable external backend (probe fails): drop personality, note in synthesis, continue. Don't fail-stop.
 E2. Empty swarm after gating: return error (B2). Don't synthesize.
-E3. Dispatch failure for individual personality (crash or incoherent output): treat as non-contributing (B4). Don't block synthesis.
+E3. Dispatch failure for individual personality (crash, incoherent output, or prompt load failure at Step 4): treat as non-contributing (B4). Don't block synthesis. Incoherent output: response cannot be parsed into a structured findings list and is not a recognizable "No findings" statement (a response of "No findings" with or without brief rationale is valid, not incoherent).
 E4. Review packet assembly fails (no artifact resolvable): return error (B1). Don't dispatch.
 E5. Synthesis exceeds word budget: truncate at priority order — disagreements first, then high-severity, then medium, then low. Note truncation in output.
 E6. Arbitrator dispatch fails or returns no structured output: return error to caller with per-personality summary from Step 7 (if any). Don't attempt synthesis from raw member outputs.
+E7. Hash record write failure (Steps 5 or 8): non-fatal. Log the failure and continue. Per-persona write failure (Step 5): continue dispatching remaining personalities; B10 re-dispatches missing persona on next run. Synthesis write failure (Step 8): result already returned to caller — log and return normally. Don't abort the swarm or surface a write error to the caller.
 
 Precedence:
 P1. `personality_filter` overrides trigger-condition evaluation; only named personalities dispatched; triggers bypassed for named entries.
