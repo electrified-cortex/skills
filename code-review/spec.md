@@ -338,6 +338,7 @@ Hallucination filter: before including a finding, reviewer must verify file path
 
 - Smoke pass tier defaults to fast-cheap. No override permitted.
 - Substantive pass tier defaults to standard. No override permitted.
+- Single-adversary pass tier defaults to fast-cheap. Override permitted via `model` input. **Tradeoff note:** fast-cheap is appropriate for cost-speed optimization and catches obvious logic errors, but may miss subtle security vulnerabilities requiring deeper reasoning. For security-critical code, callers should dispatch a full substantive pass instead or override with `model=standard`.
 - Focus areas: default none (full review). Behavior constraints defined
   under Requirements > Inputs item 4.
 - See Calling agent obligations item 4 — no maximum pass count, no
@@ -350,17 +351,19 @@ Hallucination filter: before including a finding, reviewer must verify file path
 
 Code review uses content-addressed caching to avoid re-reviewing unchanged inputs.
 
-**Cache key**: SHA-256 hash of the canonical manifest — sorted file paths concatenated with their individual content hashes. For a single-file review: SHA-256 of that file's contents.
+**Ownership**: the calling agent (via SKILL.md) is responsible for the cache probe before dispatch and the cache write after result received. Dispatched review agents have no cache awareness — they execute the review procedure and return findings only.
+
+**Cache key**: SHA-256 hash of the canonical manifest — sorted `change_set` file paths concatenated with their individual content hashes, plus `tier`, `focus` (if set), SHA-256 of `context_pointer` file contents (if set), and SHA-256 of `prior_findings` JSON (substantive only, if set). All key components must be included; omitting any component risks a stale cache hit when inputs differ only in that dimension.
 
 **Cache path**: `.hash-record/XX/HASH/code-review/vN/report.md` where `XX` is the first two hex chars of HASH and `vN` is the skill version.
 
-**Caller model override**: if the caller specifies a model, the cache path gains a subfolder: `.hash-record/XX/HASH/code-review/vN/<caller-model>/report.md`. Default (no model specified): no model subfolder.
+**Caller model override**: if the caller specifies a model, the cache path gains a subfolder: `.hash-record/XX/HASH/code-review/vN/<caller-model>/report.md`. Default (no model specified): no model subfolder. The `model` parameter applies to all tiers (smoke, substantive, single-adversary).
 
 **Cache hit**: report exists at the cache path. Return the cached report without dispatching any agents.
 
 **Cache miss**: run the full review, write the report to the cache path, return the result.
 
-**Invalidation**: any change to any file in the manifest changes the manifest hash. No manual invalidation is needed.
+**Invalidation**: any change to any component of the cache key changes the manifest hash. No manual invalidation is needed.
 
 **Version increment**: bump `vN` when the skill logic changes in a way that could affect review quality — prompt changes, tier policy changes, output schema changes. Old cache entries are automatically bypassed.
 
