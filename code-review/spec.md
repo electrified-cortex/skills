@@ -280,8 +280,8 @@ values. The vocabulary is:
     the per-pass duration.)
 11. Focus areas (Inputs item 4) reorder the dispatched agent's search
     priority but must not reduce review depth on non-focus areas. The
-    dispatched agent must still surface every `blocker` and `major`
-    finding that exists outside the focus areas. `minor` and `nit`
+    dispatched agent must still surface every `critical` and `high`
+    finding that exists outside the focus areas. `medium` and `low`
     findings outside the focus may be deprioritized.
 
 ## Behavior
@@ -402,6 +402,8 @@ authorized for use with this skill.
 
 A single-pass adversarial review for time- or token-constrained scenarios.
 
+Exception: Single-Adversary Mode runs inline in the host agent context; this is explicitly permitted as a lightweight alternative to the full tiered dispatch model. Caller accepts reduced isolation.
+
 Requirements:
 1. Exactly one pass is dispatched (no smoke + substantive split).
 2. The dispatched agent reads the target (file contents or PR diff) and
@@ -418,6 +420,10 @@ Routes code-review through the `swarm` skill for multi-model consensus review.
 All swarm dispatch conventions are governed by `swarm/SKILL.md`. The code-review
 skill supplies the instructions payload; the swarm skill governs model selection
 and result aggregation.
+
+## Evaluation
+
+Evaluation criteria for this skill are documented in `eval.md`.
 
 ## Relationship to Other Skills
 
