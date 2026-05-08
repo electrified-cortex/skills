@@ -9,7 +9,7 @@ agent how many messages are waiting. Does not claim, read, or modify any file.
 ## Parameters
 
 | Flag | Required | Description |
-|---|---|---|
+| --- | --- | --- |
 | `--inbox` | Yes | Agent name whose inbox to check (kebab-case) |
 | `--workspace` | No | Workspace root path. Defaults to `$PWD`. |
 | `--help` | No | Print usage and exit zero. |
@@ -22,14 +22,16 @@ agent how many messages are waiting. Does not claim, read, or modify any file.
    `*.json.claimed`).
 4. Get current UTC time in ISO 8601 format.
 5. Output exactly one line to stdout:
-   ```
+
+   ```text
    [<utc-timestamp>]: <N> messages waiting
    ```
+
 6. Exit zero.
 
 ## Output
 
-```
+```text
 [2026-05-08T14:30:22Z]: 5 messages waiting
 [2026-05-08T14:30:22Z]: 0 messages waiting
 ```
@@ -39,7 +41,7 @@ Output is written even when N is zero.
 ## Exit Codes
 
 | Code | Meaning |
-|---|---|
+| --- | --- |
 | 0 | Normal completion |
 | 1 | Missing required argument |
 | 2 | Tool-level failure (filesystem inaccessible) |
