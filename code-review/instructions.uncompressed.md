@@ -95,26 +95,6 @@ Findings that fail any check MUST be omitted. Do not downgrade — omit entirely
 - `verdict`: `clean`, `findings`, or `error`.
 - `preserved_contradictions`: smoke findings the sign-off contradicted, each paired with contradicting commentary.
 
-## Single-Adversary Mode
-
-Quick targeted review: one pass, focused finding list.
-
-Inputs:
-- `file_path` OR `pr_number` — target of the review.
-- `model` — which model to use. If omitted, read capability-cache for available models; use first listed, or fall back to host model.
-- `focus` — optional. Specific concern (e.g. "security", "logic errors", "API surface").
-
-Output:
-- Finding list: each finding as `{file, line_or_range, severity, description}`. Severity: `critical | high | medium | low | info`.
-- Summary: 1-3 sentences — top concern + overall verdict.
-
-Procedure:
-1. Check capability cache (see `capability-cache` skill) to determine available models.
-2. If `model` specified, use it. If not, use first available from cache (fall back to host model if cache MISS or unavailable).
-3. Read the target (file contents or PR diff).
-4. Produce ONE adversarial review pass: assume the author is wrong and look for problems.
-5. Return finding list + summary.
-
 ## Rules
 
 - Read-only. Do not edit, stage, commit, push, or run scripts that mutate state.
