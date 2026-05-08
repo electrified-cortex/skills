@@ -20,7 +20,7 @@ Parameters:
 
 Pre-dispatch:
 1. If `context_pointer` not supplied by caller, check repo root for these files in order: `CLAUDE.md`, `README.md`, `.cursorrules`, `copilot-instructions.md`. Use first found as `context_pointer`. If none found, omit.
-2. Blast-radius gate (git-range input only): if `change_set` is a git ref/range (contains `..'', `...'', or matches `HEAD~N`), run `git diff --name-only <change_set>` to enumerate affected files. Restrict review context to those files. Skip if `change_set` is inline diff or explicit file list.
+2. Blast-radius gate (git-range input only): if `change_set` is a git ref/range (contains `..`, `...`, or matches `HEAD~N`), run `git diff --name-only <change_set>` to enumerate affected files. Restrict review context to those files. Skip if `change_set` is inline diff or explicit file list.
 
 Gates:
 1. Resolve `change_set`. Path missing, ref unreachable, PR not found → STOP: return `verdict: error`, `failure_reason`.
@@ -36,7 +36,7 @@ Procedure:
 5. Apply focus areas if provided: examine first and most thoroughly. Still surface every `critical` and `high` finding outside focus. `medium`/`low` outside focus may be deprioritized.
 6. Read `context_pointer` if provided, for local conventions only. Does NOT replace judgment.
 
-One skill per invocation. Each pass is separate dispatch. Smoke always runs before substantive. Two-pass policy applies regardless of change-set size — no size threshold permitting single-pass review.
+One skill per invocation. Each pass is separate dispatch. Smoke always runs before substantive. Two-pass policy applies regardless of change-set size — no size threshold permitting single-pass review. Single-Adversary Mode is explicitly exempt: it is intentionally one pass.
 
 Empty change set: skip all passes; return empty-result aggregate.
 
@@ -59,7 +59,7 @@ Findings that fail any check MUST be omitted. Don't downgrade — omit entirely.
 Output (JSON-shaped, returned as final response):
 ```json
 {
-  "tier": "smoke" | "substantive",
+  "tier": "smoke" | "substantive" | "single-adversary",
   "pass_index": <integer assigned by caller; echo if provided, else 0>,
   "verdict": "clean" | "findings" | "error",
   "findings": [

@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Tiered code review on a change set. Read-only — never modifies code. Triggers — security, correctness, code-quality, change-review, architectural-risk.
+description: Tiered code review on a change set. Read-only. Never modifies code. Triggers - security, correctness, code-quality, change-review, architectural-risk.
 ---
 
 # Code Review Pass
@@ -43,7 +43,7 @@ Tier substitution is prohibited.
 5. Apply focus areas if provided: examine focus areas first and most thoroughly. Still surface every `critical` and `high` finding outside focus. `medium`/`low` outside focus may be deprioritized.
 6. Read `context_pointer` if provided, for local conventions only. It does NOT replace your judgment.
 
-One skill per invocation. Each pass is separate dispatch. Smoke always runs before substantive. Two-pass policy applies regardless of change-set size — there is no size threshold permitting single-pass review.
+One skill per invocation. Each pass is separate dispatch. Smoke always runs before substantive. Two-pass policy applies regardless of change-set size — there is no size threshold permitting single-pass review. Single-Adversary Mode is explicitly exempt: it is intentionally one pass.
 
 Empty change set: skip all passes; return empty-result aggregate.
 
@@ -72,14 +72,14 @@ Findings that fail any check MUST be omitted. Do not downgrade — omit entirely
 
 ```json
 {
-  "tier": "smoke" | "substantive",
+  "tier": "smoke" | "substantive" | "single-adversary",
   "pass_index": <integer assigned by caller; echo if provided, else 0>,
   "verdict": "clean" | "findings" | "error",
   "findings": [
     {
       "severity": "critical" | "high" | "medium" | "low" | "info",
       "location": "<file:line-range>" or "general",
-      "snippet": "<verbatim code excerpt from diff — exact match; omit if location is \"general\">",
+      "snippet": "<verbatim code excerpt from diff -- exact match; omit if location is \"general\">",
       "description": "<what the issue is>",
       "recommended_action": "<what should be done>"
     }
