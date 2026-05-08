@@ -97,6 +97,7 @@ watch .inbox/<own-name>/.signal for changes:
 Drain-to-quiescence loop (inner `loop`) required; ensures nothing stranded.
 
 On Startup:
+
 1. `init --name <own-name>` (or `--force` on restart).
 2. Drain once — msgs posted while offline waiting.
 3. Enter monitoring loop.
@@ -115,6 +116,7 @@ Don't drain another agent's inbox. Archives files even if unparsable; failure on
 
 Processing:
 For each msg object in JSON array from `drain`:
+
 1. Read fields: `from`, `sent`, `body`. Check for optional `subject`.
 2. Process body.
 3. If field missing or body unhandled, log failure and continue.
