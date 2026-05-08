@@ -22,7 +22,7 @@ description: Multi-personality review infrastructure — selects personalities, 
 - **Confidence rating**: High / Medium / Low scalar attached to synthesis output. Reflects reviewer agreement, evidence quality, and scope coverage.
 - **Model class**: abstract tier identifier — `haiku-class` (shallow/mechanical), `sonnet-class` (moderate reasoning, default), `opus-class` (heavy architectural reasoning), `gpt-class` (external OpenAI-hosted model). No bare model names anywhere.
 - **Caller override**: caller-supplied `model_overrides` map pinning one or more personalities to a specific model class for the current invocation.
-- **High-severity point**: finding that would block shipping or require architectural change. Used in confidence rating determination.
+- **High-severity point**: finding that would block shipping or require architectural change. Covers both HIGH and CRITICAL severity labels from Step 5 dispatch output — they share the same threshold. Maps to the arbitrator's Critical actions section. Used in confidence rating (D6) and E5 truncation priority; HIGH and CRITICAL receive equal truncation priority.
 - **Availability probe**: lightweight shell command (e.g., `copilot --version`) or tool call confirming backend is live before including the personality.
 - **Backend**: execution target for a personality. Values: `dispatch-sonnet`, `dispatch-haiku`, `dispatch-opus`, `copilot-cli`, `local-llm` (reserved, v1 out of scope).
 - **Arbitrator**: single sonnet-class sub-agent dispatched after all swarm members complete. Receives full member outputs and review packet. Returns structured action list only. Not a reviewer. Not in the registry. Not subject to personality selection, availability gating, or `personality_filter`.
@@ -157,7 +157,7 @@ Only after the swarm is finalized (post-gating) load the prompt for each survivi
 
 Dispatch swarm personalities using your runtime dispatch mechanism, following the `dispatch` skill for implementation details. Maximum concurrency — dispatch up to 3 in parallel; as each completes, dispatch the next until all have run. Treat any personality that has not returned within a host-defined threshold (recommended: typical sonnet-class response time + 20%) as timed out per B4.
 
-As each personality dispatch completes, immediately write its raw output to `.hash-record/XX/HASH/swarm/v1/<persona-name>/report.md` (built-in personas only — generated personas are never written). Do not wait for all dispatches to complete before writing per-persona results.
+As each personality dispatch completes, immediately write its raw output to `.hash-record/XX/HASH/swarm/v1/<persona-name>/report.md` (built-in personas only — generated personas are never written). `<persona-name>` uses the same slugification as the reviewer filename (Step 4): personality name lowercased with spaces and apostrophes replaced by hyphens. Do not wait for all dispatches to complete before writing per-persona results.
 
 Each personality dispatch receives:
 
