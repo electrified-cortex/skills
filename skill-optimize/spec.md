@@ -191,12 +191,12 @@ change in a way that invalidates prior records.
     result. The caller controls how many passes to run; the optimizer
     does not self-iterate — it is stateless per invocation.
 
-13. **Pre-flight audit awareness**: Before deep analysis, the optimizer
-    **must** note whether the skill passes basic structural checks
-    (per skill-auditing). Optimization findings are more meaningful on
-    structurally sound skills. If the skill has auditing failures, the
-    optimizer **must** note them as context but still produce optimization
-    findings — the two are complementary.
+13. **Pre-flight audit probe**: Before deep analysis, the optimizer
+    **should** probe the current audit verdict (via `skill-auditing/result.ps1`)
+    and note it as context. The optimizer **must** proceed regardless —
+    a failing audit is not a gate. Audit is a sealing step, not an entry
+    requirement. Optimization findings are valid and useful on structurally
+    unsound skills.
 
 14. **Audit-candidate findings**: When the optimizer identifies a pattern
     that is deterministic and universally applicable (not specific to this
@@ -216,6 +216,11 @@ change in a way that invalidates prior records.
 - **Convergence-based multi-pass**: the optimizer may run in multiple
   passes across escalating model tiers (see R12). A single pass is valid;
   multi-pass until convergence is the optimal pattern.
+- **Seal sequence (post-convergence, caller responsibility)**: once all
+  topics converge, the caller **must** run the seal sequence before
+  distributing the skill: skill-auditing → compression pass (if
+  `uncompressed.md` exists) → markdown-hygiene. The optimizer itself
+  does not trigger these — it emits a `CONVERGED` signal and stops.
 - **Minimum Sonnet for standard pass**: Haiku may be used for initial fast
   passes; Sonnet is required for the standard pass; Opus is recommended
   for deep or final refinement passes. The caller is responsible for tier
