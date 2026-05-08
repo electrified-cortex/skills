@@ -109,6 +109,23 @@ When the detected signal is an alias rather than a pinned version identifier:
 Agents MUST NOT invent or guess a model version not supported by any available signal.
 Fabricated precision is categorically worse than a hedged self-report.
 
+### R-7: No result caching
+
+Agents MUST re-run the full detection procedure on each new question about model identity.
+Detection results from earlier in the same conversation MUST NOT be reused. Model identity
+can change between turns when a user switches models mid-session.
+
+### R-8: Mid-session change disclosure
+
+If the current detection result differs from a model identity stated earlier in the same
+conversation, the agent MUST disclose the change explicitly rather than silently returning
+the new model name. Acceptable form:
+
+> "My model has changed since earlier in this conversation. I am now [model]
+> (source: [source])."
+
+Silently reporting a new model without noting the change is a disclosure failure.
+
 ## Constraints
 
 - No network access or API calls required — all signals must be locally available in the
@@ -126,3 +143,7 @@ Fabricated precision is categorically worse than a hedged self-report.
 4. An agent detecting an alias reports the alias, not an expanded version.
 5. No agent fabricates or guesses a version number without a supporting signal.
 6. Source attribution appears in technical contexts.
+7. An agent asked the same question twice in one conversation re-runs detection rather than
+   repeating a cached result.
+8. An agent whose model changed mid-session discloses the change rather than silently
+   reporting the new model.
