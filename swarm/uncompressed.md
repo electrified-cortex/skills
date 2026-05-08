@@ -121,7 +121,7 @@ Packet fields (omit if not applicable to artifact type):
 - Blast radius: downstream consumers, imports, integrations affected.
 - Conventions: applicable project conventions.
 
-Verify the packet before proceeding: Goal must be specific enough to evaluate; Artifacts must include actual content, not just references. If either condition fails, attempt to resolve the gap from available context. Do not ask the caller to fill gaps.
+Verify the packet before proceeding: Goal must name the artifact type and state what outcome is being evaluated (e.g., "evaluate diff for correctness and security"); Artifacts must include actual content, not just references. If either condition fails, attempt to resolve the gap from available context. Do not ask the caller to fill gaps. If the gap cannot be resolved, return error per B1 and halt.
 
 ### Step 2 — Select personalities
 
@@ -163,16 +163,16 @@ Each personality dispatch receives:
 
 1. The full review packet from Step 1.
 2. The personality's prompt loaded in Step 4.
-3. An explicit read-only constraint (see Constraints C1–C3).
+3. An explicit read-only constraint — include verbatim in each prompt: "read-only review — analyze and report only, no file edits, no commits, no shell commands" (see Constraints C1–C3).
 
-Apply `model_overrides` at dispatch time: if a caller override exists, use it; otherwise use first available entry from `suggested_models`; otherwise fall back to `sonnet-class`. Apply diversity rule B8 after model selection: if all selected personalities resolve to the same model family, execute the resolution order defined in B8 before dispatching.
+Apply `model_overrides` at dispatch time: if a caller override exists, use it; otherwise use first available entry from `suggested_models`; otherwise fall back to `sonnet-class`. Diversity check after model selection: if all selected personalities resolve to the same model family, apply resolution order before dispatching — (1) include any personality from the full candidate registry on a different model family; (2) re-assign Devil's Advocate to a different vendor via `vendor` override; (3) if neither resolves, proceed and set `homogeneity_warning`. (B8 governs this rule.)
 
 Dispatch parameters:
 
 - `<tier>` = `standard`
 - `<description>` = `swarm-personality:<personality-name>`
 
-Should return: a structured findings list. Each finding: description of the issue, evidence cite (snippet, line reference, scenario, or direct quote). Empty response or "No findings" is a valid return — treated as non-contributing (B4).
+Must return: a structured findings list. Each finding: description of the issue, evidence cite (snippet, line reference, scenario, or direct quote). Empty response or "No findings" is a valid return — treated as non-contributing (B4).
 
 Structured-evidence requirement (high/critical findings): any finding marked HIGH or CRITICAL severity must include three fields: Source (where the vulnerability or bug enters), Sink (where it causes harm), and Missing guard (what defense is absent). Findings at HIGH or CRITICAL severity that lack this structure are automatically downgraded to MEDIUM.
 
@@ -187,7 +187,7 @@ Dispatch parameters:
 - `<tier>` = `standard`
 - `<description>` = `swarm-arbitrator`
 
-Should return: a structured two-section action list — Obvious actions and Critical actions — as specified in the Required arbitrator output format below. If no actionable findings: "No actionable findings" stated explicitly.
+Must return: a structured two-section action list — Obvious actions and Critical actions — as specified in the Required arbitrator output format below. If no actionable findings: "No actionable findings" stated explicitly.
 
 The arbitrator's sole job: produce a structured action list — not a narrative synthesis.
 
