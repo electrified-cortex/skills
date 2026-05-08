@@ -65,14 +65,16 @@ The following table is informative — it documents the built-in personalities a
 | # | Personality | Trigger condition | Default model class | Backend | Scope limiter |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Devil's Advocate | always | sonnet-class | dispatch-sonnet | Challenge assumptions; no constructive suggestions |
-| 2 | Security Auditor | problem touches auth, user input, API endpoints, data access, secrets, or network calls | sonnet-class | dispatch-sonnet | Find vulnerabilities only; no design advice |
-| 3 | Code Quality Critic | problem includes code (new or modified) | sonnet-class | dispatch-sonnet | Code conventions, readability, duplication; no security or arch |
-| 4 | Test Reviewer | problem includes new or modified logic requiring test coverage | sonnet-class | dispatch-sonnet | Test coverage and quality only |
-| 5 | Architect | problem affects system structure, introduces new abstractions, crosses service boundaries, or modifies shared infrastructure | sonnet-class | dispatch-sonnet | Structural and interface concerns only |
-| 6 | Operational Readiness | problem introduces new failure modes, external dependencies, error handling paths, or production-facing behavior | sonnet-class | dispatch-sonnet | Observability, recovery, degraded-mode behavior |
-| 7 | Performance Reviewer | problem involves data access, loops, serialization, caching, or computationally significant logic | sonnet-class | dispatch-sonnet | Throughput, latency, resource use only |
-| 8 | Copilot Reviewer | problem includes code and copilot-cli is available | external | copilot-cli | Full code review via Copilot; availability-gated |
-| 9 | Custom Specialist | caller explicitly supplies via custom menu | varies | varies | Defined by caller in custom menu entry |
+| 2 | Accessibility Officer | problem includes UI components, web rendering, forms, interactive elements, visual design, color usage, or user-facing text rendered in a browser or native UI | sonnet-class | dispatch-sonnet | WCAG 2.2 AA only; no logic, no security, no performance |
+| 3 | Architect | problem affects system structure, introduces new abstractions, crosses service boundaries, modifies shared infrastructure, or changes how components communicate | sonnet-class | dispatch-sonnet | Structural concerns only; no implementation details |
+| 4 | Designer | problem introduces or modifies public interfaces, APIs, library surfaces, shared types, configuration contracts, or caller-facing behavior | sonnet-class | dispatch-sonnet | Public surface and caller experience only; no internals |
+| 5 | Engineer | problem includes new logic, integration points, external calls, state mutation, error handling paths, or behavior under partial failure | sonnet-class | dispatch-sonnet | Practical correctness only; no style or architecture |
+| 6 | Linguist | problem includes code, documentation, error messages, log strings, user-visible text, or any named abstractions | sonnet-class | dispatch-sonnet | Naming, clarity, and communication only |
+| 7 | Penny Pincher | problem involves API calls, database queries, loops over large sets, caching decisions, storage allocation, cloud resource usage, or per-request compute cost | sonnet-class | dispatch-sonnet | Cost and resource efficiency only |
+| 8 | Privacy Advocate | problem touches user data, PII, analytics, logging, storage, external data transmission, identity, consent, or data retention | sonnet-class | dispatch-sonnet | Privacy and data handling only; no unrelated security |
+| 9 | Security Auditor | problem touches authentication, user input, API endpoints, data access, secrets, network calls, file system writes, or process execution | sonnet-class | dispatch-sonnet | Find vulnerabilities only; no design advice |
+| 10 | Copilot Reviewer | problem includes code and copilot-cli is available | external | copilot-cli | Full code review via Copilot; availability-gated |
+| 11 | Custom Specialist | caller explicitly supplies via custom menu | varies | varies | Defined by caller in custom menu entry |
 
 The integer index in this table is informative only. At runtime, index assignment follows alphabetical crawl order (1-based) from the `reviewers/` directory. Personality renames or additions change the runtime index; disagreement tracking uses personality names, not indices.
 
