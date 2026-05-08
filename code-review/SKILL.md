@@ -47,6 +47,11 @@ RESULT: aggregated review result `{passes[], sign_off_pass_index, severity_aggre
 ERROR: <reason>
 
 Calling agent assembles aggregated result from per-pass reports. Aggregation rules in `instructions.txt`.
+SARIF severity map: `critical`/`high` → error, `medium` → warning, `low`/`info` → note.
+
+## Orchestration
+
+Smoke always runs before substantive. Two-pass policy applies regardless of change-set size — no single-pass shortcut. Single-Adversary Mode is explicitly exempt: one pass only, no `prior_findings`.
 
 ## Single-Adversary Mode
 
@@ -58,7 +63,7 @@ Follow dispatch skill. See `../dispatch/SKILL.md`
 Should return: JSON findings report `{tier, pass_index, verdict, findings[], failure_reason?}`
 
 Inputs: `file_path` OR `pr_number` as `change_set`, optional `focus`.
-Output: finding list (`{file, line_or_range, severity, description}`) + 1-3 sentence summary.
+Output: same JSON schema as tiered passes — `{tier: "single-adversary", pass_index, verdict, findings[{severity, location, snippet, description, recommended_action}], failure_reason?}`
 
 ## Related
 

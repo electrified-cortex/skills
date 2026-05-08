@@ -9,3 +9,8 @@
 | DETERMINISM | 2026-05-08 | Haiku | 0 | clean | no |
 | COMPOSITION | 2026-05-08 | Haiku | 0 | clean | no |
 | MODEL-SELECTION | 2026-05-08 | Sonnet | 1 | acted | yes — MEDIUM (single-adversary Haiku tradeoff undocumented; added caveat to spec + tier desc) |
+| COMPRESSABILITY | 2026-05-08 | Sonnet | 3 | acted | yes — MEDIUM (tier vocab → table); MEDIUM (adversarial framing redundancy); LOW (rules wording) |
+| WORDING | 2026-05-08 | Sonnet | 5 | acted | yes — HIGH (duplicate model param); MEDIUM (passive voice, severity redundancy); 2x LOW (step 2/4 wording) |
+| LESS-IS-MORE | 2026-05-08 | Sonnet | 5 | acted | yes — HIGH (two-pass policy → SKILL.md); 4x MEDIUM (empty change set, SARIF, Rule 4, opening line) |
+| REUSE | 2026-05-08 | Sonnet | 0 | clean | no — LOW deferred (context-pointer auto-detect; not extractable yet) |
+| OUTPUT-FORMAT | 2026-05-08 | Sonnet | 3 | acted | yes — 2x HIGH (single-adversary schema mismatch, preserved_contradictions undefined); MEDIUM (severity_aggregate null case) |

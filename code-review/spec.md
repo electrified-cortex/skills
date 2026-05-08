@@ -183,9 +183,9 @@ exactly these fields:
    `error`. The aggregated `verdict` vocabulary is therefore `clean`,
    `findings`, or `error`.
 5. `preserved_contradictions`: the list of smoke-pass findings the
-   sign-off pass contradicted, each paired with the contradicting
-   commentary from the substantive pass that produced the contradiction.
-   Empty list when no contradictions occurred.
+   sign-off pass contradicted. Empty list when no contradictions
+   occurred. Each entry shape:
+   `{smoke_finding: <finding object>, contradiction: {verdict: "false_positive"|"out_of_scope", commentary: "<string>"}}`
 
 When the change set is empty and no passes are dispatched, the
 aggregated result must be exactly: `passes` empty, `sign_off_pass_index`
