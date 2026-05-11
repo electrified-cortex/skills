@@ -1,0 +1,111 @@
+Inputs:
+`--link-dir <abs-path>` (required) — absolute path to the chain-link folder under audit.
+`--chain-root <abs-path>` (optional) — absolute path to the chain root containing `chain.md`. If absent, walk upward from `--link-dir` until `chain.md` is found or repo root is reached.
+`--report-path <abs-path>` (required) — absolute path to write the audit report. Overwrite if present.
+
+HARD PROHIBITION: Do NOT modify source files (the SKILL, the spec, the manifest, instructions.txt, or any other file in the link folder or chain). Read-only except for writing `<report_path>`. Do NOT dispatch sub-agents or invoke other skills.
+
+Missing `--report-path` → emit `BLOCKED: --report-path required` on stdout, stop.
+Missing `--link-dir` → emit `BLOCKED: --link-dir required`, stop.
+
+Procedure:
+
+1. Validate the link folder.
+   Read `--link-dir`. Absent or unreadable → emit `BLOCKED: link-dir-missing`, stop.
+   Require `<link_dir>/SKILL.md` exists. Absent → finding `B-1 skill-missing` (HIGH); proceed to step 9 with FAIL verdict.
+
+2. Identify repo root.
+   Run: `git rev-parse --show-toplevel`
+   Failure → emit `BLOCKED: repo-root-unresolvable`, stop.
+
+3. Locate the chain manifest.
+   If `--chain-root` supplied, look for `<chain-root>/chain.md`.
+   Else walk upward from `<link-dir>` checking each parent for `chain.md` until found or repo root reached.
+   Not found → finding `M-1 manifest-missing` (HIGH); proceed to step 9 with FAIL verdict.
+
+4. Parse the manifest.
+   Find the Links table. Required columns (case-insensitive header match): `id`, `link`, `mode`, `tier`, `prev`, `next-pass`, `next-fail`, `next-blocked`, `outputs`.
+   Missing column → finding `M-2 manifest-schema-incomplete: column <name>` (HIGH) for each.
+
+5. Find the link row.
+   Match the row whose `id` field equals the link folder's directory basename.
+   Not found → finding `M-3 link-row-missing: <basename>` (HIGH); proceed to step 9.
+   Validate row fields:
+   - `mode` ∈ {`inline`, `dispatch`} else finding `M-4 mode-invalid: <value>` (HIGH).
+   - `tier` ∈ {`fast-cheap`, `standard`, `deep`} else finding `M-5 tier-invalid: <value>` (HIGH).
+   - For each of `prev`, `next-pass`, `next-fail`, `next-blocked`: value is `—` OR matches an existing `id` in the manifest, else finding `M-6 link-reference-broken: <field>=<value>` (HIGH).
+
+6. SKILL body boundary checks (read `<link_dir>/SKILL.md`).
+   - B-2 orchestration-leak (HIGH): SKILL body contains a routing table whose semantics duplicate the manifest row (e.g. a "Next" or "Routing" table listing next-link decisions); or prose declaring "next link is X".
+   - B-3 narrative-bloat (MEDIUM): SKILL body contains multi-paragraph rationale/background ("Why this exists", "Rationale", "Background", etc.) — that belongs in spec.
+   - B-4 stack-leak (HIGH): SKILL body declares stack-specific file extensions (e.g. `.cs`, `.py`, `.ts`), language idioms (e.g. "PowerShell cmdlet", ".NET assembly"), or framework names (e.g. "React component", "Django model"); AND the manifest does NOT declare the chain as stack-specific (no `stack:` field in manifest header, notes, or tags).
+   - B-5 duplicate-restatement (LOW): SKILL body restates dispatch mechanics (more than one sentence on how dispatch works), markdown-hygiene rules, or hash-record semantics. Cite the sibling skill instead.
+
+7. Contract alignment.
+   Extract SKILL's declared outputs from an "Output" / "Outputs" section, the output JSON's top-level keys, or a result emission list.
+   Extract SKILL's declared inputs from an "Inputs" / "Input" section.
+
+   C-1 outputs-undeclared (HIGH): SKILL emits a value name not in manifest `outputs` column.
+   C-2 outputs-missing (HIGH): manifest `outputs` lists a value name the SKILL does not emit.
+   C-3 inputs-undeclared-upstream (HIGH): SKILL consumes a value name that:
+     - is NOT in any upstream link's `outputs` column (walk back from this link's `prev` to first link), AND
+     - is NOT a chain entry-point input declared in the manifest's Acceptance paragraph.
+
+   Trivial casing/spacing differences do not trigger findings; exact-name semantic equivalence is required.
+
+8. Mode / instructions.txt consistency.
+   D-1 dispatch-missing-instructions (HIGH): `mode: dispatch` and `<link_dir>` does not contain `instructions.txt`.
+   D-2 inline-has-instructions (HIGH): `mode: inline` and `<link_dir>` contains `instructions.txt`.
+
+   Manifest-wide checks (each is a finding on the manifest, attributed to this audit even if the current link is not the offender):
+   T-1 no-first-link (HIGH): no manifest row has `prev: —`.
+   T-2 multiple-first-links (HIGH): more than one row has `prev: —`.
+   T-3 no-terminus (HIGH): no row has `next-pass: —`.
+
+   Brevity (line count of `<link_dir>/SKILL.md`):
+   Z-1 dispatch-over-budget (MEDIUM): `mode: dispatch` AND lines > 50.
+   Z-2 inline-over-budget (MEDIUM): `mode: inline` AND no loop indicators (no "iterate", "loop", "cap-N", "internal audit") AND lines > 75.
+   Z-3 inline-loop-over-budget (MEDIUM): `mode: inline` AND loop indicators present AND lines > 120.
+   Z-4 presumptive-bloat (HIGH): any SKILL with lines > 150 (overrides Z-1/Z-2/Z-3).
+
+   Path enforcement:
+   P-1 absolute-path (HIGH) for each occurrence in SKILL body of: `[A-Z]:\\`, `/home/`, `/Users/`, `~/`, or any drive-letter / username pattern.
+
+   Hash-record presence (result.sh / result.ps1 / .hash-record/): NEVER a finding.
+
+9. Write the report at `<report_path>`.
+   Create parent dirs if needed.
+   Structure (all sections present; empty sections show `(none)`):
+
+   ## Manifest Check
+   Manifest path, link row id, mode, tier. State PASS or list M-* findings.
+
+   ## Boundary Check
+   List B-* findings or `(none)`.
+
+   ## Contract Alignment
+   List C-* and D-* findings or `(none)`. Include the resolved upstream output set used for input alignment.
+
+   ## Brevity Check
+   Line count, expected budget per mode, list Z-* findings or `(none)`. List P-* (path) findings here as well.
+
+   ## Findings
+   Full list, severity-tagged. Format per row: `<code> [<SEVERITY>] <description>`.
+
+   ## Verdict
+   One line. Apply verdict rules:
+   - Zero findings → `PASS`
+   - LOW only → `PASS` (note "with LOW findings")
+   - MEDIUM present, zero HIGH → `NEEDS_REVISION`
+   - Any HIGH → `FAIL`
+
+   Report MUST NOT contain absolute paths. Use repo-relative paths throughout.
+
+10. Verify report on disk.
+    Confirm file exists with non-zero size. If missing → emit `BLOCKED: report-write-failed`, stop.
+
+11. Emit verdict as final stdout line (column 0, no indent, no list marker, nothing follows):
+    `PASS: <report_path>`
+    `NEEDS_REVISION: <report_path>`
+    `FAIL: <report_path>`
+    `BLOCKED: <report_path>`
