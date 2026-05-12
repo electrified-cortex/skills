@@ -12,8 +12,10 @@ Inputs:
 
 ## Inline hash check
 
-- Bash: `bash ../hash-record/hash-record-check/check.sh <target-path> spec-auditing/v1 report.md`
-- PS7:  `pwsh ../hash-record/hash-record-check/check.ps1 <target-path> spec-auditing/v1 report.md`
+Uses `hash-record-manifest` (`../hash-record/hash-record-manifest/manifest.sh` or `manifest.ps1`). Pass all input files: `<target-path>` plus `<spec-path>` if provided.
+
+- Bash: `bash ../hash-record/hash-record-manifest/manifest.sh spec-auditing/v1 report.md <target-path> [<spec-path>]`
+- PS7:  `pwsh ../hash-record/hash-record-manifest/manifest.ps1 spec-auditing/v1 report.md <target-path> [<spec-path>]`
 
 - `HIT: <abs-path>` → emit `PATH: <abs-path>`, stop.
 - `MISS: <abs-path>` → bind `<report_path>` = `<abs-path>`, jump to Dispatch.
@@ -30,7 +32,7 @@ Variables:
 `<description>` = `Spec Audit: <target-path>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
-Import the `dispatch` skill from `../dispatch/SKILL.md`. Use the `dispatch` skill to launch the sub-agent.
+Follow dispatch skill. See `../dispatch/SKILL.md`.
 
 Returns: `Pass: <abs-path>` | `Pass with Findings: <abs-path>` | `Fail: <abs-path>` | `ERROR: <reason>`
 

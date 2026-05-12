@@ -1,9 +1,5 @@
 # Hash Record Index
 
-## Dispatch Parameters
-
-- `repo_root` (required): absolute path to the repository root containing `.hash-record/`.
-
 ## Procedure
 
 Run every step with the named tool. Do not summarize or plan.

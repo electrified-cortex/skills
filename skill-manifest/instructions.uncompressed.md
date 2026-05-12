@@ -3,14 +3,6 @@
 Produce the complete file list for a skill folder. Walk `SKILL.md` refs recursively.
 Store result in `hash-record`. Return JSON.
 
-## Inputs
-
-- `skill_dir` (required): absolute path to skill folder (validated by host).
-- `repo_root` (required): absolute path to skills repo root (resolved by host).
-- `manifest_hash` (required): 40-char hash computed by host via `hash-record-manifest`.
-- `files` (required): comma-separated repo-relative paths of files directly in `skill_dir`, pre-enumerated by host.
-- `depth_limit` (optional): max recursion depth. Default: 4. Max: 8.
-
 ## Step 1 — Ref walk
 
 Initialize:

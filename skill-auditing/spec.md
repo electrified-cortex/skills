@@ -394,6 +394,34 @@ Verify the companion spec is structurally sound, then verify the compiled artifa
     skill folder or a more specific sub-file (e.g., `tier/rules.txt`,
     embedded examples). This is preference, not a violation.
 
+24. **(A-IR-1) Input redefinition in instructions** — `instructions.txt`,
+    `instructions.uncompressed.md`, and any shell-split variants
+    (`instructions.<shell>.txt`, `instructions.<shell>.uncompressed.md`)
+    MUST NOT contain an `## Inputs` heading (or equivalent parameter table)
+    that restates parameters already declared in `SKILL.md` or
+    `uncompressed.md`. The executor receives inputs via `<input-args>` and
+    cannot choose other inputs; restating them is decorative bloat. Applies
+    equally to router skills whose `SKILL.md` delegates to an instructions
+    file — that file is a continuation of the `SKILL.md` context, not a
+    fresh contract. Detection: `## Inputs` heading (or equivalent parameter
+    block) present in any instructions file → flag HIGH.
+
+25. **(A-IR-2) Return contract redefinition in instructions** —
+    `instructions.txt`, `instructions.uncompressed.md`, and shell-split
+    variants MUST NOT restate the return contract already declared in
+    `SKILL.md` or `uncompressed.md`. Material extensions (e.g., additional
+    error cases not present in `SKILL.md`) are permitted; verbatim or
+    near-verbatim restatements are not. Detection: a `## Return`, `## Output`,
+    or `## Returns` section in any instructions file whose content matches
+    (or nearly matches) the `SKILL.md` return declaration → flag HIGH.
+
+26. **(A-IR-3) Frontmatter leak in instructions** — instructions files
+    (`instructions.txt`, `instructions.uncompressed.md`, and shell-split
+    variants) MUST NOT carry YAML frontmatter (a `---` block starting at
+    line 1). Frontmatter belongs only in `SKILL.md`, `uncompressed.md`,
+    agent files, and tool-spec files. Detection: file whose first line is
+    `---` → flag HIGH.
+
 ## Dispatch Skill Audit Criteria
 
 Applies to dispatch skills only. Auditor runs these checks against `uncompressed.md`
@@ -647,6 +675,9 @@ CLEAN | PASS | NEEDS_REVISION | FAIL
 | Iteration-safety pointer form (A-FM-9a) | PASS/FAIL/N/A | |
 | No verbatim Rule A/B (A-FM-9b) | PASS/FAIL/N/A | |
 | Cross-reference anti-pattern (A-XR-1) | PASS/FAIL | |
+| Input redefinition in instructions (A-IR-1) | PASS/FAIL | |
+| Return contract redefinition in instructions (A-IR-2) | PASS/FAIL | |
+| Frontmatter leak in instructions (A-IR-3) | PASS/FAIL/N/A | |
 | Return shape declared (DS-1) | PASS/FAIL/N/A | |
 | Host card minimalism (DS-2) | PASS/FAIL/N/A | |
 | Description trigger phrases (DS-3) | PASS/FAIL/N/A | |
@@ -746,6 +777,9 @@ See `../iteration-safety/SKILL.md`.
 - Do not pass A-XR-1 if any skill artifact (other than skill-auditing's own files as subject-matter context) contains a cross-skill reference that supplies ONLY a path with no canonical name. Bare-name and name-with-path-pointer references pass.
 - Do not pass A-FM-8 if the Iteration Safety blurb appears in `instructions.uncompressed.md` or `instructions.txt`, even if it is also present in `SKILL.md`.
 - Do not rate A-FM-9a/9b as N/A unless the skill contains no iteration-safety reference at all; if any reference is present, check pointer form and verbatim restatement.
+- Do not pass A-IR-1 if any instructions file contains an `## Inputs` heading or parameter table that restates inputs declared in `SKILL.md` or `uncompressed.md`.
+- Do not pass A-IR-2 if any instructions file contains a `## Return`, `## Output`, or `## Returns` section whose content matches the `SKILL.md` return declaration verbatim or near-verbatim.
+- Do not pass A-IR-3 if any instructions file has `---` as its first line (YAML frontmatter). Rate A-IR-3 as N/A only when the skill has no instructions files at all.
 
 ## Appendix — Design Goal: Haiku Wins the Eval Game
 

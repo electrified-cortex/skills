@@ -1,29 +1,45 @@
 ---
 name: gh-cli-issues
-description: Manage GitHub issues using the gh issue subcommand. Full lifecycle: create, list, view, edit, comment, close, transfer. Triggers - create issue, github issue, list issues, close issue, comment on issue, manage issues.
+description: Manage GitHub issues using the gh issue subcommand. Full lifecycle: create, list, view, edit, comment, close, transfer.
 ---
+
+# GH CLI Issues
 
 `gh issue` subcommand. Full lifecycle: create, list, view, edit, comment, close, transfer.
 
-## Create
+Creating Issues:
+
+For arbitrary body content (markdown, code fences, `$VAR` refs, backticks), write body to temp file and pass `--body-file`. NEVER substitute user-supplied body inline as a shell arg.
+
+Bash:
 
 ```bash
-gh issue create --title "title" --body "body" --label bug,high-priority --assignee user1,@me
+BODY_FILE=$(mktemp /tmp/gh-body-XXXXXX.md)
+printf '%s' "$BODY" > "$BODY_FILE"
+gh issue create --title "title" --body-file "$BODY_FILE" --label bug,high-priority --assignee user1,@me
+rm -f "$BODY_FILE"
 ```
 
-## Body from file
+PowerShell 7+:
 
-```bash
-gh issue create --title "title" --body-file issue.md
+```powershell
+$bodyFile = [System.IO.Path]::GetTempFileName()
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+gh issue create --title "title" --body-file $bodyFile --label bug,high-priority --assignee user1,@me
+Remove-Item $bodyFile -Force
 ```
 
-## List (default state: open)
+Static file: `gh issue create --title "title" --body-file issue.md`
+
+Listing Issues:
+
+Default state is open.
 
 ```bash
 gh issue list --state all --assignee @me --label bug --milestone "v1.0" --limit 50
 ```
 
-## Search + jq
+Search + structured extract:
 
 ```bash
 gh issue list --search "is:open label:stale" --json number,title --jq '.[].number'
@@ -31,63 +47,111 @@ gh issue list --search "is:open label:stale" --json number,title --jq '.[].numbe
 
 States: `open`, `closed`, `all`.
 
-## View
+Viewing:
 
 ```bash
 gh issue view 123 --comments
 ```
 
-## Edit
+Editing Metadata:
 
 ```bash
 gh issue edit 123 --title "new" --add-label triage --remove-label stale
 gh issue edit 123 --add-assignee user1 --remove-assignee user2 --milestone "v2.0"
 ```
 
-## Close/reopen
+Closing and Reopening:
 
 ```bash
 gh issue close 123 --comment "Fixed in #456"
 gh issue reopen 123
 ```
 
-## Comment
+Commenting:
+
+Write BODY to temp file first to prevent shell corruption of markdown.
+
+Bash:
 
 ```bash
-gh issue comment 123 --body "text"
+BODY_FILE=$(mktemp /tmp/gh-body-XXXXXX.md)
+printf '%s' "$BODY" > "$BODY_FILE"
+gh issue comment 123 --body-file "$BODY_FILE"
+rm -f "$BODY_FILE"
 ```
 
-`gh issue comment` has no `--edit`/`--delete` flags. Use REST API. Find comment ID first:
+PowerShell 7+:
+
+```powershell
+$bodyFile = [System.IO.Path]::GetTempFileName()
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+gh issue comment 123 --body-file $bodyFile
+Remove-Item $bodyFile -Force
+```
+
+`gh issue comment` has no `--edit`/`--delete` flags. Use REST API. Find comment ID, then PATCH or DELETE:
 
 ```bash
-# list → find comment ID
-gh api /repos/{owner}/{repo}/issues/{issue_number}/comments
-
-# edit
-gh api --method PATCH /repos/{owner}/{repo}/issues/comments/{comment_id} \
-  --field body="updated"
-
-# delete
-gh api --method DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}
+gh api repos/{owner}/{repo}/issues/{issue_number}/comments
 ```
 
-## Transfer
+Edit comment — write BODY to temp file:
+
+Bash:
+
+```bash
+BODY_FILE=$(mktemp /tmp/gh-body-XXXXXX.md)
+printf '%s' "$BODY" > "$BODY_FILE"
+gh api --method PATCH repos/{owner}/{repo}/issues/comments/{comment_id} \
+  --field body=@"$BODY_FILE"
+rm -f "$BODY_FILE"
+```
+
+PowerShell 7+:
+
+```powershell
+$bodyFile = [System.IO.Path]::GetTempFileName()
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+gh api --method PATCH "repos/{owner}/{repo}/issues/comments/{comment_id}" `
+  --field "body=@$bodyFile"
+Remove-Item $bodyFile -Force
+```
+
+Delete comment:
+
+```bash
+gh api --method DELETE repos/{owner}/{repo}/issues/comments/{comment_id}
+```
+
+Transferring:
 
 ```bash
 gh issue transfer 123 --repo owner/other-repo
 ```
 
-## Constraints
+Bulk Operations:
 
-- Requires write access for state transitions (close/reopen).
-- Labels and milestones must exist before assigning.
+```bash
+gh issue list --search "label:stale" --json number --jq '.[].number' \
+  | xargs -I {} gh issue close {} --comment "Closing stale"
+```
 
-## Error Handling
+Scope Boundaries:
 
-- Auth failure: re-run `gh-cli-setup`.
-- Issue not found: verify repo and issue number.
-- Permission denied: confirm repo access.
+`gh issue` only. GitHub Projects v2 → `gh-cli-projects`. PR linking → `gh-cli-prs-create`. Milestone creation is out of scope; skill only assigns to existing milestones.
 
-## Dependencies
+Safety Classification:
 
-- gh-cli-setup/SKILL.md — required pre-check: auth + CLI installed
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh issue list | Safe | Read-only |
+| gh issue view | Safe | Read-only |
+| gh issue create | Destructive | Operator approval required before execution |
+| gh issue close | Destructive | Operator approval required before execution |
+| gh issue reopen | Destructive | Operator approval required before execution |
+| gh issue edit | Destructive | Operator approval required before execution |
+| gh issue delete | Destructive | Operator approval required before execution |
+| gh issue comment | Destructive | Operator approval required before execution |
+| gh issue transfer | Destructive | Operator approval required before execution |
+
+Destructive ops require explicit operator authorization in current session before execution. Approval from another agent (e.g., Overseer confirming CI green) doesn't constitute operator authorization.

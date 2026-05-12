@@ -19,10 +19,24 @@ If a PR already exists, edit or view it rather than creating a duplicate.
 
 ## Creating a Pull Request
 
-Create a PR with title, body, and base branch:
+For arbitrary body content (markdown, code fences, `$VAR` references, backticks), write the body to a temp file and pass `--body-file`. Never substitute user-supplied body content inline as a shell argument.
+
+**Bash:**
 
 ```bash
-gh pr create --title "title" --body "body" --base main
+BODY_FILE=$(mktemp /tmp/gh-body-XXXXXX.md)
+printf '%s' "$BODY" > "$BODY_FILE"
+gh pr create --title "title" --body-file "$BODY_FILE" --base main
+rm -f "$BODY_FILE"
+```
+
+**PowerShell 7+:**
+
+```powershell
+$bodyFile = [System.IO.Path]::GetTempFileName()
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+gh pr create --title "title" --body-file $bodyFile --base main
+Remove-Item $bodyFile -Force
 ```
 
 Create a PR with full metadata — reviewers, assignee, labels, and start as draft:

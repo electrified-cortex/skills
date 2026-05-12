@@ -393,6 +393,43 @@ If extension is allowed, the spec must define:
 
 Otherwise, extension is prohibited.
 
+### Domain-Flavor Extension
+
+This spec permits **domain-flavor extension**. A derived spec may
+declare itself a domain flavor of this spec and add normative
+sections specific to its domain (for example, `prd-writing` is a
+flavor for Product Requirements Documents), subject to all of the
+following:
+
+- The derived spec must include an **Inheritance** section that
+  names this spec as its parent and states that it is a
+  domain-flavor extension.
+- The derived spec must inherit, without contradiction, this
+  spec's Content Modes, normative-language rules, atomicity
+  requirements, Definition of a Specification, and audit gate.
+- Additional normative requirements introduced by the derived
+  spec must be atomic, testable, and consistent with this spec's
+  Definition of a Specification.
+- Every additional section in the derived spec must be classified
+  in a Section Classification table using the modes defined by
+  this spec.
+- The derived spec must not redefine any term defined here, expand
+  scope contrary to this spec, change any default or constraint
+  declared here, or override any rule in this spec.
+- The derived spec must reference a corresponding audit skill that
+  runs this spec's audit (via `spec-auditing`) first, then the
+  domain-specific checks.
+
+For derived specs that satisfy the above, the additional normative
+requirements are NOT Unauthorized Additions; they are sanctioned
+domain extensions. Traceability still applies for any requirement
+that restates or specializes a parent rule; new requirements unique
+to the domain need not trace to a parent requirement.
+
+Without an explicit Inheritance declaration and conformance to the
+above, the Target Spec Contract applies unchanged: no new normative
+requirements are permitted.
+
 ---
 
 ## Consistency Requirements

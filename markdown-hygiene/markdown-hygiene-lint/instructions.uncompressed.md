@@ -1,11 +1,5 @@
 # Markdown Hygiene — Lint Executor
 
-## Inputs
-
-`<markdown_file_path>` (required) — absolute path to the `.md` file to scan.
-`--lint-path <lint_path>` (optional) — absolute path to write `lint.md`. If omitted, derived in step 3 via result check.
-`--ignore <RULE>[,<RULE>...]` (optional) — rules to suppress for this run.
-
 ## Constraints
 
 Hard prohibition: do NOT author scripts, helper files, or any file other than `<lint_path>`. Use Read/Bash/Grep tools only for inspection.

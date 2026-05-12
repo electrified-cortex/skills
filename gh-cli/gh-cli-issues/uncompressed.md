@@ -9,13 +9,27 @@ Manage GitHub issues using the `gh issue` subcommand. Covers the full issue life
 
 ## Creating Issues
 
-Create an issue with title, body, labels, and assignees:
+For arbitrary body content (markdown, code fences, `$VAR` references, backticks), write the body to a temp file and pass `--body-file`. Never substitute user-supplied body content inline as a shell argument.
+
+**Bash:**
 
 ```bash
-gh issue create --title "title" --body "body" --label bug,high-priority --assignee user1,@me
+BODY_FILE=$(mktemp /tmp/gh-body-XXXXXX.md)
+printf '%s' "$BODY" > "$BODY_FILE"
+gh issue create --title "title" --body-file "$BODY_FILE" --label bug,high-priority --assignee user1,@me
+rm -f "$BODY_FILE"
 ```
 
-Create an issue with a body from a file:
+**PowerShell 7+:**
+
+```powershell
+$bodyFile = [System.IO.Path]::GetTempFileName()
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+gh issue create --title "title" --body-file $bodyFile --label bug,high-priority --assignee user1,@me
+Remove-Item $bodyFile -Force
+```
+
+Create an issue with a body from a static file:
 
 ```bash
 gh issue create --title "title" --body-file issue.md
@@ -75,24 +89,58 @@ gh issue reopen 123
 
 ## Commenting
 
-Add a comment:
+Add a comment — write BODY to a temp file first to prevent shell corruption of markdown content:
+
+**Bash:**
 
 ```bash
-gh issue comment 123 --body "text"
+BODY_FILE=$(mktemp /tmp/gh-body-XXXXXX.md)
+printf '%s' "$BODY" > "$BODY_FILE"
+gh issue comment 123 --body-file "$BODY_FILE"
+rm -f "$BODY_FILE"
+```
+
+**PowerShell 7+:**
+
+```powershell
+$bodyFile = [System.IO.Path]::GetTempFileName()
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+gh issue comment 123 --body-file $bodyFile
+Remove-Item $bodyFile -Force
 ```
 
 `gh issue comment` has no `--edit` or `--delete` flags. Use the REST API directly. First find the comment ID, then PATCH or DELETE it:
 
 ```bash
 # List comments to find the comment ID
-gh api /repos/{owner}/{repo}/issues/{issue_number}/comments
+gh api repos/{owner}/{repo}/issues/{issue_number}/comments
+```
 
-# Edit the comment
-gh api --method PATCH /repos/{owner}/{repo}/issues/comments/{comment_id} \
-  --field body="updated"
+Edit the comment — write BODY to a temp file:
 
+**Bash:**
+
+```bash
+BODY_FILE=$(mktemp /tmp/gh-body-XXXXXX.md)
+printf '%s' "$BODY" > "$BODY_FILE"
+gh api --method PATCH repos/{owner}/{repo}/issues/comments/{comment_id} \
+  --field body=@"$BODY_FILE"
+rm -f "$BODY_FILE"
+```
+
+**PowerShell 7+:**
+
+```powershell
+$bodyFile = [System.IO.Path]::GetTempFileName()
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+gh api --method PATCH "repos/{owner}/{repo}/issues/comments/{comment_id}" `
+  --field "body=@$bodyFile"
+Remove-Item $bodyFile -Force
+```
+
+```bash
 # Delete the comment
-gh api --method DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}
+gh api --method DELETE repos/{owner}/{repo}/issues/comments/{comment_id}
 ```
 
 ## Transferring Issues

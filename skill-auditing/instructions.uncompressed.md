@@ -1,10 +1,5 @@
 # Skill Auditing Instructions
 
-## Inputs
-
-`skill_dir` (positional, required) — absolute path to the skill folder being audited.
-`--report-path <abs-path>` (required) — absolute path to write the report. Missing → `ERROR: --report-path required`, stop. Existing file at `<report_path>` is overwritten.
-
 **Hard prohibition:** do NOT author scripts (`.ps1`, `.sh`, `.py`, etc.), helper files, or any file other than `<report_path>`. Source files in `skill_dir` are read-only. Use Read/Bash/Grep only for inspection.
 
 **Check invention prohibition:** only evaluate checks that are explicitly named and defined in this document. Do not invent, infer, or apply checks not present here — even if a pattern looks suspicious. If a concern does not match a named check, do not report it.
@@ -280,6 +275,58 @@ NOT violations:
 
 Any cross-file pointer with no canonical name → HIGH.
 
+### (A-IR-1) Input redefinition in instructions
+
+Scan all instructions files in `skill_dir`: `instructions.txt`,
+`instructions.uncompressed.md`, and any shell-split variants
+(`instructions.<shell>.txt`, `instructions.<shell>.uncompressed.md`).
+
+For each file found: check whether it contains a heading that introduces an
+inputs block — `## Inputs`, `# Inputs`, or an equivalent parameter table
+(look for a block of lines beginning with parameter names followed by type
+annotations or dashes in a table under a heading that names inputs or
+parameters). If found, verify that the `SKILL.md` or `uncompressed.md`
+already declares those same parameters. If they are already declared in
+`SKILL.md` or `uncompressed.md` → flag HIGH.
+
+Applies equally to router skills (skills whose `SKILL.md` says "read and
+follow `instructions.<ext>`"): the instructions file is a continuation of
+the `SKILL.md` context; restating inputs in the instructions file is
+decorative bloat.
+
+Finding text: `A-IR-1: instructions file '<filename>' restates input parameters already declared in SKILL.md. Remove the Inputs section from the instructions file.`
+
+### (A-IR-2) Return contract redefinition in instructions
+
+Scan all instructions files: `instructions.txt`, `instructions.uncompressed.md`,
+and shell-split variants.
+
+For each file found: check whether it contains a return/output section —
+headings matching `## Return`, `# Return`, `## Returns`, `# Returns`,
+`## Output`, or `# Output`. If found, read its content and compare against
+the return declaration in `SKILL.md` or `uncompressed.md`. Verbatim or
+near-verbatim match → flag HIGH. Material extensions that add genuinely new
+error cases or output modes not present in `SKILL.md` are permitted — do
+not flag those.
+
+Finding text: `A-IR-2: instructions file '<filename>' restates the return contract already declared in SKILL.md. Remove the redundant Return/Output section from the instructions file.`
+
+### (A-IR-3) Frontmatter leak in instructions
+
+Scan all instructions files: `instructions.txt`, `instructions.uncompressed.md`,
+and shell-split variants.
+
+For each file found: check whether the first non-empty line of the file is
+`---` (the YAML frontmatter opening delimiter). If yes → flag HIGH.
+
+Frontmatter belongs only in `SKILL.md`, `uncompressed.md`, agent files, and
+tool-spec files. Instructions files are runtime executor content — frontmatter
+in them is never consumed and represents structural confusion.
+
+Finding text: `A-IR-3: instructions file '<filename>' has YAML frontmatter (--- at line 1). Remove the frontmatter block; it belongs in SKILL.md or uncompressed.md only.`
+
+If the skill has no instructions files, rate A-IR-3 as N/A.
+
 ### (A-FM-10) Launch-script form on dispatch skills
 
 Applies to dispatch skills only (N/A for inline skills). N/A if `uncompressed.md` is absent (SKILL.md-only is valid).
@@ -467,6 +514,9 @@ CLEAN | PASS | NEEDS_REVISION | FAIL
 | Iteration-safety pointer form (A-FM-9a) | PASS/FAIL/N/A | |
 | No verbatim Rule A/B (A-FM-9b) | PASS/FAIL/N/A | |
 | Cross-reference anti-pattern (A-XR-1) | PASS/FAIL | |
+| Input redefinition in instructions (A-IR-1) | PASS/FAIL | |
+| Return contract redefinition in instructions (A-IR-2) | PASS/FAIL | |
+| Frontmatter leak in instructions (A-IR-3) | PASS/FAIL/N/A | |
 | Launch-script form (A-FM-10) | PASS/FAIL/N/A | |
 | Return shape declared (DS-1) | PASS/FAIL/N/A | |
 | Host card minimalism (DS-2) | PASS/FAIL/N/A | |

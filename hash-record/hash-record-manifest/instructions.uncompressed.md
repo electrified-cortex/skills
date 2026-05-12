@@ -1,10 +1,5 @@
 # Hash-Record Manifest Instructions
 
-## Dispatch Parameters
-
-- `repo_root` (required): absolute path to the repository root. Used to compute repo-relative paths.
-- `files` (required): list of file paths to include. May be absolute or repo-relative; the skill normalizes all to repo-relative. Comma-separated or newline-separated both accepted.
-
 ## Procedure
 
 Run every step with the named tool. Do not summarize or plan.

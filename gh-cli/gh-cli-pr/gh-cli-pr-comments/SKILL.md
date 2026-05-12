@@ -1,89 +1,99 @@
 ---
 name: gh-cli-pr-comments
-description: Add, edit, delete pull request comments via GitHub CLI. Triggers - add PR comment, comment on pull request, edit PR comment, delete PR comment, pull request discussion.
+description: Add, edit, delete pull request comments via GitHub CLI.
 ---
 
-Add, edit, delete PR comments via `gh pr comment`.
+gh-cli-pr-comments: Add, edit, delete general PR comments via `gh pr comment`.
 
-## Adding
+Adding a Comment:
+Write BODY to temp file first — inline shell substitution corrupts bodies with backticks, `$VAR` refs, double quotes, or code fences.
 
-Add comment to PR:
-
+Bash:
 ```bash
-gh pr comment 123 --body "text"
+BODY_FILE=$(mktemp /tmp/gh-body-XXXXXX.md)
+printf '%s' "$BODY" > "$BODY_FILE"
+gh pr comment 123 --body-file "$BODY_FILE"
+rm -f "$BODY_FILE"
 ```
 
-## Viewing
-
-`gh pr view --comments` truncates output and misses later pages.
-For a complete list of all review comments, use the paginated API:
-
-```bash
-# All inline/review comments (paginated — all pages)
-gh api --paginate /repos/{owner}/{repo}/pulls/{pull_number}/comments
-
-# All review-level submissions (paginated)
-gh api --paginate /repos/{owner}/{repo}/pulls/{pull_number}/reviews
+PowerShell 7+:
+```powershell
+$bodyFile = [System.IO.Path]::GetTempFileName()
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+gh pr comment 123 --body-file $bodyFile
+Remove-Item $bodyFile -Force
 ```
 
-For general PR (issue) comments, also paginate:
+Editing a Comment:
+`gh pr comment` has no `--edit` flag. Use REST API. Find comment ID first, then PATCH:
 
 ```bash
-gh api --paginate /repos/{owner}/{repo}/issues/{pull_number}/comments
-```
-
-Use `gh pr view --comments` only for a quick human-readable glance —
-never for exhaustive comment checks.
-
-## Editing
-
-`gh pr comment` has no `--edit` flag. Use REST API — find comment ID,
-PATCH:
-
-```bash
-# List ALL comments to find the comment ID (--paginate collects all)
+# List ALL comments (--paginate collects all pages)
 gh api --paginate /repos/{owner}/{repo}/issues/{issue_number}/comments
-
-# Edit the comment
-gh api --method PATCH \
-  /repos/{owner}/{repo}/issues/comments/{comment_id} \
-  --field body="updated text"
 ```
 
-## Deleting
+Write BODY to temp file before PATCHing:
 
+Bash:
+```bash
+BODY_FILE=$(mktemp /tmp/gh-body-XXXXXX.md)
+printf '%s' "$BODY" > "$BODY_FILE"
+gh api --method PATCH /repos/{owner}/{repo}/issues/comments/{comment_id} \
+  --field body=@"$BODY_FILE"
+rm -f "$BODY_FILE"
+```
+
+PowerShell 7+:
+```powershell
+$bodyFile = [System.IO.Path]::GetTempFileName()
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+gh api --method PATCH "/repos/{owner}/{repo}/issues/comments/{comment_id}" `
+  --field "body=@$bodyFile"
+Remove-Item $bodyFile -Force
+```
+
+Deleting a Comment:
 `gh pr comment` has no `--delete` flag. Use REST API:
 
 ```bash
 gh api --method DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}
 ```
 
-## Resolving Review Threads
+Viewing Comments:
+`gh pr view --comments` truncates + misses later pages. Use paginated API for complete lists:
 
-No `gh pr` command for resolving threads. Use
-`resolveReviewThread` GraphQL mutation via `gh-cli-api`:
+```bash
+# All inline/review comments (all pages)
+gh api --paginate /repos/{owner}/{repo}/pulls/{pull_number}/comments
+
+# All review-level submissions (all pages)
+gh api --paginate /repos/{owner}/{repo}/pulls/{pull_number}/reviews
+
+# General PR (issue) comments (all pages)
+gh api --paginate /repos/{owner}/{repo}/issues/{pull_number}/comments
+```
+
+Use `gh pr view --comments` only for quick human-readable glance — NEVER for exhaustive comment checks.
+
+Resolving Review Threads:
+No `gh pr` command exists. Use `resolveReviewThread` GraphQL mutation via `gh-cli-api`:
 
 ```bash
 gh api graphql -f query='
-  mutation {
-    resolveReviewThread(input: {threadId: "THREAD_ID"}) {
-      thread { isResolved }
-    }
-  }'
+  mutation { resolveReviewThread(input: {threadId: "THREAD_ID"}) { thread { isResolved } } }'
 ```
 
-## Dependencies
+Scope Boundaries:
+Covers `gh pr comment` only. Review-level comments (approve/request-changes verdicts) → `gh-cli-prs-review`. Viewing also available in `gh-cli-prs` inspection commands.
 
-- `gh-cli-setup/SKILL.md` — required pre-check: auth + CLI installed
+Safety Classification:
 
-## Error Handling
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh pr comment (add) | Destructive | Operator approval required before execution |
+| gh pr comment --edit | Destructive | Operator approval required before execution |
+| gh pr comment --delete | Destructive | Operator approval required before execution |
+| gh pr view --comments | Safe | Read-only |
+| gh api --paginate (GET) | Safe | Read-only |
 
-- Auth failure: re-run `gh-cli-setup` to verify token.
-- PR not found: verify repository and PR number.
-- Comment not found: verify comment ID.
-
-## Scope
-
-Covers `gh pr comment` only. Review-level comments
-(approve/request-changes verdict) → `gh-cli-prs-review`. Viewing also in
-`gh-cli-prs` inspection.
+Destructive ops require explicit operator authorization in current session before execution. Approval from another agent (e.g., Overseer confirming CI green) doesn't constitute operator authorization.

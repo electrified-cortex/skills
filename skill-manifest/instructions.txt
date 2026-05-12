@@ -23,15 +23,15 @@ While queue not empty:
 3. Add `file_path` to `visited`.
 4. Read file content.
 5. Extract all refs:
-   - Backtick paths: `` `some/path.md` ``
-   - Markdown links: `[label](some/path.md)`
-   - Ignore URLs (http/https), anchors (#), refs starting with `*/`.
+   Backtick paths: `` `some/path.md` ``
+   Markdown links: `[label](some/path.md)`
+   Ignore URLs (http/https), anchors (#), refs starting with `*/`.
 6. For each raw ref:
    a. Resolve relative to dir of `file_path`.
-   b. If resolved path doesn't exist: add raw ref to `broken_refs`. Continue.
-   c. If resolved path outside `repo_root`: skip silently.
+   b. Resolved path doesn't exist: add raw ref to `broken_refs`. Continue.
+   c. Resolved path outside `repo_root`: skip silently.
    d. Add resolved path to `file_set` as repo-relative path.
-   e. If resolved path is `.md` AND `depth < depth_limit`: enqueue `(resolved_path, depth + 1)`.
+   e. Resolved path is `.md` AND `depth < depth_limit`: enqueue `(resolved_path, depth + 1)`.
 
 1c — Deduplicate: Sort `file_set` lexicographically. Remove duplicates.
 
@@ -59,5 +59,5 @@ Never include dot-files.
 Never fail hard on broken refs — report and continue.
 Never include files outside `repo_root`.
 Never cache error or partial result (Step 2 runs only on full success).
-Never recurse into subdirectories of `skill_dir` during Step 4a enumeration.
+Never recurse into subdirectories of `skill_dir` during Step 1a enumeration.
 Note: Cached results may have stale `files`/`broken_refs` if transitive deps outside `skill_dir` changed since last scan. Cache key covers `skill_dir` direct files only — external dep changes not detected.

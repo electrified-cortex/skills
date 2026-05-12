@@ -8,6 +8,7 @@ description: Tiered code review on a change set. Read-only. Never modifies code.
 ## Cache Probe
 
 Before dispatching any pass:
+
 1. Compute canonical manifest hash: SHA-256 of sorted `change_set` file paths + their content hashes + `tier` + `focus` (if set) + `context_pointer` hash (if set) + `prior_findings` hash (substantive, if set).
 2. Check `.hash-record/XX/HASH/code-review/vN[/<model>]/report.md` (caller: SKILL.md owns probe + write; dispatched agents don't cache).
 3. Cache hit → return cached report, skip dispatch.
@@ -70,6 +71,7 @@ Output: same JSON schema as tiered passes — `{tier: "single-adversary", pass_i
 ## Examples
 
 **change_set forms:**
+
 - Inline diff: `change_set="""--- a/src/foo.ts\n+++ b/src/foo.ts ..."""`
 - File list: `change_set="/abs/src/foo.ts /abs/src/bar.ts"`
 - Git ref: `change_set="HEAD~3..HEAD"` (requires shell in dispatched agent)
@@ -86,4 +88,3 @@ Output: same JSON schema as tiered passes — `{tier: "single-adversary", pass_i
 ## Related
 
 `dispatch` (`../dispatch/SKILL.md`), `swarm` (`../swarm/SKILL.md`), `code-review-setup` (`./code-review-setup/SKILL.md`)
-

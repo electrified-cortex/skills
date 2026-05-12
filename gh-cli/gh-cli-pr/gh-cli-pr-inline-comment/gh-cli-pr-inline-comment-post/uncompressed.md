@@ -18,10 +18,15 @@ description: Post an inline PR review comment on a diff line. Triggers — post 
 | SIDE | no | `RIGHT` (default) or `LEFT` |
 | START_LINE | no | For multi-line comments: start of the range |
 
-## Execution
+## Dispatch by shell
 
-`<instructions>` = `instructions.txt` (NEVER READ)
-`<instructions-abspath>` = absolute path to `<instructions>` in this skill folder
+Choose `<shell>` based on the executing runtime:
+
+- bash 4+ on Linux, macOS, or Windows Git Bash → `<shell>` = `bash`
+- PowerShell 7+ on any platform → `<shell>` = `pwsh`
+
+`<instructions>` = `instructions.<shell>.txt` in this skill folder (NEVER READ)
+`<instructions-abspath>` = absolute path to `<instructions>`
 `<input-args>` = `OWNER={OWNER} REPO={REPO} PR_NUMBER={PR_NUMBER} FILE_PATH={FILE_PATH} LINE_NUMBER={LINE_NUMBER} BODY={BODY} SIDE={SIDE} START_LINE={START_LINE}`
 `<tier>` = fast-cheap
 `<description>` = post inline PR comment on {FILE_PATH}:{LINE_NUMBER}

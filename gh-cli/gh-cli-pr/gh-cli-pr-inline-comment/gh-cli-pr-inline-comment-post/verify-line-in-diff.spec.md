@@ -16,14 +16,14 @@ cross-platform) is the equivalent. Windows PowerShell 5.1 is NOT supported.
 
 ## Parameters
 
-| Positional    | Type              | Required | Description                                  |
-| ------------- | ----------------- | -------- | -------------------------------------------- |
-| `owner`       | string            | yes      | GitHub org or user name                      |
-| `repo`        | string            | yes      | Repository name                              |
-| `pr_number`   | integer (string)  | yes      | PR number                                    |
-| `file_path`   | string            | yes      | Repo-relative path, e.g. `src/foo.ts`        |
-| `line_number` | integer (string)  | yes      | Absolute line number to check                |
-| `side`        | `RIGHT` \| `LEFT` | yes      | `RIGHT` = additions/context; `LEFT` = deletions |
+| Positional | Type | Required | Description |
+| ------------- | ----------------- | -------- | --- |
+| `owner` | string | yes | GitHub org or user name |
+| `repo` | string | yes | Repository name |
+| `pr_number` | integer (string) | yes | PR number |
+| `file_path` | string | yes | Repo-relative path, e.g. `src/foo.ts` |
+| `line_number` | integer (string) | yes | Absolute line number to check |
+| `side` | `RIGHT` \| `LEFT` | yes | `RIGHT` = additions/context; `LEFT` = deletions |
 
 All six arguments are required. The `.ps1` variant also accepts named parameters
 (`-owner`, `-repo`, etc.) in addition to positional.
@@ -38,9 +38,11 @@ All six arguments are required. The `.ps1` variant also accepts named parameters
    Validate `pr_number` and `line_number` are numeric. Exit 3 on failure.
 
 2. Fetch the full patch:
+
    ```bash
    gh pr diff {pr_number} --repo {owner}/{repo} --patch
    ```
+
    Capture stdout+stderr. On non-zero exit, emit diagnostic to stderr and
    `API_ERROR: gh pr diff failed` to stdout; exit 4.
 
@@ -108,7 +110,7 @@ Errors (exit ≥ 2) also write a diagnostic line to **stderr**.
 
 Replaces step 4 in `instructions.txt`:
 
-```
+```md
 4. Verify line:
    bash: bash verify-line-in-diff.sh {OWNER} {REPO} {PR_NUMBER} {FILE_PATH} {LINE_NUMBER} {SIDE}
    pwsh: pwsh verify-line-in-diff.ps1 {OWNER} {REPO} {PR_NUMBER} {FILE_PATH} {LINE_NUMBER} {SIDE}

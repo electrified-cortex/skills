@@ -59,6 +59,7 @@ Audit (pair-audit mode):
     Meta mode: classify target-only additions as `Valid Extension`, `Derived but Unstated`, or `Unauthorized Addition`.
     Domain mode, authority supplied: authority spec = domain spec via `--spec`; apply same three-way classification.
     Domain mode, no authority supplied: skip. Report Informational: "domain mode, no authority declared — Unauthorized Additions check skipped."
+    DOMAIN-FLAVOR RECOGNITION (any mode): if target spec declares itself a domain-flavor extension of a parent via an explicit `Inheritance` section naming the parent, classify additional normative reqs unique to the domain as `Valid Extension`, provided: (a) parent named by canonical ref, (b) additions satisfy parent's atomicity/testability/normative-language rules, (c) additions don't contradict parent, (d) additional sections classified in Section Classification table per parent's Content Modes rules. Any condition missing → fall back to three-way rule. Resolving parent file path not required; verify parent by canonical name only.
 12. Economy: apply removal test to duplicated rules, unnecessary scaffolding, prose removable without changing effect. Confirm effect before reporting waste. Consolidation = Informational; escalate to Low/Medium where waste creates drift risk.
 13. Compression fidelity: flag loss, gain, bloat. Loss/gain = governance failures (High+); bloat = quality issue (Medium).
 
