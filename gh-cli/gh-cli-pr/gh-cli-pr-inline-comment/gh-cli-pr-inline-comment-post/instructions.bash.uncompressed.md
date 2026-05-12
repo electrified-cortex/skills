@@ -47,7 +47,10 @@ Exit code semantics:
 
 ```bash
 gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" \
-  --jq ".[] | select(.path == \"$FILE_PATH\" and .line == $LINE_NUMBER and .side == \"$SIDE\") | {id, body, author: .user.login}"
+  --jq ".[] | select(.path == \"$FILE_PATH\" and .side == \"$SIDE\" and (
+    (\"$SIDE\" == \"RIGHT\" and .line == $LINE_NUMBER) or
+    (\"$SIDE\" == \"LEFT\"  and .original_line == $LINE_NUMBER)
+  )) | {id, body, author: .user.login}"
 ```
 
 If a matching comment already exists, return:
@@ -102,6 +105,10 @@ case $POST_EXIT in
   2)
     # Usage error — should not happen if args were constructed correctly
     printf '{ "status": "error", "comment_id": null, "comment_url": null, "message": "internal error: bad args to post.sh" }\n'
+    exit 0
+    ;;
+  *)
+    printf '{ "status": "error", "comment_id": null, "comment_url": null, "message": "post.sh exited with unexpected code %s" }\n' "$POST_EXIT"
     exit 0
     ;;
 esac

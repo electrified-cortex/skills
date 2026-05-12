@@ -27,7 +27,6 @@ REST API endpoint `/repos/{owner}/{repo}/pulls/{pull_number}/comments` via `gh a
 | LINE_NUMBER | yes | Absolute line number |
 | BODY | yes | Comment text |
 | SIDE | no | `RIGHT` (default) or `LEFT` |
-| START_LINE | no | For multi-line comments only |
 
 ## Step Order (Fixed)
 

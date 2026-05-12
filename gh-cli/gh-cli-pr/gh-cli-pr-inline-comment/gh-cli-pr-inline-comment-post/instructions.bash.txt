@@ -28,7 +28,10 @@ WINDOWS / Git Bash: NEVER use leading `/` in `gh api` paths — Git Bash rewrite
 Step 4: Check for existing comment (dedup)
 ```bash
 gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" \
-  --jq ".[] | select(.path == \"$FILE_PATH\" and .line == $LINE_NUMBER and .side == \"$SIDE\") | {id, body, author: .user.login}"
+  --jq ".[] | select(.path == \"$FILE_PATH\" and .side == \"$SIDE\" and (
+    (\"$SIDE\" == \"RIGHT\" and .line == $LINE_NUMBER) or
+    (\"$SIDE\" == \"LEFT\"  and .original_line == $LINE_NUMBER)
+  )) | {id, body, author: .user.login}"
 ```
 Match found → return: `{ "status": "duplicate", "comment_id": <existing_id>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<existing_id>", "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
 
@@ -72,6 +75,10 @@ case $POST_EXIT in
     ;;
   2)
     printf '{ "status": "error", "comment_id": null, "comment_url": null, "message": "internal error: bad args to post.sh" }\n'
+    exit 0
+    ;;
+  *)
+    printf '{ "status": "error", "comment_id": null, "comment_url": null, "message": "post.sh exited with unexpected code %s" }\n' "$POST_EXIT"
     exit 0
     ;;
 esac

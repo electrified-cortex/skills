@@ -17,12 +17,14 @@ description: Post an inline PR review comment on a diff line. Triggers — post 
 | BODY | yes | Comment text |
 | SIDE | no | `RIGHT` (default) or `LEFT` |
 
-## Dispatch by shell
+## Shell selection
 
 Choose `<shell>` based on the executing runtime:
 
 - bash 4+ on Linux, macOS, or Windows Git Bash → `<shell>` = `bash`
 - PowerShell 7+ on any platform → `<shell>` = `pwsh`
+
+## Dispatch
 
 `<instructions>` = `instructions.<shell>.txt` in this skill folder (NEVER READ)
 `<instructions-abspath>` = absolute path to `<instructions>`
@@ -32,7 +34,6 @@ Choose `<shell>` based on the executing runtime:
 `<prompt>` = Read and follow `<instructions-abspath>`. Input: `<input-args>`
 
 Follow dispatch skill. See `../../../../dispatch/SKILL.md`.
-Should return: `{ "status": "posted" | "duplicate" | "error", "comment_id": <integer or null>, "comment_url": "<https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r{ID} or null>", "message": "<one-line summary>" }`
 
 ## Return
 

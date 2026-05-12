@@ -15,10 +15,11 @@ Inputs:
 | BODY | yes | Comment text |
 | SIDE | no | `RIGHT` (default) or `LEFT` |
 
-Dispatch by shell — resolve `<shell>`:
+Shell selection — resolve `<shell>`:
 - bash 4+ on Linux, macOS, or Windows Git Bash → `bash`
 - PowerShell 7+ on any platform → `pwsh`
 
+Dispatch:
 `<instructions>` = `instructions.<shell>.txt` in this skill folder (NEVER READ)
 `<instructions-abspath>` = absolute path to `<instructions>`
 `<input-args>` = `OWNER={OWNER} REPO={REPO} PR_NUMBER={PR_NUMBER} FILE_PATH={FILE_PATH} LINE_NUMBER={LINE_NUMBER} BODY={BODY} SIDE={SIDE}`
