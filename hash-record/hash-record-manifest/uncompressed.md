@@ -1,24 +1,44 @@
+---
+name: hash-record-manifest
+description: Probe the hash-record cache for a set of files via a combined manifest hash. Triggers - compute manifest hash, multi-file cache key, hash-record manifest, manifest hash, bundle file hashes, cache key for directory.
+---
+
 # Hash-Record Manifest
 
-Compute a deterministic manifest hash for a set of files. The manifest hash is the multi-file cache key used by hash-record consumers (skill audits, code reviews on a directory, anything that bundles multiple sources into a single result).
+Probe the hash-record cache for a set of files via a combined manifest hash. Returns the cache path as `HIT` (exists) or `MISS` (absent); the caller reads or writes at that path.
 
-## Input
+## Inputs
 
-- `repo_root` (required): absolute path to the repository root. Used to compute repo-relative paths for the manifest text.
-- `files` (required): paths to include. May be absolute or repo-relative; the skill normalizes all to repo-relative against `repo_root`.
+| Parameter         | Required | Description                                                                 |
+| ----------------- | -------- | --------------------------------------------------------------------------- |
+| `op_kind`         | yes      | Operation kind, e.g. `skill-auditing/v2`. May contain `/`; no `..`, `\`, `*`. |
+| `record_filename` | yes      | Leaf filename, e.g. `report.md`. No path separators or `..`.               |
+| `files`           | yes      | One or more file paths (absolute or relative). At least one required.      |
 
-## Dispatch
+## Procedure
 
-Variables:
+Call the local tool directly — no sub-agent dispatch.
 
-`<instructions>` = `instructions.txt` (this folder; NEVER READ THIS FILE)
-`<instructions-abspath>` = absolute path to `<instructions>`
-`<input-args>` = `repo_root=<abs-path> files=<comma-or-newline-separated-list>`
-`<tier>` = `fast-cheap`
-`<description>` = `Computing manifest hash: <repo_root>`
-`<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
+**bash:**
 
-Follow `dispatch` skill. See `../../dispatch/SKILL.md`.
-Returns: `manifest: <40-char-hash>` | `ERROR: <reason>`
+```bash
+bash manifest.sh <op_kind> <record_filename> <file1> [<file2> ...]
+```
+
+**pwsh:**
+
+```powershell
+pwsh manifest.ps1 <op_kind> <record_filename> <file1> [<file2> ...]
+```
+
+The tool resolves repo root from the first file, computes a git blob hash per file, sorts pairs lexically, builds manifest text, hashes it via `git hash-object --stdin`, and tests the resulting cache path.
+
+## Return
+
+| Output            | Exit | Meaning                                      |
+| ----------------- | ---- | -------------------------------------------- |
+| `HIT: <abs-path>` | 0    | Cache file exists; caller reads its contents |
+| `MISS: <abs-path>`| 0    | No cache entry; caller writes to this path   |
+| `ERROR: <reason>` | 1    | Argument or runtime error                    |
 
 Related: `hash-record`, `hash-record-index`, `hash-record-prune`
