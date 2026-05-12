@@ -1,8 +1,3 @@
----
-name: copilot-cli-review
-description: Code review operation via the standalone Copilot CLI binary. Runs adversarial review of a change set and returns structured findings.
----
-
 # copilot-cli-review — Instructions
 
 ## Prerequisites

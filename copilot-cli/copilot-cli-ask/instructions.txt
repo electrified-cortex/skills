@@ -1,37 +1,29 @@
-## Prerequisites
-
+Prerequisites:
 ```bash
 copilot --version   # must resolve; fail-fast if not
 ```
-
 Fails → return `Status: UNAVAILABLE`; surface stderr; stop. Do NOT attempt installation.
 
-## Invocation
-
+Invocation:
 ```bash
 copilot -p "<prompt>" -s --allow-all-tools
 ```
+Add `--model <model>` only when caller explicitly supplied model name. Omit otherwise; don't pin model inside skill.
 
-Add `--model <model>` only when caller explicitly supplied model name. Omit otherwise; do not pin model inside skill.
+Named models (e.g. `gpt-4o`, `gpt-4.5`) may be unavailable via `--model`. Use default unless caller requires named model. Named model rejected → `Status: ERROR` with "model not available: `<model>`"; stop.
 
-> **Note:** Named models (e.g. `gpt-4o`, `gpt-4.5`) may be unavailable via `--model`. Use default (no flag) unless caller requires named model. Named model rejected → return `Status: ERROR` with "model not available: `<model>`"; stop.
+Constrain working dir to neutral path — never `/`, `~`, or dir containing secrets.
 
-Constrain working directory to neutral path — never `/`, `~`, or directory containing secrets.
-
-## Prompt Construction
-
+Prompt Construction:
 Pass caller's question directly. Prepend context if supplied:
-
 ```text
 <context if any>
 
 <caller's question>
 ```
-
 No framing or instructions — prompt pass-through is verbatim.
 
-## Output Shape
-
+Output Shape:
 ```text
 Status: OK | ERROR | UNAVAILABLE
 Answer: <Copilot's plain text response>
@@ -43,8 +35,7 @@ Answer: <Copilot's plain text response>
 | `ERROR` | Binary returned non-zero exit code |
 | `UNAVAILABLE` | `copilot --version` failed before invocation |
 
-## Error Handling
-
+Error Handling:
 | Condition | Action |
 | --- | --- |
 | `copilot --version` fails | `Status: UNAVAILABLE`; set `Answer:` to stderr; stop |
@@ -52,8 +43,7 @@ Answer: <Copilot's plain text response>
 | `copilot -p ...` exits non-zero | `Status: ERROR`; set `Answer:` to stderr; stop |
 | `copilot -p ...` exits zero with empty stdout | `Status: OK`; set `Answer:` to empty string |
 
-## Rules
-
-- Do not interpret or filter Copilot's answer — return verbatim in `Answer` field.
-- One question per invocation; do not chain questions.
-- Do not pin model; only pass `--model` when caller explicitly supplies one.
+Rules:
+Don't interpret or filter Copilot's answer — return verbatim in `Answer` field.
+One question per invocation; don't chain questions.
+Don't pin model; only pass `--model` when caller explicitly supplies one.

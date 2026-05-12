@@ -1,79 +1,34 @@
 ---
 name: gh-cli-pr-create
-description: Open pull request via GitHub CLI.
+description: Open a pull request via GitHub CLI. Triggers - create pr, open pull request, submit pr, create draft pr.
 ---
 
 # GH CLI PR Create
 
-Open pull requests using `gh pr create`. Covers creating standard PRs, draft PRs, and promoting drafts to ready.
+## Inputs
 
-## Before Creating — Check for Existing PR
+| Parameter | Required | Notes |
+| --- | --- | --- |
+| OWNER | yes | GitHub org or user name |
+| REPO | yes | Repository name |
+| BASE | yes | Base branch name (e.g., `main`) |
+| TITLE | yes | PR title |
+| BODY | yes | PR body markdown; written to temp file before use |
+| LABEL | no | Comma-separated label names |
+| DRAFT | no | Any non-empty value enables `--draft` |
 
-Before opening a PR, confirm there is no existing open PR for the current branch:
+## Route by shell
 
-```bash
-gh pr list --head $(git branch --show-current)
-```
+Read and follow:
 
-If a PR already exists, edit or view it rather than creating a duplicate.
+- bash 4+ → `instructions.bash.txt` in this folder
+- pwsh 7+ → `instructions.pwsh.txt` in this folder
 
-## Creating a Pull Request
+The host executes the procedure directly. No sub-agent dispatch.
 
-For arbitrary body content (markdown, code fences, `$VAR` references, backticks), write the body to a temp file and pass `--body-file`. Never substitute user-supplied body content inline as a shell argument.
+## Return
 
-**Bash:**
-
-```bash
-BODY_FILE=$(mktemp /tmp/gh-body-XXXXXX.md)
-printf '%s' "$BODY" > "$BODY_FILE"
-gh pr create --title "title" --body-file "$BODY_FILE" --base main
-rm -f "$BODY_FILE"
-```
-
-**PowerShell 7+:**
-
-```powershell
-$bodyFile = [System.IO.Path]::GetTempFileName()
-[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
-gh pr create --title "title" --body-file $bodyFile --base main
-Remove-Item $bodyFile -Force
-```
-
-Create a PR with full metadata — reviewers, assignee, labels, and start as draft:
-
-```bash
-gh pr create --title "title" --body-file .github/PULL_REQUEST_TEMPLATE.md \
-  --reviewer user1,user2 --assignee @me --label enhancement --draft
-```
-
-## Linking to a Closing Issue
-
-Include a closing keyword in the PR body to automatically close the linked issue when the PR merges:
-
-```bash
-# In the --body value or --body-file content:
-Closes #123
-```
-
-## Promoting a Draft to Ready
-
-When the PR is ready for review, promote it:
-
-```bash
-gh pr ready 123
-```
-
-## Editing Metadata After Creation
-
-Add reviewers, labels, or remove labels after the PR is open:
-
-```bash
-gh pr edit 123 --add-reviewer user3 --add-label bug --remove-label wip
-```
-
-## Scope Boundaries
-
-This skill covers `gh pr create`, `gh pr ready`, and `gh pr edit`. It does not cover branch creation or `git push` — the branch must already exist on the remote before running these commands. Reviewing and merging the PR belong to their respective sub-skills.
+On create: PR URL string. On list: table or JSON of PRs. On promote/edit: exit code 0 on success.
 
 ## Safety Classification
 
@@ -81,5 +36,7 @@ This skill covers `gh pr create`, `gh pr ready`, and `gh pr edit`. It does not c
 | --- | --- | --- |
 | gh pr create | Destructive | Operator approval required before execution |
 | gh pr ready | Destructive | Operator approval required before execution |
+| gh pr edit | Destructive | Operator approval required before execution |
+| gh pr list (GET) | Safe | Read-only |
 
-**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.
+Destructive operations require explicit operator authorization in the current session before execution. Approval from another agent does not constitute operator authorization.

@@ -1,19 +1,5 @@
 # GH CLI PR Inline Comment — Post (PowerShell 7+)
 
-Execution sequence and parameter handling for the gh-cli-pr-inline-comment-post skill — PowerShell 7+ only. Windows PowerShell 5.1 is NOT supported.
-
-## Inputs
-
-| Parameter | Required | Notes |
-| --------- | -------- | ----- |
-| OWNER | yes | GitHub org or user name |
-| REPO | yes | Repository name |
-| PR_NUMBER | yes | Integer PR number |
-| FILE_PATH | yes | Repo-relative path (e.g. `src/foo.ts`) |
-| LINE_NUMBER | yes | Absolute line number in the file |
-| BODY | yes | Comment text |
-| SIDE | no | `RIGHT` (default) or `LEFT` |
-
 ## Prerequisites
 
 ```powershell
@@ -122,19 +108,3 @@ switch ($POST_EXIT) {
 }
 ```
 
-## Return
-
-On success:
-`{ "status": "posted", "comment_id": <id from response>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<id from response>", "message": "posted at {FILE_PATH}:{LINE_NUMBER}" }`
-
-On duplicate (Step 4 match):
-`{ "status": "duplicate", "comment_id": <existing_id>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<existing_id>", "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
-
-On line not in diff (exit 3 from post.ps1):
-`{ "status": "error", "comment_id": null, "comment_url": null, "message": "Line {LINE_NUMBER} is not in the diff for {FILE_PATH}" }`
-
-On gh error (exit 4 from post.ps1):
-`{ "status": "error", "comment_id": null, "comment_url": null, "message": "gh api error — see stderr" }`
-
-On any other error:
-`{ "status": "error", "comment_id": null, "comment_url": null, "message": "<error description>" }`

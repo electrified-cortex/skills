@@ -1,83 +1,44 @@
-# GH CLI PR Inline Comment — Post (PowerShell 7+)
+GH CLI PR Inline Comment — Post (pwsh 7+; PS5.1 NOT supported)
 
-Execution sequence + param handling. PS7+ only; PS5.1 NOT supported.
-
-Inputs:
-
-| Parameter | Required | Notes |
-| --------- | -------- | ----- |
-| OWNER | yes | GitHub org or user |
-| REPO | yes | Repo name |
-| PR_NUMBER | yes | Integer |
-| FILE_PATH | yes | Repo-relative path (e.g. `src/foo.ts`) |
-| LINE_NUMBER | yes | Absolute line number |
-| BODY | yes | Comment text |
-| SIDE | no | `RIGHT` (default) or `LEFT` |
-
-Prerequisites:
-
-```powershell
-gh auth status 2>&1
-```
+Prereq: `gh auth status 2>&1`
 
 Step 1: Fetch commit SHA
-
 ALWAYS fetch fresh — stale SHAs cause 422 errors.
-
 ```powershell
 $COMMIT_SHA = gh pr view $PR_NUMBER --repo "$OWNER/$REPO" --json headRefOid --jq '.headRefOid'
 ```
 
 Step 2: Verify file is in diff
-
 ```powershell
 gh pr diff $PR_NUMBER --repo "$OWNER/$REPO" --name-only
 ```
-
 If FILE_PATH not listed, stop: file has no changes in this PR.
 
 Step 3: Verify line is in diff
-
 Use bundled tool — don't parse diff manually.
-
 If SIDE not provided, default to `RIGHT` before invoking.
-
 ```powershell
 $verifyOutput = pwsh verify-line-in-diff.ps1 -owner $OWNER -repo $REPO -pr_number $PR_NUMBER -file_path $FILE_PATH -line_number $LINE_NUMBER -side $SIDE
 $VERIFY_EXIT = $LASTEXITCODE
 ```
-
-Exit codes:
-
-- 0 (IN_DIFF) — proceed.
-- 1 (NOT_IN_DIFF) — outside all hunk ranges; stop, surface valid ranges to caller.
-- 2 (FILE_NOT_IN_DIFF) — file has no changes; stop.
-- 3 (USAGE_ERROR) — invalid args; check invocation signature.
-- 4 (API_ERROR) — `gh pr diff` failed; surface error output.
+Exit codes: 0 (IN_DIFF) → proceed; 1 (NOT_IN_DIFF) → outside hunk ranges, stop, surface valid ranges to caller; 2 (FILE_NOT_IN_DIFF) → file has no changes, stop; 3 (USAGE_ERROR) → invalid args; 4 (API_ERROR) → `gh pr diff` failed, surface error output.
 
 WINDOWS: NEVER use leading `/` in `gh api` paths — use `repos/...` not `/repos/...`.
 
-Step 4: Check for existing comment (deduplication)
-
+Step 4: Check for existing comment (dedup)
 ```powershell
 $existing = gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" `
   --jq ".[] | select(.path == \`"$FILE_PATH\`" and .line == $LINE_NUMBER and .side == \`"$SIDE\`") | {id, body, author: .user.login}"
 ```
-
-If match found, return:
-`{ "status": "duplicate", "comment_id": <existing_id>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<existing_id>", "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
+Match found → return: `{ "status": "duplicate", "comment_id": <existing_id>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<existing_id>", "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
 
 Step 5: Post comment
-
-Write BODY to temp file — inline interpolation corrupts bodies with backticks, `$VAR` refs, double quotes, or code fences. Use `WriteAllText` for UTF-8 without BOM, no shell expansion.
-
+Write BODY to temp file — inline interpolation corrupts bodies with backticks, `$VAR` refs, double quotes, code fences. `WriteAllText` = UTF-8 no-BOM, no shell expansion.
 ```powershell
 $bodyFile = [System.IO.Path]::GetTempFileName()
 [System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
 ```
-
 Invoke local post tool. `post.ps1` uses kebab-case flags parsed manually — pass as double-dash flags, not PS-style params.
-
 ```powershell
 $POST_URL = pwsh post.ps1 `
   --owner $OWNER `
@@ -93,9 +54,7 @@ Remove-Item $bodyFile -Force -ErrorAction SilentlyContinue
 ```
 
 Step 6: Parse and return
-
 `post.ps1` emits comment URL as single stdout line (exit 0) or nothing on error.
-
 ```powershell
 switch ($POST_EXIT) {
   0 {
@@ -105,36 +64,16 @@ switch ($POST_EXIT) {
     }
   }
   3 {
-    # Line not in diff
     Write-Output "{ `"status`": `"error`", `"comment_id`": null, `"comment_url`": null, `"message`": `"Line $LINE_NUMBER is not in the diff for $FILE_PATH`" }"
     exit 0
   }
   4 {
-    # gh error — stderr forwarded by tool
     Write-Output '{ "status": "error", "comment_id": null, "comment_url": null, "message": "gh api error — see stderr" }'
     exit 0
   }
   2 {
-    # Usage error — shouldn't happen if args constructed correctly
     Write-Output '{ "status": "error", "comment_id": null, "comment_url": null, "message": "internal error: bad args to post.ps1" }'
     exit 0
   }
 }
 ```
-
-Return:
-
-Success:
-`{ "status": "posted", "comment_id": <id>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<id>", "message": "posted at {FILE_PATH}:{LINE_NUMBER}" }`
-
-Duplicate (Step 4 match):
-`{ "status": "duplicate", "comment_id": <existing_id>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<existing_id>", "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
-
-Line not in diff (exit 3 from post.ps1):
-`{ "status": "error", "comment_id": null, "comment_url": null, "message": "Line {LINE_NUMBER} is not in the diff for {FILE_PATH}" }`
-
-gh error (exit 4 from post.ps1):
-`{ "status": "error", "comment_id": null, "comment_url": null, "message": "gh api error — see stderr" }`
-
-Any other error:
-`{ "status": "error", "comment_id": null, "comment_url": null, "message": "<error description>" }`
