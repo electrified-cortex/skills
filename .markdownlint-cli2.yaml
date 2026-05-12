@@ -1,0 +1,5 @@
+ignores:
+  - "**/.hash-record/**"
+  - "**/.tests/**"
+  - "**/.worktrees/**"
+  - "**/agents/transcripts/**"
