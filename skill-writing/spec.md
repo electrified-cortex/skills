@@ -459,7 +459,6 @@ For dispatch skills: also write the companion agent/instruction file
 Never modify `SKILL.md` directly — it is a compiled artifact.
 Flow: spec → uncompressed → compressed.
 
-
 ### Dispatch vs inline decision flow
 
 Ask: "Could someone with no context do this from just the inputs given?"

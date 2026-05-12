@@ -48,7 +48,7 @@ same inputs. Windows PowerShell 5.1 is not supported.
    exit 2 if not found.
 7. Construct the `gh pr review` invocation:
 
-   ```
+   ```sh
    gh pr review {pr} --repo {owner}/{repo} {gh-flag} [--body-file {body-file}] [--review-id {review-id}]
    ```
 
@@ -60,7 +60,7 @@ same inputs. Windows PowerShell 5.1 is not supported.
 9. On success (gh exit 0): `gh pr review` does not emit the PR URL.
    Retrieve the URL via a follow-up call:
 
-   ```
+   ```sh
    gh pr view {pr} --repo {owner}/{repo} --json url --jq .url
    ```
 

@@ -11,7 +11,9 @@
 ## Clean
 
 ### Smoke — CLEAN
+
 Haiku is correct for surface lint/style/obvious bugs. Fully explicit instructions, structured schema, no deep judgment required.
 
 ### Substantive — CLEAN
+
 Sonnet is correct for design, correctness, security, architectural analysis. Multi-step judgment across full context; no instruction-quality lever available to downgrade.
