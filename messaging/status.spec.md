@@ -21,7 +21,7 @@ agent how many messages are waiting. Does not claim, read, or modify any file.
 3. Count all `*.json` files directly inside the inbox (not in subdirectories, not
    `*.json.claimed`).
 4. Get current UTC time in ISO 8601 format.
-5. Output exactly one line to stdout:
+5. Output exactly one line to `stdout`:
 
    ```text
    [<utc-timestamp>]: <N> messages waiting
@@ -36,7 +36,7 @@ agent how many messages are waiting. Does not claim, read, or modify any file.
 [2026-05-08T14:30:22Z]: 0 messages waiting
 ```
 
-Output is written even when N is zero.
+Output even when N is zero.
 
 ## Exit Codes
 

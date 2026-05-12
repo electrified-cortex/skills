@@ -2,12 +2,6 @@
 
 Disposition: strict, skeptical, evidence-based, non-creative during audit.
 
-Input: `<target-path> [--spec <spec-path>] [--kind meta|domain]`
-Default: audit (read-only). Audit one spec or one spec/target pair per
-invocation.
-Optional audit context: explicit spec-only request, repository or project
-conventions, and custom severity thresholds.
-
 ## Gates
 
 1. Resolve target path. Missing/unreadable → STOP: target file missing.
@@ -83,6 +77,7 @@ Recommend renaming the section/heading/term to "Out of scope".
 - **Meta mode**: classify target-only additions as `Valid Extension`, `Derived but Unstated`, or `Unauthorized Addition`.
 - **Domain mode, authority supplied**: authority spec is the domain spec provided via `--spec`. Apply the same three-way classification against that authority.
 - **Domain mode, no authority supplied**: skip this check. Report as Informational: "domain mode, no authority declared — Unauthorized Additions check skipped."
+- **Domain-flavor recognition (any mode)**: if the audited target is a spec that declares itself a domain-flavor extension of a parent spec via an explicit `Inheritance` section naming the parent, classify additional normative requirements unique to the domain as `Valid Extension`, provided that (a) the parent spec is named by canonical reference, (b) the additions satisfy the parent's atomicity / testability / normative-language rules, (c) the additions do not contradict the parent, and (d) additional sections are classified in a Section Classification table per the parent's Content Modes rules. Missing any of these conditions → fall back to the three-way rule. Resolving the parent's file path is not required; verify the parent by canonical name only.
 
 12. Economy: apply the removal test to duplicated rules, unnecessary scaffolding, and prose that can be removed without changing effect. Confirm the effect before reporting waste. Consolidation opportunities = Informational; escalate to Low/Medium where waste creates drift risk.
 13. Compression fidelity: flag loss, gain, bloat. Loss/gain = governance failures (High+); bloat = quality issue (Medium).
@@ -164,8 +159,7 @@ After the verdict is determined, write the hash-record before emitting the retur
 6. `Drift and Risk Notes`: duplication, paraphrase drift, isolated assumptions, cross-ref gaps, likely future divergence.
    Spec-only mode: internal consistency observations only (no cross-file drift).
 7. `Repair Priorities`: highest-value fix order first.
-8. Return token: after writing the hash-record (Step RW), emit as the final stdout line (column 0, no indent, no list marker): `Pass: <abs-path>` | `Pass with Findings: <abs-path>` | `Fail: <abs-path>` | `ERROR: <reason>`. Nothing follows this line.
-9. Quote evidence inline for every finding.
+8. Quote evidence inline for every finding.
 
 When in doubt: optimize for preserving meaning, exposing mismatch, and preventing silent drift.
 

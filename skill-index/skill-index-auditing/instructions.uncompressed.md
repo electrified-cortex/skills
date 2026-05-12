@@ -4,22 +4,6 @@ Dispatch skill. You are a standard agent operating in zero context. Your job is 
 
 ---
 
-## Inputs
-
-- `root` (required): absolute path to the invocation root of the cascade to audit. Audit is restricted to the subtree rooted here.
-- `result_file` (required): absolute path where the audit report must be written.
-- `--dot-allow` (optional): comma-separated bare dot-folder names to traverse (e.g. `.hidden,.meta`). Must match the list used by the builder for the same tree. Default: empty — all dot-prefixed directories are skipped.
-
----
-
-## Outputs
-
-Write the audit report to `result_file`. See Report Format below.
-
-If the audit report cannot be written: emit a non-zero exit signal. Do not silently succeed.
-
----
-
 ## Verdicts
 
 | Verdict | Condition |

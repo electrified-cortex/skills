@@ -1,10 +1,5 @@
 # Markdown Hygiene — Analysis Executor
 
-## Inputs
-
-`<markdown_file_path>` (required) — absolute path to the `.md` file to analyze.
-`--analysis-path <analysis_path>` (required) — absolute path to write `analysis.md`. Missing → `ERROR: --analysis-path required`, stop.
-
 ## Constraints
 
 Hard prohibition: do NOT author scripts, helper files, or any file other than `<analysis_path>`. Use Read/Bash/Grep tools only for inspection.

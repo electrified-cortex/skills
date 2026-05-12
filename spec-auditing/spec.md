@@ -373,12 +373,32 @@ Each addition must be classified as one of:
 - **Unauthorized Addition**
   No support in the spec. This is a defect.
 
+**Domain-flavor recognition:** When the audited target is itself a
+spec that declares itself a domain-flavor extension of a parent spec
+(via an explicit **Inheritance** section naming the parent and
+stating the domain-flavor declaration), the auditor MUST classify
+additional normative requirements unique to the domain as **Valid
+Extension** rather than **Unauthorized Addition**, provided that:
+
+- the parent spec exists and permits domain-flavor extension;
+- the additional requirements satisfy the parent's atomicity,
+  testability, and normative-language rules;
+- the additional requirements do not contradict the parent;
+- additional sections are classified in a Section Classification
+  table per the parent's Content Modes rules.
+
+If any of the above is missing, the auditor classifies the
+additional content per the original three-way rule. Verify the
+parent spec by name (e.g., `spec-writing` referenced by canonical
+name in the Inheritance section); resolving the parent's file path
+is not required.
+
 **Domain mode behavior:** When audit kind is domain:
 
 - If a domain authority spec is provided via `--spec`, apply the three-way classification against that authority.
 - If no domain authority spec is provided, skip this check and report as Informational: "domain mode, no authority declared — Unauthorized Additions check skipped."
 
-The auditor must not assume additions are acceptable unless the spec explicitly allows extension.
+The auditor must not assume additions are acceptable unless the spec explicitly allows extension or the target spec declares a valid Inheritance from a parent that permits domain-flavor extension.
 
 ### 10. Economy
 

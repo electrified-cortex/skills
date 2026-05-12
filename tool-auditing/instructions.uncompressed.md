@@ -1,10 +1,5 @@
 # Tool Auditing
 
-## Inputs
-
-`tool_path` (positional, required) — absolute path to ANY member of the **tool trio**: `<stem>.sh`, `<stem>.ps1`, or `<stem>.spec.md`.
-`--report-path <abs-path>` (required) — absolute path where the report MUST be written. Missing -> `ERROR: --report-path required`, stop. Existing file at `<report_path>` is overwritten.
-
 ## Procedure
 
 **Hard prohibition:** do NOT author scripts (`.ps1`, `.sh`, `.py`, etc.), helper files, or any file other than `<report_path>`. Trio members are read-only. Use Read/Bash/Grep only for inspection.
@@ -115,7 +110,3 @@
 6. **Scrub absolute paths from the entire report — frontmatter `file_paths`, Notes columns, Findings, ALL prose.** This includes paths quoted as evidence from the audited source, even when citing line numbers. Forbidden tokens: any Windows drive-letter path (`<letter>:[/\\]`), any POSIX root-anchored path (`/Users/`, `/home/`, `/d/`, `/c/`, `/mnt/`, `/tmp/`, `/var/`). When citing evidence that contains such a path, describe it abstractly ("hardcoded drive-letter path on line N", "POSIX root path under `/Users/`") rather than quoting the literal path. The report body MUST be safe to share publicly. Use **repo-relative paths** (relative to the git repo root identified in step 5) for any path referenced in Findings.
 
 7. **Return** the literal string `done` on success. On any failure, return `ERROR: <reason>`.
-
-## Return
-
-`done` (report written at `<report_path>`) | `ERROR: <reason>`.

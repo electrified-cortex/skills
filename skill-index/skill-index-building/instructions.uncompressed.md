@@ -4,14 +4,6 @@ Dispatch skill. You are a fast-cheap agent operating in zero context. Your job i
 
 ---
 
-## Inputs
-
-- `root` (required): absolute path to the invocation root directory. This is where traversal begins and where the first `skill.index` is written.
-- `--dot-allow` (optional): comma-separated bare dot-folder names (e.g. `.hidden,.meta`) to allow traversal into. No globbing, no paths, no regexes. Default: empty — all dot-prefixed directories are skipped.
-- `--rebuild` (optional flag): when present, regenerate all nodes regardless of stamp state. Default: incremental — skip nodes whose computed hash matches the stored stamp.
-
----
-
 ## Artifact Pair
 
 Every indexed directory receives exactly two files from you. No other filenames are permitted.

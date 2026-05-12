@@ -7,11 +7,15 @@ description: Tiered code review on a change set. Read-only. Never modifies code.
 
 ## Cache Probe
 
-Before dispatching any pass:
-1. Compute canonical manifest hash: SHA-256 of sorted `change_set` file paths + their content hashes + `tier` + `focus` (if set) + `context_pointer` hash (if set) + `prior_findings` hash (substantive, if set).
-2. Check `.hash-record/XX/HASH/code-review/vN[/<model>]/report.md` (caller: SKILL.md owns probe + write; dispatched agents don't cache).
-3. Cache hit → return cached report, skip dispatch.
-4. Cache miss → proceed to dispatch. After receiving result, write to cache path.
+Before dispatching any pass (SKILL.md owns probe + write; dispatched agents don't cache):
+
+1. Invoke `hash-record-manifest` with:
+   - `op_kind` = `code-review/vN` (append `/<model>` if `model` input is set)
+   - `record_filename` = `report.md`
+   - `files` = all `change_set` files + `context_pointer` file (if set) + a temporary file containing `tier`, `focus` (if set), and `prior_findings` hash (if substantive and set), as additional cache-key inputs
+2. `hash-record-manifest` emits `HIT: <abs-path>` or `MISS: <abs-path>`.
+3. HIT → read and return the cached report; skip dispatch.
+4. MISS → proceed to dispatch. After receiving result, write to the returned `<abs-path>`.
 
 ## Dispatch
 
@@ -46,7 +50,7 @@ Should return: JSON findings report `{tier, pass_index, verdict, findings[], fai
 ## Returns
 
 RESULT: aggregated review result `{passes[], sign_off_pass_index, severity_aggregate, verdict, preserved_contradictions[]}`
-ERROR: <reason>
+ERROR: `<reason>`
 
 Calling agent assembles aggregated result from per-pass reports. Aggregation rules in `instructions.txt`.
 SARIF severity map: `critical`/`high` → error, `medium` → warning, `low`/`info` → note.
@@ -70,6 +74,7 @@ Output: same JSON schema as tiered passes — `{tier: "single-adversary", pass_i
 ## Examples
 
 **change_set forms:**
+
 - Inline diff: `change_set="""--- a/src/foo.ts\n+++ b/src/foo.ts ..."""`
 - File list: `change_set="/abs/src/foo.ts /abs/src/bar.ts"`
 - Git ref: `change_set="HEAD~3..HEAD"` (requires shell in dispatched agent)
@@ -86,4 +91,3 @@ Output: same JSON schema as tiered passes — `{tier: "single-adversary", pass_i
 ## Related
 
 `dispatch` (`../dispatch/SKILL.md`), `swarm` (`../swarm/SKILL.md`), `code-review-setup` (`./code-review-setup/SKILL.md`)
-

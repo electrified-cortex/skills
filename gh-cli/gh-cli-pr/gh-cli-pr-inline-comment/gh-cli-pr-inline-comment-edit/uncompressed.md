@@ -18,9 +18,26 @@ Update the body of an existing inline review comment.
 
 ## Command
 
+Write BODY to a temp file first — inline shell substitution corrupts bodies containing backticks, `$VAR` references, double quotes, or code fences.
+
+**Bash:**
+
 ```bash
+BODY_FILE=$(mktemp /tmp/gh-body-XXXXXX.md)
+printf '%s' "$BODY" > "$BODY_FILE"
 gh api --method PATCH repos/{OWNER}/{REPO}/pulls/comments/{COMMENT_ID} \
-  --field body="{BODY}"
+  --field body=@"$BODY_FILE"
+rm -f "$BODY_FILE"
+```
+
+**PowerShell 7+:**
+
+```powershell
+$bodyFile = [System.IO.Path]::GetTempFileName()
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+gh api --method PATCH "repos/{OWNER}/{REPO}/pulls/comments/{COMMENT_ID}" `
+  --field "body=@$bodyFile"
+Remove-Item $bodyFile -Force
 ```
 
 ## Notes

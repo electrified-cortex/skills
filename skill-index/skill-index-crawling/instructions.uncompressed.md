@@ -4,19 +4,6 @@ Dispatch skill. You are a fast-cheap agent operating in zero context. Your job i
 
 ---
 
-## Inputs
-
-- `root` (required): absolute path to the directory containing the starting `skill.index`. This is your working directory for the crawl.
-- `need` (required): the agent's stated need as a plain phrase (e.g. `compress text`, `audit cascade`, `build index`).
-
----
-
-## Outputs
-
-Return a crawl report (see Report Format below). That is your only output. You do not write, modify, or create any file.
-
----
-
 ## Procedure
 
 Follow these steps in order. Stop as soon as a stop condition is met.

@@ -15,11 +15,13 @@ This spec covers exactly one skill: `capability-cache`. The skill manages
 a single cache file per `env_key` for the `copilot-cli/models` operation.
 
 In scope:
+
 - Checking whether a valid cache file exists (READ path).
 - Probing `gh copilot models` and writing the result (WRITE path).
 - Returning a structured `{result, models, cache_hit}` tuple to callers.
 
 Out of scope:
+
 - General key-value caching (use a different substrate).
 - Caching any operation other than `copilot-cli/models`.
 - Cache eviction strategies other than manual erasure.

@@ -5,78 +5,38 @@ description: Approve, request changes on, dismiss pull request review via GitHub
 
 # GH CLI PR Review
 
-Perform and dismiss pull request reviews using `gh pr review`.
+## Inputs
 
-## Approving a Pull Request
+| Parameter | Required | Notes |
+| --------- | -------- | ----- |
+| OWNER | yes | GitHub org or user name |
+| REPO | yes | Repository name |
+| PR_NUMBER | yes | Integer PR number |
+| DECISION | yes | One of: `approve`, `request-changes`, `comment`, `dismiss` |
+| BODY_FILE | cond | Required for `request-changes` and `comment`; optional for `approve` and `dismiss` |
+| REVIEW_ID | cond | Required for `dismiss` |
 
-Approve a PR with an optional body message:
+## Route by shell
 
-```bash
-gh pr review 123 --approve --body "LGTM"
-```
+Read and follow:
 
-## Requesting Changes
+- bash 4+ → `instructions.bash.txt` in this folder
+- pwsh 7+ → `instructions.pwsh.txt` in this folder
 
-Request changes on a PR. A body is required to explain what needs to be addressed:
+The host executes the procedure directly. No sub-agent dispatch.
 
-```bash
-gh pr review 123 --request-changes --body "Please address X before merging"
-```
+## Decision Mapping
 
-## Comment-Only Review (No Verdict)
+| DECISION value | gh flag passed |
+| --- | --- |
+| `approve` | `--approve` |
+| `request-changes` | `--request-changes` (requires BODY_FILE) |
+| `comment` | `--comment` (requires BODY_FILE) |
+| `dismiss` | `--dismiss` (requires REVIEW_ID) |
 
-Submit a review comment without approving or requesting changes:
+## Return
 
-```bash
-gh pr review 123 --comment --body "Thoughts inline"
-```
-
-## Dismissing a Review
-
-Dismiss a previously submitted review. `--review-id` is required — the `gh` CLI will not accept `--dismiss` without it:
-
-```bash
-gh pr review 123 --dismiss --review-id <review-id> --body "reason"
-```
-
-To obtain the review ID:
-
-```bash
-gh pr view 123 --json reviews --jq '.reviews[].id'
-```
-
-## Adding Reviewers
-
-To add reviewers at PR creation time, use `gh pr create --reviewer`. To add reviewers after creation:
-
-```bash
-gh pr edit 123 --add-reviewer user
-```
-
-These are covered by `gh-cli-prs-create`, not by this skill.
-
-## Resolving Review Threads
-
-Resolving review threads has no `gh pr` command. Use the `resolveReviewThread` GraphQL mutation via `gh-cli-api`:
-
-```bash
-gh api graphql -f query='
-  mutation { resolveReviewThread(input: {threadId: "THREAD_ID"}) { thread { isResolved } } }'
-```
-
-## Scope Boundaries
-
-This skill covers `gh pr review` only. It does not cover inline review comments (adding comments to specific lines of code), requesting reviewers (see `gh-cli-prs-create`), or resolving review threads (see `gh-cli-api`).
-
-## Error Paths
-
-- **`--request-changes` without `--body`**: the `gh` CLI requires a body for request-changes reviews. If no body is provided by the caller, prompt for the change rationale before running the command.
-- **`--dismiss` with non-existent review ID**: `gh` surfaces a 422 or "not found" error. Surface the error message to the caller; use `gh pr view --json reviews` to list current review IDs and ask the caller to reconfirm.
-
-## Related
-
-- `gh-cli-prs-create` — adding reviewers, creating PRs
-- `gh-cli-api` — resolving review threads via GraphQL
+`gh pr review` does not emit a URL on success. The local tool retrieves the PR URL via a follow-up `gh pr view --json url --jq .url` call and writes it to stdout. A successful run yields exactly one line on stdout: the PR URL.
 
 ## Safety Classification
 
@@ -86,5 +46,7 @@ This skill covers `gh pr review` only. It does not cover inline review comments 
 | gh pr review --request-changes | Destructive | Operator approval required before execution |
 | gh pr review --comment | Destructive | Operator approval required before execution |
 | gh pr review --dismiss | Destructive | Operator approval required before execution |
+| gh pr view (GET) | Safe | Read-only |
+| gh api --paginate (GET) | Safe | Read-only |
 
-**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.
+Destructive operations require explicit operator authorization in the current session before execution. Approval from another agent does not constitute operator authorization.

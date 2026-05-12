@@ -1,8 +1,3 @@
----
-name: code-review
-description: Tiered code review on a change set. Read-only. Never modifies code. Triggers - security, correctness, code-quality, change-review, architectural-risk.
----
-
 # Code Review Pass
 
 Produce structured findings report. Never edit, commit, push, or stage.
@@ -13,15 +8,6 @@ Produce structured findings report. Never edit, commit, push, or stage.
 - **standard** — capable model (e.g. Sonnet-class). Use for `tier=substantive`.
 
 Tier substitution is prohibited.
-
-## Parameters
-
-- `change_set` (required): inline unified diff text, list of absolute file paths, or git ref/range (refs require shell access in the dispatched agent).
-- `tier` (required): `smoke`, `substantive`, or `single-adversary`. Governs depth.
-- `prior_findings` (substantive only, required): findings from every prior pass on the same change set, forwarded unmodified. Required for substantive; smoke and single-adversary must not receive this.
-- `focus` (optional): comma-separated focus areas (e.g. `security,concurrency`). Reorders priority; doesn't reduce depth — `critical` and `high` outside focus must still surface.
-- `model` (optional, single-adversary only): model override for this pass. If provided, use it; otherwise use tier default.
-- `context_pointer` (optional): path to CLAUDE.md/README/style guide for local conventions. Read for conventions only.
 
 ## Pre-dispatch
 

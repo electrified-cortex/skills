@@ -27,7 +27,6 @@ REST API endpoint `/repos/{owner}/{repo}/pulls/{pull_number}/comments` via `gh a
 | LINE_NUMBER | yes | Absolute line number |
 | BODY | yes | Comment text |
 | SIDE | no | `RIGHT` (default) or `LEFT` |
-| START_LINE | no | For multi-line comments only |
 
 ## Step Order (Fixed)
 
@@ -39,7 +38,7 @@ fetch SHA → verify file in diff → verify line in diff → dedup check → PO
 2. Verify the target file appears in `gh pr diff --name-only` before posting.
 3. Confirm the target line is in the diff using the bundled `verify-line-in-diff` tool (`.sh` for bash, `.ps1` for PowerShell). Pass OWNER, REPO, PR_NUMBER, FILE_PATH, LINE_NUMBER, SIDE; the tool exits 0 (line is in diff), 1 (not in diff — surfaces valid ranges), 2 (file not in diff), or 3 (USAGE_ERROR — check invocation signature) or ≥ 4 (API_ERROR — surface gh pr diff output). **`gh pr diff {PR} -- {file}` is invalid** — `gh pr diff` accepts only one argument; the file-filter syntax fails with "accepts at most 1 arg". The bundled tool handles full-patch retrieval and hunk-header parsing internally.
 4. Check for existing comments at the same file+line before posting (deduplication).
-5. Post with `body`, `commit_id`, `path`, `line`, `side`. Never use deprecated `position`.
+5. Post with `body`, `commit_id`, `path`, `line`, `side`. Never use deprecated `position`. Write BODY to a temp file and use `--field body=@"$BODY_FILE"` (bash) or `--field "body=@$bodyFile"` (PowerShell) — never substitute BODY inline as a shell argument; backticks, `$VAR` references, double quotes, and code fences will corrupt or crash the command.
 6. On 422: re-inspect diff, diagnose cause, surface to caller — do not silently retry.
 
 ## Error Handling

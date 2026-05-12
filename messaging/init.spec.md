@@ -36,13 +36,13 @@ Must be called once on agent startup, before entering the monitoring loop or dra
 2. If directory already exists, skip creation (treat as already owned).
 3. If directory does not exist, create it (and `archive/`).
 4. Touch signal file unconditionally.
-5. Exit zero. Never fails due to pre-existing inbox.
+5. Exit zero. **Never** fails due to pre-existing inbox.
 
 `--force` does not drain or delete any existing messages.
 
 ## Output
 
-No output on success (stdout empty). Errors written to stderr.
+No output on success (stdout empty). Tool writes errors to stderr.
 
 ## Exit Codes
 

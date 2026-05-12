@@ -1,6 +1,6 @@
 ---
 name: spec-writing
-description: Write precise, testable, auditable specification documents with explicit scope, stable terminology, and enforceable requirements.
+description: Write precise, testable, auditable specification documents with explicit scope, stable terminology, and enforceable requirements. Triggers - write a spec, create specification, draft spec document, new spec file, spec document.
 ---
 
 # spec-writing
@@ -56,7 +56,7 @@ Include required sections:
 - Precedence Rules: conflict resolution
 - Don'ts: explicit exclusions
 
-After listing sections, include a **Section Classification** table with columns: `Section`, `Type` (normative/informative/structural), `Required` (yes/no). This makes the section structure auditable at a glance.
+After listing sections, include a **Section Classification** table with columns: `Section` and `Mode`. Mode values are Normative, Descriptive, or Informational. This makes the section structure auditable at a glance.
 
 Each requirement must be atomic (one testable condition only), testable (verifiable from document text alone), and unambiguous.
 
@@ -88,6 +88,37 @@ no new concepts.
 If extension is allowed, the spec must define where extension is
 permitted and what constraints apply to it. Otherwise extension is
 prohibited.
+
+### Domain-Flavor Extension
+
+This skill's spec permits **domain-flavor extension**. A derived
+spec may declare itself a domain flavor (e.g., `prd-writing` for
+Product Requirements Documents) and add normative sections specific
+to its domain, subject to all of:
+
+- the derived spec includes an **Inheritance** section naming this
+  spec as parent and stating the domain-flavor declaration;
+- the derived spec inherits, without contradiction, this spec's
+  Content Modes, normative-language rules, atomicity requirements,
+  and audit gate;
+- additional normative requirements are atomic, testable, and use
+  the normative language defined here;
+- every additional section is classified in a Section
+  Classification table using this spec's Content Modes;
+- the derived spec does not redefine any term defined here, expand
+  scope contrary to this spec, change a default or constraint
+  declared here, or override any rule here;
+- the derived spec references a corresponding audit skill that runs
+  `spec-auditing` first, then domain-specific checks.
+
+Additional requirements in a conforming derived spec are **Valid
+Extensions**, not Unauthorized Additions. Traceability still
+applies to requirements that restate or specialize a parent rule;
+requirements unique to the domain need not trace to a parent rule.
+
+Without an explicit Inheritance declaration and conformance to the
+above, the derived-target rules apply unchanged: no new normative
+requirements are permitted.
 
 ## Behavior
 
@@ -148,8 +179,6 @@ workflow violation.
 Don't use descriptive, exploratory, or informational content as substitute for normative requirements. Don't use this skill to justify silent scope expansion. Do not embed normative requirements in examples, descriptive text, or exploratory sections.
 
 ## Footgun Convention
-
-Spec-writing failure modes belong in derived specs (skills, agents, tools) that implement or extend this spec, not in this meta-spec itself; authors applying this skill should document failure modes specific to their domain using the convention below.
 
 Specs may include an optional `Footguns` section. Format:
 
