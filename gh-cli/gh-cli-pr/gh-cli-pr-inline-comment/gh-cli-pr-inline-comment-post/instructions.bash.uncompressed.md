@@ -45,15 +45,32 @@ Exit code semantics:
 
 ## Step 4: Check for Existing Comment (Deduplication)
 
+### 4a: Positional match (primary)
+
 ```bash
-gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" \
+EXISTING=$(gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" \
   --jq ".[] | select(.path == \"$FILE_PATH\" and .side == \"$SIDE\" and (
     (\"$SIDE\" == \"RIGHT\" and .line == $LINE_NUMBER) or
     (\"$SIDE\" == \"LEFT\"  and .original_line == $LINE_NUMBER)
-  )) | {id, body, author: .user.login}"
+  )) | {id, body, author: .user.login}")
 ```
 
-If a matching comment already exists, return:
+### 4b: Body-content fallback (eventual-consistency guard)
+
+GitHub's PR comments index is eventually consistent. When a previous call posts a comment but the caller times out before reading the response, a retry can arrive in the 2–5 second window during which the just-posted comment is NOT yet returned by the positional query above. The fallback below catches that case so dedup stays idempotent on retry.
+
+Only run when 4a is empty. Match on body content (post-trim) scoped to same path + side.
+
+```bash
+if [ -z "$EXISTING" ]; then
+  BODY_TRIMMED=$(printf '%s' "$BODY" | awk '{$1=$1};1')
+  EXISTING=$(gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" \
+    --jq --arg body "$BODY_TRIMMED" --arg path "$FILE_PATH" --arg side "$SIDE" \
+    '.[] | select(.path == $path and .side == $side and ((.body // "") | gsub("^\\s+|\\s+$"; "")) == $body) | {id, body, author: .user.login}')
+fi
+```
+
+If either 4a or 4b returned a match, return:
 `{ "status": "duplicate", "comment_id": <existing_id>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<existing_id>", "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
 
 ## Step 5: Post the Comment

@@ -26,6 +26,8 @@ Exit codes: 0 (IN_DIFF) → proceed; 1 (NOT_IN_DIFF) → outside hunk ranges, st
 WINDOWS: NEVER use leading `/` in `gh api` paths — use `repos/...` not `/repos/...`.
 
 Step 4: Check for existing comment (dedup)
+
+4a — Positional match (primary):
 ```powershell
 $existing = gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" `
   --jq ".[] | select(.path == \`"$FILE_PATH\`" and .side == \`"$SIDE\`" and (
@@ -33,7 +35,21 @@ $existing = gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" `
     (\`"$SIDE\`" == \`"LEFT\`"  and .original_line == $LINE_NUMBER)
   )) | {id, body, author: .user.login}"
 ```
-Match found → return: `{ "status": "duplicate", "comment_id": <existing_id>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<existing_id>", "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
+
+4b — Body-content fallback (eventual-consistency guard). GitHub's PR comments index is eventually consistent; after a timed-out post + retry the just-posted comment may not yet be returned by the positional query (2–5s window). Only run when 4a is empty. Scope to same path + side.
+```powershell
+if ([string]::IsNullOrWhiteSpace($existing)) {
+  $bodyTrimmed = $BODY.Trim()
+  $allComments = gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" | ConvertFrom-Json
+  $existing = $allComments |
+    Where-Object { $_.path -eq $FILE_PATH -and $_.side -eq $SIDE -and ($_.body ?? '').Trim() -eq $bodyTrimmed } |
+    Select-Object -First 1 |
+    ForEach-Object { [pscustomobject]@{ id = $_.id; body = $_.body; author = $_.user.login } } |
+    ConvertTo-Json -Compress
+}
+```
+
+Match found (4a or 4b) → return: `{ "status": "duplicate", "comment_id": <existing_id>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<existing_id>", "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
 
 Step 5: Post comment
 Write BODY to temp file — inline interpolation corrupts bodies with backticks, `$VAR` refs, double quotes, code fences. `WriteAllText` = UTF-8 no-BOM, no shell expansion.

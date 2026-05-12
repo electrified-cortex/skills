@@ -45,6 +45,8 @@ Exit code semantics:
 
 ## Step 4: Check for Existing Comment (Deduplication)
 
+### 4a: Positional match (primary)
+
 ```powershell
 $existing = gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" `
   --jq ".[] | select(.path == \`"$FILE_PATH\`" and .side == \`"$SIDE\`" and (
@@ -53,7 +55,25 @@ $existing = gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" `
   )) | {id, body, author: .user.login}"
 ```
 
-If a matching comment already exists, return:
+### 4b: Body-content fallback (eventual-consistency guard)
+
+GitHub's PR comments index is eventually consistent. When a previous call posts a comment but the caller times out before reading the response, a retry can arrive in the 2–5 second window during which the just-posted comment is NOT yet returned by the positional query above. The fallback below catches that case so dedup stays idempotent on retry.
+
+Only run when 4a is empty. Match on body content (post-trim) scoped to same path + side.
+
+```powershell
+if ([string]::IsNullOrWhiteSpace($existing)) {
+  $bodyTrimmed = $BODY.Trim()
+  $allComments = gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" | ConvertFrom-Json
+  $existing = $allComments |
+    Where-Object { $_.path -eq $FILE_PATH -and $_.side -eq $SIDE -and ($_.body ?? '').Trim() -eq $bodyTrimmed } |
+    Select-Object -First 1 |
+    ForEach-Object { [pscustomobject]@{ id = $_.id; body = $_.body; author = $_.user.login } } |
+    ConvertTo-Json -Compress
+}
+```
+
+If either 4a or 4b returned a match, return:
 `{ "status": "duplicate", "comment_id": <existing_id>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<existing_id>", "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
 
 ## Step 5: Post the Comment
