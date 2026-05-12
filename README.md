@@ -33,6 +33,27 @@ Skills ship with companion `.spec.md` files that preserve design rationale
 and constraints in full natural language. The skill tells machines *what*;
 the spec tells humans and agents *why*.
 
+## Foundational journey
+
+A small set of skills are load-bearing — everything else builds on them.
+
+- **[compression](compression/)** — the first skill. Cuts token waste in
+  agent contexts via three tiers (Lite / Full / Ultra). Inspired by
+  [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) (MIT);
+  extended with safety gates and companion specs.
+- **[spec-writing](spec-writing/)** — the contract layer. Any file, feature,
+  or system can have a behavioral spec; specs are the source code, runtime
+  files the compiled program.
+- **[skill-writing](skill-writing/)** — the authoring pipeline. Spec first,
+  derive uncompressed, compress to runtime, audit. Encodes the inline-vs-
+  dispatch test and the rule that `SKILL.md` is never edited directly.
+- **[spec-auditing](spec-auditing/)** + **[skill-auditing](skill-auditing/)**
+  — the governance pair. Spec drift and skill quality are caught by
+  zero-context dispatched audits before anything ships.
+- **[dispatch](dispatch/)** — the architectural primitive. When to spawn a
+  sub-agent, what model tier, what prompt shape; everything that delegates
+  rests on this.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
