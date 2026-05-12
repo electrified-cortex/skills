@@ -335,7 +335,7 @@ Every topic spec must meet these three bars to be considered complete.
 Topics that fail these standards produce low-quality findings — too vague
 to act on, missing the context needed to apply them, or unprovable.
 
-**1. Operational trigger conditions**
+#### Operational trigger conditions
 
 Silence and fire conditions must be specific enough to act on without
 judgment. Vague thresholds — "materially improved," "significant,"
@@ -345,7 +345,7 @@ than 20% since the last subtraction review" or "fire when no `REASON:`
 justification is present on a finding." If you cannot write a test case
 for the trigger, it is not operational.
 
-**2. Required evaluator context declared**
+#### Required evaluator context declared
 
 Each topic must state what context it needs to produce valid findings.
 Examples: "requires the caller invocation pattern," "requires prior
@@ -353,7 +353,7 @@ findings or changelog to assess duplication rate," "requires the runtime
 environment to assess portability." Topics that silently assume context
 they are not given will produce incorrect or inapplicable findings.
 
-**3. Success criteria**
+#### Success criteria
 
 Findings must be falsifiable. A finding that cannot be disproved after
 it is acted on is not useful. Each topic's finding section must describe
@@ -399,7 +399,7 @@ The optimizer produces two outputs per invocation:
 
 **1. Primary return line** — emitted as the final stdout line:
 
-```
+```md
 TOPIC: <TOPIC-SLUG> | FINDINGS: <N> | LOG: <repo-relative path to .optimization/.log.md>
 ```
 
@@ -411,7 +411,7 @@ On failure: `ERROR: <reason>` as the final line instead.
 **2. Optimize log entry** — the optimizer appends one row to
 `<skill-path>/.optimization/.log.md`:
 
-```
+```md
 | TOPIC | date | model | N findings | status | one-line action summary |
 ```
 

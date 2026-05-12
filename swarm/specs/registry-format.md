@@ -16,19 +16,19 @@ When the index is authored as YAML (the recommended default), it is a top-level 
 
 Required fields per entry:
 
-| Field              | Type                   | Description                                                             |
-| ------------------ | ---------------------- | ----------------------------------------------------------------------- |
-| `name`             | string                 | Display name. Must be unique across all entries in the index.           |
-| `trigger`          | string                 | Trigger condition. Use `"always"` for unconditional inclusion.          |
-| `required`         | bool                   | `true` = always dispatched regardless of `custom menu` unless the caller explicitly names a subset that omits it. |
-| `suggested_models` | list of model-class    | Preference-ordered list of model-class terms. First available entry is selected at dispatch time. |
-| `suggested_backends` | list of backend IDs  | Preference-ordered list of backend identifiers.                         |
-| `scope`            | string                 | What this personality reviews and what it explicitly ignores.           |
+| Field | Type | Description |
+| --- | --- | --- |
+| `name` | string | Display name. Must be unique across all entries in the index. |
+| `trigger` | string | Trigger condition. Use `"always"` for unconditional inclusion. |
+| `required` | bool | `true` = always dispatched regardless of `custom menu` unless the caller explicitly names a subset that omits it. |
+| `suggested_models` | list of model-class | Preference-ordered list of model-class terms. First available entry is selected at dispatch time. |
+| `suggested_backends` | list of backend IDs | Preference-ordered list of backend identifiers. |
+| `scope` | string | What this personality reviews and what it explicitly ignores. |
 
 Optional fields per entry:
 
-| Field    | Type   | Description                                                                  |
-| -------- | ------ | ---------------------------------------------------------------------------- |
+| Field    | Type   | Description                                                                 |
+| -------- | ------ | --------------------------------------------------------------------------- |
 | `vendor` | string | Model vendor hint (e.g. `anthropic`, `openai`). Used by diversity rule B8.  |
 
 Valid backend identifiers: `dispatch-sonnet`, `dispatch-haiku`, `dispatch-opus`, `copilot-cli`, `local-llm` (reserved — v1 out of scope), `varies` (custom entries only).
@@ -39,10 +39,10 @@ The body file for a personality is located at `reviewers/<kebab-name>.md`. The k
 
 Examples:
 
-| Personality name   | Body file path                     |
-| ------------------ | ---------------------------------- |
-| Devil's Advocate   | `reviewers/devils-advocate.md`     |
-| Security Auditor   | `reviewers/security-auditor.md`    |
+| Personality name    | Body file path                     |
+| ------------------- | ---------------------------------- |
+| Devil's Advocate    | `reviewers/devils-advocate.md`     |
+| Security Auditor    | `reviewers/security-auditor.md`    |
 | Code Quality Critic | `reviewers/code-quality-critic.md` |
 
 ## Loading Policy
@@ -70,11 +70,11 @@ Built-ins are generic personalities applicable to any artifact regardless of dom
 
 The table below describes the personalities typically defined in `reviewers/index.yaml`. It is informative only — the authoritative list is the index contents at runtime.
 
-| #  | Personality        | Trigger condition                                                                        | Suggested model class | Backend         | Scope limiter                                      |
-| -- | ------------------ | ---------------------------------------------------------------------------------------- | --------------------- | --------------- | -------------------------------------------------- |
-| 1  | Devil's Advocate   | always                                                                                   | sonnet-class          | dispatch-sonnet | Challenge assumptions; no constructive suggestions |
-| 2  | Security Auditor   | problem touches auth, user input, API endpoints, data access, secrets, or network calls | sonnet-class          | dispatch-sonnet | Find vulnerabilities only; no design advice        |
-| 3  | Custom Specialist  | generated on-the-fly when no built-in or caller-supplied personality fits the problem    | sonnet-class          | dispatch-sonnet | Role and scope inferred from the problem domain    |
+| # | Personality | Trigger condition | Suggested model class | Backend | Scope limiter |
+| - | --- | --- | --- | --- | --- |
+| 1 | Devil's Advocate | always | sonnet-class | dispatch-sonnet | Challenge assumptions; no constructive suggestions |
+| 2 | Security Auditor | problem touches auth, user input, API endpoints, data access, secrets, or network calls | sonnet-class | dispatch-sonnet | Find vulnerabilities only; no design advice |
+| 3 | Custom Specialist | generated on-the-fly when no built-in or caller-supplied personality fits the problem | sonnet-class | dispatch-sonnet | Role and scope inferred from the problem domain |
 
 The integer `#` in this table is informative only. The stable runtime index is entry order in `reviewers/index.yaml` (1-based). Entry reordering changes the numeric index; callers using `custom menu` by name are unaffected.
 

@@ -340,4 +340,3 @@ P5. Synthesis word budget (2000-word cap) overrides completeness. Truncation req
 - `specs/glossary.md` — canonical term definitions for the swarm skill family.
 - `specs/personality-file.md` — sub-specification for the reviewer personality file format.
 - `specs/registry-format.md` — sub-specification for the personality registry format and crawl behavior.
-

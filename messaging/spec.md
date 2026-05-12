@@ -416,4 +416,3 @@ P4. All drained messages move to `archive/` regardless of parse outcome. There i
 | Precedence Rules | Normative | Yes |
 | Don'ts | Normative | Yes |
 | Section Classification | Structural | Yes |
-
