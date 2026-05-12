@@ -15,7 +15,7 @@ Variables:
 `<description>` = `Auditing PRD: <prd_path>`
 `<prompt>` = `Read and follow <instructions-abspath>; Input: <input-args>`
 
-Import `dispatch` skill from `../dispatch/SKILL.md`. Use it to launch sub-agent.
+Follow `dispatch` skill. See `../dispatch/SKILL.md`.
 Should return: `CLEAN: <path>` | `PASS: <path>` | `NEEDS_REVISION: <path>` | `FAIL: <path>` | `ERROR: <reason>`
 If returns `ERROR: <reason>` -> stop, surface reason.
 

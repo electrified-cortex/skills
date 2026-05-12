@@ -170,13 +170,10 @@ CLEAN | PASS | NEEDS_REVISION | FAIL
 <one-line summary>
 ```
 
-Emit the verdict token as the final line of stdout:
-
-`CLEAN: <report-abs-path>` | `PASS: <report-abs-path>` |
-`NEEDS_REVISION: <report-abs-path>` | `FAIL: <report-abs-path>`
-
-`ERROR: <reason>` is reserved for runtime failures (target not
-found, report path not writable). Errors are never persisted.
+Emit the verdict token as the final line of stdout per the SKILL.md
+return contract. `ERROR: <reason>` is reserved for runtime failures
+(target not found, report path not writable); errors are never
+persisted.
 
 ## Read-Only Constraint
 

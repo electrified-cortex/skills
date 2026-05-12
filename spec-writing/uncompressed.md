@@ -56,7 +56,7 @@ Include required sections:
 - Precedence Rules: conflict resolution
 - Don'ts: explicit exclusions
 
-After listing sections, include a **Section Classification** table with columns: `Section`, `Type` (normative/informative/structural), `Required` (yes/no). This makes the section structure auditable at a glance.
+After listing sections, include a **Section Classification** table with columns: `Section` and `Mode`. Mode values are Normative, Descriptive, or Informational. This makes the section structure auditable at a glance.
 
 Each requirement must be atomic (one testable condition only), testable (verifiable from document text alone), and unambiguous.
 

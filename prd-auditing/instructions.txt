@@ -131,10 +131,7 @@ CLEAN | PASS | NEEDS_REVISION | FAIL
 <one-line summary>
 ```
 
-Emit verdict token as final stdout line:
-`CLEAN: <report-abs-path>` | `PASS: <report-abs-path>` | `NEEDS_REVISION: <report-abs-path>` | `FAIL: <report-abs-path>`
-
-`ERROR: <reason>` reserved for runtime failures (target not found, report path not writable). Errors never persisted.
+Emit verdict token as final stdout line per SKILL.md return contract. `ERROR: <reason>` reserved for runtime failures (target not found, report path not writable); errors never persisted.
 
 Read-Only Constraint:
 Auditor NEVER modifies PRD or any file in target's directory. Fixes are caller's responsibility.

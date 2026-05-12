@@ -37,6 +37,24 @@ parent; this document only adds.
 - **Out of Scope**: an explicit list of adjacent capabilities
   deliberately excluded. Replaces the term "non-goals".
 
+## Content Modes
+
+Content modes follow `spec-writing/spec.md` (Normative, Descriptive,
+Exploratory, Informational). The definitions and rules declared there
+apply to this document without restatement.
+
+PRD-writing additions:
+
+- Sections that define required PRD structure or authoring rules are
+  **Normative**.
+- Sections that explain rationale, order, or examples are
+  **Informational**.
+- No section in this spec may introduce requirements using Exploratory
+  mode.
+
+The Section Classification table at the end of this document records
+the mode for every top-level section in this spec.
+
 ## Additional Required Sections
 
 Beyond the sections required by `spec-writing/spec.md` (Purpose,
@@ -181,6 +199,94 @@ A PRD is ready for review when:
 
 Run `prd-auditing` against the draft. Not done until PASS or CLEAN.
 
+## Behavior
+
+### Conflict resolution — Goals vs. Constraints
+
+When a Goal and a Constraint in the same PRD conflict, the Constraint
+wins. An unreachable Goal under stated Constraints is itself a
+finding. The author must either relax the Constraint, narrow the
+Goal, or document the conflict as a blocking Open Question naming a
+decider and the blocking effect.
+
+### Out of Scope interaction with Functional Requirements
+
+A Functional Requirement MUST NOT describe behavior that the Out of
+Scope section explicitly excludes. Any such contradiction is
+immediately a FAIL in `prd-auditing`. The author must resolve it
+before submission by either removing the exclusion or removing the
+requirement.
+
+### Open Questions and release readiness
+
+A PRD with one or more **blocking** Open Questions MUST NOT be
+declared ready for implementation. Blocking status requires a named
+decider and a statement of the blocking effect. Non-blocking Open
+Questions do not gate release readiness but must be marked as
+non-blocking.
+
+### Drafting-order enforcement
+
+Sections must be authored in the Drafting Order sequence. The Summary
+must be written last. A Summary authored before the Functional
+Requirements or Out of Scope sections is considered a defect because
+it cannot accurately represent the completed scope.
+
+## Defaults and Assumptions
+
+- **Open Questions section** — the section is required. An empty
+  Open Questions section (no items) is permitted when there are
+  genuinely no open questions; omitting the section entirely is a
+  LOW finding per `prd-auditing` Step A.
+- **Users / Personas section** — required. For internal-only
+  infrastructure with no end-user, a single explicit exemption
+  sentence substitutes for the full section. Absence without an
+  exemption sentence is a HIGH finding per `prd-auditing` Step A.
+- **Release / Rollout Notes section** — required. A one-line
+  statement "No special rollout required" is acceptable when true.
+  Omitting the section entirely is a LOW finding per `prd-auditing`
+  Step A.
+- **Goal-Metric pairing threshold** — every Goal must pair with at
+  least one quantified Success Metric and a target, threshold, or
+  direction. Zero pairings is a HIGH finding per `prd-auditing`
+  Step B.
+- **Acceptance Criteria threshold** — every Functional Requirement
+  must carry at least one Acceptance Criterion. Zero ACs on any
+  single requirement is a HIGH finding per `prd-auditing` Step B.
+- **NFR measurability threshold** — each Non-Functional Requirement
+  must state a measurable threshold or compliance standard. A
+  qualitative-only NFR is a HIGH finding per `prd-auditing` Step B.
+- **Out of Scope minimum** — when the product has any adjacent
+  capability that could plausibly be confused with it, at least one
+  explicit exclusion must appear. An empty Out of Scope section where
+  exclusions are warranted is a HIGH finding per `prd-auditing`
+  Step B.
+- **Summary length** — maximum 5 sentences. Exceeding this limit is
+  a HIGH finding. The summary must cover problem, product, and
+  primary outcome; missing any of these is a HIGH finding.
+
+## Error Handling
+
+- **Ambiguous normative statement** — any normative statement in the
+  PRD that can be interpreted in more than one reasonable way must be
+  rewritten before the PRD is submitted for audit. Ambiguity in a
+  normative statement is not permitted to stand; it must be resolved
+  or moved to a non-normative section.
+- **Missing required section** — absence of any required PRD section
+  (as listed in Additional Required Sections) is a defect. The PRD
+  MUST NOT pass audit while any required section is absent. The
+  author must add the missing section and re-run `prd-auditing`.
+- **Goal contradicts a Constraint** — a PRD where any Goal is
+  unreachable under its own stated Constraints MUST receive a FAIL
+  verdict from `prd-auditing`. The author must resolve the
+  contradiction before re-submission.
+- **Banned terminology occurrence** — any occurrence of "non-goals"
+  or a subjective qualifier in an Acceptance Criterion or
+  Non-Functional Requirement is a HIGH finding per `prd-auditing`
+  Step D. The author must replace each occurrence with the required
+  substitute ("Out of Scope" for "non-goals"; a measurable predicate
+  for subjective qualifiers) and re-run the audit.
+
 ## Precedence Rules
 
 1. `spec-writing/spec.md` governs the meta-structure of a spec. This
@@ -211,6 +317,7 @@ Run `prd-auditing` against the draft. Not done until PASS or CLEAN.
 | Scope | Descriptive | yes |
 | Inheritance | Descriptive | yes |
 | Definitions (additions) | Descriptive | yes |
+| Content Modes | Normative | yes |
 | Additional Required Sections | Normative | yes |
 | Additional Quality Rules | Normative | yes |
 | Additional Constraints | Normative | yes |
@@ -219,6 +326,9 @@ Run `prd-auditing` against the draft. Not done until PASS or CLEAN.
 | Patterns | Informational | yes |
 | Anti-Patterns | Informational | yes |
 | Quality Gate | Normative | yes |
+| Behavior | Normative | yes |
+| Defaults and Assumptions | Normative | yes |
+| Error Handling | Normative | yes |
 | Precedence Rules | Normative | yes |
 | Don'ts | Normative | yes |
 | Section Classification | Informational | yes |

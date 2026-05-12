@@ -12,14 +12,7 @@ Inputs:
 
 ## Inline hash check
 
-Uses `hash-record-manifest` (`../hash-record/hash-record-manifest/manifest.sh` or `manifest.ps1`). Pass all input files: `<target-path>` plus `<spec-path>` if provided.
-
-- Bash: `bash ../hash-record/hash-record-manifest/manifest.sh spec-auditing/v1 report.md <target-path> [<spec-path>]`
-- PS7:  `pwsh ../hash-record/hash-record-manifest/manifest.ps1 spec-auditing/v1 report.md <target-path> [<spec-path>]`
-
-- `HIT: <abs-path>` → emit `PATH: <abs-path>`, stop.
-- `MISS: <abs-path>` → bind `<report_path>` = `<abs-path>`, jump to Dispatch.
-- `ERROR: <reason>` → surface the error, stop.
+Uses `hash-record-manifest` cache substrate; host resolves HIT/MISS/ERROR before dispatch.
 
 ## Dispatch
 
@@ -44,4 +37,4 @@ If that result is a `MISS: <abs-path>` then something is wrong and report it as:
 
 If `Pass:`, return the result to the caller and stop here.
 
-To fix, load `../dispatch/SKILL.md` and use the `dispatch` skill (tier: standard) to launch a sub-agent; pass this report as input instructing it to fix all the issues. Then follow this skill again; stop at 3 rounds and surface the report.
+Fix iteration is caller-driven; this skill is single-pass read-only.

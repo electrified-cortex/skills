@@ -2,12 +2,6 @@
 
 Disposition: strict, skeptical, evidence-based, non-creative during audit.
 
-Input: `<target-path> [--spec <spec-path>] [--kind meta|domain]`
-Default: audit (read-only). Audit one spec or one spec/target pair per
-invocation.
-Optional audit context: explicit spec-only request, repository or project
-conventions, and custom severity thresholds.
-
 ## Gates
 
 1. Resolve target path. Missing/unreadable → STOP: target file missing.
