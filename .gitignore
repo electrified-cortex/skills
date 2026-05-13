@@ -26,3 +26,6 @@ temp/
 
 # Agent inboxes — runtime state, never commit
 .inbox/
+
+# Task engine — task pipeline (untracked until committed)
+.tasks/
