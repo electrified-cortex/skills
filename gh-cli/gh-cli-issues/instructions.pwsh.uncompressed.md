@@ -12,7 +12,7 @@ Write BODY to a temp file — inline string interpolation corrupts bodies contai
 
 ```powershell
 $bodyFile = [System.IO.Path]::GetTempFileName()
-[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.UTF8Encoding]::new($false))
 ```
 
 Invoke the local create tool. `create.ps1` uses kebab-case flags parsed manually — pass them as double-dash flags, not PowerShell-style parameters.
@@ -37,7 +37,7 @@ Write BODY to a temp file — inline string interpolation corrupts bodies contai
 
 ```powershell
 $bodyFile = [System.IO.Path]::GetTempFileName()
-[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.UTF8Encoding]::new($false))
 ```
 
 Invoke the local comment tool. `comment.ps1` uses kebab-case flags parsed manually — pass them as double-dash flags, not PowerShell-style parameters.
@@ -76,7 +76,7 @@ gh issue edit $ISSUE_NUMBER --repo "$OWNER/$REPO" `
 
 ```powershell
 $bodyFile = [System.IO.Path]::GetTempFileName()
-[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.UTF8Encoding]::new($false))
 gh issue edit $ISSUE_NUMBER --repo "$OWNER/$REPO" --body-file $bodyFile
 Remove-Item $bodyFile -Force -ErrorAction SilentlyContinue
 ```
@@ -96,7 +96,7 @@ Write BODY to a temp file before PATCHing:
 
 ```powershell
 $bodyFile = [System.IO.Path]::GetTempFileName()
-[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.UTF8Encoding]::new($false))
 gh api --method PATCH "repos/$OWNER/$REPO/issues/comments/$COMMENT_ID" `
   --field "body=@$bodyFile"
 Remove-Item $bodyFile -Force -ErrorAction SilentlyContinue
