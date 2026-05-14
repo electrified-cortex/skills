@@ -40,19 +40,10 @@ for the same inputs. Windows PowerShell 5.1 is not supported.
    found.
 3. Validate `--line` is a positive integer; validate `--side` is
    `LEFT` or `RIGHT`; exit 2 otherwise.
-4. Construct the `gh api` invocation:
-
-   ```
-   gh api --method POST repos/{owner}/{repo}/pulls/{pr}/comments
-     --field commit_id={commit-sha}
-     --field path={file}
-     --field line={line}
-     --field side={side}
-     --field body=@{body-file}
-   ```
-
-   The body file path is passed as `--field body=@<path>` so `gh`
-   reads the file directly. This tool never reads body content.
+4. Post the comment to the GitHub PR comments API with fields:
+   `body`, `commit_id`, `path`, `line`, `side`. The body content must
+   arrive at GitHub byte-for-byte identical to the contents of the
+   body file — no character substitution, escaping, or truncation.
 
 5. Capture stdout and stderr from `gh`. On non-zero exit, inspect
    stderr for the string `"line"` and HTTP status 422 to detect the
@@ -88,8 +79,8 @@ Exit code 1 is reserved and unused by this tool.
 ## Constraints
 
 - `gh` must be on PATH and authenticated.
-- Body file path is passed by reference to `gh` (`--field body=@<path>`);
-  body content is never read, expanded, or interpolated by this tool.
+- Body content must be posted exactly as it appears in the body file.
+  No shell expansion or interpolation of body content may occur.
 - No multi-line / `start_line` support — out of scope.
 - No dedup logic — caller handles dedup before invoking.
 - No JSON output — caller parses the URL directly (regex
