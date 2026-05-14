@@ -29,3 +29,5 @@ temp/
 
 # Task engine — task pipeline (untracked until committed)
 .tasks/
+
+.foreman-pod/

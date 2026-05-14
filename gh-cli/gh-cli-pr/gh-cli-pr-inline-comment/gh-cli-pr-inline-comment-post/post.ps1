@@ -104,38 +104,56 @@ if (-not (Test-Path -LiteralPath $bodyFile -PathType Leaf)) {
 }
 
 # ---------------------------------------------------------------------------
+# Read body content and build JSON payload
+# ---------------------------------------------------------------------------
+# We read the file here (UTF-8, no BOM) and serialize the entire payload via
+# ConvertTo-Json rather than relying on gh's --field body=@<path> reader.
+# gh's @file handling on Windows mangles backticks and can drop characters
+# due to its type-inference pass over the file content.
+$bodyContent = Get-Content -LiteralPath $bodyFile -Raw -Encoding utf8
+if ($null -eq $bodyContent) { $bodyContent = '' }
+
+$payload = [ordered]@{
+    body      = $bodyContent
+    commit_id = $commitSha
+    path      = $file
+    line      = [int]$line
+    side      = $side
+} | ConvertTo-Json -Depth 2 -Compress
+
+# ---------------------------------------------------------------------------
 # Invoke gh api via ProcessStartInfo (no command-string interpolation)
 # ---------------------------------------------------------------------------
 $psi = [System.Diagnostics.ProcessStartInfo]::new()
 $psi.FileName               = 'gh'
+$psi.RedirectStandardInput  = $true
 $psi.RedirectStandardOutput = $true
 $psi.RedirectStandardError  = $true
 $psi.UseShellExecute        = $false
 
-# Build argument list — one element per Add() call.
-# Body file path is added as a single token; gh reads the file directly.
+# Pipe the pre-built JSON payload via --input - instead of using
+# --field body=@<path> to avoid gh's @file reader on Windows.
 $psi.ArgumentList.Add('api')
 $psi.ArgumentList.Add('--method')
 $psi.ArgumentList.Add('POST')
 $psi.ArgumentList.Add("repos/$owner/$repo/pulls/$pr/comments")
-$psi.ArgumentList.Add('--field')
-$psi.ArgumentList.Add("commit_id=$commitSha")
-$psi.ArgumentList.Add('--field')
-$psi.ArgumentList.Add("path=$file")
-$psi.ArgumentList.Add('--field')
-$psi.ArgumentList.Add("line=$line")
-$psi.ArgumentList.Add('--field')
-$psi.ArgumentList.Add("side=$side")
-$psi.ArgumentList.Add('--field')
-$psi.ArgumentList.Add("body=@$bodyFile")
+$psi.ArgumentList.Add('--input')
+$psi.ArgumentList.Add('-')
 
 $proc = [System.Diagnostics.Process]::new()
 $proc.StartInfo = $psi
 [void]$proc.Start()
 
-$ghStdout = $proc.StandardOutput.ReadToEnd()
-$ghStderr  = $proc.StandardError.ReadToEnd()
+# Write JSON payload to stdin, then close to signal EOF.
+$proc.StandardInput.Write($payload)
+$proc.StandardInput.Close()
+
+# Read stdout and stderr asynchronously to avoid buffer-full deadlock.
+$stdoutTask = $proc.StandardOutput.ReadToEndAsync()
+$stderrTask = $proc.StandardError.ReadToEndAsync()
 $proc.WaitForExit()
+$ghStdout = $stdoutTask.Result
+$ghStderr  = $stderrTask.Result
 $ghExit = $proc.ExitCode
 
 # ---------------------------------------------------------------------------
