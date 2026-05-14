@@ -23,7 +23,7 @@ Write BODY to a temp file — inline string interpolation corrupts bodies contai
 
 ```powershell
 $bodyFile = [System.IO.Path]::GetTempFileName()
-[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.UTF8Encoding]::new($false))
 ```
 
 Invoke the local create tool. `create.ps1` uses kebab-case flags parsed manually — pass them as double-dash flags, not PowerShell-style parameters.

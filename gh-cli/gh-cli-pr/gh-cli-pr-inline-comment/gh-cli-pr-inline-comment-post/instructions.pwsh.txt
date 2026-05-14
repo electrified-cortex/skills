@@ -55,7 +55,7 @@ Step 5: Post comment
 Write BODY to temp file — inline interpolation corrupts bodies with backticks, `$VAR` refs, double quotes, code fences. `WriteAllText` = UTF-8 no-BOM, no shell expansion.
 ```powershell
 $bodyFile = [System.IO.Path]::GetTempFileName()
-[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.UTF8Encoding]::new($false))
 ```
 Invoke local post tool. `post.ps1` uses kebab-case flags parsed manually — pass as double-dash flags, not PS-style params.
 ```powershell
