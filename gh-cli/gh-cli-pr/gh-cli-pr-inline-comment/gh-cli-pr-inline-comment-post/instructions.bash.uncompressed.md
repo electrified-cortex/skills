@@ -76,12 +76,26 @@ If either 4a or 4b returned a match, return:
 
 ## Step 5: Post the Comment
 
-Write BODY to a temp file — inline shell substitution corrupts bodies that contain backticks, `$VAR` references, double quotes, or code fences.
+Resolve the body file path. If BODY_FILE was provided, use it directly — no temp file, no string handling:
 
 ```bash
-BODY_FILE=$(mktemp /tmp/gh-body-XXXXXX.md)
-printf '%s' "$BODY" > "$BODY_FILE"
+BODY_FILE_PATH="$BODY_FILE"
+CREATED_TEMP_FILE=0
 ```
+
+If only BODY was provided, write it to a temp file using a **quoted heredoc** — never pass BODY through a double-quoted string or unquoted heredoc. In double-quoted bash strings and unquoted heredocs, backticks run as command substitution and `$var` is expanded. A quoted heredoc delimiter (`<<'DELIM'`) passes content verbatim — no expansion of any kind.
+
+Embed the body content **directly in the heredoc** — do not use a `$BODY` variable:
+
+```bash
+BODY_FILE_PATH=$(mktemp /tmp/gh-body-XXXXXX.md)
+CREATED_TEMP_FILE=1
+cat > "$BODY_FILE_PATH" <<'BODY_HEREDOC'
+<embed BODY verbatim here — replace this line with the exact body text>
+BODY_HEREDOC
+```
+
+If BODY spans multiple lines, each line goes inside the heredoc as-is. If BODY contains `BODY_HEREDOC` on its own line alone (extremely rare), choose a different delimiter.
 
 Invoke the local post tool:
 
@@ -94,9 +108,9 @@ POST_URL=$(bash post.sh \
   --file "$FILE_PATH" \
   --line "$LINE_NUMBER" \
   --side "$SIDE" \
-  --body-file "$BODY_FILE")
+  --body-file "$BODY_FILE_PATH")
 POST_EXIT=$?
-rm -f "$BODY_FILE"
+[ "$CREATED_TEMP_FILE" -eq 1 ] && rm -f "$BODY_FILE_PATH"
 ```
 
 ## Step 6: Parse and Return

@@ -1,6 +1,6 @@
 ---
 name: gh-cli-pr-inline-comment-post
-description: Post an inline PR review comment on a diff line. Triggers — post inline comment, pr review comment, inline diff comment, pr inline annotation, gh api pr comment.
+description: Post an inline PR review comment on a diff line. Triggers - post inline comment, pr review comment, inline diff comment, pr inline annotation, gh api pr comment, gh cli pr inline comment post.
 ---
 
 # GH CLI PR Inline Comment — Post
@@ -14,8 +14,13 @@ description: Post an inline PR review comment on a diff line. Triggers — post 
 | PR_NUMBER | yes | Integer PR number |
 | FILE_PATH | yes | Repo-relative path (e.g. `src/foo.ts`) |
 | LINE_NUMBER | yes | Absolute line number in the file |
-| BODY | yes | Comment text |
+| BODY | yes* | Comment text (* required if BODY_FILE not provided) |
+| BODY_FILE | no | Absolute path to a file containing the body text — use instead of BODY to skip shell string-handling entirely |
 | SIDE | no | `RIGHT` (default) or `LEFT` |
+
+## Pre-dispatch check — BODY_FILE promotion
+
+If BODY contains any of: `` ` `` (backtick), `$`, `"`, or ` ``` ` (code fence) — write BODY to a temp file using a verbatim method at the caller's level and pass `BODY_FILE` instead. Omit `BODY` from `<input-args>`.
 
 ## Shell selection
 
@@ -28,7 +33,7 @@ Choose `<shell>` based on the executing runtime:
 
 `<instructions>` = `instructions.<shell>.txt` in this skill folder (NEVER READ)
 `<instructions-abspath>` = absolute path to `<instructions>`
-`<input-args>` = `OWNER={OWNER} REPO={REPO} PR_NUMBER={PR_NUMBER} FILE_PATH={FILE_PATH} LINE_NUMBER={LINE_NUMBER} BODY={BODY} SIDE={SIDE}`
+`<input-args>` = `OWNER={OWNER} REPO={REPO} PR_NUMBER={PR_NUMBER} FILE_PATH={FILE_PATH} LINE_NUMBER={LINE_NUMBER} BODY={BODY} BODY_FILE={BODY_FILE} SIDE={SIDE}`
 `<tier>` = fast-cheap
 `<description>` = post inline PR comment on {FILE_PATH}:{LINE_NUMBER}
 `<prompt>` = Read and follow `<instructions-abspath>`. Input: `<input-args>`

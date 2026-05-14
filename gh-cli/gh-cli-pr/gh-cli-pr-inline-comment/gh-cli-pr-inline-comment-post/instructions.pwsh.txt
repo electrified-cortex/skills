@@ -1,31 +1,31 @@
-GH CLI PR Inline Comment — Post (pwsh 7+; PS5.1 NOT supported)
+# GH CLI PR Inline Comment — Post (pwsh 7+)
 
 Prereq: `gh auth status 2>&1`
 
 Step 1: Fetch commit SHA
-ALWAYS fetch fresh — stale SHAs cause 422 errors.
+Fetch fresh — stale SHAs → 422.
 ```powershell
 $COMMIT_SHA = gh pr view $PR_NUMBER --repo "$OWNER/$REPO" --json headRefOid --jq '.headRefOid'
 ```
 
-Step 2: Verify file is in diff
+Step 2: Verify file in diff
 ```powershell
 gh pr diff $PR_NUMBER --repo "$OWNER/$REPO" --name-only
 ```
-If FILE_PATH not listed, stop: file has no changes in this PR.
+FILE_PATH not listed → stop: no changes in this PR.
 
-Step 3: Verify line is in diff
+Step 3: Verify line in diff
 Use bundled tool — don't parse diff manually.
-If SIDE not provided, default to `RIGHT` before invoking.
+SIDE not provided → default to `RIGHT` before invoking.
 ```powershell
 $verifyOutput = pwsh verify-line-in-diff.ps1 -owner $OWNER -repo $REPO -pr_number $PR_NUMBER -file_path $FILE_PATH -line_number $LINE_NUMBER -side $SIDE
 $VERIFY_EXIT = $LASTEXITCODE
 ```
-Exit codes: 0 (IN_DIFF) → proceed; 1 (NOT_IN_DIFF) → outside hunk ranges, stop, surface valid ranges to caller; 2 (FILE_NOT_IN_DIFF) → file has no changes, stop; 3 (USAGE_ERROR) → invalid args; 4 (API_ERROR) → `gh pr diff` failed, surface error output.
+Exit codes: 0 (IN_DIFF) → proceed; 1 (NOT_IN_DIFF) → outside hunk ranges, stop, surface valid ranges; 2 (FILE_NOT_IN_DIFF) → no changes, stop; 3 (USAGE_ERROR) → invalid args; 4 (API_ERROR) → `gh pr diff` failed, surface error.
 
 WINDOWS: NEVER use leading `/` in `gh api` paths — use `repos/...` not `/repos/...`.
 
-Step 4: Check for existing comment (dedup)
+Step 4: Check existing comment (dedup)
 
 4a — Positional match (primary):
 ```powershell
@@ -36,7 +36,7 @@ $existing = gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/comments" `
   )) | {id, body, author: .user.login}"
 ```
 
-4b — Body-content fallback (eventual-consistency guard). GitHub's PR comments index is eventually consistent; after a timed-out post + retry the just-posted comment may not yet be returned by the positional query (2–5s window). Only run when 4a is empty. Scope to same path + side.
+4b — Body-content fallback (eventual-consistency guard). PR comment index is eventually consistent; timed-out post + retry may arrive in 2–5s window before just-posted comment appears in positional query — keeps dedup idempotent on retry. Only run when 4a empty; match body (post-trim), same path + side.
 ```powershell
 if ([string]::IsNullOrWhiteSpace($existing)) {
   $bodyTrimmed = $BODY.Trim()
@@ -49,15 +49,26 @@ if ([string]::IsNullOrWhiteSpace($existing)) {
 }
 ```
 
-Match found (4a or 4b) → return: `{ "status": "duplicate", "comment_id": <existing_id>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<existing_id>", "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
+4a or 4b matched → return: `{ "status": "duplicate", "comment_id": <existing_id>, "comment_url": "https://github.com/{OWNER}/{REPO}/pull/{PR_NUMBER}#discussion_r<existing_id>", "message": "comment already exists at {FILE_PATH}:{LINE_NUMBER}" }`
 
 Step 5: Post comment
-Write BODY to temp file — inline interpolation corrupts bodies with backticks, `$VAR` refs, double quotes, code fences. `WriteAllText` = UTF-8 no-BOM, no shell expansion.
+BODY_FILE provided → use directly, no temp file:
+```powershell
+$bodyFile = $BODY_FILE
+$createdTempFile = $false
+```
+BODY only → write to temp via VERBATIM single-quote here-string. NEVER assign BODY to double-quoted string — `@"..."@` expands `` `n ``→newline, strips `` `$ ``, consumes `` ` ``+char pairs. `@'...'@` passes content verbatim.
+Embed BODY directly — don't use `$BODY` variable:
 ```powershell
 $bodyFile = [System.IO.Path]::GetTempFileName()
-[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+$createdTempFile = $true
+[System.IO.File]::WriteAllText($bodyFile, @'
+<embed BODY verbatim here — replace this line with the exact body text, then leave the closing '@, on its own line>
+'@, [System.Text.Encoding]::UTF8)
 ```
-Invoke local post tool. `post.ps1` uses kebab-case flags parsed manually — pass as double-dash flags, not PS-style params.
+Multi-line BODY: each line in `@'...'@` as-is. BODY contains `'@` on own line → use different delimiter.
+
+Invoke `post.ps1` (kebab-case flags, parsed manually — pass as `--flag`, not PS-style):
 ```powershell
 $POST_URL = pwsh post.ps1 `
   --owner $OWNER `
@@ -69,11 +80,11 @@ $POST_URL = pwsh post.ps1 `
   --side $SIDE `
   --body-file $bodyFile
 $POST_EXIT = $LASTEXITCODE
-Remove-Item $bodyFile -Force -ErrorAction SilentlyContinue
+if ($createdTempFile) { Remove-Item $bodyFile -Force -ErrorAction SilentlyContinue }
 ```
 
 Step 6: Parse and return
-`post.ps1` emits comment URL as single stdout line (exit 0) or nothing on error.
+Tool emits comment URL on stdout (exit 0) or nothing on error.
 ```powershell
 switch ($POST_EXIT) {
   0 {
