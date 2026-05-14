@@ -34,7 +34,7 @@ rm -f "$BODY_FILE"
 
 ```powershell
 $bodyFile = [System.IO.Path]::GetTempFileName()
-[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.UTF8Encoding]::new($false))
 gh api --method PATCH "repos/{OWNER}/{REPO}/pulls/comments/{COMMENT_ID}" `
   --field "body=@$bodyFile"
 Remove-Item $bodyFile -Force

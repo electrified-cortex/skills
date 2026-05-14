@@ -82,7 +82,7 @@ Write BODY to a temp file — inline string interpolation corrupts bodies that c
 
 ```powershell
 $bodyFile = [System.IO.Path]::GetTempFileName()
-[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.UTF8Encoding]::new($false))
 ```
 
 Invoke the local post tool. `post.ps1` uses kebab-case flags parsed manually — pass them as double-dash flags, not PowerShell-style parameters.
