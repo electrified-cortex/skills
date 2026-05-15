@@ -78,26 +78,12 @@ If either 4a or 4b returned a match, return:
 
 ## Step 5: Post the Comment
 
-Resolve the body file path. If BODY_FILE was provided, use it directly — no temp file, no string handling:
-
-```powershell
-$bodyFile = $BODY_FILE
-$createdTempFile = $false
-```
-
-If only BODY was provided, write it to a temp file using a **verbatim (single-quote) here-string** — never assign BODY to a double-quoted string first. In double-quoted strings (and `@"..."@` here-strings), `` `n `` becomes a newline, `` `$ `` strips the backtick, and any other `` ` ``+char pair is consumed. Single-quote here-strings (`@'...'@`) pass content through without any expansion.
-
-Embed the body content **directly between the delimiters** — do not use a `$BODY` variable:
+Write BODY to a temp file — inline string interpolation corrupts bodies that contain backticks, `$VAR` references, double quotes, or code fences. Use `WriteAllText` to guarantee UTF-8 encoding without BOM and no shell expansion.
 
 ```powershell
 $bodyFile = [System.IO.Path]::GetTempFileName()
-$createdTempFile = $true
-[System.IO.File]::WriteAllText($bodyFile, @'
-<embed BODY verbatim here — replace this line with the exact body text, then leave the closing '@, on its own line>
-'@, [System.Text.Encoding]::UTF8)
+[System.IO.File]::WriteAllText($bodyFile, $BODY, [System.Text.UTF8Encoding]::new($false))
 ```
-
-If BODY spans multiple lines, each line goes inside the `@'...'@` block as-is. If BODY contains `'@` on its own line (extremely rare), choose a different delimiter for that invocation.
 
 Invoke the local post tool. `post.ps1` uses kebab-case flags parsed manually — pass them as double-dash flags, not PowerShell-style parameters.
 
@@ -112,7 +98,8 @@ $POST_URL = pwsh post.ps1 `
   --side $SIDE `
   --body-file $bodyFile
 $POST_EXIT = $LASTEXITCODE
-if ($createdTempFile) { Remove-Item $bodyFile -Force -ErrorAction SilentlyContinue }
+Remove-Item $bodyFile -Force -ErrorAction SilentlyContinue
+```
 
 ## Step 6: Parse and Return
 
@@ -147,3 +134,4 @@ switch ($POST_EXIT) {
   }
 }
 ```
+
