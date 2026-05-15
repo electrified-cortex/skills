@@ -65,6 +65,7 @@ Inspection commands are handled directly by this skill; write operations are alw
 **Fork PR leak** — `gh pr list --repo {fork}` returns the upstream repo's PRs via REST. The `url` field in the results points to the upstream, not the fork. `gh pr view {number} --repo {fork}` then fails with "Could not resolve to a PullRequest" because GraphQL looks in the fork, not the upstream. Fix: always verify the actual repo by checking the `url` field from `gh pr list --json url`. Extract owner/repo from the URL and use that for `gh pr view`.
 
 Example:
+
 ```bash
 # Wrong — fork may show upstream PRs; gh pr view on fork will fail
 gh pr list --repo electricessence/Open.Disposable --json number,url
