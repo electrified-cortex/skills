@@ -1,4 +1,4 @@
-GH CLI Setup — install, authenticate, configure `gh`. Prerequisite all other gh-cli skills depend on.
+GH CLI Setup — install, authenticate, configure `gh`. Prerequisite all other github skills depend on.
 
 Check installed:
 ```bash

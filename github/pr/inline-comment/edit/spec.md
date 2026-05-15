@@ -1,9 +1,9 @@
 ---
-name: gh-cli-pr-inline-comment-edit
+name: edit
 description: Spec for editing the body of an existing inline review comment via GitHub CLI.
 ---
 
-# gh-cli-pr-inline-comment-edit — Spec
+# edit — Spec
 
 ## Purpose
 

@@ -1,5 +1,5 @@
 ---
-name: gh-cli-repos
+name: repo
 description: Create, clone, fork, sync, edit, delete GitHub repositories via CLI.
 ---
 
@@ -96,7 +96,7 @@ gh repo set-default --unset
 
 This skill covers `gh repo` only. It does not manage repository content (files, branches, commits — those are git operations), repository secrets or deploy keys, GitHub Apps, webhooks, or repository integrations.
 
-Related: `gh-cli-actions` (Actions configuration), `gh-cli-api` (advanced repo operations via API)
+Related: `actions` (Actions configuration), `api` (advanced repo operations via API)
 
 ## Safety Classification
 

@@ -1,5 +1,5 @@
 ---
-name: gh-cli-pr-merge
+name: merge
 description: Merge, update, revert, close pull request via GitHub CLI.
 ---
 
@@ -65,11 +65,11 @@ gh pr close 123 --comment "Superseded by #456"
 
 ## Checking Readiness Before Merge
 
-Check CI status before merging using `gh pr checks 123`. That command is covered by the `gh-cli-prs` inspection commands, not this sub-skill.
+Check CI status before merging using `gh pr checks 123`. That command is covered by the `pr` inspection commands, not this sub-skill.
 
 ## Scope Boundaries
 
-This skill covers `gh pr merge`, `gh pr update-branch`, `gh pr revert`, and `gh pr close`. It does not cover reviewing a PR before merge (see `gh-cli-prs-review`) or git operations after merge such as pulling the updated base locally.
+This skill covers `gh pr merge`, `gh pr update-branch`, `gh pr revert`, and `gh pr close`. It does not cover reviewing a PR before merge (see `pr/review`) or git operations after merge such as pulling the updated base locally.
 
 ## Safety Classification
 

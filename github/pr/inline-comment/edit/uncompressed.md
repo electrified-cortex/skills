@@ -1,5 +1,5 @@
 ---
-name: gh-cli-pr-inline-comment-edit
+name: edit
 description: Edit the body of an existing inline PR review comment by comment ID via GitHub CLI.
 ---
 

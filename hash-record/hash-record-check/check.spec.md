@@ -115,7 +115,7 @@ pwsh misses.ps1 <glob> <op_kind> <record_filename>
 
 | Positional | Required | Description |
 | ----------------- | -------- | -------------------------------------------------------- |
-| `glob` | yes | File glob to expand (e.g. `gh-cli/**/*.md`). |
+| `glob` | yes | File glob to expand (e.g. `github/**/*.md`). |
 | `op_kind` | yes | Same as `check.ps1` — e.g. `markdown-hygiene`. |
 | `record_filename` | yes | Leaf filename to probe — e.g. `lint.md`, `report.md`. |
 

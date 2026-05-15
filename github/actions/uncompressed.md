@@ -1,5 +1,5 @@
 ---
-name: gh-cli-actions
+name: actions
 description: Trigger, monitor, manage GitHub Actions workflows, runs, secrets, variables via CLI.
 ---
 

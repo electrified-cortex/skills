@@ -1,4 +1,4 @@
-# gh-cli-prs-comments — Spec
+# pr/comments — Spec
 
 ## Purpose
 
@@ -6,13 +6,13 @@ Guide an agent through adding, editing, and deleting comments on a pull request.
 
 ## Scope
 
-`gh pr comment`. Does not cover review submissions (approve/request changes) — see `gh-cli-prs-review`.
+`gh pr comment`. Does not cover review submissions (approve/request changes) — see `pr/review`.
 
 ## Definitions
 
 - **General PR comment**: a top-level comment on a pull request with no approval verdict; distinct from review-level comments.
 - **Comment ID**: the unique integer identifier for a specific comment; required for edit and delete operations.
-- **Review thread**: a comment thread tied to a specific code line or review submission; not covered by this skill — use `gh-cli-api` for resolution.
+- **Review thread**: a comment thread tied to a specific code line or review submission; not covered by this skill — use `api` for resolution.
 
 ## Requirements
 
@@ -24,7 +24,7 @@ The skill must enable an agent to:
 
 ## Behavior
 
-The skill covers general PR comments via `gh pr comment`: adding a new comment, editing an existing comment by its ID, and deleting a comment by its ID. Review-level comments (tied to approve/request-changes verdicts) are not handled here. Resolving review threads has no `gh pr` command — the agent must redirect to `gh-cli-api` for the `resolveReviewThread` GraphQL mutation.
+The skill covers general PR comments via `gh pr comment`: adding a new comment, editing an existing comment by its ID, and deleting a comment by its ID. Review-level comments (tied to approve/request-changes verdicts) are not handled here. Resolving review threads has no `gh pr` command — the agent must redirect to `api` for the `resolveReviewThread` GraphQL mutation.
 
 ## Error Handling
 

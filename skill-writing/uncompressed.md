@@ -124,9 +124,9 @@ per R-FM-3).
   fully-qualified names that include the parent as a prefix. Example:
   under `electrified-cortex/skill-index/`, children are
   `skill-index-auditing/`, `skill-index-building/` — not bare
-  `auditing/`, `building/`. Canonical reference: `electrified-cortex/gh-cli/`
-  (`gh-cli-actions`, `gh-cli-api`, etc.). Bare unqualified names inside a
-  parent folder do not resolve.
+  `auditing/`, `building/`. Pure router intermediates (e.g. `github/`) may
+  use bare folder names for their children (`actions/`, `api/`) since they
+  are only reachable via the router — bare names don't need a prefix there.
 - Never use "SKILL" in any filename except `SKILL.md`.
 
 ### Content

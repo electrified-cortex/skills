@@ -1,5 +1,5 @@
 ---
-name: gh-cli-pr-inline-comment-post
+name: post
 description: Post an inline PR review comment on a diff line. Triggers - post inline comment, pr review comment, inline diff comment, pr inline annotation, gh api pr comment, gh cli pr inline comment post.
 ---
 

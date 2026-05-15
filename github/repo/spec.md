@@ -1,4 +1,4 @@
-# gh-cli-repos — Spec
+# repo — Spec
 
 ## Purpose
 

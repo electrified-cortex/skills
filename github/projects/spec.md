@@ -1,4 +1,4 @@
-# gh-cli-projects — Spec
+# projects — Spec
 
 ## Purpose
 

@@ -53,7 +53,7 @@ Paths under `.hash-record/` are excluded by default.
 Use this before dispatching agents to find exactly which files still need work:
 
 ```powershell
-$misses = pwsh misses.ps1 'gh-cli/**/*.md' markdown-hygiene lint.md
+$misses = pwsh misses.ps1 'github/**/*.md' markdown-hygiene lint.md
 # $misses is now a list of file paths to dispatch
 ```
 

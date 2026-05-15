@@ -1,5 +1,5 @@
 ---
-name: gh-cli-pr-inline-comment-delete
+name: delete
 description: Delete an existing inline PR review comment by comment ID via GitHub CLI.
 ---
 

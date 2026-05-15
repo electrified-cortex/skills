@@ -1,39 +1,39 @@
-# gh-cli - skill index
+# github - skill index
 
 Routes GitHub CLI tasks to the correct domain sub-skill; does not run gh commands itself.
 
-## gh-cli
+## github
 
 GitHub CLI operations hub that routes to domain-specific sub-skills via dispatch.
 
-## gh-cli-actions
+## actions
 
 Triggers, monitors, and manages GitHub Actions workflows, runs, secrets, and variables via the CLI.
 
-## gh-cli-api
+## api
 
 Makes authenticated REST and GraphQL calls to the GitHub API when no dedicated gh subcommand covers the operation.
 
-## gh-cli-issues
+## issues
 
 Manages GitHub issues through the full lifecycle — create, list, view, edit, comment, close — using the gh issue subcommand.
 
-## gh-cli-pr
+## pr
 
 Entry point for pull request management via the GitHub CLI, handling inspection and routing write operations to sub-skills.
 
-## gh-cli-projects
+## projects
 
 Creates and manages GitHub Projects v2 boards, items, and fields via the CLI.
 
-## gh-cli-releases
+## release
 
 Manages GitHub releases through the full lifecycle — create, publish, upload assets, edit, delete — via gh release.
 
-## gh-cli-repos
+## repo
 
 Creates, clones, forks, syncs, edits, and deletes GitHub repositories via the CLI.
 
-## gh-cli-setup
+## setup
 
-Installs, authenticates, and configures the GitHub CLI; prerequisite for all other gh-cli skills.
+Installs, authenticates, and configures the GitHub CLI; prerequisite for all other github skills.

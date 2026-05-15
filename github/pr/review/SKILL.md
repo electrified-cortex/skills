@@ -1,5 +1,5 @@
 ---
-name: gh-cli-pr-review
+name: review
 description: Approve, request changes on, dismiss pull request review via GitHub CLI.
 ---
 

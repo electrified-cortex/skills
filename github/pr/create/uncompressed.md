@@ -1,5 +1,5 @@
 ---
-name: gh-cli-pr-create
+name: create
 description: Open a pull request via GitHub CLI. Triggers - create pr, open pull request, submit pr, create draft pr.
 ---
 

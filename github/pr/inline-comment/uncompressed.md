@@ -1,5 +1,5 @@
 ---
-name: gh-cli-pr-inline-comment
+name: inline-comment
 description: Post, edit, or delete inline code review comments on PR diff lines. Routes to sub-skills by operation.
 ---
 
@@ -11,14 +11,14 @@ Routes inline review comment operations to specialized sub-skills.
 
 | Operation | Sub-skill | Notes |
 | --------- | --------- | ----- |
-| Post (create) | `gh-cli-pr-inline-comment-post/` | Multi-step: SHA lookup, diff verify, dedup, POST |
-| Edit (update body) | `gh-cli-pr-inline-comment-edit/` | Single PATCH call by comment ID |
-| Delete | `gh-cli-pr-inline-comment-delete/` | Single DELETE call by comment ID |
+| Post (create) | `post/` | Multi-step: SHA lookup, diff verify, dedup, POST |
+| Edit (update body) | `edit/` | Single PATCH call by comment ID |
+| Delete | `delete/` | Single DELETE call by comment ID |
 
 Read the sub-skill SKILL.md for the requested operation and follow it.
 
 ## Related Skills
 
-- General PR comments: `gh-cli-pr-comments/`
-- Review verdicts (approve/request-changes): `gh-cli-pr-review/`
-- Thread resolution: `gh-cli-api/` (GraphQL `resolveReviewThread`)
+- General PR comments: `comments/`
+- Review verdicts (approve/request-changes): `review/`
+- Thread resolution: `api/` (GraphQL `resolveReviewThread`)

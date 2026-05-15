@@ -1,4 +1,4 @@
-# gh-cli-pr-inline-comment-post — Spec
+# post — Spec
 
 ## Purpose
 

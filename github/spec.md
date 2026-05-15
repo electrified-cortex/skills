@@ -1,4 +1,4 @@
-# gh-cli — Spec
+# github — Spec
 
 ## Purpose
 
@@ -30,14 +30,14 @@ The skill must enable an agent to:
 
 | Domain | Sub-skill | Handles |
 | --- | --- | --- |
-| actions | gh-cli-actions/ | Workflows, runs, secrets, variables, caches |
-| api | gh-cli-api/ | Raw REST and GraphQL API calls |
-| issues | gh-cli-issues/ | Issue lifecycle: create, list, edit, close, comment |
-| projects | gh-cli-projects/ | GitHub Projects v2: boards, items, fields |
-| prs | gh-cli-prs/ | Pull request lifecycle router |
-| releases | gh-cli-releases/ | Release lifecycle: create, publish, assets |
-| repos | gh-cli-repos/ | Repository management: create, clone, fork, sync |
-| setup | gh-cli-setup/ | Install, authenticate, configure gh |
+| actions | actions/ | Workflows, runs, secrets, variables, caches |
+| api | api/ | Raw REST and GraphQL API calls |
+| issues | issues/ | Issue lifecycle: create, list, edit, close, comment |
+| projects | projects/ | GitHub Projects v2: boards, items, fields |
+| prs | pr/ | Pull request lifecycle router |
+| releases | release/ | Release lifecycle: create, publish, assets |
+| repos | repo/ | Repository management: create, clone, fork, sync |
+| setup | setup/ | Install, authenticate, configure gh |
 
 ## Requirements
 

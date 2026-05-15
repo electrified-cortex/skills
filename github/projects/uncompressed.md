@@ -1,5 +1,5 @@
 ---
-name: gh-cli-projects
+name: projects
 description: Create, manage GitHub Projects v2 boards, items, fields via CLI.
 ---
 
@@ -120,7 +120,7 @@ gh project delete PROJECT_NUM --owner owner
 
 This skill covers `gh project` only. It does not manage GitHub Projects v1 (classic boards), configure project automation rules, or link issues to projects — item addition is the linking mechanism.
 
-Related: `gh-cli-issues` (managing issues linked to projects), `gh-cli-api` (advanced project automation via GraphQL)
+Related: `issues` (managing issues linked to projects), `api` (advanced project automation via GraphQL)
 
 ## Safety Classification
 

@@ -1,5 +1,5 @@
 ---
-name: gh-cli
+name: github
 description: Route any GitHub CLI task to the correct domain sub-skill. Triggers — github cli, gh commands, pull request, repository management, issue lifecycle, release management.
 ---
 

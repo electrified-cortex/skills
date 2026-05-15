@@ -55,7 +55,7 @@ gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews"
 `gh pr view --comments` = quick human-readable glance only.
 
 Resolve review threads:
-No `gh pr` command. Use `resolveReviewThread` GraphQL mutation via `gh-cli-api`:
+No `gh pr` command. Use `resolveReviewThread` GraphQL mutation via `api`:
 ```bash
 gh api graphql -f query='
   mutation { resolveReviewThread(input: {threadId: "THREAD_ID"}) { thread { isResolved } } }'

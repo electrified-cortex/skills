@@ -1,5 +1,5 @@
 ---
-name: gh-cli-pr-merge
+name: merge
 description: Merge, update, revert, close pull request via GitHub CLI. Triggers - merge PR, merge pull request, close PR, revert PR, squash merge, rebase merge.
 ---
 
@@ -38,18 +38,18 @@ gh pr close 123 --comment "Superseded by #456"
 ```
 
 Pre-Merge Readiness:
-CI check: `gh pr checks 123` — covered by `gh-cli-prs` inspection skill, not this one.
+CI check: `gh pr checks 123` — covered by `pr` inspection skill, not this one.
 
 Scope:
-Covers `gh pr merge`, `gh pr update-branch`, `gh pr revert`, `gh pr close`. Doesn't cover PR review before merge (see `gh-cli-prs-review`) or git ops post-merge.
+Covers `gh pr merge`, `gh pr update-branch`, `gh pr revert`, `gh pr close`. Doesn't cover PR review before merge (see `pr/review`) or git ops post-merge.
 
 ## Dependencies
 
-- gh-cli-setup/SKILL.md — required pre-check: auth + CLI installed
+- setup/SKILL.md — required pre-check: auth + CLI installed
 
 ## Error Handling
 
-- Auth failure: re-run gh-cli-setup.
+- Auth failure: re-run setup.
 - Merge conflict: resolve conflicts before merging.
 - Required checks failing: wait for CI or use --admin flag only if authorized.
 - Permission denied: confirm merge rights.

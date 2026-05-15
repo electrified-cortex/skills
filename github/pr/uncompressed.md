@@ -1,5 +1,5 @@
 ---
-name: gh-cli-pr
+name: github-pr
 description: Entry point for pull request management via the GitHub CLI. Handles common PR inspection and routes write operations to sub-skills.
 ---
 
@@ -47,10 +47,10 @@ Each stage of the PR lifecycle has its own sub-skill:
 
 | Sub-skill | Handles |
 | --- | --- |
-| gh-cli-prs-create/ | Open new PRs, convert drafts to ready |
-| gh-cli-prs-review/ | Approve, request changes, dismiss reviews |
-| gh-cli-prs-comments/ | Add, edit, delete PR comments |
-| gh-cli-prs-merge/ | Merge, update branch, revert, close |
+| pr/create/ | Open new PRs, convert drafts to ready |
+| pr/review/ | Approve, request changes, dismiss reviews |
+| pr/comments/ | Add, edit, delete PR comments |
+| pr/merge/ | Merge, update branch, revert, close |
 
 ## Notes
 
@@ -64,7 +64,7 @@ This skill covers `gh pr` subcommands only. It does not touch git operations, br
 
 ## Related Skills
 
-`gh-cli-prs-create`, `gh-cli-prs-review`, `gh-cli-prs-comments`, `gh-cli-prs-merge`
+`pr/create`, `pr/review`, `pr/comments`, `pr/merge`
 
 ## Safety Classification
 

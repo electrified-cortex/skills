@@ -1,5 +1,5 @@
 ---
-name: gh-cli-releases
+name: release
 description: Manage GitHub releases via gh release. Full lifecycle: create, publish, upload assets, edit, delete.
 ---
 

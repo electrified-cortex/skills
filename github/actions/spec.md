@@ -1,4 +1,4 @@
-# gh-cli-actions — Spec
+# actions — Spec
 
 ## Purpose
 

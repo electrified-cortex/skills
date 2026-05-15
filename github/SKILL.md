@@ -1,47 +1,48 @@
 ---
-name: gh-cli
-description: GitHub CLI operations — routes to domain-specific sub-skills via dispatch. Triggers - use GitHub CLI, gh command, github CLI task, github operations, gh CLI.
+name: github
+description: GitHub umbrella router — directs to child skills for actions, api, issues, pr, projects, release, repo, setup. Triggers - github, github CLI, gh command, github operations, github skill.
 ---
 
-Routes GitHub CLI tasks to correct domain sub-skill. Doesn't run `gh` commands itself.
+Routes GitHub tasks to the correct domain sub-skill. Does not execute `gh` commands itself.
 
-When to Use
+When domain is known, dispatch the sub-skill directly. When unclear, parse the task and route by domain below.
 
-Use when unsure which sub-skill owns task, or want auto-routing. If domain known, dispatch sub-skill directly.
-
-How It Works
-
-1. Parse task → identify domain.
-2. Domain unclear → ask caller before proceeding.
-3. Load + invoke domain sub-skill, follow its instructions.
-4. Await sub-skill result; relay outcome to caller.
-5. Task spans multiple domains → handle primary, report remaining to caller.
-
-Domain Routing
+Domain Routing:
 
 | Domain | Sub-skill | Use for |
 | --- | --- | --- |
-| actions | gh-cli-actions/ | Workflows, runs, secrets, variables, caches |
-| api | gh-cli-api/ | Raw REST and GraphQL API calls |
-| issues | gh-cli-issues/ | Issue lifecycle: create, list, edit, close, comment |
-| projects | gh-cli-projects/ | GitHub Projects v2: boards, items, fields |
-| prs | gh-cli-pr/ | Pull request lifecycle router |
-| releases | gh-cli-releases/ | Release lifecycle: create, publish, upload assets |
-| repos | gh-cli-repos/ | Repository management: create, clone, fork, sync |
-| setup | gh-cli-setup/ | Install, authenticate, and configure gh |
+| actions | actions/ | Workflows, runs, secrets, variables, caches |
+| api | api/ | Raw REST and GraphQL API calls |
+| issues | issues/ | Issue lifecycle: create, list, edit, close, comment |
+| projects | projects/ | GitHub Projects v2: boards, items, fields |
+| pr | pr/ | Pull request lifecycle router |
+| release | release/ | Release lifecycle: create, publish, upload assets |
+| repo | repo/ | Repository management: create, clone, fork, sync |
+| setup | setup/ | Install, authenticate, and configure gh |
 
-PR Sub-skills
+PR sub-skills under `pr/`:
 
-prs domain sub-skills under `gh-cli-pr/`:
-`gh-cli-pr-comments/` — add/edit/delete PR comments
-`gh-cli-pr-create/` — open new PRs
-`gh-cli-pr-merge/` — merge strategies, branch updates, revert
-`gh-cli-pr-review/` — approve, request changes, dismiss reviews
+| Sub-skill | Handles |
+| --- | --- |
+| pr/comments/ | Add, edit, delete general PR comments |
+| pr/create/ | Open new PRs |
+| pr/file-viewed/ | Mark or unmark files as viewed |
+| pr/inline-comment/ | Post, edit, delete inline diff comments (router) |
+| pr/merge/ | Merge strategies, branch updates, revert |
+| pr/review/ | Approve, request changes, dismiss reviews |
 
-Rules
+Inline comment sub-skills under `pr/inline-comment/`:
 
-If setup skill wasn't loaded, load `gh-cli-setup/` to verify auth before delegating.
-**Never** improvise commands — use only what sub-skill documents.
-One domain per invocation. Multiple domains → complete primary first, note remaining.
+| Sub-skill | Handles |
+| --- | --- |
+| pr/inline-comment/post/ | Post a new inline diff comment |
+| pr/inline-comment/edit/ | Edit an existing inline comment |
+| pr/inline-comment/delete/ | Delete an inline comment |
 
-Related: `dispatch`, `gh-cli-actions`, `gh-cli-api`, `gh-cli-issues`, `gh-cli-projects`, `gh-cli-pr`, `gh-cli-releases`, `gh-cli-repos`, `gh-cli-setup`
+Rules:
+
+Load `setup/` to verify auth before any `gh` command if setup skill not yet run in session.
+Never improvise commands — use only what the sub-skill documents.
+One domain per invocation; multiple domains → complete primary first, report remaining.
+
+Related: `actions`, `api`, `issues`, `projects`, `pr`, `release`, `repo`, `setup`

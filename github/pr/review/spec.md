@@ -1,9 +1,9 @@
 ---
-name: gh-cli-pr-review
+name: review
 description: Spec for reviewing pull requests via the GitHub CLI.
 ---
 
-# gh-cli-prs-review — Spec
+# pr/review — Spec
 
 ## Purpose
 
@@ -11,7 +11,7 @@ Guide an agent through performing, editing, and dismissing pull request reviews.
 
 ## Scope
 
-`gh pr review`. Does not cover inline comments or general (non-review) PR comments — see `gh-cli-prs-comments`.
+`gh pr review`. Does not cover inline comments or general (non-review) PR comments — see `pr/comments`.
 
 ## Definitions
 
@@ -44,9 +44,9 @@ N/A — each review operation is a discrete single command; there are no competi
 
 ## Constraints
 
-- Does not cover requesting reviewers — that belongs to `gh-cli-prs-create` (at creation) or the `gh pr edit --add-reviewer` path.
-- Does not cover resolving review threads — see `gh-cli-api` for the GraphQL mutation.
-- Does not cover inline comments or general PR comments — see `gh-cli-prs-comments`.
+- Does not cover requesting reviewers — that belongs to `pr/create` (at creation) or the `gh pr edit --add-reviewer` path.
+- Does not cover resolving review threads — see `api` for the GraphQL mutation.
+- Does not cover inline comments or general PR comments — see `pr/comments`.
 
 ## Safety Classification
 

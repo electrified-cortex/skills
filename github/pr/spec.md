@@ -1,4 +1,4 @@
-# gh-cli-prs — Spec
+# github-prs — Spec
 
 ## Purpose
 
@@ -29,10 +29,10 @@ The skill must enable an agent to:
 
 | Sub-skill | Handles |
 | --- | --- |
-| gh-cli-prs-create/ | Opening new PRs, converting drafts to ready |
-| gh-cli-prs-review/ | Approving, requesting changes, dismissing reviews |
-| gh-cli-prs-comments/ | Adding, editing, deleting general PR comments |
-| gh-cli-prs-merge/ | Merging, updating branch, reverting, closing |
+| pr/create/ | Opening new PRs, converting drafts to ready |
+| pr/review/ | Approving, requesting changes, dismissing reviews |
+| pr/comments/ | Adding, editing, deleting general PR comments |
+| pr/merge/ | Merging, updating branch, reverting, closing |
 
 ## Requirements
 
@@ -58,7 +58,7 @@ Inspection commands are handled directly by this skill; write operations are alw
 - Does not cover git operations (push, checkout, fetch) performed locally.
 - Does not manage branch protection rules or required review policies.
 - Does not configure CODEOWNERS files.
-- Does not cover GitHub Actions triggered by PR events — see `gh-cli-actions`.
+- Does not cover GitHub Actions triggered by PR events — see `actions`.
 
 ## Known Gotchas
 

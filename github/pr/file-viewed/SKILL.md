@@ -1,5 +1,5 @@
 ---
-name: gh-cli-pr-file-viewed
+name: file-viewed
 description: Mark or unmark one, multiple, or all files in a PR as viewed via GitHub GraphQL mutations. Handles node ID resolution and pagination for large PRs. Triggers - mark file as viewed, PR file viewed, unmark file, mark all files reviewed, PR file review status.
 ---
 
@@ -131,7 +131,7 @@ $pr.files | ForEach-Object {
 
 ## Scope
 
-Covers `markFileAsViewed` and `unmarkFileAsViewed` GraphQL mutations only. Does not submit PR reviews, post comments, or manage review threads — see `gh-cli-pr-review/` and `gh-cli-pr-inline-comment/`.
+Covers `markFileAsViewed` and `unmarkFileAsViewed` GraphQL mutations only. Does not submit PR reviews, post comments, or manage review threads — see `review/` and `inline-comment/`.
 
 ## Inputs
 
@@ -141,4 +141,4 @@ Covers `markFileAsViewed` and `unmarkFileAsViewed` GraphQL mutations only. Does 
 
 ## Dependencies
 
-- gh-cli-setup/SKILL.md — required pre-check: auth + CLI installed
+- setup/SKILL.md — required pre-check: auth + CLI installed

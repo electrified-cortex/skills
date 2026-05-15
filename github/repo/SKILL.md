@@ -1,11 +1,11 @@
 ---
-name: gh-cli-repos
+name: repo
 description: Create, clone, fork, sync, edit, delete GitHub repositories via CLI. Triggers - create repo, clone repository, fork repo, github repo operations, manage repositories.
 ---
 
 ## Dependencies
 
-- gh-cli-setup/SKILL.md — required pre-check: auth + CLI installed
+- setup/SKILL.md — required pre-check: auth + CLI installed
 
 Create:
 Always specify visibility — no default:
@@ -56,8 +56,8 @@ Covers `gh repo` only. Doesn't manage repo content (files, branches, commits —
 
 ## Error Handling
 
-- Auth failure: re-run gh-cli-setup.
+- Auth failure: re-run setup.
 - Repo not found: verify org/name and visibility.
 - Name conflict: repository name already in use.
 
-Related: `gh-cli-actions`, `gh-cli-api`
+Related: `actions`, `api`

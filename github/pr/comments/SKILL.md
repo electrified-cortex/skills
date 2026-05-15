@@ -1,5 +1,5 @@
 ---
-name: gh-cli-pr-comments
+name: comments
 description: Add, edit, delete, and list pull request comments via GitHub CLI. Triggers - add pr comment, edit pr comment, delete pr comment, list pr comments, resolve review thread.
 ---
 

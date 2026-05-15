@@ -1,9 +1,9 @@
 ---
-name: gh-cli-pr-inline-comment
+name: inline-comment
 description: Spec for posting, editing, and deleting inline code review comments on pull request diffs via GitHub CLI.
 ---
 
-# gh-cli-pr-inline-comment — Spec
+# inline-comment — Spec
 
 ## Architecture
 
@@ -11,9 +11,9 @@ This is a routing skill. Operations are handled by sub-skills:
 
 | Sub-skill | Operation |
 | --------- | --------- |
-| `gh-cli-pr-inline-comment-post/` | Create inline comment (complex: SHA, diff verify, dedup, POST) |
-| `gh-cli-pr-inline-comment-edit/` | Edit comment body by ID |
-| `gh-cli-pr-inline-comment-delete/` | Delete comment by ID |
+| `post/` | Create inline comment (complex: SHA, diff verify, dedup, POST) |
+| `edit/` | Edit comment body by ID |
+| `delete/` | Delete comment by ID |
 
 ## Purpose
 
@@ -26,7 +26,7 @@ REST API endpoint `/repos/{owner}/{repo}/pulls/{pull_number}/comments` via `gh a
 ## Definitions
 
 - **Inline review comment**: a comment anchored to a specific file path and line number in the PR diff; visible in the "Files changed" tab.
-- **General PR comment**: a top-level conversation comment on the PR (not file-anchored); covered by `gh-cli-pr-comments`.
+- **General PR comment**: a top-level conversation comment on the PR (not file-anchored); covered by `comments`.
 - **commit_id**: the SHA of a commit in the PR branch; required for inline comments. Must be fetched at execution time via `headRefOid`.
 - **side**: `RIGHT` = new/added version of the file (additions and context); `LEFT` = deleted/old version (deletions only).
 - **line**: absolute line number in the file. Use `line`, never the deprecated `position` (raw diff-patch offset).
@@ -36,9 +36,9 @@ REST API endpoint `/repos/{owner}/{repo}/pulls/{pull_number}/comments` via `gh a
 
 The skill must enable an agent to:
 
-- Route post operations to `gh-cli-pr-inline-comment-post/`
-- Route edit operations to `gh-cli-pr-inline-comment-edit/`
-- Route delete operations to `gh-cli-pr-inline-comment-delete/`
+- Route post operations to `post/`
+- Route edit operations to `edit/`
+- Route delete operations to `delete/`
 - Diagnose and recover from 422 errors (line not in diff, wrong side, stale SHA)
 
 ## Behavior
@@ -62,9 +62,9 @@ Step order is fixed: fetch SHA → verify diff → post comment. The agent must 
 
 ## Constraints
 
-- Does not cover general PR conversation comments → `gh-cli-pr-comments`
-- Does not cover review submission verdicts (approve/request-changes) → `gh-cli-pr-review`
-- Does not cover resolving review threads → `gh-cli-api` (GraphQL `resolveReviewThread`)
+- Does not cover general PR conversation comments → `comments`
+- Does not cover review submission verdicts (approve/request-changes) → `review`
+- Does not cover resolving review threads → `api` (GraphQL `resolveReviewThread`)
 - `position` parameter is deprecated; never use it
 - All destructive operations require explicit operator authorization in the current session
 

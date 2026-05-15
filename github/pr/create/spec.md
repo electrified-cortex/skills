@@ -1,4 +1,4 @@
-# gh-cli-prs-create — Spec
+# pr/create — Spec
 
 ## Purpose
 

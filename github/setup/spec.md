@@ -1,8 +1,8 @@
-# gh-cli-setup — Spec
+# setup — Spec
 
 ## Purpose
 
-Define the intent and scope of a skill that guides an agent through getting the GitHub CLI (`gh`) installed, authenticated, and configured for use. This is the prerequisite skill all other gh-cli skills depend on.
+Define the intent and scope of a skill that guides an agent through getting the GitHub CLI (`gh`) installed, authenticated, and configured for use. This is the prerequisite skill all other github skills depend on.
 
 ## Scope
 

@@ -1,9 +1,9 @@
 ---
-name: gh-cli-pr-merge
+name: merge
 description: Spec for merging, updating, and reverting pull requests via the GitHub CLI.
 ---
 
-# gh-cli-prs-merge — Spec
+# pr/merge — Spec
 
 ## Purpose
 

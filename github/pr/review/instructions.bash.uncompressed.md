@@ -53,7 +53,7 @@ gh api --paginate "repos/$OWNER/$REPO/pulls/$PR_NUMBER/reviews"
 ## Resolving Review Threads
 
 There is no `gh pr` command for resolving review threads. Use the
-`resolveReviewThread` GraphQL mutation via `gh-cli-api`:
+`resolveReviewThread` GraphQL mutation via `api`:
 
 ```bash
 gh api graphql -f query='

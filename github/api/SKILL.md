@@ -1,5 +1,5 @@
 ---
-name: gh-cli-api
+name: api
 description: Make authenticated REST and GraphQL calls to the GitHub API via the CLI. Use when no dedicated gh subcommand covers the operation. Triggers - call GitHub API, github REST API, graphql query github, gh api call, raw github API.
 ---
 
@@ -75,14 +75,14 @@ Covers `gh api` for REST and `gh api graphql` for GraphQL. Doesn't replace domai
 
 ## See Also
 
-`gh-cli-issues`, `gh-cli-prs`, `gh-cli-prs-comments`, `gh-cli-releases`, `gh-cli-repos`, `gh-cli-actions`
+`issues`, `pr`, `pr/comments`, `release`, `repo`, `actions`
 
 ## Error Handling
 
-- Auth failure: re-run `gh-cli-setup` to verify token.
+- Auth failure: re-run `setup` to verify token.
 - Rate limit: wait and retry.
 - Invalid endpoint: check `gh api --help` for valid paths.
 
 ## Dependencies
 
-- gh-cli-setup/SKILL.md — required pre-check: auth + CLI installed
+- setup/SKILL.md — required pre-check: auth + CLI installed

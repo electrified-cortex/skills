@@ -1,9 +1,9 @@
 ---
-name: gh-cli-pr-file-viewed
+name: file-viewed
 description: Spec for marking and unmarking files as viewed in a GitHub pull request.
 ---
 
-# gh-cli-pr-file-viewed — Spec
+# file-viewed — Spec
 
 ## Purpose
 

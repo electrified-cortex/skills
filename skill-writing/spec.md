@@ -242,8 +242,9 @@ absent-H1 finding — no inline guard text is needed.
   `electrified-cortex/skill-index/`, children are `skill-index-auditing/`,
   `skill-index-building/`, `skill-index-crawling/` — not bare `auditing/`,
   `building/`, `crawling/`. The canonical reference implementation is
-  `electrified-cortex/gh-cli/` (`gh-cli-actions`, `gh-cli-api`, etc.). Bare
-  unqualified names inside a parent folder do not resolve.
+  `electrified-cortex/skill-index/` (`skill-index-auditing`, etc.). Pure
+  router intermediates (e.g. `github/`) use bare folder names for their
+  children (`actions/`, `api/`) since they are only reachable via the router.
 - `SKILL.md` = the runtime file (always this exact name)
 - `spec.md` = companion spec (always this exact name — no prefix, no
   "SKILL" in the filename). Required for dispatch and complex inline
