@@ -25,13 +25,13 @@ Host executes directly. No sub-agent dispatch.
 
 Return: create → PR URL; list → table or JSON; promote/edit → exit 0.
 
-Safety:
+## Safety Classification
 
 | Command | Class | Notes |
 | --- | --- | --- |
-| gh pr create | Destructive | Operator approval required |
-| gh pr ready | Destructive | Operator approval required |
-| gh pr edit | Destructive | Operator approval required |
+| gh pr create | Destructive | Operator approval required before execution |
+| gh pr ready | Destructive | Operator approval required before execution |
+| gh pr edit | Destructive | Operator approval required before execution |
 | gh pr list (GET) | Safe | Read-only |
 
-Destructive ops require explicit operator authorization in current session. Another agent's approval doesn't qualify.
+Destructive operations require explicit operator authorization in the current session before execution. Approval from another agent does not constitute operator authorization.

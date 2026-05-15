@@ -1,6 +1,6 @@
 ---
 name: merge
-description: Merge, update, revert, close pull request via GitHub CLI.
+description: Merge, update, revert, close pull request via GitHub CLI. Triggers - merge PR, merge pull request, close PR, revert PR, squash merge, rebase merge.
 ---
 
 # GH CLI PR Merge

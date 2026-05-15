@@ -1,6 +1,6 @@
 ---
 name: release
-description: Manage GitHub releases via gh release. Full lifecycle: create, publish, upload assets, edit, delete.
+description: Manage GitHub releases via gh release. Full lifecycle: create, publish, upload assets, edit, delete. Triggers - create release, github release, publish release, upload release asset, manage releases.
 ---
 
 # GH CLI Releases

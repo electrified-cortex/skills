@@ -22,6 +22,8 @@ Domain Routing:
 
 PR sub-skills under `pr/`:
 
+**Routing rule for PR comments:** No FILE_PATH or LINE_NUMBER → use `pr/comments/` (general PR conversation). Anchored to a specific diff line → use `pr/inline-comment/post/`.
+
 | Sub-skill | Handles |
 | --- | --- |
 | pr/comments/ | Add, edit, delete general PR comments |

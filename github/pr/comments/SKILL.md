@@ -23,13 +23,13 @@ Host executes directly. No sub-agent dispatch.
 
 Return: add → comment URL; edit/delete → exit 0; list → JSON array.
 
-Safety:
+## Safety Classification
 
 | Command | Class | Notes |
 | --- | --- | --- |
-| gh pr comment (add) | Destructive | Operator approval required |
-| gh api PATCH (edit) | Destructive | Operator approval required |
-| gh api DELETE | Destructive | Operator approval required |
+| gh pr comment (add) | Destructive | Operator approval required before execution |
+| gh api PATCH (edit) | Destructive | Operator approval required before execution |
+| gh api DELETE | Destructive | Operator approval required before execution |
 | gh api --paginate (GET) | Safe | Read-only |
 
-Destructive ops require explicit operator authorization in current session. Another agent's approval doesn't qualify.
+Destructive operations require explicit operator authorization in the current session before execution. Approval from another agent does not constitute operator authorization.

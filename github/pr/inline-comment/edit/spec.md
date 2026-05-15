@@ -1,8 +1,3 @@
----
-name: edit
-description: Spec for editing the body of an existing inline review comment via GitHub CLI.
----
-
 # edit — Spec
 
 ## Purpose

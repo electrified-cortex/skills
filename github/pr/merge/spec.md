@@ -1,8 +1,3 @@
----
-name: merge
-description: Spec for merging, updating, and reverting pull requests via the GitHub CLI.
----
-
 # pr/merge — Spec
 
 ## Purpose

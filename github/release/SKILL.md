@@ -62,6 +62,20 @@ gh release download v1.0.0 --pattern "*.tar.gz" --dir ./downloads
 gh release download v1.0.0 --archive zip
 ```
 
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh release list | Safe | Read-only |
+| gh release view | Safe | Read-only |
+| gh release download | Safe | Read-only |
+| gh release create | Destructive | Operator approval required before execution |
+| gh release edit | Destructive | Operator approval required before execution |
+| gh release delete | Destructive | Operator approval required before execution |
+| gh release upload | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.
+
 ## Error Handling
 
 - Auth failure: re-run setup.

@@ -1,6 +1,6 @@
 ---
 name: actions
-description: Trigger, monitor, manage GitHub Actions workflows, runs, secrets, variables via CLI.
+description: Trigger, monitor, manage GitHub Actions workflows, runs, secrets, variables via CLI. Triggers - run workflow, trigger GitHub Actions, check workflow status, manage workflows, github actions CLI.
 ---
 
 # GH CLI Actions

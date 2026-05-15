@@ -63,6 +63,19 @@ GitHub Enterprise: add `--hostname enterprise.internal` to `gh auth login`.
 
 Scope: covers `gh auth`, `gh config`, `gh repo set-default` only. Doesn't cover domain-specific subcommands, token mgmt beyond `gh auth`, or CI/CD pipeline config.
 
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh auth login | Safe | Local config only |
+| gh auth logout | Safe | Local config only |
+| gh auth status | Safe | Read-only |
+| gh config set | Safe | Local config only |
+| gh config get | Safe | Read-only |
+| gh repo set-default | Safe | Local config only |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.
+
 ## Outputs
 
 - Verification result: authenticated user display name + scopes.

@@ -63,4 +63,25 @@ Covers `gh project` only. Doesn't cover: Projects v1 (classic boards), automatio
 - Project not found: verify project number and org/user scope.
 - Permission denied: confirm project membership.
 
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh project list | Safe | Read-only |
+| gh project view | Safe | Read-only |
+| gh project create | Destructive | Operator approval required before execution |
+| gh project edit | Destructive | Operator approval required before execution |
+| gh project delete | Destructive | Operator approval required before execution |
+| gh project copy | Destructive | Operator approval required before execution |
+| gh project link | Destructive | Operator approval required before execution |
+| gh project unlink | Destructive | Operator approval required before execution |
+| gh project item-add | Destructive | Operator approval required before execution |
+| gh project item-edit | Destructive | Operator approval required before execution |
+| gh project item-archive | Destructive | Operator approval required before execution |
+| gh project item-delete | Destructive | Operator approval required before execution |
+| gh project field-create | Destructive | Operator approval required before execution |
+| gh project field-delete | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.
+
 Related: `issues`, `api`

@@ -1,6 +1,6 @@
 ---
 name: api
-description: Make authenticated REST and GraphQL calls to the GitHub API via the CLI. Use when no dedicated gh subcommand covers the operation.
+description: Make authenticated REST and GraphQL calls to the GitHub API via the CLI. Use when no dedicated gh subcommand covers the operation. Triggers - call GitHub API, github REST API, graphql query github, gh api call, raw github API.
 ---
 
 # GH CLI API

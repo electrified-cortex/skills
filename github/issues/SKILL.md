@@ -23,20 +23,20 @@ Route by shell — read and follow:
 
 Host executes directly. No sub-agent dispatch.
 
-Safety:
+## Safety Classification
 
 | Command | Class | Notes |
 | --- | --- | --- |
 | gh issue list | Safe | Read-only |
 | gh issue view | Safe | Read-only |
 | gh api --paginate (GET) | Safe | Read-only |
-| create tool (create.sh / create.ps1) | Destructive | Operator approval required |
-| comment tool (comment.sh / comment.ps1) | Destructive | Operator approval required |
-| gh issue edit | Destructive | Operator approval required |
-| gh issue close | Destructive | Operator approval required |
-| gh issue reopen | Destructive | Operator approval required |
-| gh issue transfer | Destructive | Operator approval required |
-| gh api PATCH (edit comment) | Destructive | Operator approval required |
-| gh api DELETE (delete comment) | Destructive | Operator approval required |
+| create tool (create.sh / create.ps1) | Destructive | Operator approval required before execution |
+| comment tool (comment.sh / comment.ps1) | Destructive | Operator approval required before execution |
+| gh issue edit | Destructive | Operator approval required before execution |
+| gh issue close | Destructive | Operator approval required before execution |
+| gh issue reopen | Destructive | Operator approval required before execution |
+| gh issue transfer | Destructive | Operator approval required before execution |
+| gh api PATCH (edit comment) | Destructive | Operator approval required before execution |
+| gh api DELETE (delete comment) | Destructive | Operator approval required before execution |
 
-Destructive ops require explicit operator authorization in current session. Another agent's approval doesn't qualify.
+Destructive operations require explicit operator authorization in the current session before execution. Approval from another agent does not constitute operator authorization.

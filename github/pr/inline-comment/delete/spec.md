@@ -1,8 +1,3 @@
----
-name: delete
-description: Spec for deleting an existing inline review comment via GitHub CLI.
----
-
 # delete — Spec
 
 ## Purpose

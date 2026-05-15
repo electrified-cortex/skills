@@ -54,6 +54,24 @@ Set default for current dir so subsequent commands don't need `--repo`:
 Scope:
 Covers `gh repo` only. Doesn't manage repo content (files, branches, commits — git ops), secrets, deploy keys, GitHub Apps, webhooks, or integrations.
 
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh repo view | Safe | Read-only |
+| gh repo list | Safe | Read-only |
+| gh repo clone | Safe | Local only |
+| gh repo create | Destructive | Operator approval required before execution |
+| gh repo delete | Destructive | Operator approval required before execution |
+| gh repo archive | Destructive | Operator approval required before execution |
+| gh repo rename | Destructive | Operator approval required before execution |
+| gh repo fork | Destructive | Operator approval required before execution |
+| gh repo sync | Destructive | Operator approval required before execution |
+| gh repo edit | Destructive | Operator approval required before execution |
+| gh repo set-default | Safe | Local config only |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.
+
 ## Error Handling
 
 - Auth failure: re-run setup.

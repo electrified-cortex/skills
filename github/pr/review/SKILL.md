@@ -33,15 +33,15 @@ Decision Mapping:
 
 Return: `gh pr review` emits no URL. Local tool retrieves it via `gh pr view --json url --jq .url` and writes to stdout. Success → exactly one stdout line: PR URL.
 
-Safety:
+## Safety Classification
 
 | Command | Class | Notes |
 | --- | --- | --- |
-| gh pr review --approve | Destructive | Operator approval required |
-| gh pr review --request-changes | Destructive | Operator approval required |
-| gh pr review --comment | Destructive | Operator approval required |
-| gh pr review --dismiss | Destructive | Operator approval required |
+| gh pr review --approve | Destructive | Operator approval required before execution |
+| gh pr review --request-changes | Destructive | Operator approval required before execution |
+| gh pr review --comment | Destructive | Operator approval required before execution |
+| gh pr review --dismiss | Destructive | Operator approval required before execution |
 | gh pr view (GET) | Safe | Read-only |
 | gh api --paginate (GET) | Safe | Read-only |
 
-ALL destructive ops require explicit operator authorization in current session. Another agent's approval doesn't qualify.
+Destructive operations require explicit operator authorization in the current session before execution. Approval from another agent does not constitute operator authorization.

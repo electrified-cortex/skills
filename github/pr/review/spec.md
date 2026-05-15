@@ -1,8 +1,3 @@
----
-name: review
-description: Spec for reviewing pull requests via the GitHub CLI.
----
-
 # pr/review — Spec
 
 ## Purpose

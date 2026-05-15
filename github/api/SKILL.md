@@ -73,6 +73,19 @@ Use `gh auth login` interactively or set `GH_TOKEN` in env config (shell profile
 
 Covers `gh api` for REST and `gh api graphql` for GraphQL. Doesn't replace domain skills, manage GitHub Apps or OAuth Apps, or cover webhook config.
 
+## Safety Classification
+
+| Command | Class | Notes |
+| --- | --- | --- |
+| gh api GET | Safe | Read-only |
+| gh api POST | Destructive | Operator approval required before execution |
+| gh api PATCH | Destructive | Operator approval required before execution |
+| gh api DELETE | Destructive | Operator approval required before execution |
+| gh api graphql (query) | Safe | Read-only |
+| gh api graphql (mutation) | Destructive | Operator approval required before execution |
+
+**Destructive operations require explicit operator authorization in the current session before the agent executes them.** Approval from another agent (e.g., Overseer confirming CI green) does not constitute operator authorization.
+
 ## See Also
 
 `issues`, `pr`, `pr/comments`, `release`, `repo`, `actions`

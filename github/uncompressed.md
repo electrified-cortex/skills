@@ -1,6 +1,6 @@
 ---
 name: github
-description: Route any GitHub CLI task to the correct domain sub-skill. Triggers — github cli, gh commands, pull request, repository management, issue lifecycle, release management.
+description: GitHub umbrella router — directs to child skills for actions, api, issues, pr, projects, release, repo, setup. Triggers - github, github CLI, gh command, github operations, github skill.
 ---
 
 # GH CLI Router

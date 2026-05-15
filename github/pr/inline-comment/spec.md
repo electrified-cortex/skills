@@ -1,8 +1,3 @@
----
-name: inline-comment
-description: Spec for posting, editing, and deleting inline code review comments on pull request diffs via GitHub CLI.
----
-
 # inline-comment — Spec
 
 ## Architecture

@@ -26,6 +26,8 @@ Sub-skills:
 | merge/ | Merge, update branch, revert, close |
 | file-viewed/ | Mark or unmark files as viewed (single, multiple, or all) |
 
+**Comment routing:** No FILE_PATH / LINE_NUMBER → `comments/`. Anchored to a diff line → `inline-comment/`.
+
 Notes:
 Use `--repo owner/name` when not in local clone of target repo.
 `gh pr checks --watch` blocks until CI completes.
