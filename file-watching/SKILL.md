@@ -15,7 +15,7 @@ bash <skill-path>/watch.sh <file-path> [--single] [--prefix <s>] [--timeout <s>]
 
 - `<file-path>` (required, positional) — absolute path to the file to watch
 - `-Single` / `--single` — exit 0 after the first `changed`. Combined with timeout, whichever fires first ends the script
-- `-Prefix <string>` / `--prefix <string>` — prepend `"<prefix>: "` to every emitted line. Default empty
+- `-Prefix <string>` / `--prefix <string>` — insert `"<prefix>: "` between the timestamp and the token on every emitted line. Default empty
 - `-Timeout <s>` / `--timeout <s>` — exit after N consecutive idle seconds. Prints `timeout` then exits 0. Default: never
 - `-Debounce <s>` / `--debounce <s>` — coalescing window: rapid changes collapse into one `changed` after N seconds of quiet. Range 0-60. Default: 2
 - `-Heartbeat <s>` / `--heartbeat <s>` — emit a `heartbeat` line every N idle seconds. Default: off
@@ -23,7 +23,22 @@ bash <skill-path>/watch.sh <file-path> [--single] [--prefix <s>] [--timeout <s>]
 
 ## Output
 
-Each line on stdout (optionally prefixed with `<prefix>: ` when `-Prefix` is set):
+Every line on stdout has the format:
+
+```
+<ISO8601-UTC-timestamp> [<prefix>: ]<token>
+```
+
+Examples:
+
+```
+2026-05-15T05:48:32Z changed
+2026-05-15T05:48:35Z Inbox: changed
+2026-05-15T05:49:32Z Inbox: heartbeat
+2026-05-15T05:50:00Z Inbox: gone
+```
+
+Tokens:
 
 - `changed` — file changed (leading-edge debounced); act on it
 - `heartbeat` — `-Heartbeat` window elapsed without a change (proves the watcher is alive)
@@ -31,9 +46,11 @@ Each line on stdout (optionally prefixed with `<prefix>: ` when `-Prefix` is set
 - `gone` — watched file was deleted while running; script exited 0
 - `missing` — watched file did not exist at script start; script exited 0 immediately. The watcher is a pure consumer — file lifecycle is the producer's job.
 
+The timestamp is always ISO 8601 UTC with second precision and a trailing `Z`. Consumers parsing the line can split on the first space to separate the timestamp from the rest.
+
 ## Off-ramp — delete the file to close the channel
 
-**The canonical way to stop a watcher is to delete the watched file.** No `kill`, no `TaskStop`, no signal handling — just `rm <file>`. The watcher detects the deletion, emits `gone` (or `<prefix>: gone`) and exits 0.
+**The canonical way to stop a watcher is to delete the watched file.** No `kill`, no `TaskStop`, no signal handling — just `rm <file>`. The watcher detects the deletion, emits `gone` and exits 0.
 
 This is the recommended shutdown idiom across pod inbox/outbox monitors. To close your inbox channel, delete `inbox/.signal`. The monitor unravels, the channel is gone. Re-create the file later to re-open.
 

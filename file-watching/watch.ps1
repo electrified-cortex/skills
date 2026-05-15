@@ -7,9 +7,14 @@
 #   pwsh -File watch.ps1 <file-path> [-Single] [-Prefix <s>] [-Timeout <s>] [-Debounce <s>] [-Heartbeat <s>] [-Help]
 #
 # Output (stdout, one line per event):
+#   <ISO8601-UTC> [<prefix>: ]<token>
+#
+# Tokens:
 #   changed    — file mtime changed; act on it
 #   heartbeat  — -Heartbeat window elapsed with no change (proves watcher is alive)
 #   timeout    — -Timeout window elapsed with no change (script exits 0)
+#   gone       — watched file deleted while running (script exits 0)
+#   missing    — watched file did not exist at start (script exits 0)
 #
 # Exit code: 0 on clean timeout or normal termination; 1 on argument error; 2 on watch failure.
 
@@ -44,8 +49,8 @@ Arguments:
 Options:
   -Single            Exit after the first `changed` (debounce-respecting). Combined with
                      -Timeout, whichever fires first ends the script. Exit code: 0.
-  -Prefix <string>   Prepend "<prefix>: " to every emitted line (changed/heartbeat/timeout/gone).
-                     Default empty (no prefix).
+  -Prefix <string>   Insert "<prefix>: " between the timestamp and the token on every
+                     emitted line. Default empty (no prefix).
   -Timeout <s>       Exit after <s> consecutive idle seconds. Prints "timeout" then exits 0. Default: 0 (disabled).
   -Debounce <s>      Coalescing window: rapid-fire changes collapse into one `changed` after
                      <s> seconds of quiet. Range 0-60. Default: 2.
@@ -53,13 +58,19 @@ Options:
   -Help              Print this help and exit.
 
 Off-ramp:
-  Delete the watched file while the script is running → emits `gone` (or
-  `<prefix>: gone`) and exits 0. Use this as a clean shutdown signal.
+  Delete the watched file while the script is running → emits `gone` and exits 0.
+  Use this as a clean shutdown signal.
 
-Output (one line per event on stdout):
+Output (one line per event on stdout). Format:
+  <ISO8601-UTC-timestamp> [<prefix>: ]<token>
+e.g. `2026-05-15T05:48:32Z changed` or `2026-05-15T05:48:32Z Inbox: changed`.
+
+Tokens:
   changed        File mtime changed.
   heartbeat      No change in the last -Heartbeat seconds.
   timeout        -Timeout elapsed with no change; script exits 0.
+  gone           Watched file deleted while running; script exits 0.
+  missing        Watched file did not exist at start; script exits 0.
 
 Notes:
 - File-event-driven via System.IO.FileSystemWatcher (Windows native). Zero idle CPU.
@@ -99,16 +110,23 @@ if (-not (Test-Path -LiteralPath $dir -PathType Container)) {
     exit 2
 }
 
+# All emits go through Write-Token so timestamp + prefix handling is centralized.
+function Write-Token {
+    param([string]$Token)
+    $ts = [DateTime]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+    if ([string]::IsNullOrEmpty($Prefix)) {
+        Write-Output "$ts $Token"
+    } else {
+        Write-Output "$ts $($Prefix): $Token"
+    }
+    [Console]::Out.Flush()
+}
+
 # If the file is missing at start, exit immediately with `missing` (or `<prefix>: missing`).
 # We never auto-create — the watcher is a pure consumer. Producers (or wrappers like
 # monitor.sh) own file lifecycle. Missing file = nothing to watch = clean exit.
 if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
-    if ([string]::IsNullOrEmpty($Prefix)) {
-        Write-Output 'missing'
-    } else {
-        Write-Output "$($Prefix): missing"
-    }
-    [Console]::Out.Flush()
+    Write-Token -Token 'missing'
     exit 0
 }
 
@@ -147,7 +165,10 @@ if ($tickSeconds -lt 1) { $tickSeconds = 1 }
 $lastChangedTime = [DateTime]::UtcNow
 $lastHeartbeatTime = [DateTime]::UtcNow
 
-function Drain-Events {
+# Function names use approved PS verbs (Clear, Wait, Write, Test) to avoid
+# unapproved-verb warnings on module load.
+
+function Clear-FwEvents {
     param([string[]]$SourceIdentifiers)
     $count = 0
     foreach ($sid in $SourceIdentifiers) {
@@ -176,21 +197,10 @@ function Wait-AnyEvent {
     return $null
 }
 
-# All emits go through Emit so prefix handling is centralized.
-function Emit {
-    param([string]$Token)
-    if ([string]::IsNullOrEmpty($Prefix)) {
-        Write-Output $Token
-    } else {
-        Write-Output "$($Prefix): $Token"
-    }
-    [Console]::Out.Flush()
-}
+function Write-Changed { Write-Token -Token 'changed' }
 
-function Emit-Changed { Emit -Token 'changed' }
-
-function Check-Deleted {
-    # If the watched file is gone, emit `gone` (with prefix) and exit 0.
+function Test-Deleted {
+    # If the watched file is gone, emit `gone` and exit 0.
     # Atomic temp+rename saves trigger a brief Deleted then Created/Renamed; verify the
     # file is REALLY gone by sleeping 200ms and re-checking before exiting.
     $deletedEvent = Get-Event -SourceIdentifier $srcDeleted -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -198,11 +208,11 @@ function Check-Deleted {
     Start-Sleep -Milliseconds 200
     if (Test-Path -LiteralPath $Path -PathType Leaf) {
         # File is back — atomic save in progress, treat as touch.
-        Drain-Events -SourceIdentifiers @($srcDeleted) | Out-Null
+        Clear-FwEvents -SourceIdentifiers @($srcDeleted) | Out-Null
         return
     }
-    Drain-Events -SourceIdentifiers @($srcDeleted) | Out-Null
-    Emit -Token 'gone'
+    Clear-FwEvents -SourceIdentifiers @($srcDeleted) | Out-Null
+    Write-Token -Token 'gone'
     exit 0
 }
 
@@ -218,9 +228,9 @@ try {
         $evt = Wait-AnyEvent -SourceIdentifiers $allSources -TimeoutSeconds $tickSeconds
 
         # Off-ramp: file deleted while watching → emit `gone` and exit 0.
-        Check-Deleted
+        Test-Deleted
 
-        # If the wait was woken by a Deleted-only event, Check-Deleted has either exited or
+        # If the wait was woken by a Deleted-only event, Test-Deleted has either exited or
         # treated it as atomic-rename noise; the change sources may still be empty. Re-check
         # whether any change event actually fired before treating $evt as a real touch.
         if ($evt) {
@@ -238,8 +248,8 @@ try {
 
         if ($evt) {
             # First touch from idle — fire IMMEDIATELY (leading-edge).
-            Drain-Events -SourceIdentifiers $allSources | Out-Null
-            Emit-Changed
+            Clear-FwEvents -SourceIdentifiers $allSources | Out-Null
+            Write-Changed
             $lastChangedTime = [DateTime]::UtcNow
             $lastHeartbeatTime = $lastChangedTime
 
@@ -261,7 +271,7 @@ try {
                     if ($secs -lt 1) { $secs = 1 }
                     $extra = Wait-AnyEvent -SourceIdentifiers $allSources -TimeoutSeconds $secs
                     # Off-ramp: file deleted during cooldown → exit 0.
-                    Check-Deleted
+                    Test-Deleted
                     if ($extra) {
                         # Confirm it's a change event (not just deleted-noise we already absorbed).
                         $hasChange = $false
@@ -272,14 +282,14 @@ try {
                         }
                         if ($hasChange) {
                             $touchInCooldown = $true
-                            Drain-Events -SourceIdentifiers $allSources | Out-Null
+                            Clear-FwEvents -SourceIdentifiers $allSources | Out-Null
                         }
                     }
                 }
 
                 if ($touchInCooldown) {
                     # Batched `changed` representing every touch during the cooldown.
-                    Emit-Changed
+                    Write-Changed
                     $lastChangedTime = [DateTime]::UtcNow
                     $lastHeartbeatTime = $lastChangedTime
                     # Restart cooldown — sustained chatter = one `changed` per Debounce seconds.
@@ -299,12 +309,12 @@ try {
         $idleSinceHeartbeat = ($now - $lastHeartbeatTime).TotalSeconds
 
         if ($Timeout -gt 0 -and $idleSinceChanged -ge $Timeout) {
-            Emit -Token 'timeout'
+            Write-Token -Token 'timeout'
             exit 0
         }
 
         if ($Heartbeat -gt 0 -and $idleSinceHeartbeat -ge $Heartbeat) {
-            Emit -Token 'heartbeat'
+            Write-Token -Token 'heartbeat'
             $lastHeartbeatTime = $now
         }
     }
