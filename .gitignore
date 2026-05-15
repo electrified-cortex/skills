@@ -17,6 +17,7 @@ logs/
 *.log
 
 temp/
+.temp/
 
 # Worker scratch directories — never commit
 .audit/
