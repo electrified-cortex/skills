@@ -55,13 +55,6 @@ Run every step with the named tool. Do not summarize or plan.
 
    Then stop. Do not write any file to disk. Do not invoke any other skill.
 
-## Output Format
-
-One line only:
-
-- `manifest: <40-char-hash>` — success.
-- `ERROR: <reason>` — failure (missing input, file not found, git error).
-
 ## Rules
 
 - Only `git` is permitted as an external tool. No other commands may be used for hashing.

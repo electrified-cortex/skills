@@ -51,14 +51,6 @@ Run every step with the named tool. Do not summarize or plan.
    - If count is 0: output `CLEAN`
    - Otherwise: output `indexed: <count>`
 
-## Output Format
-
-One line only:
-
-- `CLEAN` — no hash directories needed indexing (all up to date or store absent).
-- `indexed: <count>` — manifest files written for `<count>` hash directories.
-- `ERROR: <reason>` — pre-execution failure (e.g., `repo_root` not found, path-traversal rejected).
-
 ## Rules
 
 - Never modify any leaf `.md` record file. Read-only on all leaf records.

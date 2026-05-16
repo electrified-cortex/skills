@@ -1,7 +1,6 @@
 ---
 name: hash-record
-version: 0.1
-description: Content-hash-keyed durable record store. Probe / Read / Write / Invalidate API. Replaces .audit-reports/ and .code-reviews/ with one substrate that consumer skills call into directly.
+description: Content-hash-keyed durable record store — one substrate for caching audit, review, and hygiene results. Probe / Read / Write / Invalidate / Rekey / Prune / Index API. Triggers - cache result, look up cached record, hash-record store.
 ---
 
 # Hash Record
@@ -25,9 +24,9 @@ Shard prefix is always exactly 2 chars. Full hash is always 40 chars. Never trun
 
 | Operation | Input | Output | Purpose |
 | --- | --- | --- | --- |
-| Probe | `(hash, skill, version|null, model)` | `{ hit: bool, path: string|null }` | Cache check |
+| Probe | `(hash, skill, version\|null, model)` | `{ hit: bool, path: string\|null }` | Cache check |
 | Read | record path | full record content (frontmatter + body) | Return cached result |
-| Write | `(hash, skill, version|null, model, content)` | new record path | Append a fresh record |
+| Write | `(hash, skill, version\|null, model, content)` | new record path | Append a fresh record |
 | Invalidate | `[(path, old-hash, new-hash)]` | count of dirs deleted | Eager cleanup (hook-driven) |
 
 Path computation (Probe + Write must agree):

@@ -1,6 +1,6 @@
 ---
 name: hash-record-manifest
-description: Probe the hash-record cache for a set of files via a combined manifest hash. Triggers - compute manifest hash, multi-file cache key, hash-record manifest, manifest hash, bundle file hashes, cache key for directory.
+description: Compute a manifest hash for a set of files and probe the hash-record cache using that combined key. Triggers — multi-file cache key, compute manifest hash, cache key for directory.
 ---
 
 # Hash-Record Manifest
@@ -9,11 +9,11 @@ Probe the hash-record cache for a set of files via a combined manifest hash. Ret
 
 ## Inputs
 
-| Parameter         | Required | Description                                                                 |
-| ----------------- | -------- | --------------------------------------------------------------------------- |
+| Parameter         | Required | Description                                                                   |
+| ----------------- | -------- | ----------------------------------------------------------------------------- |
 | `op_kind`         | yes      | Operation kind, e.g. `skill-auditing/v2`. May contain `/`; no `..`, `\`, `*`. |
-| `record_filename` | yes      | Leaf filename, e.g. `report.md`. No path separators or `..`.               |
-| `files`           | yes      | One or more file paths (absolute or relative). At least one required.      |
+| `record_filename` | yes      | Leaf filename, e.g. `report.md`. No path separators or `..`.                  |
+| `files`           | yes      | One or more file paths (absolute or relative). At least one required.         |
 
 ## Procedure
 
@@ -41,4 +41,4 @@ The tool resolves repo root from the first file, computes a git blob hash per fi
 | `MISS: <abs-path>`| 0    | No cache entry; caller writes to this path   |
 | `ERROR: <reason>` | 1    | Argument or runtime error                    |
 
-Related: `hash-record`, `hash-record-index`, `hash-record-prune`
+Related: `hash-record`, `index/`, `prune/`
