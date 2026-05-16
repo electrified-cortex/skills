@@ -86,4 +86,3 @@ There is no `gh pr` command for resolving review threads. Use the
 gh api graphql -f query='
   mutation { resolveReviewThread(input: {threadId: "THREAD_ID"}) { thread { isResolved } } }'
 ```
-
