@@ -12,7 +12,7 @@ limit is reached.
 
 The skill has three distinct layers, implemented across two executor sub-skills and one host orchestration file.
 
-### Lint Executor (`markdown-hygiene-lint/instructions.txt`)
+### Lint Executor (`lint/instructions.txt`)
 
 Haiku-class. Deterministic pattern-matching only. It:
 
@@ -26,7 +26,7 @@ Haiku-class. Deterministic pattern-matching only. It:
 
 ### Analysis Executor
 
-`markdown-hygiene-analysis/instructions.txt` — Sonnet-class (or GPT-5.4). Semantic reasoning. It:
+`analysis/instructions.txt` — Sonnet-class (or GPT-5.4). Semantic reasoning. It:
 
 - Reads `<lint_path>` to extract the lint result and violation count.
 - Evaluates SA001–SA038 advisory rules against the target file.
@@ -44,9 +44,9 @@ The host is the agent that reads `SKILL.md` and drives the full workflow.
 flowchart TD
     A([start]) --> RC1[result check: report]
     RC1 -->|HIT| RET([return result to caller])
-    RC1 -->|MISS - bind report_path| LINT[markdown-hygiene-lint/SKILL.md\nauto-fix + cache check + dispatch]
+    RC1 -->|MISS - bind report_path| LINT[lint/SKILL.md\nauto-fix + cache check + dispatch]
     LINT -->|ERROR| RET
-    LINT -->|clean/findings - bind lint_path| ANA[markdown-hygiene-analysis/SKILL.md\ncache check + dispatch]
+    LINT -->|clean/findings - bind lint_path| ANA[analysis/SKILL.md\ncache check + dispatch]
     ANA -->|ERROR| RET
     ANA -->|clean/pass/findings - bind analysis_path| AGG[aggregate + write report.md]
     AGG --> IC{aggregate result?}
@@ -62,8 +62,8 @@ flowchart TD
 Steps:
 
 1. **Result check (report).** Cache hit → return to caller. Miss → bind `<report_path>`.
-2. **Lint.** Follow `markdown-hygiene-lint/SKILL.md`. Sub-skill handles auto-fix, cache check, and dispatch. Bind `<lint_path>` from return.
-3. **Analysis.** Follow `markdown-hygiene-analysis/SKILL.md`. Sub-skill handles cache check and dispatch. Bind `<analysis_path>` from return.
+2. **Lint.** Follow `lint/SKILL.md`. Sub-skill handles auto-fix, cache check, and dispatch. Bind `<lint_path>` from return.
+3. **Analysis.** Follow `analysis/SKILL.md`. Sub-skill handles cache check and dispatch. Bind `<analysis_path>` from return.
 4. **Aggregate.** Derive combined result from `<lint_path>` and `<analysis_path>`. Write `report.md`.
 5. **Iteration check.** Clean → return `CLEAN`. Fail/pass → dispatch fix agent.
    - `fixed:` — restart from step 2 (max 3 times; then return `findings:`).
@@ -112,13 +112,13 @@ The `dispatch` skill takes a single `<prompt>` — a verbatim string sent to the
 
 **Lint phase prompt** — host-composed variables:
 
-- `<lint-instructions-abspath>` = absolute path to `markdown-hygiene-lint/instructions.txt`
+- `<lint-instructions-abspath>` = absolute path to `lint/instructions.txt`
 - `<input-args>` = `<markdown_file_path> --lint-path <lint_path> [--ignore <RULE>[,<RULE>...]]`
 - `<prompt>` = `Read and follow <lint-instructions-abspath>; Input: <input-args>`
 
 **Analysis phase prompt** — host-composed variables:
 
-- `<analysis-instructions-abspath>` = absolute path to `markdown-hygiene-analysis/instructions.txt`
+- `<analysis-instructions-abspath>` = absolute path to `analysis/instructions.txt`
 - `<input-args>` = `<markdown_file_path> --lint-path <lint_path> --analysis-path <analysis_path> [--ignore ...]`
 - `<prompt>` = `Read and follow <analysis-instructions-abspath>; Input: <input-args>`
 

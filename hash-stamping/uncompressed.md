@@ -9,8 +9,8 @@ Suite of two dispatch skills for managing SHA-256 integrity stamps alongside tra
 
 ## Sub-skills
 
-- **`hash-stamp-audit/`** — verify stamps, detect drift. Use when checking whether a file has changed since its last stamp (e.g., triggering an audit, pre-merge check, CI gate).
-- **`hash-stamp/`** — write or update `.sha256` companions. Use after editing any stamped file.
+- **`audit/`** — verify stamps, detect drift. Use when checking whether a file has changed since its last stamp (e.g., triggering an audit, pre-merge check, CI gate).
+- **`stamp/`** — write or update `.sha256` companions. Use after editing any stamped file.
 
 ## Stamp Policy
 

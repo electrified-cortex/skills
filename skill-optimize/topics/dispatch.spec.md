@@ -72,8 +72,8 @@ correctness, and where the replacement would reduce latency or cost.
 
 When a skill dispatches, the invocation should use the canonical variable
 block pattern established in the `dispatch` skill. The golden reference is
-`markdown-hygiene/markdown-hygiene-analysis/SKILL.md` and
-`markdown-hygiene/markdown-hygiene-lint/SKILL.md`.
+`markdown-hygiene/analysis/SKILL.md` and
+`markdown-hygiene/lint/SKILL.md`.
 
 Fire a MEDIUM finding if the skill dispatches but:
 

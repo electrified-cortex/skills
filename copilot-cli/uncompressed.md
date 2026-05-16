@@ -8,9 +8,9 @@ The host agent should never need to know which Copilot CLI flags exist, how to c
 
 | Operation | Sub-skill | Handles |
 | --- | --- | --- |
-| `review` | `copilot-cli-review/` | Code review of a change set; returns structured findings + raw markdown |
-| `ask` | `copilot-cli-ask/` | General query / advice; returns plain text answer |
-| `explain` | `copilot-cli-explain/` | Explain a code region / file; returns explanatory markdown |
+| `review` | `review/` | Code review of a change set; returns structured findings + raw markdown |
+| `ask` | `ask/` | General query / advice; returns plain text answer |
+| `explain` | `explain/` | Explain a code region / file; returns explanatory markdown |
 
 ## Behavior
 

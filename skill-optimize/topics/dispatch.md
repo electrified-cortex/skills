@@ -72,7 +72,7 @@ Fire a DISPATCH finding if:
 
 If the skill uses dispatch, inspect how it invokes the dispatch pattern:
 
-**Canonical form** (from `markdown-hygiene-analysis/SKILL.md` as golden reference):
+**Canonical form** (from `markdown-hygiene/analysis/SKILL.md` as golden reference):
 
 ```
 `<instructions>` = `instructions.txt` (NEVER READ)

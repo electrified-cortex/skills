@@ -12,14 +12,14 @@ description: Full markdown hygiene pass on a .md file — lint fixes, MD rule sc
 
 ## 1 — Result check (report)
 
-Run inline `markdown-hygiene-result` check for `report`. See `markdown-hygiene-result/SKILL.md`.
+Run inline `result` check for `report`. See `result/SKILL.md`.
 
 - `MISS: <abs-path>` — bind `<report_path>`. Continue.
 - Otherwise: stop, return result to caller.
 
 ## 2 — Analysis
 
-Follow `markdown-hygiene-analysis/SKILL.md` with `<markdown_file_path>`.
+Follow `analysis/SKILL.md` with `<markdown_file_path>`.
 
 - `ERROR: <reason>` — stop, surface reason.
 - Otherwise: bind `<analysis_result>`.
@@ -34,7 +34,7 @@ If `<analysis_result>` is `pass: <analysis_path>` or `findings: <analysis_path>`
 
 ## 3 — Lint
 
-Follow `markdown-hygiene-lint/SKILL.md` with `<markdown_file_path> [--ignore <RULE>[,<RULE>...]]`.
+Follow `lint/SKILL.md` with `<markdown_file_path> [--ignore <RULE>[,<RULE>...]]`.
 
 - `ERROR: <reason>` — stop, surface reason.
 - Otherwise: bind `<lint_result>`.
