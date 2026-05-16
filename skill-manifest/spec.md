@@ -15,7 +15,7 @@ files to dist — no more, no less.
 In scope:
 
 - Accepting a skill folder path as input
-- Computing the folder manifest hash via `hash-record-manifest`
+- Computing the folder manifest hash via `hash-record/manifest`
 - Probing `hash-record` for a cached result
 - Dispatching an LLM subagent to walk refs recursively on cache miss
 - Storing the LLM result in `hash-record`
@@ -46,7 +46,7 @@ alone.
 to publish a skill. Includes the entry point, all directly referenced files, and all
 transitively referenced files up to the depth limit.
 
-**Manifest hash** — a single 40-char SHA1 hash computed by `hash-record-manifest` over all
+**Manifest hash** — a single 40-char SHA1 hash computed by `hash-record/manifest` over all
 files in the skill folder. Serves as the cache key.
 
 **Cache hit** — a `hash-record` entry exists for (manifest-hash, `skill-manifest`).
@@ -73,7 +73,7 @@ repo root. When omitted, defaults to the git repo root containing `skill_dir`.
 ### R-HASH-1
 
 The skill must enumerate all files directly inside `skill_dir` (non-recursive, excluding
-dot-files and directories) and pass them to `hash-record-manifest` to compute the manifest
+dot-files and directories) and pass them to `hash-record/manifest` to compute the manifest
 hash.
 
 ### R-HASH-2
@@ -181,7 +181,7 @@ Depth limit must not exceed 8. Default is 4.
 ### Normal flow (cache miss)
 
 1. Resolve `repo_root` (from input or git detection).
-2. Enumerate files in `skill_dir` → pass to `hash-record-manifest` → receive
+2. Enumerate files in `skill_dir` → pass to `hash-record/manifest` → receive
    `manifest_hash`.
 3. Probe `hash-record(manifest_hash, "skill-manifest")` → miss.
 4. Dispatch LLM subagent with `skill_dir`, `repo_root`, `depth_limit`.
@@ -222,7 +222,7 @@ raised; this is expected behavior for deep ref chains.
 | --- | --- |
 | `skill_dir` missing | `ERROR: skill_dir not found: <path>` |
 | No `SKILL.md` in `skill_dir` | `ERROR: no SKILL.md in <skill_dir>` |
-| `hash-record-manifest` failure | `ERROR: manifest hash failed: <reason>` |
+| `hash-record/manifest` failure | `ERROR: manifest hash failed: <reason>` |
 | LLM scan returns error | `ERROR: scan failed: <reason>` — do not write to hash-record |
 | `hash-record` write failure | Log warning; still return result to caller |
 

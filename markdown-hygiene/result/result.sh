@@ -38,22 +38,22 @@ fi
 
 RECORD_FILE="${FILENAME}.md"
 
-# Locate hash-record-check
+# Locate hash-record/check
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-CHECK_SH="${SCRIPT_DIR}/../../hash-record/hash-record-check/check.sh"
+CHECK_SH="${SCRIPT_DIR}/../../hash-record/check/check.sh"
 
 if [ ! -f "$CHECK_SH" ]; then
-    echo "ERROR: cannot locate hash-record-check at: $CHECK_SH"
+    echo "ERROR: cannot locate hash-record/check at: $CHECK_SH"
     exit 1
 fi
 
-# Invoke hash-record-check
+# Invoke hash-record/check
 CHECK_OUT=$(bash "$CHECK_SH" "$FILE_PATH" markdown-hygiene "$RECORD_FILE" 2>/dev/null) || {
-    echo "ERROR: hash-record-check failed for: $FILE_PATH"
+    echo "ERROR: hash-record/check failed for: $FILE_PATH"
     exit 1
 }
 
-# Branch on hash-record-check stdout
+# Branch on hash-record/check stdout
 case "$CHECK_OUT" in
     "MISS: "*)
         echo "$CHECK_OUT"
@@ -94,7 +94,7 @@ case "$CHECK_OUT" in
         esac
         ;;
     *)
-        echo "ERROR: unrecognized hash-record-check output: $CHECK_OUT"
+        echo "ERROR: unrecognized hash-record/check output: $CHECK_OUT"
         exit 1
         ;;
 esac

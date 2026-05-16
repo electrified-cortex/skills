@@ -201,7 +201,7 @@ content. Lint is the final touch before sealing.
 1. Apply lint fixes to all `.md` files.
 2. For each Phase 1 / Phase 2 / Phase 3a hash record now stale due to content hash change:
    a. Run the result script (`result.sh` or `result.ps1`) — expect a cache MISS.
-   b. Use `hash-record-rekey` to move the record to the new key automatically (or
+   b. Use `hash-record/rekey` to move the record to the new key automatically (or
       `git mv <old-record-path> <new-record-path>` if the sub-skill is unavailable).
       Do not re-run the full audit.
 3. Stage all changed `.md` files and renamed hash records.

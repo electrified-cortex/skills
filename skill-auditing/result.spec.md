@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Wraps `hash-record-manifest` for `skill-auditing` and translates a HIT into the cached audit verdict. Host calls `result` to read the on-disk audit-record state — at cache-check time AND at post-execute validation time. Same script, same return shape, both calls.
+Wraps `hash-record/manifest` for `skill-auditing` and translates a HIT into the cached audit verdict. Host calls `result` to read the on-disk audit-record state — at cache-check time AND at post-execute validation time. Same script, same return shape, both calls.
 
 Read-only.
 
@@ -16,7 +16,7 @@ Read-only.
 
 `--help` / `-h` — print usage, exit 0.
 
-The tool hashes ONLY the semantic content files of the skill bundle. Whitelist (in this exact order — order is part of the manifest hash key, do NOT reorder): `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md`. Files that exist are included; files that don't, are skipped. Non-semantic files (stamps, scripts, logs, generated artifacts), tool scripts (`result.sh`, `result.ps1`, etc.), and tool-spec files (`*.spec.md` other than the skill's own `spec.md`) are NOT hashed — they belong to the tool manifest, not the skill manifest. Skill manifest and tool manifest are intentionally separate; tool-auditing covers tool trios independently of skill-auditing. The result tool delegates manifest computation to `hash-record-manifest` for the cache lookup.
+The tool hashes ONLY the semantic content files of the skill bundle. Whitelist (in this exact order — order is part of the manifest hash key, do NOT reorder): `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md`. Files that exist are included; files that don't, are skipped. Non-semantic files (stamps, scripts, logs, generated artifacts), tool scripts (`result.sh`, `result.ps1`, etc.), and tool-spec files (`*.spec.md` other than the skill's own `spec.md`) are NOT hashed — they belong to the tool manifest, not the skill manifest. Skill manifest and tool manifest are intentionally separate; tool-auditing covers tool trios independently of skill-auditing. The result tool delegates manifest computation to `hash-record/manifest` for the cache lookup.
 
 ## Procedure
 
@@ -24,7 +24,7 @@ The tool hashes ONLY the semantic content files of the skill bundle. Whitelist (
 
 2. Look up the semantic-file whitelist in `<skill_dir>` (top-level only, NOT recursive) in this exact order: `SKILL.md`, `instructions.txt`, `spec.md`, `uncompressed.md`, `instructions.uncompressed.md`. Include each file that exists; skip each that does not. Order is part of the manifest hash key — do NOT sort, reorder, or rearrange. At least one MUST be found or -> `ERROR: no semantic content files found in skill_dir`, exit 1.
 
-3. Invoke `hash-record-manifest` (sibling tool — do NOT reimplement) with:
+3. Invoke `hash-record/manifest` (sibling tool — do NOT reimplement) with:
    - `op_kind` = `skill-auditing/v2`. Single canonical op_kind; no compiled/uncompressed split.
    - `record_filename` = `report.md`
    - `files` = the enumerated list (absolute paths).
@@ -68,7 +68,7 @@ The host:
 - Frontmatter parsing is line-based (`^result:` line, first whitespace-separated token after `:`).
 - Forward-slash paths. ASCII output.
 - Both `result.sh` (Bash) and `result.ps1` (PowerShell 7+); byte-identical stdout.
-- Delegates manifest computation entirely to `hash-record-manifest` — no duplication.
+- Delegates manifest computation entirely to `hash-record/manifest` — no duplication.
 - Skill version (`v2`) is hardcoded in the script. Bump version + update script in lockstep when contract changes.
 
 ## Don'ts
@@ -78,7 +78,7 @@ The host:
 
 ## Dependencies
 
-- `hash-record-manifest` (sibling at `../hash-record/hash-record-manifest/`).
+- `hash-record/manifest` (sibling at `../hash-record/manifest/`).
 
 ## Examples
 

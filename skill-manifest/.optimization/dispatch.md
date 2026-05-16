@@ -17,7 +17,7 @@ eliminating redundant hash computation inside the subagent.
 
 **Recommendation:** In `uncompressed.md`, add pre-dispatch Steps 1–3: resolve
 `repo_root`, enumerate `skill_dir` files, compute manifest hash via
-`hash-record-manifest`, probe `hash-record` — return result with `cached: true` on hit.
+`hash-record/manifest`, probe `hash-record` — return result with `cached: true` on hit.
 Pass `manifest_hash` to the subagent via `<input-args>`. In
 `instructions.uncompressed.md`, accept `manifest_hash` as a provided input, remove
 current Steps 2–3, begin directly at Step 4 (ref walk).

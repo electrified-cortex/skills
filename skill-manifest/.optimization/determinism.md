@@ -53,7 +53,7 @@ decision on whether LLM semantic judgment is intended beyond the defined pattern
 that the host already holds.
 
 **Reasoning:** The host enumerates `skill_dir` direct files in Step 3 of
-`uncompressed.md` (to compute the manifest hash via `hash-record-manifest`). The subagent
+`uncompressed.md` (to compute the manifest hash via `hash-record/manifest`). The subagent
 independently re-enumerates the same directory in Step 1a. The two enumerations apply
 identical rules (non-recursive, no dot-files), so results should match — but there is a
 narrow race window where a file is created or deleted between the host enumeration and the

@@ -39,33 +39,33 @@ if ($Filename -match '[/\\.]') {
 
 $RecordFile = "$Filename.md"
 
-# Locate hash-record-check
+# Locate hash-record/check
 $ScriptDir = Split-Path -Parent $PSCommandPath
-$CheckPs1 = Join-Path $ScriptDir '../../hash-record/hash-record-check/check.ps1'
+$CheckPs1 = Join-Path $ScriptDir '../../hash-record/check/check.ps1'
 
 if (-not (Test-Path $CheckPs1)) {
-    [Console]::Out.Write("ERROR: cannot locate hash-record-check at: $CheckPs1`n")
+    [Console]::Out.Write("ERROR: cannot locate hash-record/check at: $CheckPs1`n")
     exit 1
 }
 
-# Invoke hash-record-check
+# Invoke hash-record/check
 try {
     $CheckOut = & pwsh -NoProfile -File $CheckPs1 $FilePath 'markdown-hygiene' $RecordFile 2>$null
     $CheckOut = $CheckOut -join "`n" -replace "`r", '' -split "`n" | Where-Object { $_ -ne '' } | Select-Object -Last 1
 } catch {
-    [Console]::Out.Write("ERROR: hash-record-check failed for: $FilePath`n")
+    [Console]::Out.Write("ERROR: hash-record/check failed for: $FilePath`n")
     exit 1
 }
 
 if (-not $CheckOut) {
-    [Console]::Out.Write("ERROR: hash-record-check returned no output for: $FilePath`n")
+    [Console]::Out.Write("ERROR: hash-record/check returned no output for: $FilePath`n")
     exit 1
 }
 
 # Normalize forward slashes
 $CheckOut = $CheckOut -replace '\\', '/'
 
-# Branch on hash-record-check stdout
+# Branch on hash-record/check stdout
 if ($CheckOut -like 'MISS: *') {
     [Console]::Out.Write("$CheckOut`n")
     exit 0
@@ -111,5 +111,5 @@ if ($CheckOut -like 'HIT: *') {
     }
 }
 
-[Console]::Out.Write("ERROR: unrecognized hash-record-check output: $CheckOut`n")
+[Console]::Out.Write("ERROR: unrecognized hash-record/check output: $CheckOut`n")
 exit 1

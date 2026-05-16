@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Wraps `hash-record-manifest` for `tool-auditing` and translates a HIT into the cached audit verdict. Resolves the **tool trio** — `<stem>.sh`, `<stem>.ps1`, `<stem>.spec.md` — from any input path, then hashes whichever members exist as a manifest. Drift in any member invalidates the cache.
+Wraps `hash-record/manifest` for `tool-auditing` and translates a HIT into the cached audit verdict. Resolves the **tool trio** — `<stem>.sh`, `<stem>.ps1`, `<stem>.spec.md` — from any input path, then hashes whichever members exist as a manifest. Drift in any member invalidates the cache.
 
 Read-only.
 
@@ -39,7 +39,7 @@ Missing trio members are reported as audit FAIL by the executor (Check 1). `resu
    - `<stem>.ps1` (if file)
    - `<stem>.spec.md` (if file)
 
-4. Invoke `hash-record-manifest` (sibling tool — do NOT reimplement) with:
+4. Invoke `hash-record/manifest` (sibling tool — do NOT reimplement) with:
    - `op_kind` = `tool-auditing/v2`
    - `record_filename` = `report.md`
    - `files` = ordered file list from step 3 (sort by repo-relative path inside manifest tool)
@@ -70,8 +70,8 @@ Missing trio members are reported as audit FAIL by the executor (Check 1). `resu
 - Frontmatter parsing: `^result:` line, first whitespace-separated token after `:`.
 - Forward-slash paths. ASCII output.
 - Both `result.sh` (Bash) and `result.ps1` (PS7+); byte-identical stdout.
-- Delegates manifest computation entirely to `hash-record-manifest`.
+- Delegates manifest computation entirely to `hash-record/manifest`.
 
 ## Dependencies
 
-- `hash-record-manifest` (sibling at `../hash-record/hash-record-manifest/`).
+- `hash-record/manifest` (sibling at `../hash-record/manifest/`).

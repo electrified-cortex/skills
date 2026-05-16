@@ -9,7 +9,7 @@
 `depth_limit`. The output (`files`, `broken_refs`) therefore depends on external files
 not included in the cache key. Stale cache hits are possible with no invalidation signal.
 
-**Reasoning:** `hash-record-manifest` hashes only `skill_dir` direct files (R-HASH-1).
+**Reasoning:** `hash-record/manifest` hashes only `skill_dir` direct files (R-HASH-1).
 The subagent walks transitive refs — `../dispatch/SKILL.md`, `../hash-record/SKILL.md`,
 etc. — and includes those paths in the returned file list. If `dispatch/SKILL.md` adds a
 new ref to `../new-skill/SKILL.md`, the cache returns the old list missing `new-skill`.

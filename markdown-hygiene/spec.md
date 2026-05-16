@@ -69,11 +69,11 @@ Steps:
    - `fixed:` — restart from step 2 (max 3 times; then return `findings:`).
    - `clean:` — return `pass: <report_path>`.
 
-**Pruning is out of scope.** Do NOT run `hash-record-prune` from this skill or its sub-skills. Pruning during a seal chain destroys valid records produced by sibling skills before they can be committed. Operators run prune as a separate maintenance pass after seal commits land.
+**Pruning is out of scope.** Do NOT run `hash-record/prune` from this skill or its sub-skills. Pruning during a seal chain destroys valid records produced by sibling skills before they can be committed. Operators run prune as a separate maintenance pass after seal commits land.
 
 ### Result Check Tool
 
-The `result` scripts (`result.sh` / `result.ps1`) wrap `hash-record-check` and translate the HIT into a cached verdict. They accept a **mode argument** that controls which sub-file is checked and what a HIT means.
+The `result` scripts (`result.sh` / `result.ps1`) wrap `hash-record/check` and translate the HIT into a cached verdict. They accept a **mode argument** that controls which sub-file is checked and what a HIT means.
 
 **Invocation:**
 
@@ -186,9 +186,9 @@ After each full cycle (lint → analysis → aggregate), the host branches on `r
 
 `fixed:` is an internal signal only. It is never written to any record file and never returned to the caller of this skill.
 
-**On terminal stop** (CLEAN or fix agent `clean:`), run `hash-record-prune`:
+**On terminal stop** (CLEAN or fix agent `clean:`), run `hash-record/prune`:
 
-- Skill: `hash-record-prune`
+- Skill: `hash-record/prune`
 - Input: `repo_root=<repo_root> --target <repo-relative-path>`
 - `<repo-relative-path>` is `<markdown_file_path>` with the `<repo_root>/` prefix stripped.
 - Removes orphaned hash directories accumulated across fail iterations.
@@ -638,7 +638,7 @@ consistent" will fail the apply test.
 - Never modify content meaning — only formatting violations are in scope.
 - Preserve all technical strings, code blocks, and frontmatter.
 - Cache delegation is mandatory. The executor never computes the git blob hash or
-  constructs the cache path inline; `hash-record-check` owns that logic entirely.
+  constructs the cache path inline; `hash-record/check` owns that logic entirely.
 
 ## Integration
 

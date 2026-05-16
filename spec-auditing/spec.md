@@ -670,7 +670,7 @@ actually audited in this invocation.
 
 ### Cache Check (at host surface)
 
-The host runs the inline hash check (via the `hash-record-manifest` skill (`hash-record-manifest/manifest.sh` or `.ps1`)) with `op_kind = spec-auditing/v1` and `record_filename = report.md` before any dispatch.
+The host runs the inline hash check (via the `hash-record/manifest` skill (`hash-record/manifest/manifest.sh` or `.ps1`)) with `op_kind = spec-auditing/v1` and `record_filename = report.md` before any dispatch.
 
 - **Hit** (`HIT: <abs-path>`): host emits `PATH: <abs-path>` and stops. No executor dispatched.
 - **Miss** (`MISS: <abs-path>`): host binds `<report_path>` and passes it via `--report-path` to the executor.
@@ -731,7 +731,7 @@ repo_root=$(git -C "$(dirname <spec_path>)" rev-parse --show-toplevel 2>/dev/nul
 
 ### Requirements (hash-record)
 
-R-HR-1: The HOST MUST invoke the `hash-record-manifest` manifest tool (`hash-record-manifest/manifest.sh`
+R-HR-1: The HOST MUST invoke the `hash-record/manifest` manifest tool (`hash-record/manifest/manifest.sh`
 or `.ps1`) before dispatching the executor — before any LLM is dispatched and
 before any other side effect related to this invocation.
 

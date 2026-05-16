@@ -2,19 +2,19 @@
 
 ## Purpose
 
-Wraps `hash-record-check` for `markdown-hygiene` and translates a HIT into the cached verdict for a named sub-document. The host dispatches this sub-skill to probe the cache before running any executor phase — and again after execution to read back the result. Read-only.
+Wraps `hash-record/check` for `markdown-hygiene` and translates a HIT into the cached verdict for a named sub-document. The host dispatches this sub-skill to probe the cache before running any executor phase — and again after execution to read back the result. Read-only.
 
 ## Parameters
 
 `<markdown_file_path>` (positional, required) — absolute path to the `.md` file.
 
-`<filename>` (positional, required) — sub-document to probe, e.g. `report`, `lint`, `analysis`. The script appends `.md` to form the record filename passed to `hash-record-check`.
+`<filename>` (positional, required) — sub-document to probe, e.g. `report`, `lint`, `analysis`. The script appends `.md` to form the record filename passed to `hash-record/check`.
 
 `--help` / `-h` — print usage, exit 0.
 
 ## Procedure
 
-1. Invoke `hash-record-check` with `<markdown_file_path> markdown-hygiene <filename>.md`.
+1. Invoke `hash-record/check` with `<markdown_file_path> markdown-hygiene <filename>.md`.
 2. Branch on its stdout:
    - `MISS: <abs-path>` → emit `MISS: <abs-path>`, exit 0.
    - `ERROR: <reason>` → emit `ERROR: <reason>`, exit 1.
@@ -54,4 +54,4 @@ Forward-slash paths, ASCII, LF terminator. One line on stdout, always.
 
 ## Dependencies
 
-`hash-record-check` at `../../hash-record/hash-record-check/` relative to this sub-skill folder.
+`hash-record/check` at `../../hash-record/check/` relative to this sub-skill folder.

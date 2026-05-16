@@ -41,12 +41,12 @@ Follow `lint/SKILL.md` with `<markdown_file_path> [--ignore <RULE>[,<RULE>...]]`
 
 ## 4 — Rekey
 
-Run inline. No agent dispatch. See `hash-record/hash-record-rekey/SKILL.md`.
+Run inline. No agent dispatch. See `hash-record/rekey/SKILL.md`.
 
 ```bash
-bash hash-record/hash-record-rekey/rekey.sh <markdown_file_path> markdown-hygiene analysis.md <hash_A>
+bash hash-record/rekey/rekey.sh <markdown_file_path> markdown-hygiene analysis.md <hash_A>
 # Windows:
-pwsh hash-record/hash-record-rekey/rekey.ps1 <markdown_file_path> markdown-hygiene analysis.md <hash_A>
+pwsh hash-record/rekey/rekey.ps1 <markdown_file_path> markdown-hygiene analysis.md <hash_A>
 ```
 
 - `REKEYED:` or `CURRENT:` — ok.
