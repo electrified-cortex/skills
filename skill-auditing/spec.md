@@ -422,6 +422,33 @@ Verify the companion spec is structurally sound, then verify the compiled artifa
     agent files, and tool-spec files. Detection: file whose first line is
     `---` → flag HIGH.
 
+27. **(A-PD-1) Plugin-depth visibility** — checks whether the audited skill is
+    discoverable via Claude Code's depth-1 plugin scan. Claude Code auto-discovers
+    only `<plugin-root>/skills/<name>/SKILL.md`; sub-skills nested deeper are
+    invisible unless a depth-1 parent SKILL.md explicitly routes to them
+    (the router-as-facade pattern).
+
+    **PASS** — the audited skill is at depth 1 in `<plugin-root>/skills/`
+    (i.e., `skills/<name>/SKILL.md`) OR is nested (depth > 1) AND a parent
+    SKILL.md (any ancestor under `<plugin-root>/skills/`) contains an explicit
+    reference to this sub-skill by folder name OR by canonical name (the value
+    of its `name:` frontmatter field).
+
+    **WARN** — the audited skill is nested AND has a SKILL.md with its own
+    `description:` containing trigger phrases (looks standalone, not merely a
+    delegated component) AND no parent SKILL.md enumeration of this sub-skill
+    is found.
+
+    **FAIL** — the audited skill is nested AND no parent SKILL.md exists in
+    the ancestor chain, OR the nearest parent SKILL.md exists but contains no
+    reference to this sub-skill by folder name or canonical name.
+
+    Failure/warn recommendation: See `github/SKILL.md` for the router-as-facade
+    pattern that makes sub-skills discoverable.
+
+    Detection note: initial implementation may rely on auditor judgment (reading
+    the parent SKILL.md text); a tool-assisted version can come later.
+
 ## Dispatch Skill Audit Criteria
 
 Applies to dispatch skills only. Auditor runs these checks against `uncompressed.md`
@@ -678,6 +705,7 @@ CLEAN | PASS | NEEDS_REVISION | FAIL
 | Input redefinition in instructions (A-IR-1) | PASS/FAIL | |
 | Return contract redefinition in instructions (A-IR-2) | PASS/FAIL | |
 | Frontmatter leak in instructions (A-IR-3) | PASS/FAIL/N/A | |
+| Plugin-depth visibility (A-PD-1) | PASS/WARN/FAIL/N/A | |
 | Return shape declared (DS-1) | PASS/FAIL/N/A | |
 | Host card minimalism (DS-2) | PASS/FAIL/N/A | |
 | Description trigger phrases (DS-3) | PASS/FAIL/N/A | |
